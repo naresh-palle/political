@@ -52,6 +52,8 @@ export interface AssemblyInfo {
   stateId: string;
   name: string;
   code: string;
+  number?: number;
+  reservedCategory?: string;
   totalVoters: number;
   candidateCount: number;
   estimatedDigitalAudience: number;

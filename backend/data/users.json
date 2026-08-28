@@ -1,0 +1,156 @@
+[
+  {
+    "id": "usr_superadmin",
+    "name": "Dr. Vikramaditya Varma",
+    "email": "admin@leaderslens.in",
+    "demoPassword": "Admin@2026!",
+    "role": "super_admin",
+    "roleTitle": "Chief Executive Strategist & System Super Admin",
+    "department": "Apex Command & National Governance Council",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80",
+    "assignedConstituency": "National Command / All Jurisdictions",
+    "clearanceLevel": "Tier 0 (Master Admin Clearance)",
+    "permissions": {
+      "canExportReports": true,
+      "canEditStrategy": true,
+      "canManageVolunteers": true,
+      "canResolveGrievances": true,
+      "canPublishLandingPage": true,
+      "canViewConfidentialMetrics": true,
+      "canManageSystemUsers": true
+    },
+    "createdAt": "2026-08-28T18:24:07.360Z"
+  },
+  {
+    "id": "usr_director",
+    "name": "Naresh Palle",
+    "email": "director@leaderslens.in",
+    "demoPassword": "Director@2026!",
+    "role": "campaign_director",
+    "roleTitle": "Campaign Director & Chief Strategist",
+    "department": "State Strategic Steering Unit",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
+    "assignedConstituency": "Andhra Pradesh & Telangana State Wide",
+    "clearanceLevel": "Level 1 (Full Access)",
+    "permissions": {
+      "canExportReports": true,
+      "canEditStrategy": true,
+      "canManageVolunteers": true,
+      "canResolveGrievances": true,
+      "canPublishLandingPage": true,
+      "canViewConfidentialMetrics": true,
+      "canManageSystemUsers": true
+    },
+    "createdAt": "2026-08-28T18:24:07.361Z"
+  },
+  {
+    "id": "usr_candidate",
+    "name": "Hon. Candidate Executive",
+    "email": "candidate@leaderslens.in",
+    "demoPassword": "Candidate@2026!",
+    "role": "candidate_executive",
+    "roleTitle": "Contesting Assembly Candidate",
+    "department": "Constituency Executive Office",
+    "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80",
+    "assignedConstituency": "Kadapa (132) & Pulivendla (126)",
+    "clearanceLevel": "Executive Briefing Only",
+    "permissions": {
+      "canExportReports": true,
+      "canEditStrategy": false,
+      "canManageVolunteers": false,
+      "canResolveGrievances": false,
+      "canPublishLandingPage": true,
+      "canViewConfidentialMetrics": true,
+      "canManageSystemUsers": false
+    },
+    "createdAt": "2026-08-28T18:24:07.361Z"
+  },
+  {
+    "id": "usr_field",
+    "name": "Rajesh Goud",
+    "email": "field@leaderslens.in",
+    "demoPassword": "Field@2026!",
+    "role": "field_strategist",
+    "roleTitle": "Senior Field Operations Strategist",
+    "department": "Zonal Field Deployment Unit",
+    "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=256&q=80",
+    "assignedConstituency": "Rayalaseema Zone (Kadapa, Kurnool, Anantapur)",
+    "clearanceLevel": "Level 2 (Operations)",
+    "permissions": {
+      "canExportReports": true,
+      "canEditStrategy": true,
+      "canManageVolunteers": true,
+      "canResolveGrievances": true,
+      "canPublishLandingPage": false,
+      "canViewConfidentialMetrics": false,
+      "canManageSystemUsers": false
+    },
+    "createdAt": "2026-08-28T18:24:07.361Z"
+  },
+  {
+    "id": "usr_media",
+    "name": "Sunita Mehra",
+    "email": "media@leaderslens.in",
+    "demoPassword": "Media@2026!",
+    "role": "media_analyst",
+    "roleTitle": "Digital Media & Sentiment Analyst",
+    "department": "Digital War Room & Narrative Intelligence",
+    "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80",
+    "assignedConstituency": "Digital & Media Grid (Statewide)",
+    "clearanceLevel": "Level 2 (Operations)",
+    "permissions": {
+      "canExportReports": true,
+      "canEditStrategy": false,
+      "canManageVolunteers": false,
+      "canResolveGrievances": false,
+      "canPublishLandingPage": true,
+      "canViewConfidentialMetrics": false,
+      "canManageSystemUsers": false
+    },
+    "createdAt": "2026-08-28T18:24:07.361Z"
+  },
+  {
+    "id": "usr_volunteer",
+    "name": "Ananya Sharma",
+    "email": "volunteer@leaderslens.in",
+    "demoPassword": "Volunteer@2026!",
+    "role": "volunteer_lead",
+    "roleTitle": "Youth & Volunteer Mobilization Lead",
+    "department": "Grassroots Mobilization Cell",
+    "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=256&q=80",
+    "assignedConstituency": "Kadapa Central & Urban Wards 1-28",
+    "clearanceLevel": "Level 3 (Field Only)",
+    "permissions": {
+      "canExportReports": false,
+      "canEditStrategy": false,
+      "canManageVolunteers": true,
+      "canResolveGrievances": true,
+      "canPublishLandingPage": false,
+      "canViewConfidentialMetrics": false,
+      "canManageSystemUsers": false
+    },
+    "createdAt": "2026-08-28T18:24:07.361Z"
+  },
+  {
+    "id": "usr_booth",
+    "name": "K. Srinivas Reddy",
+    "email": "booth@leaderslens.in",
+    "demoPassword": "Booth@2026!",
+    "role": "booth_coordinator",
+    "roleTitle": "Electoral Booth In-Charge & Panna Pramukh Lead",
+    "department": "Ward & Polling Booth Micro-Management",
+    "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=256&q=80",
+    "assignedConstituency": "Sector 4 / Booths 142 to 158 (Kadapa Urban)",
+    "clearanceLevel": "Level 3 (Field Only)",
+    "permissions": {
+      "canExportReports": false,
+      "canEditStrategy": false,
+      "canManageVolunteers": false,
+      "canResolveGrievances": true,
+      "canPublishLandingPage": false,
+      "canViewConfidentialMetrics": false,
+      "canManageSystemUsers": false
+    },
+    "createdAt": "2026-08-28T18:24:07.361Z"
+  }
+]

@@ -1,0 +1,2417 @@
+[
+  {
+    "id": "AP-PC-1",
+    "stateId": "AP",
+    "number": 1,
+    "name": "Araku",
+    "code": "ARAK-PC",
+    "reservedCategory": "ST",
+    "totalElectors": 1451418,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-2",
+    "stateId": "AP",
+    "number": 2,
+    "name": "Srikakulam",
+    "code": "SRIK-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1553860,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-3",
+    "stateId": "AP",
+    "number": 3,
+    "name": "Vizianagaram",
+    "code": "VIZI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1503920,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-4",
+    "stateId": "AP",
+    "number": 4,
+    "name": "Visakhapatnam",
+    "code": "VISA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1824900,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-5",
+    "stateId": "AP",
+    "number": 5,
+    "name": "Anakapalli",
+    "code": "ANAK-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1521400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-6",
+    "stateId": "AP",
+    "number": 6,
+    "name": "Kakinada",
+    "code": "KAKI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1561200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-7",
+    "stateId": "AP",
+    "number": 7,
+    "name": "Amalapuram",
+    "code": "AMAL-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1459400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-8",
+    "stateId": "AP",
+    "number": 8,
+    "name": "Rajahmundry",
+    "code": "RAJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1542100,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-9",
+    "stateId": "AP",
+    "number": 9,
+    "name": "Narsapuram",
+    "code": "NARS-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1461900,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-10",
+    "stateId": "AP",
+    "number": 10,
+    "name": "Eluru",
+    "code": "ELUR-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1584200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-11",
+    "stateId": "AP",
+    "number": 11,
+    "name": "Machilipatnam",
+    "code": "MACH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1512400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-12",
+    "stateId": "AP",
+    "number": 12,
+    "name": "Vijayawada",
+    "code": "VIJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1658400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-13",
+    "stateId": "AP",
+    "number": 13,
+    "name": "Guntur",
+    "code": "GUNT-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1748200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-14",
+    "stateId": "AP",
+    "number": 14,
+    "name": "Narasaraopet",
+    "code": "NARA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1689200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-15",
+    "stateId": "AP",
+    "number": 15,
+    "name": "Bapatla",
+    "code": "BAPA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1498400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-16",
+    "stateId": "AP",
+    "number": 16,
+    "name": "Ongole",
+    "code": "ONGO-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1584500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-17",
+    "stateId": "AP",
+    "number": 17,
+    "name": "Nandyal",
+    "code": "NAND-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1604500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-18",
+    "stateId": "AP",
+    "number": 18,
+    "name": "Kurnool",
+    "code": "KURN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1642100,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-19",
+    "stateId": "AP",
+    "number": 19,
+    "name": "Anantapur",
+    "code": "ANAN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1684500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-20",
+    "stateId": "AP",
+    "number": 20,
+    "name": "Hindupur",
+    "code": "HIND-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1604500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-21",
+    "stateId": "AP",
+    "number": 21,
+    "name": "Kadapa",
+    "code": "KADA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1610400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-22",
+    "stateId": "AP",
+    "number": 22,
+    "name": "Nellore",
+    "code": "NELL-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1645000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-23",
+    "stateId": "AP",
+    "number": 23,
+    "name": "Tirupati",
+    "code": "TIRU-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1634500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-24",
+    "stateId": "AP",
+    "number": 24,
+    "name": "Rajampet",
+    "code": "RAJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1598400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AP-PC-25",
+    "stateId": "AP",
+    "number": 25,
+    "name": "Chittoor",
+    "code": "CHIT-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1584200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-1",
+    "stateId": "TS",
+    "number": 1,
+    "name": "Adilabad",
+    "code": "ADIL-PC",
+    "reservedCategory": "ST",
+    "totalElectors": 1489400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-2",
+    "stateId": "TS",
+    "number": 2,
+    "name": "Peddapalle",
+    "code": "PEDD-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1542100,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-3",
+    "stateId": "TS",
+    "number": 3,
+    "name": "Karimnagar",
+    "code": "KARI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1658400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-4",
+    "stateId": "TS",
+    "number": 4,
+    "name": "Nizamabad",
+    "code": "NIZA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1584200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-5",
+    "stateId": "TS",
+    "number": 5,
+    "name": "Zahirabad",
+    "code": "ZAHI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1598400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-6",
+    "stateId": "TS",
+    "number": 6,
+    "name": "Medak",
+    "code": "MEDA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1684500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-7",
+    "stateId": "TS",
+    "number": 7,
+    "name": "Malkajgiri",
+    "code": "MALK-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 3184500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-8",
+    "stateId": "TS",
+    "number": 8,
+    "name": "Secunderabad",
+    "code": "SECU-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1984200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-9",
+    "stateId": "TS",
+    "number": 9,
+    "name": "Hyderabad",
+    "code": "HYDE-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1954200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-10",
+    "stateId": "TS",
+    "number": 10,
+    "name": "Chevella",
+    "code": "CHEV-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 2541200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-11",
+    "stateId": "TS",
+    "number": 11,
+    "name": "Mahbubnagar",
+    "code": "MAHB-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1642100,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-12",
+    "stateId": "TS",
+    "number": 12,
+    "name": "Nagarkurnool",
+    "code": "NAGA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1604500,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-13",
+    "stateId": "TS",
+    "number": 13,
+    "name": "Nalgonda",
+    "code": "NALG-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1684200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-14",
+    "stateId": "TS",
+    "number": 14,
+    "name": "Bhongir",
+    "code": "BHON-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1698400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-15",
+    "stateId": "TS",
+    "number": 15,
+    "name": "Warangal",
+    "code": "WARA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1784200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-16",
+    "stateId": "TS",
+    "number": 16,
+    "name": "Mahabubabad",
+    "code": "MAHA-PC",
+    "reservedCategory": "ST",
+    "totalElectors": 1542100,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS-PC-17",
+    "stateId": "TS",
+    "number": 17,
+    "name": "Khammam",
+    "code": "KHAM-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1658400,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AR-PC-1",
+    "stateId": "AR",
+    "number": 1,
+    "name": "Arunachal Pradesh Constituency 1",
+    "code": "ARUN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AR-PC-2",
+    "stateId": "AR",
+    "number": 2,
+    "name": "Arunachal Pradesh Constituency 2",
+    "code": "ARUN-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AS-PC-1",
+    "stateId": "AS",
+    "number": 1,
+    "name": "Assam Constituency 1",
+    "code": "ASSA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AS-PC-2",
+    "stateId": "AS",
+    "number": 2,
+    "name": "Assam Constituency 2",
+    "code": "ASSA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AS-PC-3",
+    "stateId": "AS",
+    "number": 3,
+    "name": "Assam Constituency 3",
+    "code": "ASSA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AS-PC-4",
+    "stateId": "AS",
+    "number": 4,
+    "name": "Assam Constituency 4",
+    "code": "ASSA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AS-PC-5",
+    "stateId": "AS",
+    "number": 5,
+    "name": "Assam Constituency 5",
+    "code": "ASSA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "BR-PC-1",
+    "stateId": "BR",
+    "number": 1,
+    "name": "Bihar Constituency 1",
+    "code": "BIHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "BR-PC-2",
+    "stateId": "BR",
+    "number": 2,
+    "name": "Bihar Constituency 2",
+    "code": "BIHA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "BR-PC-3",
+    "stateId": "BR",
+    "number": 3,
+    "name": "Bihar Constituency 3",
+    "code": "BIHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "BR-PC-4",
+    "stateId": "BR",
+    "number": 4,
+    "name": "Bihar Constituency 4",
+    "code": "BIHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "BR-PC-5",
+    "stateId": "BR",
+    "number": 5,
+    "name": "Bihar Constituency 5",
+    "code": "BIHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CG-PC-1",
+    "stateId": "CG",
+    "number": 1,
+    "name": "Chhattisgarh Constituency 1",
+    "code": "CHHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CG-PC-2",
+    "stateId": "CG",
+    "number": 2,
+    "name": "Chhattisgarh Constituency 2",
+    "code": "CHHA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CG-PC-3",
+    "stateId": "CG",
+    "number": 3,
+    "name": "Chhattisgarh Constituency 3",
+    "code": "CHHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CG-PC-4",
+    "stateId": "CG",
+    "number": 4,
+    "name": "Chhattisgarh Constituency 4",
+    "code": "CHHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CG-PC-5",
+    "stateId": "CG",
+    "number": 5,
+    "name": "Chhattisgarh Constituency 5",
+    "code": "CHHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GA-PC-1",
+    "stateId": "GA",
+    "number": 1,
+    "name": "Goa Constituency 1",
+    "code": "GOAC-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GA-PC-2",
+    "stateId": "GA",
+    "number": 2,
+    "name": "Goa Constituency 2",
+    "code": "GOAC-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GJ-PC-1",
+    "stateId": "GJ",
+    "number": 1,
+    "name": "Gujarat Constituency 1",
+    "code": "GUJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GJ-PC-2",
+    "stateId": "GJ",
+    "number": 2,
+    "name": "Gujarat Constituency 2",
+    "code": "GUJA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GJ-PC-3",
+    "stateId": "GJ",
+    "number": 3,
+    "name": "Gujarat Constituency 3",
+    "code": "GUJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GJ-PC-4",
+    "stateId": "GJ",
+    "number": 4,
+    "name": "Gujarat Constituency 4",
+    "code": "GUJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GJ-PC-5",
+    "stateId": "GJ",
+    "number": 5,
+    "name": "Gujarat Constituency 5",
+    "code": "GUJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HR-PC-1",
+    "stateId": "HR",
+    "number": 1,
+    "name": "Haryana Constituency 1",
+    "code": "HARY-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HR-PC-2",
+    "stateId": "HR",
+    "number": 2,
+    "name": "Haryana Constituency 2",
+    "code": "HARY-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HR-PC-3",
+    "stateId": "HR",
+    "number": 3,
+    "name": "Haryana Constituency 3",
+    "code": "HARY-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HR-PC-4",
+    "stateId": "HR",
+    "number": 4,
+    "name": "Haryana Constituency 4",
+    "code": "HARY-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HR-PC-5",
+    "stateId": "HR",
+    "number": 5,
+    "name": "Haryana Constituency 5",
+    "code": "HARY-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HP-PC-1",
+    "stateId": "HP",
+    "number": 1,
+    "name": "Himachal Pradesh Constituency 1",
+    "code": "HIMA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HP-PC-2",
+    "stateId": "HP",
+    "number": 2,
+    "name": "Himachal Pradesh Constituency 2",
+    "code": "HIMA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HP-PC-3",
+    "stateId": "HP",
+    "number": 3,
+    "name": "Himachal Pradesh Constituency 3",
+    "code": "HIMA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HP-PC-4",
+    "stateId": "HP",
+    "number": 4,
+    "name": "Himachal Pradesh Constituency 4",
+    "code": "HIMA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JH-PC-1",
+    "stateId": "JH",
+    "number": 1,
+    "name": "Jharkhand Constituency 1",
+    "code": "JHAR-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JH-PC-2",
+    "stateId": "JH",
+    "number": 2,
+    "name": "Jharkhand Constituency 2",
+    "code": "JHAR-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JH-PC-3",
+    "stateId": "JH",
+    "number": 3,
+    "name": "Jharkhand Constituency 3",
+    "code": "JHAR-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JH-PC-4",
+    "stateId": "JH",
+    "number": 4,
+    "name": "Jharkhand Constituency 4",
+    "code": "JHAR-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JH-PC-5",
+    "stateId": "JH",
+    "number": 5,
+    "name": "Jharkhand Constituency 5",
+    "code": "JHAR-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KA-PC-1",
+    "stateId": "KA",
+    "number": 1,
+    "name": "Karnataka Constituency 1",
+    "code": "KARN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KA-PC-2",
+    "stateId": "KA",
+    "number": 2,
+    "name": "Karnataka Constituency 2",
+    "code": "KARN-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KA-PC-3",
+    "stateId": "KA",
+    "number": 3,
+    "name": "Karnataka Constituency 3",
+    "code": "KARN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KA-PC-4",
+    "stateId": "KA",
+    "number": 4,
+    "name": "Karnataka Constituency 4",
+    "code": "KARN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KA-PC-5",
+    "stateId": "KA",
+    "number": 5,
+    "name": "Karnataka Constituency 5",
+    "code": "KARN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KL-PC-1",
+    "stateId": "KL",
+    "number": 1,
+    "name": "Kerala Constituency 1",
+    "code": "KERA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KL-PC-2",
+    "stateId": "KL",
+    "number": 2,
+    "name": "Kerala Constituency 2",
+    "code": "KERA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KL-PC-3",
+    "stateId": "KL",
+    "number": 3,
+    "name": "Kerala Constituency 3",
+    "code": "KERA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KL-PC-4",
+    "stateId": "KL",
+    "number": 4,
+    "name": "Kerala Constituency 4",
+    "code": "KERA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KL-PC-5",
+    "stateId": "KL",
+    "number": 5,
+    "name": "Kerala Constituency 5",
+    "code": "KERA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MP-PC-1",
+    "stateId": "MP",
+    "number": 1,
+    "name": "Madhya Pradesh Constituency 1",
+    "code": "MADH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MP-PC-2",
+    "stateId": "MP",
+    "number": 2,
+    "name": "Madhya Pradesh Constituency 2",
+    "code": "MADH-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MP-PC-3",
+    "stateId": "MP",
+    "number": 3,
+    "name": "Madhya Pradesh Constituency 3",
+    "code": "MADH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MP-PC-4",
+    "stateId": "MP",
+    "number": 4,
+    "name": "Madhya Pradesh Constituency 4",
+    "code": "MADH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MP-PC-5",
+    "stateId": "MP",
+    "number": 5,
+    "name": "Madhya Pradesh Constituency 5",
+    "code": "MADH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MH-PC-1",
+    "stateId": "MH",
+    "number": 1,
+    "name": "Maharashtra Constituency 1",
+    "code": "MAHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MH-PC-2",
+    "stateId": "MH",
+    "number": 2,
+    "name": "Maharashtra Constituency 2",
+    "code": "MAHA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MH-PC-3",
+    "stateId": "MH",
+    "number": 3,
+    "name": "Maharashtra Constituency 3",
+    "code": "MAHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MH-PC-4",
+    "stateId": "MH",
+    "number": 4,
+    "name": "Maharashtra Constituency 4",
+    "code": "MAHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MH-PC-5",
+    "stateId": "MH",
+    "number": 5,
+    "name": "Maharashtra Constituency 5",
+    "code": "MAHA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MN-PC-1",
+    "stateId": "MN",
+    "number": 1,
+    "name": "Manipur Constituency 1",
+    "code": "MANI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MN-PC-2",
+    "stateId": "MN",
+    "number": 2,
+    "name": "Manipur Constituency 2",
+    "code": "MANI-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "ML-PC-1",
+    "stateId": "ML",
+    "number": 1,
+    "name": "Meghalaya Constituency 1",
+    "code": "MEGH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "ML-PC-2",
+    "stateId": "ML",
+    "number": 2,
+    "name": "Meghalaya Constituency 2",
+    "code": "MEGH-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MZ-PC-1",
+    "stateId": "MZ",
+    "number": 1,
+    "name": "Mizoram Constituency 1",
+    "code": "MIZO-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "NL-PC-1",
+    "stateId": "NL",
+    "number": 1,
+    "name": "Nagaland Constituency 1",
+    "code": "NAGA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "OD-PC-1",
+    "stateId": "OD",
+    "number": 1,
+    "name": "Odisha Constituency 1",
+    "code": "ODIS-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "OD-PC-2",
+    "stateId": "OD",
+    "number": 2,
+    "name": "Odisha Constituency 2",
+    "code": "ODIS-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "OD-PC-3",
+    "stateId": "OD",
+    "number": 3,
+    "name": "Odisha Constituency 3",
+    "code": "ODIS-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "OD-PC-4",
+    "stateId": "OD",
+    "number": 4,
+    "name": "Odisha Constituency 4",
+    "code": "ODIS-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "OD-PC-5",
+    "stateId": "OD",
+    "number": 5,
+    "name": "Odisha Constituency 5",
+    "code": "ODIS-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PB-PC-1",
+    "stateId": "PB",
+    "number": 1,
+    "name": "Punjab Constituency 1",
+    "code": "PUNJ-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PB-PC-2",
+    "stateId": "PB",
+    "number": 2,
+    "name": "Punjab Constituency 2",
+    "code": "PUNJ-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PB-PC-3",
+    "stateId": "PB",
+    "number": 3,
+    "name": "Punjab Constituency 3",
+    "code": "PUNJ-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PB-PC-4",
+    "stateId": "PB",
+    "number": 4,
+    "name": "Punjab Constituency 4",
+    "code": "PUNJ-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PB-PC-5",
+    "stateId": "PB",
+    "number": 5,
+    "name": "Punjab Constituency 5",
+    "code": "PUNJ-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "RJ-PC-1",
+    "stateId": "RJ",
+    "number": 1,
+    "name": "Rajasthan Constituency 1",
+    "code": "RAJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "RJ-PC-2",
+    "stateId": "RJ",
+    "number": 2,
+    "name": "Rajasthan Constituency 2",
+    "code": "RAJA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "RJ-PC-3",
+    "stateId": "RJ",
+    "number": 3,
+    "name": "Rajasthan Constituency 3",
+    "code": "RAJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "RJ-PC-4",
+    "stateId": "RJ",
+    "number": 4,
+    "name": "Rajasthan Constituency 4",
+    "code": "RAJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "RJ-PC-5",
+    "stateId": "RJ",
+    "number": 5,
+    "name": "Rajasthan Constituency 5",
+    "code": "RAJA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "SK-PC-1",
+    "stateId": "SK",
+    "number": 1,
+    "name": "Sikkim Constituency 1",
+    "code": "SIKK-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TN-PC-1",
+    "stateId": "TN",
+    "number": 1,
+    "name": "Tamil Nadu Constituency 1",
+    "code": "TAMI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TN-PC-2",
+    "stateId": "TN",
+    "number": 2,
+    "name": "Tamil Nadu Constituency 2",
+    "code": "TAMI-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TN-PC-3",
+    "stateId": "TN",
+    "number": 3,
+    "name": "Tamil Nadu Constituency 3",
+    "code": "TAMI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TN-PC-4",
+    "stateId": "TN",
+    "number": 4,
+    "name": "Tamil Nadu Constituency 4",
+    "code": "TAMI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TN-PC-5",
+    "stateId": "TN",
+    "number": 5,
+    "name": "Tamil Nadu Constituency 5",
+    "code": "TAMI-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TR-PC-1",
+    "stateId": "TR",
+    "number": 1,
+    "name": "Tripura Constituency 1",
+    "code": "TRIP-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TR-PC-2",
+    "stateId": "TR",
+    "number": 2,
+    "name": "Tripura Constituency 2",
+    "code": "TRIP-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UP-PC-1",
+    "stateId": "UP",
+    "number": 1,
+    "name": "Uttar Pradesh Constituency 1",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UP-PC-2",
+    "stateId": "UP",
+    "number": 2,
+    "name": "Uttar Pradesh Constituency 2",
+    "code": "UTTA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UP-PC-3",
+    "stateId": "UP",
+    "number": 3,
+    "name": "Uttar Pradesh Constituency 3",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UP-PC-4",
+    "stateId": "UP",
+    "number": 4,
+    "name": "Uttar Pradesh Constituency 4",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UP-PC-5",
+    "stateId": "UP",
+    "number": 5,
+    "name": "Uttar Pradesh Constituency 5",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UK-PC-1",
+    "stateId": "UK",
+    "number": 1,
+    "name": "Uttarakhand Constituency 1",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UK-PC-2",
+    "stateId": "UK",
+    "number": 2,
+    "name": "Uttarakhand Constituency 2",
+    "code": "UTTA-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UK-PC-3",
+    "stateId": "UK",
+    "number": 3,
+    "name": "Uttarakhand Constituency 3",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UK-PC-4",
+    "stateId": "UK",
+    "number": 4,
+    "name": "Uttarakhand Constituency 4",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UK-PC-5",
+    "stateId": "UK",
+    "number": 5,
+    "name": "Uttarakhand Constituency 5",
+    "code": "UTTA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "WB-PC-1",
+    "stateId": "WB",
+    "number": 1,
+    "name": "West Bengal Constituency 1",
+    "code": "WEST-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "WB-PC-2",
+    "stateId": "WB",
+    "number": 2,
+    "name": "West Bengal Constituency 2",
+    "code": "WEST-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "WB-PC-3",
+    "stateId": "WB",
+    "number": 3,
+    "name": "West Bengal Constituency 3",
+    "code": "WEST-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "WB-PC-4",
+    "stateId": "WB",
+    "number": 4,
+    "name": "West Bengal Constituency 4",
+    "code": "WEST-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "WB-PC-5",
+    "stateId": "WB",
+    "number": 5,
+    "name": "West Bengal Constituency 5",
+    "code": "WEST-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AN-PC-1",
+    "stateId": "AN",
+    "number": 1,
+    "name": "Andaman and Nicobar Islands Constituency 1",
+    "code": "ANDA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CH-PC-1",
+    "stateId": "CH",
+    "number": 1,
+    "name": "Chandigarh Constituency 1",
+    "code": "CHAN-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DN-PC-1",
+    "stateId": "DN",
+    "number": 1,
+    "name": "Dadra and Nagar Haveli and Daman and Diu Constituency 1",
+    "code": "DADR-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DN-PC-2",
+    "stateId": "DN",
+    "number": 2,
+    "name": "Dadra and Nagar Haveli and Daman and Diu Constituency 2",
+    "code": "DADR-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DL-PC-1",
+    "stateId": "DL",
+    "number": 1,
+    "name": "Delhi (NCT) Constituency 1",
+    "code": "DELH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DL-PC-2",
+    "stateId": "DL",
+    "number": 2,
+    "name": "Delhi (NCT) Constituency 2",
+    "code": "DELH-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DL-PC-3",
+    "stateId": "DL",
+    "number": 3,
+    "name": "Delhi (NCT) Constituency 3",
+    "code": "DELH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DL-PC-4",
+    "stateId": "DL",
+    "number": 4,
+    "name": "Delhi (NCT) Constituency 4",
+    "code": "DELH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DL-PC-5",
+    "stateId": "DL",
+    "number": 5,
+    "name": "Delhi (NCT) Constituency 5",
+    "code": "DELH-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JK-PC-1",
+    "stateId": "JK",
+    "number": 1,
+    "name": "Jammu and Kashmir Constituency 1",
+    "code": "JAMM-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JK-PC-2",
+    "stateId": "JK",
+    "number": 2,
+    "name": "Jammu and Kashmir Constituency 2",
+    "code": "JAMM-PC",
+    "reservedCategory": "SC",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JK-PC-3",
+    "stateId": "JK",
+    "number": 3,
+    "name": "Jammu and Kashmir Constituency 3",
+    "code": "JAMM-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JK-PC-4",
+    "stateId": "JK",
+    "number": 4,
+    "name": "Jammu and Kashmir Constituency 4",
+    "code": "JAMM-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JK-PC-5",
+    "stateId": "JK",
+    "number": 5,
+    "name": "Jammu and Kashmir Constituency 5",
+    "code": "JAMM-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "LA-PC-1",
+    "stateId": "LA",
+    "number": 1,
+    "name": "Ladakh Constituency 1",
+    "code": "LADA-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "LD-PC-1",
+    "stateId": "LD",
+    "number": 1,
+    "name": "Lakshadweep Constituency 1",
+    "code": "LAKS-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PY-PC-1",
+    "stateId": "PY",
+    "number": 1,
+    "name": "Puducherry Constituency 1",
+    "code": "PUDU-PC",
+    "reservedCategory": "GEN",
+    "totalElectors": 1500000,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  }
+]
