@@ -11,7 +11,9 @@ import {
   MessageSquare,
   Users2,
   Lock,
-  ChevronDown
+  ChevronDown,
+  LogOut,
+  UserCheck
 } from "lucide-react";
 
 interface NavbarProps {
@@ -22,6 +24,7 @@ interface NavbarProps {
   currentProfile: UserProfile;
   onOpenRoleModal?: () => void;
   onGoHome?: () => void;
+  onSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -31,8 +34,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onResetToSelect,
   currentProfile,
   onOpenRoleModal,
-  onGoHome
+  onGoHome,
+  onSignOut
 }) => {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
   return (
     <header data-testid="global-navbar" className="sticky top-0 z-40 w-full bg-[#0B1A2C]/95 backdrop-blur-xl border-b border-[#D4A24C]/20 transition-all no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -145,26 +151,79 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[11px] text-[#B9AF95]">· {currentProfile.assignedConstituency.split("(")[0]}</span>
             </div>
 
-            <div
-              onClick={() => onProductChange("governance")}
-              className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 bg-[#142B45] border border-[#D4A24C]/25 rounded-lg hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
-              title="Switch active user role"
-            >
-              <img
-                src={currentProfile.avatar}
-                alt={currentProfile.name}
-                className="w-6 h-6 rounded-full object-cover border border-[#D4A24C]/40"
-              />
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-[#F5EFE0] leading-none">
-                  {currentProfile.name.split(" ")[0]}
-                </span>
-                <span className="text-[9px] uppercase tracking-wider font-semibold text-[#D4A24C] mt-0.5">
-                  {currentProfile.role.replace("_", " ")}
-                </span>
+            {/* User Profile Pill & Dropdown */}
+            <div className="relative">
+              <div
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 bg-[#142B45] border border-[#D4A24C]/25 rounded-lg hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
+                title="User profile & signout menu"
+              >
+                <img
+                  src={currentProfile.avatar}
+                  alt={currentProfile.name}
+                  className="w-6 h-6 rounded-full object-cover border border-[#D4A24C]/40"
+                />
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-bold text-[#F5EFE0] leading-none">
+                    {currentProfile.name.split(" ")[0]}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-wider font-semibold text-[#D4A24C] mt-0.5">
+                    {currentProfile.role.replace("_", " ")}
+                  </span>
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-[#D4A24C] transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
               </div>
-              <ChevronDown className="w-3.5 h-3.5 text-[#D4A24C]" />
+
+              {/* User Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0D2137] border border-[#D4A24C]/30 shadow-2xl p-2 z-50 animate-fadeIn">
+                  <div className="p-2.5 border-b border-[#1E3A5A] mb-1">
+                    <div className="text-xs font-bold text-[#F5EFE0]">{currentProfile.name}</div>
+                    <div className="text-[11px] text-[#B9AF95] truncate">{currentProfile.email}</div>
+                    <div className="mt-1.5 inline-flex items-center text-[10px] font-semibold text-[#D4A24C] bg-[#071322] px-2 py-0.5 rounded border border-[#D4A24C]/30">
+                      <Shield className="w-3 h-3 mr-1 text-[#D4A24C]" />
+                      {currentProfile.clearanceLevel}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      onProductChange("governance");
+                    }}
+                    className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left"
+                  >
+                    <UserCheck className="w-4 h-4 text-[#D4A24C]" />
+                    <span>Switch Role / Team Roster</span>
+                  </button>
+
+                  {onSignOut && (
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        onSignOut();
+                      }}
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 rounded-lg transition-colors text-left mt-1 border-t border-[#1E3A5A]"
+                    >
+                      <LogOut className="w-4 h-4 text-rose-400" />
+                      <span>Sign Out Session</span>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Quick Direct Sign Out Button */}
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                title="Sign Out"
+                className="hidden sm:inline-flex items-center justify-center p-2 rounded-lg bg-[#0F2338] border border-rose-500/30 text-rose-400 hover:text-white hover:bg-rose-900/40 hover:border-rose-500/60 transition-all cursor-pointer text-xs"
+              >
+                <LogOut className="w-4 h-4 mr-1" />
+                <span className="font-semibold text-[11px]">Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -218,6 +277,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Team & RBAC
           </button>
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="whitespace-nowrap px-2.5 py-1 rounded font-semibold text-rose-400 bg-rose-950/40 border border-rose-500/30"
+            >
+              Sign Out
+            </button>
+          )}
         </div>
       </div>
     </header>

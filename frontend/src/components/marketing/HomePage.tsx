@@ -8,6 +8,7 @@ import { StateInfo, AssemblyInfo } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { MOCK_STATES, MOCK_ASSEMBLIES, MOCK_CANDIDATES } from "../../services/mockData";
 import { formatLakhs } from "../../calculations";
+import { Footer } from "../layout/Footer";
 
 interface HomePageProps {
   onEnter: () => void;
@@ -359,6 +360,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
           </button>
         </div>
       </section>
+
+      {/* Matching Platform Footer */}
+      <Footer />
     </div>
   );
 };

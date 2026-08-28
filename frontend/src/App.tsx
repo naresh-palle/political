@@ -86,6 +86,10 @@ export function App() {
           onResetToSelect={handleResetToSelect}
           currentProfile={currentProfile}
           onGoHome={() => setRoute("home")}
+          onSignOut={() => {
+            setRoute("home");
+            setViewState("select");
+          }}
         />
       )}
 
