@@ -6,9 +6,10 @@ import { ArrowRight, Sparkles, ShieldCheck, Mail, KeyRound } from "lucide-react"
 
 interface AuthScreenProps {
   onAuthenticated: (profile: UserProfile) => void;
+  onBack?: () => void;
 }
 
-export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
+export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack }) => {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [selectedRole, setSelectedRole] = useState<string>(USER_PROFILES[0].id);
   const [email, setEmail] = useState<string>("");
@@ -27,8 +28,31 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated }) => {
   };
 
   return (
-    <div className="hero-dark min-h-screen flex items-center justify-center px-4 py-14">
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center animate-rise">
+    <div className="hero-dark min-h-screen flex flex-col justify-between px-4 py-8 sm:py-12">
+      {/* Top back navigation bar */}
+      <div className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6">
+        <button
+          type="button"
+          onClick={onBack}
+          data-testid="auth-back-btn"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] px-3.5 py-2 rounded-lg bg-[#0F2338] border border-[#D4A24C]/30 hover:border-[#D4A24C]/80 transition-all cursor-pointer shadow-sm"
+        >
+          <span>← Back to Overview / Home</span>
+        </button>
+
+        <div
+          onClick={onBack}
+          className="flex items-center gap-2.5 cursor-pointer group"
+          title="Return to Home"
+        >
+          <LeadersLogo size={30} />
+          <span className="font-display text-[18px] cream-text leading-none group-hover:text-[#D4A24C] transition-colors">
+            Leader's <span className="italic gold-text">Lens</span>
+          </span>
+        </div>
+      </div>
+
+      <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center animate-rise flex-1">
         {/* Editorial left */}
         <div className="lg:col-span-3 space-y-7">
           <div className="flex items-center gap-3">

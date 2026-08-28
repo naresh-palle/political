@@ -71,7 +71,10 @@ export function App() {
       {route === "home" ? (
         <HomePage onEnter={() => setRoute("auth")} />
       ) : route === "auth" ? (
-        <AuthScreen onAuthenticated={(p) => { setCurrentProfile(p); setRoute("app"); }} />
+        <AuthScreen
+          onAuthenticated={(p) => { setCurrentProfile(p); setRoute("app"); }}
+          onBack={() => setRoute("home")}
+        />
       ) : (
         <>
       {/* Top Global App Shell */}
@@ -82,6 +85,7 @@ export function App() {
           isAuditView={viewState === "audit"}
           onResetToSelect={handleResetToSelect}
           currentProfile={currentProfile}
+          onGoHome={() => setRoute("home")}
         />
       )}
 
