@@ -330,6 +330,147 @@ async def register_user(req: RegisterRequest):
         logger.error(f"User registration error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ----------------- CITIZEN GRIEVANCES (MONGODB) -----------------
+
+class GrievanceCreate(BaseModel):
+    citizenName: str
+    citizenPhone: str
+    wardNumber: str
+    boothNumber: str = "Booth Unassigned"
+    category: str
+    subject: str
+    description: str
+    urgency: str = "Normal"
+    receivedVia: str = "Web Portal"
+
+class GrievanceUpdate(BaseModel):
+    status: Optional[str] = None
+    assignedOfficer: Optional[str] = None
+    notes: Optional[List[str]] = None
+
+@api_router.get("/grievances")
+async def get_grievances(status: Optional[str] = None, urgency: Optional[str] = None, q: Optional[str] = None):
+    try:
+        query = {}
+        if status:
+            query["status"] = status
+        if urgency:
+            query["urgency"] = urgency
+        if q:
+            query["$or"] = [
+                {"subject": {"$regex": q, "$options": "i"}},
+                {"citizenName": {"$regex": q, "$options": "i"}},
+                {"ticketNumber": {"$regex": q, "$options": "i"}},
+                {"wardNumber": {"$regex": q, "$options": "i"}}
+            ]
+        items = await db.grievances.find(query, {"_id": 0}).sort("submittedDate", -1).to_list(200)
+        if items:
+            return items
+    except Exception as e:
+        logger.warning(f"MongoDB get_grievances: {e}")
+    
+    fallback = load_json_fallback("grievances.json")
+    if status:
+        fallback = [g for g in fallback if g.get("status") == status]
+    if urgency:
+        fallback = [g for g in fallback if g.get("urgency") == urgency]
+    if q:
+        q_l = q.lower()
+        fallback = [g for g in fallback if q_l in g.get("subject", "").lower() or q_l in g.get("citizenName", "").lower() or q_l in g.get("ticketNumber", "").lower()]
+    return fallback
+
+@api_router.post("/grievances")
+async def create_grievance(item: GrievanceCreate):
+    new_id = f"grv_{uuid.uuid4().hex[:8]}"
+    ticket_num = f"GRV-KDP-2026-{uuid.uuid4().hex[:4].upper()}"
+    doc = {
+        "id": new_id,
+        "ticketNumber": ticket_num,
+        "citizenName": item.citizenName,
+        "citizenPhone": item.citizenPhone,
+        "wardNumber": item.wardNumber,
+        "boothNumber": item.boothNumber,
+        "category": item.category,
+        "subject": item.subject,
+        "description": item.description,
+        "urgency": item.urgency,
+        "status": "Open",
+        "receivedVia": item.receivedVia,
+        "submittedDate": datetime.now(timezone.utc).isoformat(),
+        "slaHoursRemaining": 48 if item.urgency == "Normal" else 24 if item.urgency == "High" else 8,
+        "assignedOfficer": "Unassigned",
+        "notes": [f"Ticket registered via {item.receivedVia} at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"]
+    }
+    try:
+        await db.grievances.insert_one(doc)
+        doc.pop("_id", None)
+    except Exception as e:
+        logger.warning(f"MongoDB insert grievance: {e}")
+    return doc
+
+@api_router.patch("/grievances/{ticket_id}")
+async def update_grievance(ticket_id: str, patch: GrievanceUpdate):
+    updates = {}
+    if patch.status is not None:
+        updates["status"] = patch.status
+    if patch.assignedOfficer is not None:
+        updates["assignedOfficer"] = patch.assignedOfficer
+    if patch.notes is not None:
+        updates["notes"] = patch.notes
+    try:
+        await db.grievances.update_one({"$or": [{"id": ticket_id}, {"ticketNumber": ticket_id}]}, {"$set": updates})
+        updated = await db.grievances.find_one({"$or": [{"id": ticket_id}, {"ticketNumber": ticket_id}]}, {"_id": 0})
+        if updated:
+            return updated
+    except Exception as e:
+        logger.warning(f"MongoDB update grievance: {e}")
+    return {"status": "success", "ticketId": ticket_id, "updated": updates}
+
+# ----------------- VOLUNTEER SQUADS & TASKS (MONGODB) -----------------
+
+@api_router.get("/volunteers/squads")
+async def get_volunteer_squads():
+    try:
+        squads = await db.volunteer_squads.find({}, {"_id": 0}).to_list(100)
+        if squads:
+            return squads
+    except Exception as e:
+        logger.warning(f"MongoDB get squads: {e}")
+    return load_json_fallback("volunteer_squads.json")
+
+@api_router.get("/volunteers/tasks")
+async def get_volunteer_tasks():
+    try:
+        tasks = await db.volunteer_tasks.find({}, {"_id": 0}).to_list(100)
+        if tasks:
+            return tasks
+    except Exception as e:
+        logger.warning(f"MongoDB get tasks: {e}")
+    return load_json_fallback("volunteer_tasks.json")
+
+# ----------------- CAMPAIGN WEBSITE CONFIG (MONGODB) -----------------
+
+@api_router.get("/landing-page/config")
+async def get_landing_config():
+    try:
+        config = await db.campaign_pages.find_one({"id": "master_config"}, {"_id": 0})
+        if config:
+            return config
+    except Exception as e:
+        logger.warning(f"MongoDB get config: {e}")
+    return load_json_fallback("campaign_config.json")
+
+@api_router.post("/landing-page/config")
+async def save_landing_config(payload: dict):
+    payload["id"] = "master_config"
+    payload["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    try:
+        await db.campaign_pages.update_one({"id": "master_config"}, {"$set": payload}, upsert=True)
+        payload.pop("_id", None)
+    except Exception as e:
+        logger.warning(f"MongoDB save config: {e}")
+    return payload
+
 # ----------------- SEED & IDEMPOTENT SYNC ENDPOINT -----------------
 
 @api_router.post("/geography/seed")
@@ -338,11 +479,16 @@ async def trigger_geography_seed():
     parliaments = load_json_fallback("parliaments.json")
     assemblies = load_json_fallback("assemblies.json")
     users = load_json_fallback("users.json")
+    grievances = load_json_fallback("grievances.json")
+    squads = load_json_fallback("volunteer_squads.json")
+    tasks = load_json_fallback("volunteer_tasks.json")
+    campaign_config = load_json_fallback("campaign_config.json")
 
     imported_states = 0
     imported_pcs = 0
     imported_acs = 0
     imported_users = 0
+    imported_grievances = 0
 
     try:
         await db.countries.create_index("code", unique=True)
@@ -351,6 +497,7 @@ async def trigger_geography_seed():
         await db.assembly_constituencies.create_index([("stateId", 1), ("number", 1)], unique=True)
         await db.assembly_constituencies.create_index([("parliamentConstituencyId", 1)])
         await db.users.create_index("email", unique=True)
+        await db.grievances.create_index("ticketNumber", unique=True)
 
         await db.countries.update_one({"id": "IND"}, {"$set": {"id": "IND", "name": "India", "code": "IND"}}, upsert=True)
 
@@ -370,13 +517,28 @@ async def trigger_geography_seed():
             await db.users.update_one({"email": u["email"]}, {"$set": u}, upsert=True)
             imported_users += 1
 
+        for g in grievances:
+            await db.grievances.update_one({"id": g["id"]}, {"$set": g}, upsert=True)
+            imported_grievances += 1
+
+        for sq in squads:
+            await db.volunteer_squads.update_one({"id": sq["id"]}, {"$set": sq}, upsert=True)
+
+        for tk in tasks:
+            await db.volunteer_tasks.update_one({"id": tk["id"]}, {"$set": tk}, upsert=True)
+
+        if campaign_config:
+            campaign_config["id"] = "master_config"
+            await db.campaign_pages.update_one({"id": "master_config"}, {"$set": campaign_config}, upsert=True)
+
         return {
             "status": "success",
-            "message": "Idempotent MongoDB Geography & User Seed Completed Successfully",
+            "message": "Full MongoDB Master Data & User State Seed Completed Successfully",
             "statesImported": imported_states,
             "parliamentConstituenciesImported": imported_pcs,
             "assemblyConstituenciesImported": imported_acs,
             "usersImported": imported_users,
+            "grievancesImported": imported_grievances,
             "duplicates": 0,
             "invalidRelationships": 0
         }
@@ -401,7 +563,7 @@ async def startup_db_seed():
         count = await db.states.count_documents({})
         user_count = await db.users.count_documents({})
         if count == 0 or user_count == 0:
-            logger.info("States or Users collection empty in MongoDB, executing auto-seed...")
+            logger.info("MongoDB collections empty, executing comprehensive auto-seed...")
             await trigger_geography_seed()
     except Exception as e:
         logger.warning(f"Startup MongoDB seed notice: {e}")

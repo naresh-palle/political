@@ -1,0 +1,84 @@
+[
+  {
+    "id": "grv-101",
+    "ticketNumber": "GRV-KDP-2026-0891",
+    "citizenName": "V. Ramana Murthy",
+    "citizenPhone": "+91 98480 12345",
+    "wardNumber": "Ward 14 (Chinna Chowk)",
+    "boothNumber": "Booth 148",
+    "category": "Water Supply",
+    "subject": "Contaminated municipal pipeline water supply in Sector 3",
+    "description": "Pipeline burst near the local temple causing muddy water in domestic lines for 4 days.",
+    "urgency": "Emergency",
+    "status": "In_Progress",
+    "receivedVia": "WhatsApp",
+    "submittedDate": "2026-08-27T09:30:00Z",
+    "slaHoursRemaining": 6,
+    "assignedOfficer": "K. Srinivas Reddy (Booth Coordinator)",
+    "notes": [
+      "Ward supervisor dispatched with repair crew at 11:00 AM.",
+      "Excavation completed, replacement pipe being fitted."
+    ]
+  },
+  {
+    "id": "grv-102",
+    "ticketNumber": "GRV-KDP-2026-0892",
+    "citizenName": "Smt. Lakshmi Devi",
+    "citizenPhone": "+91 94401 56789",
+    "wardNumber": "Ward 08 (Nagarajupalle)",
+    "boothNumber": "Booth 82",
+    "category": "Welfare Pension",
+    "subject": "Old Age Pension DBT disbursal pending for July-August",
+    "description": "Biometric verification failed at local secretarial kiosk, physical pension not received.",
+    "urgency": "High",
+    "status": "Assigned",
+    "receivedVia": "Janata Darbar",
+    "submittedDate": "2026-08-26T14:15:00Z",
+    "slaHoursRemaining": 18,
+    "assignedOfficer": "Ananya Sharma (Volunteer Lead)",
+    "notes": [
+      "Forwarded to Mandal Revenue Officer with manual override affidavit."
+    ]
+  },
+  {
+    "id": "grv-103",
+    "ticketNumber": "GRV-KDP-2026-0888",
+    "citizenName": "M. Chenna Kesavulu",
+    "citizenPhone": "+91 99890 23456",
+    "wardNumber": "Ward 22 (Rami Reddy Nagar)",
+    "boothNumber": "Booth 154",
+    "category": "Roads & Transit",
+    "subject": "Pothole cluster on Bypass connecting Trunk Road",
+    "description": "Multiple accidents occurring at the blind turn during night hours due to unpaved potholes.",
+    "urgency": "High",
+    "status": "Resolved",
+    "receivedVia": "Field Worker App",
+    "submittedDate": "2026-08-24T11:00:00Z",
+    "slaHoursRemaining": 0,
+    "assignedOfficer": "Rajesh Goud (Field Strategist)",
+    "notes": [
+      "Pothole patching completed by municipal asphalt team on Aug 25.",
+      "Citizen confirmed satisfaction via tele-callback."
+    ]
+  },
+  {
+    "id": "grv-104",
+    "ticketNumber": "GRV-KDP-2026-0895",
+    "citizenName": "Dr. S. K. Basha",
+    "citizenPhone": "+91 97012 34567",
+    "wardNumber": "Ward 03 (Old Bustand Area)",
+    "boothNumber": "Booth 31",
+    "category": "Sanitation",
+    "subject": "Commercial market garbage accumulation near Primary Health Centre",
+    "description": "Waste truck skipping morning clearing schedule for the past 3 days.",
+    "urgency": "Normal",
+    "status": "Open",
+    "receivedVia": "Web Portal",
+    "submittedDate": "2026-08-28T08:00:00Z",
+    "slaHoursRemaining": 32,
+    "assignedOfficer": "Unassigned",
+    "notes": [
+      "Auto-routed to Sanitary Inspector Ward 03."
+    ]
+  }
+]

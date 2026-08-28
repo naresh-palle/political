@@ -260,5 +260,101 @@ export const politicalApiService = {
     }
     const { USER_PROFILES } = await import("./mockData");
     return USER_PROFILES;
+  },
+
+  async getGrievances(params?: { status?: string; urgency?: string; q?: string }): Promise<any[]> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.status) query.append("status", params.status);
+      if (params?.urgency) query.append("urgency", params.urgency);
+      if (params?.q) query.append("q", params.q);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/grievances?${query.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    const { MOCK_GRIEVANCES } = await import("./mockData");
+    return MOCK_GRIEVANCES;
+  },
+
+  async createGrievance(payload: any): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/grievances`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    return {
+      ...payload,
+      id: `grv_${Date.now()}`,
+      ticketNumber: `GRV-KDP-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      status: "Open",
+      submittedDate: new Date().toISOString(),
+      slaHoursRemaining: 48,
+      notes: ["Created in local offline state."]
+    };
+  },
+
+  async getVolunteerSquads(): Promise<any[]> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/volunteers/squads`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    const { MOCK_VOLUNTEER_SQUADS } = await import("./mockData");
+    return MOCK_VOLUNTEER_SQUADS;
+  },
+
+  async getVolunteerTasks(): Promise<any[]> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/volunteers/tasks`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    const { MOCK_VOLUNTEER_TASKS } = await import("./mockData");
+    return MOCK_VOLUNTEER_TASKS;
+  },
+
+  async getCampaignLandingConfig(): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/landing-page/config`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.candidateName) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    const { DEFAULT_CAMPAIGN_CONFIG } = await import("./mockData");
+    return DEFAULT_CAMPAIGN_CONFIG;
+  },
+
+  async saveCampaignLandingConfig(config: any): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/landing-page/config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    return config;
   }
 };
