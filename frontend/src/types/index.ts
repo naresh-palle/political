@@ -1,13 +1,15 @@
-﻿export type ConfidenceLevel = "Verified" | "Estimated" | "Manual" | "Derived" | "Live" | "Mixed";
+export type ConfidenceLevel = "Verified" | "Estimated" | "Manual" | "Derived" | "Live" | "Mixed";
 
 export type PlatformType = "facebook" | "instagram" | "youtube" | "x";
 
 export type UserRole = 
+  | "super_admin"
   | "campaign_director" 
   | "field_strategist" 
   | "media_analyst" 
   | "candidate_executive" 
-  | "volunteer_lead";
+  | "volunteer_lead"
+  | "booth_coordinator";
 
 export interface UserProfile {
   id: string;
@@ -15,9 +17,11 @@ export interface UserProfile {
   email: string;
   role: UserRole;
   roleTitle: string;
+  department?: string;
+  demoPassword?: string;
   avatar: string;
   assignedConstituency: string;
-  clearanceLevel: "Level 1 (Full Access)" | "Level 2 (Operations)" | "Level 3 (Field Only)" | "Executive Briefing Only";
+  clearanceLevel: "Tier 0 (Master Admin Clearance)" | "Level 1 (Full Access)" | "Level 2 (Operations)" | "Level 3 (Field Only)" | "Executive Briefing Only";
   permissions: {
     canExportReports: boolean;
     canEditStrategy: boolean;
@@ -25,6 +29,7 @@ export interface UserProfile {
     canResolveGrievances: boolean;
     canPublishLandingPage: boolean;
     canViewConfidentialMetrics: boolean;
+    canManageSystemUsers?: boolean;
   };
 }
 

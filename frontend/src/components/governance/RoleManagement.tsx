@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { UserProfile, UserRole } from "../../types";
 import { USER_PROFILES } from "../../services/mockData";
 import {
@@ -91,7 +91,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           <span className="text-xs text-[#7A7E8C]">Click any profile to instantly switch context</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {profiles.map((p) => {
             const isActive = currentProfile.id === p.id;
             return (
@@ -100,8 +100,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 onClick={() => onSwitchProfile(p)}
                 className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
                   isActive
-                    ? "bg-white border-2 border-[#112233] shadow-md ring-2 ring-[#112233]/15"
-                    : "bg-white/80 border-[#E0DED5] hover:border-[#CDC9BC]"
+                    ? "bg-white border-2 border-[#112233] shadow-md ring-2 ring-[#D4A24C]/40"
+                    : "bg-white/85 border-[#E0DED5] hover:border-[#CDC9BC] hover:bg-white"
                 }`}
               >
                 <div className="space-y-2">
@@ -109,28 +109,37 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     <img
                       src={p.avatar}
                       alt={p.name}
-                      className="w-10 h-10 rounded-full object-cover border border-[#D5D3C8]"
+                      className="w-11 h-11 rounded-full object-cover border-2 border-[#D5D3C8]"
                     />
                     <div>
                       <h4 className="text-xs font-bold text-[#112233] line-clamp-1">
                         {p.name}
                       </h4>
-                      <div className="text-[10px] text-[#696D7A]">
+                      <div className="text-[10.5px] font-semibold text-[#0F766E]">
                         {p.roleTitle}
+                      </div>
+                      <div className="text-[9.5px] text-[#787B88] line-clamp-1">
+                        {p.department}
                       </div>
                     </div>
                   </div>
 
-                  <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF9F5] border border-[#E5E3D8] text-[#555866] rounded">
-                    {p.clearanceLevel}
-                  </span>
+                  <div className="space-y-1 pt-1">
+                    <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF9F5] border border-[#E5E3D8] text-[#555866] rounded">
+                      {p.clearanceLevel}
+                    </span>
+                    <div className="text-[10px] font-mono-data text-[#646875] bg-[#F5F4EE] p-1.5 rounded border border-[#ECEAE2]">
+                      <div><span className="font-semibold">Login:</span> {p.email}</div>
+                      <div><span className="font-semibold">Pass:</span> {p.demoPassword || "Demo@2026"}</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-[#ECEAE2] flex justify-between items-center text-[10px]">
-                  <span className="text-[#7A7E8C]">{p.assignedConstituency}</span>
+                  <span className="text-[#7A7E8C] line-clamp-1">{p.assignedConstituency}</span>
                   {isActive && (
-                    <span className="font-bold text-emerald-700 flex items-center">
-                      <CheckCircle2 className="w-3 h-3 mr-0.5" />
+                    <span className="font-bold text-emerald-700 flex items-center shrink-0 ml-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-0.5" />
                       Active
                     </span>
                   )}

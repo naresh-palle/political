@@ -1,4 +1,4 @@
-﻿import {
+import {
   StateInfo,
   ParliamentInfo,
   AssemblyInfo,
@@ -24,11 +24,34 @@ import {
 
 export const USER_PROFILES: UserProfile[] = [
   {
+    id: "user-admin",
+    name: "Dr. Vikramaditya Varma",
+    email: "admin@leaderslens.ai",
+    demoPassword: "AdminPassword@2026",
+    role: "super_admin",
+    roleTitle: "Master System Administrator",
+    department: "Platform Governance & Core Security",
+    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+    assignedConstituency: "Global / All State Jurisdictions",
+    clearanceLevel: "Tier 0 (Master Admin Clearance)",
+    permissions: {
+      canExportReports: true,
+      canEditStrategy: true,
+      canManageVolunteers: true,
+      canResolveGrievances: true,
+      canPublishLandingPage: true,
+      canViewConfidentialMetrics: true,
+      canManageSystemUsers: true
+    }
+  },
+  {
     id: "user-dir",
     name: "Naresh Palle",
     email: "naresh@leaderslens.ai",
+    demoPassword: "DirectorPassword@2026",
     role: "campaign_director",
     roleTitle: "Principal Campaign Director",
+    department: "Executive Strategy & Political Advisory",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     assignedConstituency: "Kadapa AC (AC-132)",
     clearanceLevel: "Level 1 (Full Access)",
@@ -38,15 +61,18 @@ export const USER_PROFILES: UserProfile[] = [
       canManageVolunteers: true,
       canResolveGrievances: true,
       canPublishLandingPage: true,
-      canViewConfidentialMetrics: true
+      canViewConfidentialMetrics: true,
+      canManageSystemUsers: false
     }
   },
   {
     id: "user-cand",
     name: "Hon. Candidate Executive",
     email: "mla.candidate@constituency.in",
+    demoPassword: "CandidatePassword@2026",
     role: "candidate_executive",
-    roleTitle: "Nominated Candidate / Client",
+    roleTitle: "Nominated Candidate / Client Executive",
+    department: "Candidate Executive Secretariat",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
     assignedConstituency: "Kadapa AC",
     clearanceLevel: "Executive Briefing Only",
@@ -56,17 +82,20 @@ export const USER_PROFILES: UserProfile[] = [
       canManageVolunteers: false,
       canResolveGrievances: false,
       canPublishLandingPage: false,
-      canViewConfidentialMetrics: true
+      canViewConfidentialMetrics: true,
+      canManageSystemUsers: false
     }
   },
   {
     id: "user-field",
     name: "Venkatesh Rao",
     email: "venkat.field@leaderslens.ai",
+    demoPassword: "FieldPassword@2026",
     role: "field_strategist",
-    roleTitle: "Senior Field Strategist",
+    roleTitle: "Senior Field Operations Strategist",
+    department: "Ground Canvassing & Electorate Triage",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    assignedConstituency: "Kadapa & Kamalapuram",
+    assignedConstituency: "Kadapa & Kamalapuram ACs",
     clearanceLevel: "Level 2 (Operations)",
     permissions: {
       canExportReports: true,
@@ -74,17 +103,20 @@ export const USER_PROFILES: UserProfile[] = [
       canManageVolunteers: true,
       canResolveGrievances: true,
       canPublishLandingPage: false,
-      canViewConfidentialMetrics: true
+      canViewConfidentialMetrics: true,
+      canManageSystemUsers: false
     }
   },
   {
     id: "user-media",
     name: "Ananya Sharma",
     email: "ananya.media@leaderslens.ai",
+    demoPassword: "MediaPassword@2026",
     role: "media_analyst",
-    roleTitle: "Digital Media & NLP Analyst",
+    roleTitle: "Digital Media, Social Graph & NLP Lead",
+    department: "Digital Command & Narrative Defense",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
-    assignedConstituency: "Statewide Digital Command",
+    assignedConstituency: "Statewide Digital Command Center",
     clearanceLevel: "Level 2 (Operations)",
     permissions: {
       canExportReports: true,
@@ -92,15 +124,18 @@ export const USER_PROFILES: UserProfile[] = [
       canManageVolunteers: false,
       canResolveGrievances: false,
       canPublishLandingPage: true,
-      canViewConfidentialMetrics: true
+      canViewConfidentialMetrics: true,
+      canManageSystemUsers: false
     }
   },
   {
     id: "user-vol",
     name: "Ramesh Babu",
     email: "ramesh.kadapa@volunteers.in",
+    demoPassword: "VolunteerPassword@2026",
     role: "volunteer_lead",
-    roleTitle: "Constituency Volunteer Lead",
+    roleTitle: "Constituency Volunteer Network Lead",
+    department: "Cadre Relay & WhatsApp Squad Operations",
     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
     assignedConstituency: "Kadapa AC (Wards 1-28)",
     clearanceLevel: "Level 3 (Field Only)",
@@ -110,7 +145,29 @@ export const USER_PROFILES: UserProfile[] = [
       canManageVolunteers: true,
       canResolveGrievances: true,
       canPublishLandingPage: false,
-      canViewConfidentialMetrics: false
+      canViewConfidentialMetrics: false,
+      canManageSystemUsers: false
+    }
+  },
+  {
+    id: "user-booth",
+    name: "K. Srinivas Reddy",
+    email: "srinivas.booth@fieldcadre.in",
+    demoPassword: "BoothPassword@2026",
+    role: "booth_coordinator",
+    roleTitle: "Polling Station & Booth In-Charge",
+    department: "Booth Level Agent Network (BLA-2)",
+    avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+    assignedConstituency: "Kadapa AC (Booths 084-112)",
+    clearanceLevel: "Level 3 (Field Only)",
+    permissions: {
+      canExportReports: false,
+      canEditStrategy: false,
+      canManageVolunteers: true,
+      canResolveGrievances: true,
+      canPublishLandingPage: false,
+      canViewConfidentialMetrics: false,
+      canManageSystemUsers: false
     }
   }
 ];
