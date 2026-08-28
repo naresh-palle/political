@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { ArrowRight, ShieldCheck, MapPin, Radio, Users2, Globe2, Sparkles, GitCompare, ChevronDown } from "lucide-react";
 import { LeadersLogo } from "../common/LeadersLogo";
 import { VerifiedSeal, TrustBadge, TrustLevel } from "../common/TrustBadge";
+import { VerifiedFeed } from "./VerifiedFeed";
+import { CompareRadar } from "./CompareRadar";
 import { MOCK_STATES, MOCK_ASSEMBLIES, MOCK_CANDIDATES } from "../../services/mockData";
 import { formatLakhs } from "../../calculations";
 
@@ -142,6 +144,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
               <HeroStat label="Grievances" value={stats.grievances.toLocaleString("en-IN")} note="Resolved this month" gold confidence={stats.confidence} />
             </div>
 
+            {/* Rolling verified feed */}
+            <VerifiedFeed stateId={stateId} />
+
             <div className="rounded-xl border border-[#D4A24C]/25 bg-gradient-to-br from-[#122A44] to-[#0F2338] px-5 py-4 flex items-center gap-3">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
               <div className="text-[12px] text-[#D8CFB8] leading-tight">
@@ -192,6 +197,38 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
               opposingScore={leftAc.totalVoters}
               tone="cream"
             />
+          </div>
+
+          {/* 5-axis radar overlay */}
+          <div className="mt-6 rounded-2xl border border-[#D4A24C]/25 bg-[#0F2338]/60 p-6 grid grid-cols-1 lg:grid-cols-5 gap-6 items-center">
+            <div className="lg:col-span-2 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="h-px w-6 bg-[#D4A24C]" aria-hidden />
+                <span className="eyebrow gold-text">Strength shape · 5 axes</span>
+              </div>
+              <h3 className="font-display text-[28px] leading-tight tracking-[-0.01em] cream-text">
+                Where each constituency <span className="italic gold-text">actually</span> wins.
+              </h3>
+              <p className="text-[13px] text-[#B9AF95] leading-relaxed">
+                Overlay of five normalised dimensions — electorate size, digital audience,
+                candidate field, digital-to-voter ratio and headroom. The bigger the shape,
+                the broader the winnable ground.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-[#F5EFE0]">
+                  <span className="w-2 h-2 rounded-sm bg-gradient-to-r from-[#E07A1F] to-[#D4A24C]" />
+                  {leftAc.name}
+                </span>
+                <span className="text-[#5F6875] text-[11px]">vs</span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-[#B9AF95]">
+                  <span className="w-2 h-2 rounded-sm bg-[#8AA6C7]/70 border border-[#8AA6C7]" />
+                  {rightAc.name}
+                </span>
+              </div>
+            </div>
+            <div className="lg:col-span-3 flex justify-center">
+              <CompareRadar left={leftAc} right={rightAc} size={340} />
+            </div>
           </div>
 
           <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
