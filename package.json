@@ -6,6 +6,10 @@
   "main": "backend/server.py",
   "scripts": {
     "build": "python3 -m pip install -r backend/requirements.txt",
-    "start": "sh start.sh"
+    "start": "sh start.sh",
+    "deploy:smart": "node scripts/smart_deploy.js",
+    "deploy:gh-pages": "node scripts/smart_deploy.js --frontend",
+    "deploy:render": "node scripts/smart_deploy.js --backend",
+    "deploy:both": "node scripts/smart_deploy.js --both"
   }
 }
