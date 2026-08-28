@@ -1,0 +1,10 @@
+{
+  "name": "political-intelligence-platform",
+  "version": "1.0.0",
+  "description": "Leader's Lens Political Intelligence Platform",
+  "main": "backend/server.py",
+  "scripts": {
+    "start": "cd backend && uvicorn server:app --host 0.0.0.0 --port ",
+    "build": "cd frontend && npm install && npm run build"
+  }
+}
