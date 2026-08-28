@@ -9,6 +9,7 @@ import {
   Maximize2,
   Minimize2,
   TrendingUp,
+  NotebookText,
 } from "lucide-react";
 
 interface PresentationModeProps {
@@ -20,6 +21,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
   const [slideIndex, setSlideIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [transition, setTransition] = useState<"in" | "out">("in");
+  const [notesOpen, setNotesOpen] = useState<boolean>(true);
 
   const nextSlide = () => {
     if (slideIndex < slides.length - 1) {
@@ -60,6 +62,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
         </>
       ),
       subtitle: `${audit.assembly.code} · ${audit.parliament.name} Parliamentary Constituency · ${audit.state.name}`,
+      notes: [
+        `Open the briefing by anchoring the room to ${audit.assembly.name} AC (${audit.assembly.code}).`,
+        `Lead with the Social Strength score of ${audit.client.socialStrengthScore}/100 — this is our headline number.`,
+        `Flag the reach gap of ${formatLakhs(audit.voterStats.voterReachGap, true)} early — it frames every recommendation later.`,
+      ],
       render: () => (
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           <BoardMetric label="Social strength" value={String(audit.client.socialStrengthScore)} suffix="/ 100" note={`Rank #1 of ${audit.candidates.length}`} tone="gold" />
@@ -74,6 +81,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       eyebrow: "The finding",
       title: <span className="cream-text">Dominant narrative</span>,
       subtitle: "Where the constituency stands right now",
+      notes: [
+        "Deliver the headline in one breath — this is the sound-bite.",
+        "Then walk observation 01 → 02 → 03 without editorialising.",
+        "Pause after observation 03; let the room absorb the reach gap.",
+      ],
       render: () => (
         <div className="max-w-5xl mx-auto space-y-10">
           <blockquote className="font-display text-[42px] sm:text-[56px] lg:text-[68px] leading-[1.05] tracking-[-0.02em] cream-text">
@@ -99,6 +111,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       eyebrow: "Competitive analysis",
       title: <span className="cream-text">Social <span className="italic gold-text">strength</span> vs opposition</span>,
       subtitle: "Benchmark comparison across the nominated candidate field",
+      notes: [
+        `Emphasise the +11 point lead over the primary opposition — this is our moat.`,
+        `Acknowledge the challenger's engagement rate; do not dismiss.`,
+        `Frame the third-place candidate as the growth vector for alliance conversations.`,
+      ],
       render: () => (
         <div className="max-w-4xl mx-auto space-y-5">
           {audit.candidates.map((cand) => {
@@ -149,6 +166,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       eyebrow: "Opportunity matrix",
       title: <span className="cream-text">Where the <span className="italic gold-text">opportunity</span> is</span>,
       subtitle: "Addressable audience gap, ranked by single-channel scale",
+      notes: [
+        "Lead with the hero opportunity — the platform with the biggest gap.",
+        "Frame the gap as market share, not shortfall.",
+        "Tee up the recommendations slide by naming the platform aloud.",
+      ],
       render: () => {
         const sorted = [...audit.platformBreakdown].sort((a, b) => b.reachGap - a.reachGap);
         const max = sorted[0]?.reachGap || 1;
@@ -193,6 +215,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       eyebrow: "Strategic directives",
       title: <span className="cream-text">Next <span className="italic gold-text">moves.</span></span>,
       subtitle: "Immediate field and digital manoeuvres",
+      notes: [
+        "Own the first directive — call it the 30-day priority.",
+        "Directives 2 and 3 are supporting motions; keep them at 60-day cadence.",
+        "Close with the expected impact figures — this is what the room remembers.",
+      ],
       render: () => (
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {audit.recommendations.slice(0, 4).map((rec) => (
@@ -228,6 +255,11 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
         </>
       ),
       subtitle: `${audit.assembly.name} AC · Generated ${audit.generatedAt}`,
+      notes: [
+        "Invite one clarifying question before Q&A.",
+        "Offer the full audit PDF as the follow-up artifact.",
+        "Commit to one date to reconvene on the 30-day directive.",
+      ],
       render: () => (
         <div className="max-w-3xl mx-auto text-center space-y-6">
           <p className="text-[15px] text-[#B9AF95] leading-relaxed">
@@ -249,6 +281,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       else if (e.key === "ArrowLeft") prevSlide();
       else if (e.key === "Escape") onExit();
       else if (e.key.toLowerCase() === "f") toggleFullscreen();
+      else if (e.key.toLowerCase() === "n") setNotesOpen((v) => !v);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -301,6 +334,18 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
             Live feed
           </div>
           <button
+            data-testid="notes-toggle"
+            onClick={() => setNotesOpen((v) => !v)}
+            className={`p-2 rounded-lg border transition-colors ${
+              notesOpen
+                ? "bg-[#D4A24C] border-[#D4A24C] text-[#0B1A2C]"
+                : "bg-[#0F2338] border-[#22405E] text-[#D4A24C] hover:border-[#D4A24C]/60"
+            }`}
+            title="Toggle speaker notes (N)"
+          >
+            <NotebookText className="w-4 h-4" />
+          </button>
+          <button
             data-testid="fullscreen-toggle"
             onClick={toggleFullscreen}
             className="p-2 bg-[#0F2338] border border-[#22405E] rounded-lg text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors"
@@ -320,22 +365,59 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       </div>
 
       {/* Slide stage */}
-      <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 py-6">
-        <div
-          key={currentSlide.id}
-          className={`transition-all duration-300 ${
-            transition === "in" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-          }`}
-        >
-          <div className="text-center space-y-3 mb-14">
-            <div className="eyebrow gold-text">{currentSlide.eyebrow}</div>
-            <h2 className="font-display text-[46px] sm:text-[60px] lg:text-[76px] leading-[1.02] tracking-[-0.02em]">
-              {currentSlide.title}
-            </h2>
-            <p className="text-sm text-[#B9AF95]">{currentSlide.subtitle}</p>
+      <div className={`flex-1 flex px-6 sm:px-10 py-6 gap-6 min-h-0 transition-[padding] duration-300`}>
+        <div className="flex-1 flex flex-col justify-center min-w-0">
+          <div
+            key={currentSlide.id}
+            className={`transition-all duration-300 ${
+              transition === "in" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+            }`}
+          >
+            <div className="text-center space-y-3 mb-14">
+              <div className="eyebrow gold-text">{currentSlide.eyebrow}</div>
+              <h2 className="font-display text-[46px] sm:text-[60px] lg:text-[76px] leading-[1.02] tracking-[-0.02em]">
+                {currentSlide.title}
+              </h2>
+              <p className="text-sm text-[#B9AF95]">{currentSlide.subtitle}</p>
+            </div>
+            <div>{currentSlide.render()}</div>
           </div>
-          <div>{currentSlide.render()}</div>
         </div>
+
+        {/* Speaker Notes side panel */}
+        {notesOpen && (
+          <aside
+            data-testid="speaker-notes-panel"
+            className={`hidden lg:flex flex-col w-[300px] shrink-0 rounded-xl border border-[#D4A24C]/25 bg-[#0F2338]/70 backdrop-blur p-4 animate-fadeIn`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <NotebookText className="w-4 h-4 text-[#D4A24C]" />
+                <span className="eyebrow gold-text">Speaker notes</span>
+              </div>
+              <span className="text-[10px] text-[#8A8E9B] tabular">
+                {String(slideIndex + 1).padStart(2, "0")}/{String(slides.length).padStart(2, "0")}
+              </span>
+            </div>
+            <div className="text-[11px] text-[#8A8E9B] uppercase tracking-widest font-semibold mb-2">
+              For the director
+            </div>
+            <ul className="space-y-3 overflow-y-auto pr-1">
+              {(currentSlide.notes || []).map((note, idx) => (
+                <li key={idx} className="flex items-start gap-2.5 text-[13px] text-[#D8CFB8] leading-relaxed">
+                  <span className="font-mono-data text-[10px] font-bold gold-text mt-0.5 px-1.5 py-0.5 border border-[#D4A24C]/40 rounded shrink-0">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <span>{note}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-auto pt-4 border-t border-[#22405E]/60 flex items-center justify-between text-[10px] text-[#8A8E9B]">
+              <span>Press <kbd className="px-1 py-0.5 bg-[#0B1A2C] border border-[#22405E] rounded text-[9px] gold-text">N</kbd> to toggle</span>
+              <span>Only you see this</span>
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* Bottom stepper */}
