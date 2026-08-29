@@ -39,19 +39,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
       const newProfile: UserProfile = {
         id: `usr_${Date.now()}`,
         name: displayName,
-        email: cleanEmail || "leader@leaderslens.ai",
+        email: cleanEmail || "admin@leaderslens.ai",
         demoPassword: password || "Secure@2026",
         role: "super_admin",
+        roleId: "SUPER_ADMIN",
         roleTitle: "Master System Administrator",
-        department: "Central Campaign Command",
+        department: "Platform Governance & Core Security",
         avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
-        assignedConstituency: "All Constituencies (Full Command)",
-        clearanceLevel: "Level 1 (Full Access)",
-        partyId: "TDP",
-        partyName: "Telugu Desam Party",
-        partyAbbr: "TDP",
-        partyColor: "#FFD200",
-        partyEmoji: "🚲",
+        assignedConstituency: "National Command Center",
+        clearanceLevel: "LEVEL 5 — FULL SYSTEM",
+        partyId: null,
+        partyName: undefined,
+        partyAbbr: undefined,
+        partyColor: "#D4A24C",
+        partyEmoji: "🏛️",
         permissions: {
           canExportReports: true,
           canEditStrategy: true,
@@ -82,9 +83,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
   };
 
   return (
-    <div className="hero-dark min-h-screen flex flex-col justify-between px-4 py-8 sm:py-12">
-      {/* Top back navigation bar */}
-      <div className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6">
+    <div
+      className="hero-dark min-h-screen flex flex-col justify-between px-4 py-8 sm:py-12 relative"
+      style={{
+        backgroundImage: "url(./images/party-backgrounds/admin-bg.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed"
+      }}
+    >
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[#0B1A2C]/65 backdrop-blur-[0.5px]" aria-hidden="true" />
+      <div className="relative z-10 flex-1 flex flex-col justify-between max-w-5xl mx-auto w-full">
+        {/* Top back navigation bar */}
+        <div className="w-full flex items-center justify-between pb-6">
         <button
           type="button"
           onClick={onBack}
@@ -212,6 +224,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
             </form>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

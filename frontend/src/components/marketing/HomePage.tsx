@@ -54,12 +54,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
   const leftAc = eligibleAcs.find((a) => a.id === leftAcId) || eligibleAcs[0] || MOCK_ASSEMBLIES[0];
   const rightAc = eligibleAcs.find((a) => a.id === rightAcId) || eligibleAcs[1] || MOCK_ASSEMBLIES[1];
 
-  const clientCand = MOCK_CANDIDATES.find((c) => c.isClient) || MOCK_CANDIDATES[0];
-
   return (
-    <div className="hero-dark min-h-screen flex flex-col">
-      {/* Slim marketing header */}
-      <header className="relative z-10">
+    <div
+      className="hero-dark min-h-screen flex flex-col relative"
+      style={{
+        backgroundImage: "url(./images/party-backgrounds/admin-bg.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed"
+      }}
+    >
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[#0B1A2C]/65 backdrop-blur-[0.5px]" aria-hidden="true" />
+      <div className="relative z-10 flex-1 flex flex-col">
+        {/* Slim marketing header */}
+        <header className="relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <LeadersLogo size={36} />
@@ -363,6 +372,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
 
       {/* Matching Platform Footer */}
       <Footer />
+      </div>
     </div>
   );
 };
