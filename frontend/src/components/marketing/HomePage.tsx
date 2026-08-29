@@ -56,7 +56,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
 
   return (
     <div
-      className="hero-dark min-h-screen flex flex-col relative"
+      className="hero-dark min-h-screen flex flex-col relative bg-[#071322] text-[#F5EFE0]"
       style={{
         backgroundImage: "url(./images/party-backgrounds/admin-bg.jpg)",
         backgroundSize: "cover",
@@ -65,10 +65,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
         backgroundAttachment: "fixed"
       }}
     >
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[#0B1A2C]/65 backdrop-blur-[0.5px]" aria-hidden="true" />
+      {/* High-contrast tint layer allowing architectural background to shine while keeping text crystal clear */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[#071322]/85 backdrop-blur-[1px]" aria-hidden="true" />
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Slim marketing header */}
-        <header className="relative z-10">
+        <header className="relative z-10 border-b border-[#22405E]/60 bg-[#0B1A2C]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <LeadersLogo size={36} />
@@ -274,27 +275,27 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
         </div>
       </section>
 
-      {/* Modules section — ivory band */}
-      <section id="modules" className="relative z-10 bg-[#FBFBF9] text-[#0B1A2C] py-16 lg:py-24">
+      {/* Modules section — Dark Glassmorphic Band */}
+      <section id="modules" className="relative z-10 bg-[#0B1A2C]/80 backdrop-blur-md text-[#F5EFE0] py-16 lg:py-24 border-t border-[#22405E]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-6 mb-10 flex-wrap">
             <div className="max-w-xl space-y-3">
               <div className="flex items-center gap-2">
-                <span className="h-px w-6 bg-[#B45309]" aria-hidden />
-                <span className="eyebrow" style={{ color: "#B45309" }}>Product · Modules</span>
+                <span className="h-px w-6 bg-[#D4A24C]" aria-hidden />
+                <span className="eyebrow gold-text">Product · Modules</span>
               </div>
-              <h2 className="font-display text-[40px] sm:text-[52px] leading-[1.02] tracking-[-0.02em] text-[#0B1A2C]">
+              <h2 className="font-display text-[40px] sm:text-[52px] leading-[1.02] tracking-[-0.02em] cream-text">
                 Five instruments,{" "}
-                <span className="italic" style={{ color: "#B45309" }}>one</span> command room.
+                <span className="italic gold-text">one</span> command room.
               </h2>
-              <p className="text-sm text-[#5A5E6B] leading-relaxed">
+              <p className="text-sm text-[#D8CFB8] leading-relaxed">
                 Each module is a discipline of political operations — connected, but designed
                 to be used independently by directors, strategists, media analysts and field leads.
               </p>
             </div>
             <button
               onClick={onEnter}
-              className="hidden md:inline-flex items-center gap-2 text-[13px] font-semibold text-[#0B1A2C] hover:text-[#B45309] transition-colors"
+              className="hidden md:inline-flex items-center gap-2 text-[13px] font-semibold text-[#D4A24C] hover:text-[#F5EFE0] transition-colors"
             >
               Sign in to access <ArrowRight className="w-4 h-4" />
             </button>
@@ -306,17 +307,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
             <ModuleCard num="03" icon={<Users2 className="w-5 h-5" />} title="Volunteer Command" body="Squad-level operations, WhatsApp dispatch, canvassing and amplification efficiency." accent="#D4A24C" />
             <ModuleCard num="04" icon={<Globe2 className="w-5 h-5" />} title="Web Studio" body="Publish candidate landing pages with manifesto, events and grievance intake in minutes." accent="#0B1A2C" />
             <ModuleCard num="05" icon={<ShieldCheck className="w-5 h-5" />} title="Team & RBAC" body="Role-based access from Executive Briefing to Field Only — every metric respects clearance." accent="#B0203C" />
-            <div className="rounded-xl border border-dashed border-[#D5D3C8] bg-[#F5F4EE] p-5 flex flex-col justify-between">
+            <div className="rounded-xl border border-dashed border-[#D4A24C]/40 bg-[#0F2338]/85 backdrop-blur-md p-5 flex flex-col justify-between shadow-lg">
               <div>
                 <div className="eyebrow text-[#8A8E9B]">Boardroom mode</div>
-                <div className="font-display text-[24px] text-[#0B1A2C] mt-2 leading-tight">
-                  Full-screen <span className="italic">presentation</span>
+                <div className="font-display text-[24px] text-[#F5EFE0] mt-2 leading-tight">
+                  Full-screen <span className="italic gold-text">presentation</span>
                 </div>
-                <p className="text-[13px] text-[#5A5E6B] mt-2 leading-relaxed">
+                <p className="text-[13px] text-[#D8CFB8] mt-2 leading-relaxed">
                   Deep-navy stage with speaker-notes side panel a director can glance at during briefings.
                 </p>
               </div>
-              <button onClick={onEnter} className="mt-4 text-[12px] font-semibold text-[#0B1A2C] hover:text-[#B45309] inline-flex items-center gap-1">
+              <button onClick={onEnter} className="mt-4 text-[12px] font-semibold text-[#D4A24C] hover:text-[#F5EFE0] inline-flex items-center gap-1">
                 Preview inside <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -325,18 +326,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
       </section>
 
       {/* Trust band */}
-      <section id="trust" className="relative z-10 bg-[#F5F4EE] text-[#0B1A2C] py-14 border-t border-[#E5E3D8]">
+      <section id="trust" className="relative z-10 bg-[#0B1A2C]/90 backdrop-blur-md text-[#F5EFE0] py-14 border-t border-[#22405E]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 items-start">
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="h-px w-6 bg-[#0F766E]" aria-hidden />
-              <span className="eyebrow" style={{ color: "#0F766E" }}>Methodology & trust</span>
+              <span className="h-px w-6 bg-emerald-400" aria-hidden />
+              <span className="eyebrow text-emerald-400">Methodology & trust</span>
             </div>
-            <h3 className="font-display text-[30px] leading-tight tracking-[-0.01em] text-[#0B1A2C]">
+            <h3 className="font-display text-[30px] leading-tight tracking-[-0.01em] cream-text">
               Every number carries a{" "}
-              <span className="italic" style={{ color: "#0F766E" }}>provenance</span> seal.
+              <span className="italic text-emerald-400">provenance</span> seal.
             </h3>
-            <p className="text-sm text-[#5A5E6B] max-w-md leading-relaxed">
+            <p className="text-sm text-[#D8CFB8] max-w-md leading-relaxed">
               Metrics are tagged Verified, Estimated, Derived or Manual so estimated digital
               audiences are never confused with verified voter counts.
             </p>
@@ -470,21 +471,21 @@ const MiniStat: React.FC<{ label: string; value: string; highlight?: boolean; co
 const ModuleCard: React.FC<{ num: string; icon: React.ReactNode; title: string; body: string; accent: string }> = ({
   num, icon, title, body, accent,
 }) => (
-  <div className="group rounded-xl border border-[#E5E3D8] bg-white p-5 hover:border-[#0B1A2C] transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-30px_rgba(11,26,44,0.25)]">
+  <div className="group rounded-xl border border-[#22405E] bg-[#0E2137]/85 backdrop-blur-md p-5 hover:border-[#D4A24C]/60 transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-30px_rgba(212,162,76,0.25)]">
     <div className="flex items-center justify-between">
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white" style={{ backgroundColor: accent }}>
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm" style={{ backgroundColor: accent }}>
         {icon}
       </div>
-      <span className="font-mono-data text-xs text-[#8A8E9B] tabular">{num}</span>
+      <span className="font-mono-data text-xs text-[#D4A24C] tabular font-semibold">{num}</span>
     </div>
-    <h4 className="font-display text-[22px] text-[#0B1A2C] mt-4 leading-tight">{title}</h4>
-    <p className="text-[13px] text-[#5A5E6B] mt-2 leading-relaxed">{body}</p>
+    <h4 className="font-display text-[22px] text-[#F5EFE0] mt-4 leading-tight">{title}</h4>
+    <p className="text-[13px] text-[#D8CFB8] mt-2 leading-relaxed">{body}</p>
   </div>
 );
 
 const TrustPill: React.FC<{ label: string; desc: string; tone: "emerald" | "gold" }> = ({ label, desc, tone }) => (
-  <div className="rounded-xl border border-[#E5E3D8] bg-white p-4">
-    <div className={`eyebrow ${tone === "emerald" ? "text-emerald-700" : "text-[#B45309]"}`}>{label}</div>
-    <div className="text-[13px] text-[#0B1A2C] mt-1.5 font-medium">{desc}</div>
+  <div className="rounded-xl border border-[#22405E] bg-[#0E2137]/85 backdrop-blur-md p-4">
+    <div className={`eyebrow font-bold ${tone === "emerald" ? "text-emerald-400" : "text-[#D4A24C]"}`}>{label}</div>
+    <div className="text-[13px] text-[#F5EFE0] mt-1.5 font-medium">{desc}</div>
   </div>
 );
