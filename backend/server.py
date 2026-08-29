@@ -330,40 +330,85 @@ async def register_user(req: RegisterRequest):
         logger.error(f"User registration error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# ----------------- CITIZEN GRIEVANCES (MONGODB) -----------------
+# ----------------- CITIZEN GRIEVANCES & CONTACTS (MONGODB) -----------------
+
+class GrievanceAddressModel(BaseModel):
+    doorNo: str = ""
+    wardVillage: str = ""
+    townMandal: str = ""
+    assembly: str = "Kadapa AC"
+    parliament: str = "Kadapa PC"
+    state: str = "Andhra Pradesh"
+
+class VolunteerSubmitterModel(BaseModel):
+    name: str = "Field Volunteer"
+    phone: str = "9848012345"
+    constituency: str = "Kadapa AC"
 
 class GrievanceCreate(BaseModel):
+    citizenType: str = "Voter"  # Voter, Cadre, Leader
     citizenName: str
+    citizenAge: int = 35
+    citizenGender: str = "Male"  # Male, Female, Other
     citizenPhone: str
-    wardNumber: str
-    boothNumber: str = "Booth Unassigned"
-    category: str
+    address: GrievanceAddressModel
     subject: str
+    department: str
+    category: str
     description: str
-    urgency: str = "Normal"
-    receivedVia: str = "Web Portal"
+    location: str
+    priority: str = "Medium"  # Low, Medium, High
+    assignee: str = "Unassigned"
+    assigneeContact: Optional[str] = ""
+    assigneeDesignation: Optional[str] = ""
+    submittedByVolunteer: VolunteerSubmitterModel = VolunteerSubmitterModel()
 
 class GrievanceUpdate(BaseModel):
     status: Optional[str] = None
-    assignedOfficer: Optional[str] = None
+    priority: Optional[str] = None
+    assignee: Optional[str] = None
+    assigneeContact: Optional[str] = None
     notes: Optional[List[str]] = None
 
+class GrievanceContactModel(BaseModel):
+    id: Optional[str] = None
+    department: str
+    category: str
+    village: str
+    mandal: str
+    assembly: str = "Kadapa AC"
+    pocName: str
+    designation: str
+    phone: str
+    email: str
+
 @api_router.get("/grievances")
-async def get_grievances(status: Optional[str] = None, urgency: Optional[str] = None, q: Optional[str] = None):
+async def get_grievances(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    department: Optional[str] = None,
+    volunteer_phone: Optional[str] = None,
+    q: Optional[str] = None
+):
     try:
         query = {}
         if status:
             query["status"] = status
-        if urgency:
-            query["urgency"] = urgency
+        if priority:
+            query["priority"] = priority
+        if department:
+            query["department"] = department
+        if volunteer_phone:
+            query["submittedByVolunteer.phone"] = volunteer_phone
         if q:
             query["$or"] = [
                 {"subject": {"$regex": q, "$options": "i"}},
                 {"citizenName": {"$regex": q, "$options": "i"}},
                 {"ticketNumber": {"$regex": q, "$options": "i"}},
-                {"wardNumber": {"$regex": q, "$options": "i"}}
+                {"department": {"$regex": q, "$options": "i"}},
+                {"location": {"$regex": q, "$options": "i"}}
             ]
-        items = await db.grievances.find(query, {"_id": 0}).sort("submittedDate", -1).to_list(200)
+        items = await db.grievances.find(query, {"_id": 0}).sort("timestamp", -1).to_list(500)
         if items:
             return items
     except Exception as e:
@@ -372,34 +417,54 @@ async def get_grievances(status: Optional[str] = None, urgency: Optional[str] = 
     fallback = load_json_fallback("grievances.json")
     if status:
         fallback = [g for g in fallback if g.get("status") == status]
-    if urgency:
-        fallback = [g for g in fallback if g.get("urgency") == urgency]
+    if priority:
+        fallback = [g for g in fallback if g.get("priority") == priority]
+    if department:
+        fallback = [g for g in fallback if g.get("department") == department]
+    if volunteer_phone:
+        fallback = [g for g in fallback if g.get("submittedByVolunteer", {}).get("phone") == volunteer_phone]
     if q:
         q_l = q.lower()
-        fallback = [g for g in fallback if q_l in g.get("subject", "").lower() or q_l in g.get("citizenName", "").lower() or q_l in g.get("ticketNumber", "").lower()]
+        fallback = [
+            g for g in fallback
+            if q_l in g.get("subject", "").lower()
+            or q_l in g.get("citizenName", "").lower()
+            or q_l in g.get("ticketNumber", "").lower()
+            or q_l in g.get("department", "").lower()
+        ]
     return fallback
 
 @api_router.post("/grievances")
 async def create_grievance(item: GrievanceCreate):
     new_id = f"grv_{uuid.uuid4().hex[:8]}"
-    ticket_num = f"GRV-KDP-2026-{uuid.uuid4().hex[:4].upper()}"
+    ticket_num = f"KDP-GRV-2026-{uuid.uuid4().hex[:4].upper()}"
+    now_iso = datetime.now(timezone.utc).isoformat()
+    now_str = datetime.now(timezone.utc).strftime("%d %b, %I:%M %p")
+    
     doc = {
         "id": new_id,
         "ticketNumber": ticket_num,
+        "citizenType": item.citizenType,
         "citizenName": item.citizenName,
+        "citizenAge": item.citizenAge,
+        "citizenGender": item.citizenGender,
         "citizenPhone": item.citizenPhone,
-        "wardNumber": item.wardNumber,
-        "boothNumber": item.boothNumber,
-        "category": item.category,
+        "address": item.address.model_dump(),
         "subject": item.subject,
+        "department": item.department,
+        "category": item.category,
         "description": item.description,
-        "urgency": item.urgency,
-        "status": "Open",
-        "receivedVia": item.receivedVia,
-        "submittedDate": datetime.now(timezone.utc).isoformat(),
-        "slaHoursRemaining": 48 if item.urgency == "Normal" else 24 if item.urgency == "High" else 8,
-        "assignedOfficer": "Unassigned",
-        "notes": [f"Ticket registered via {item.receivedVia} at {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"]
+        "location": item.location,
+        "priority": item.priority,
+        "assignee": item.assignee,
+        "assigneeContact": item.assigneeContact or "",
+        "assigneeDesignation": item.assigneeDesignation or "",
+        "status": "Pending",
+        "submittedByVolunteer": item.submittedByVolunteer.model_dump(),
+        "submittedDate": now_str,
+        "timestamp": now_iso,
+        "slaHoursRemaining": 12 if item.priority == "High" else 24 if item.priority == "Medium" else 48,
+        "notes": [f"Ticket registered by Volunteer {item.submittedByVolunteer.name} ({item.submittedByVolunteer.phone}) at {now_str}"]
     }
     try:
         await db.grievances.insert_one(doc)
@@ -413,8 +478,12 @@ async def update_grievance(ticket_id: str, patch: GrievanceUpdate):
     updates = {}
     if patch.status is not None:
         updates["status"] = patch.status
-    if patch.assignedOfficer is not None:
-        updates["assignedOfficer"] = patch.assignedOfficer
+    if patch.priority is not None:
+        updates["priority"] = patch.priority
+    if patch.assignee is not None:
+        updates["assignee"] = patch.assignee
+    if patch.assigneeContact is not None:
+        updates["assigneeContact"] = patch.assigneeContact
     if patch.notes is not None:
         updates["notes"] = patch.notes
     try:
@@ -425,6 +494,34 @@ async def update_grievance(ticket_id: str, patch: GrievanceUpdate):
     except Exception as e:
         logger.warning(f"MongoDB update grievance: {e}")
     return {"status": "success", "ticketId": ticket_id, "updated": updates}
+
+@api_router.get("/grievances/contacts")
+async def get_grievance_contacts(department: Optional[str] = None, mandal: Optional[str] = None):
+    try:
+        query = {}
+        if department:
+            query["department"] = department
+        if mandal:
+            query["mandal"] = mandal
+        contacts = await db.grievance_contacts.find(query, {"_id": 0}).to_list(200)
+        if contacts:
+            return contacts
+    except Exception as e:
+        logger.warning(f"MongoDB get_contacts: {e}")
+    return load_json_fallback("grievance_contacts.json")
+
+@api_router.post("/grievances/contacts")
+async def create_grievance_contact(contact: GrievanceContactModel):
+    new_id = contact.id or f"cnt_{uuid.uuid4().hex[:6]}"
+    doc = contact.model_dump()
+    doc["id"] = new_id
+    try:
+        await db.grievance_contacts.update_one({"id": new_id}, {"$set": doc}, upsert=True)
+        doc.pop("_id", None)
+        return doc
+    except Exception as e:
+        logger.warning(f"MongoDB save contact: {e}")
+        return doc
 
 # ----------------- VOLUNTEER SQUADS & TASKS (MONGODB) -----------------
 

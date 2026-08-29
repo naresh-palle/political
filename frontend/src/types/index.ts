@@ -180,26 +180,78 @@ export interface AuditReport {
 }
 
 // Grievance Module Types
-export type GrievanceUrgency = "Emergency" | "High" | "Normal" | "Low";
-export type GrievanceStatus = "Open" | "Assigned" | "In_Progress" | "Resolved" | "Escalated";
+export type GrievancePriority = "Low" | "Medium" | "High";
+export type GrievanceStatus = "Pending" | "Completed" | "Can't be done" | "In_Progress" | "Open" | "Resolved" | "Assigned";
+export type GrievanceCitizenType = "Voter" | "Cadre" | "Leader";
+
+export interface GrievanceAddress {
+  doorNo: string;
+  wardVillage: string;
+  townMandal: string;
+  assembly: string;
+  parliament: string;
+  state: string;
+}
 
 export interface GrievanceItem {
   id: string;
   ticketNumber: string;
+  // Personal details
+  citizenType: GrievanceCitizenType;
   citizenName: string;
+  citizenAge: number;
+  citizenGender: "Male" | "Female" | "Other";
   citizenPhone: string;
-  wardNumber: string;
-  boothNumber: string;
-  category: "Water Supply" | "Roads & Transit" | "Electricity" | "Healthcare" | "Welfare Pension" | "Sanitation";
+  address: GrievanceAddress;
+  // Issue details
   subject: string;
+  department: string;
+  category: string;
   description: string;
-  urgency: GrievanceUrgency;
+  location: string;
+  priority: GrievancePriority;
+  assignee: string;
+  assigneeContact?: string;
+  assigneeDesignation?: string;
+  // Status & Metadata
   status: GrievanceStatus;
-  receivedVia: "WhatsApp" | "TollFree" | "Field Worker App" | "Web Portal" | "Janata Darbar";
+  submittedByVolunteer: {
+    name: string;
+    phone: string;
+    constituency?: string;
+  };
   submittedDate: string;
-  slaHoursRemaining: number;
-  assignedOfficer: string;
+  timestamp: string; // ISO date string
+  slaHoursRemaining?: number;
   notes: string[];
+  // Backwards compatibility legacy fields
+  wardNumber?: string;
+  boothNumber?: string;
+  urgency?: string;
+  receivedVia?: string;
+  assignedOfficer?: string;
+}
+
+export interface GrievanceContact {
+  id: string;
+  department: string;
+  category: string;
+  village: string;
+  mandal: string;
+  assembly: string;
+  pocName: string;
+  designation: string;
+  phone: string;
+  email: string;
+}
+
+export interface DesignatedVolunteer {
+  id: string;
+  name: string;
+  mobile: string;
+  constituency: string;
+  mandal: string;
+  active: boolean;
 }
 
 // Volunteer Module Types

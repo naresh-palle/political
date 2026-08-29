@@ -9,6 +9,8 @@ import {
   DataConfidenceRecord,
   UserProfile,
   GrievanceItem,
+  GrievanceContact,
+  DesignatedVolunteer,
   VolunteerSquad,
   VolunteerTask,
   CampaignLandingConfig
@@ -667,79 +669,463 @@ export const MOCK_DATA_CONFIDENCE: DataConfidenceRecord[] = [
   }
 ];
 
+// Designated Volunteers allowed to log in via mobile OTP
+export const DESIGNATED_VOLUNTEERS: DesignatedVolunteer[] = [
+  {
+    id: "vol-001",
+    name: "Ramesh Babu",
+    mobile: "9848012345",
+    constituency: "Kadapa AC",
+    mandal: "Kadapa Urban",
+    active: true
+  },
+  {
+    id: "vol-002",
+    name: "Suresh Reddy",
+    mobile: "9440156789",
+    constituency: "Kadapa AC",
+    mandal: "Kadapa Rural",
+    active: true
+  },
+  {
+    id: "vol-003",
+    name: "Lakshmi Prasanna",
+    mobile: "9989023456",
+    constituency: "Kadapa AC",
+    mandal: "Chinthakommadinne",
+    active: true
+  },
+  {
+    id: "vol-004",
+    name: "K. Mohan Kumar",
+    mobile: "9701234567",
+    constituency: "Kadapa AC",
+    mandal: "Pendlimarri",
+    active: true
+  },
+  {
+    id: "vol-005",
+    name: "Field Test Volunteer",
+    mobile: "123456",
+    constituency: "Kadapa AC",
+    mandal: "Kadapa Central",
+    active: true
+  }
+];
+
+// Manager Contact Database (Point of Contacts for auto-assigning & escalation)
+export const MOCK_GRIEVANCE_CONTACTS: GrievanceContact[] = [
+  {
+    id: "cnt-01",
+    department: "Water Supply",
+    category: "Drinking Water Pipeline Leak / Contamination",
+    village: "Chinna Chowk",
+    mandal: "Kadapa Urban",
+    assembly: "Kadapa AC",
+    pocName: "M. Ramesh (Irrigation & Water Works EE)",
+    designation: "Executive Engineer - Municipal Water Supply",
+    phone: "+91 94408 11223",
+    email: "ee.water.kdp@ap.gov.in"
+  },
+  {
+    id: "cnt-02",
+    department: "Electricity",
+    category: "Transformer Overload / Low Voltage",
+    village: "Railway Colony",
+    mandal: "Kadapa Urban",
+    assembly: "Kadapa AC",
+    pocName: "B. Venkatesh (APCPDCL Assistant Engineer)",
+    designation: "Assistant Engineer (Town Operations)",
+    phone: "+91 94408 22334",
+    email: "ae.elec.kdp@apcpdcl.in"
+  },
+  {
+    id: "cnt-03",
+    department: "Welfare Pension",
+    category: "DBT Pension Disbursal / e-KYC Issue",
+    village: "Gandhi Nagar",
+    mandal: "Kadapa Urban",
+    assembly: "Kadapa AC",
+    pocName: "P. Vani (Social Welfare Liaison Officer)",
+    designation: "Mandal Social Welfare Officer",
+    phone: "+91 94408 33445",
+    email: "mswo.kdp@ap.gov.in"
+  },
+  {
+    id: "cnt-04",
+    department: "Roads & Transit",
+    category: "Pothole Clusters & Road Damage",
+    village: "Industrial Bypass",
+    mandal: "Kadapa Rural",
+    assembly: "Kadapa AC",
+    pocName: "K. Suresh (R&B Assistant Executive Engineer)",
+    designation: "AEE - Roads & Buildings Division",
+    phone: "+91 94408 44556",
+    email: "aee.rb.kdp@ap.gov.in"
+  },
+  {
+    id: "cnt-05",
+    department: "Sanitation",
+    category: "Garbage Waste Accumulation / Drainage Overflow",
+    village: "Old Bus Stand",
+    mandal: "Kadapa Urban",
+    assembly: "Kadapa AC",
+    pocName: "Dr. G. Prabhakar (Municipal Health Officer)",
+    designation: "Chief Sanitary Inspector",
+    phone: "+91 94408 55667",
+    email: "sanitary.kdp@cdma.gov.in"
+  },
+  {
+    id: "cnt-06",
+    department: "Healthcare",
+    category: "PHC Doctor Availability & Medicine Stock",
+    village: "Rami Reddy Nagar",
+    mandal: "Kadapa Rural",
+    assembly: "Kadapa AC",
+    pocName: "Dr. K. Sujatha (District Medical & Health Officer)",
+    designation: "DM&HO Liaison Kadapa",
+    phone: "+91 94408 66778",
+    email: "dmho.kdp@ap.gov.in"
+  },
+  {
+    id: "cnt-07",
+    department: "Agriculture & Irrigation",
+    category: "Canal Silt Removal / Subsidized Fertilizer",
+    village: "Utukur",
+    mandal: "Chinthakommadinne",
+    assembly: "Kadapa AC",
+    pocName: "Ch. Anjaneyulu (Assistant Director of Agriculture)",
+    designation: "ADA - Kadapa Division",
+    phone: "+91 94408 77889",
+    email: "ada.agri.kdp@ap.gov.in"
+  },
+  {
+    id: "cnt-08",
+    department: "Revenue & Land Administration",
+    category: "Passbook e-Seva / Boundary Dispute",
+    village: "Nagarajupalle",
+    mandal: "Pendlimarri",
+    assembly: "Kadapa AC",
+    pocName: "S. Chennaiah (Mandal Revenue Officer)",
+    designation: "MRO / Tahsildar",
+    phone: "+91 94408 88990",
+    email: "mro.kdp@ap.gov.in"
+  }
+];
+
 // Mock Grievances List for Grievance Management CRM
 export const MOCK_GRIEVANCES: GrievanceItem[] = [
   {
     id: "grv-101",
-    ticketNumber: "KDP-GRV-2026-891",
+    ticketNumber: "KDP-GRV-2026-0891",
+    citizenType: "Voter",
     citizenName: "K. Sudhakar Reddy",
-    citizenPhone: "+91 98480 *****",
-    wardNumber: "Ward 14 (Old City)",
-    boothNumber: "Booth 112",
-    category: "Water Supply",
-    urgency: "Emergency",
-    status: "In_Progress",
-    receivedVia: "WhatsApp",
-    submittedDate: "28 Aug, 09:15 AM",
-    slaHoursRemaining: 4,
-    assignedOfficer: "M. Ramesh (Irrigation Liaison)",
-    subject: "Broken pipeline near Ambedkar Circle causing drinking water contamination",
-    description: "Main municipal pipeline burst since yesterday evening. Contaminated muddy water entering households in Street 4.",
-    notes: ["Team dispatched with replacement seal pipe.", "Water tanker sent as interim relief at 11:30 AM."]
+    citizenAge: 46,
+    citizenGender: "Male",
+    citizenPhone: "+91 98480 12345",
+    address: {
+      doorNo: "D.No 14/231-A",
+      wardVillage: "Ward 14 (Chinna Chowk)",
+      townMandal: "Kadapa Urban",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
+    subject: "Broken drinking water pipeline near Ambedkar Circle causing muddy water supply",
+    department: "Water Supply",
+    category: "Drinking Water Pipeline Leak / Contamination",
+    description: "Main municipal 4-inch supply line ruptured yesterday evening. Mud and drainage seepage entering residential sumps on Street 4.",
+    location: "Near Ambedkar Circle, Street 4, Chinna Chowk",
+    priority: "High",
+    assignee: "M. Ramesh (Irrigation & Water Works EE)",
+    assigneeContact: "+91 94408 11223",
+    assigneeDesignation: "Executive Engineer - Municipal Water Supply",
+    status: "Pending",
+    submittedByVolunteer: {
+      name: "Ramesh Babu",
+      phone: "9848012345",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "Today, 09:15 AM",
+    timestamp: new Date().toISOString(),
+    slaHoursRemaining: 6,
+    notes: [
+      "09:20 AM: Ticket assigned automatically to Water Supply PoC.",
+      "10:45 AM: Field technician team dispatched with pipe clamp weld kit."
+    ]
   },
   {
     id: "grv-102",
-    ticketNumber: "KDP-GRV-2026-892",
+    ticketNumber: "KDP-GRV-2026-0892",
+    citizenType: "Voter",
     citizenName: "S. Fatima Begum",
-    citizenPhone: "+91 94401 *****",
-    wardNumber: "Ward 07 (Gandhi Nagar)",
-    boothNumber: "Booth 058",
-    category: "Welfare Pension",
-    urgency: "High",
-    status: "Open",
-    receivedVia: "Janata Darbar",
-    submittedDate: "28 Aug, 10:45 AM",
-    slaHoursRemaining: 18,
-    assignedOfficer: "P. Vani (Social Welfare Desk)",
+    citizenAge: 62,
+    citizenGender: "Female",
+    citizenPhone: "+91 94401 56789",
+    address: {
+      doorNo: "D.No 7/89",
+      wardVillage: "Ward 07 (Gandhi Nagar)",
+      townMandal: "Kadapa Urban",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
     subject: "Widow pension DBT disbursement delayed for 2 consecutive months",
-    description: "Aadhaar e-KYC mismatch showing at local secretariat center preventing monthly disbursement.",
-    notes: ["Biometric re-verification scheduled with field volunteer."]
+    department: "Welfare Pension",
+    category: "DBT Pension Disbursal / e-KYC Issue",
+    description: "Biometric e-KYC device error at the local ward secretariat preventing pension credit. Beneficiary has no other financial support.",
+    location: "Gandhi Nagar 3rd Cross, near Urdu Primary School",
+    priority: "Medium",
+    assignee: "P. Vani (Social Welfare Liaison Officer)",
+    assigneeContact: "+91 94408 33445",
+    assigneeDesignation: "Mandal Social Welfare Officer",
+    status: "Pending",
+    submittedByVolunteer: {
+      name: "Lakshmi Prasanna",
+      phone: "9989023456",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "Today, 11:30 AM",
+    timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+    slaHoursRemaining: 18,
+    notes: [
+      "11:35 AM: Auto-routed to Social Welfare Officer.",
+      "12:10 PM: Doorstep biometric re-scan scheduled with secretariat volunteer."
+    ]
   },
   {
     id: "grv-103",
-    ticketNumber: "KDP-GRV-2026-893",
+    ticketNumber: "KDP-GRV-2026-0893",
+    citizenType: "Cadre",
     citizenName: "T. Narayana Murthy",
-    citizenPhone: "+91 99890 *****",
-    wardNumber: "Ward 22 (Industrial Bypass)",
-    boothNumber: "Booth 184",
-    category: "Roads & Transit",
-    urgency: "Normal",
-    status: "Assigned",
-    receivedVia: "Field Worker App",
-    submittedDate: "27 Aug, 04:20 PM",
-    slaHoursRemaining: 32,
-    assignedOfficer: "K. Suresh (R&B Division)",
-    subject: "Pothole clusters causing bike accidents near Kopparthy junction",
-    description: "Monsoon runoff eroded asphalt over 200m stretch. Needs cold patch asphalt repair before market day.",
-    notes: ["Inspection logged. Work order submitted to municipal engineer."]
+    citizenAge: 52,
+    citizenGender: "Male",
+    citizenPhone: "+91 99890 23456",
+    address: {
+      doorNo: "D.No 22/104",
+      wardVillage: "Ward 22 (Industrial Bypass)",
+      townMandal: "Kadapa Rural",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
+    subject: "Pothole clusters causing bike skids near Kopparthy Industrial junction",
+    department: "Roads & Transit",
+    category: "Pothole Clusters & Road Damage",
+    description: "Heavy monsoons washed away top asphalt over 150m. Two motorcycle riders injured yesterday evening.",
+    location: "Kopparthy Junction to NH-40 connector",
+    priority: "High",
+    assignee: "K. Suresh (R&B Assistant Executive Engineer)",
+    assigneeContact: "+91 94408 44556",
+    assigneeDesignation: "AEE - Roads & Buildings Division",
+    status: "Completed",
+    submittedByVolunteer: {
+      name: "Suresh Reddy",
+      phone: "9440156789",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "Yesterday, 04:20 PM",
+    timestamp: new Date(Date.now() - 28 * 3600 * 1000).toISOString(),
+    slaHoursRemaining: 0,
+    notes: [
+      "Yesterday: Emergency inspection logged.",
+      "Today 08:30 AM: Cold asphalt bitumen patching completed. Verified by volunteer."
+    ]
   },
   {
     id: "grv-104",
-    ticketNumber: "KDP-GRV-2026-894",
+    ticketNumber: "KDP-GRV-2026-0894",
+    citizenType: "Leader",
     citizenName: "G. Venkateswarlu",
-    citizenPhone: "+91 97000 *****",
-    wardNumber: "Ward 03 (Railway Colony)",
-    boothNumber: "Booth 024",
-    category: "Electricity",
-    urgency: "High",
-    status: "Resolved",
-    receivedVia: "TollFree",
-    submittedDate: "27 Aug, 11:10 AM",
+    citizenAge: 58,
+    citizenGender: "Male",
+    citizenPhone: "+91 97000 88990",
+    address: {
+      doorNo: "D.No 3/44",
+      wardVillage: "Ward 03 (Railway Colony)",
+      townMandal: "Kadapa Urban",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
+    subject: "Severe low voltage and frequent transformer trips during evening peak hours",
+    department: "Electricity",
+    category: "Transformer Overload / Low Voltage",
+    description: "Transformer overloaded with 35 new connections. Voltage dropping to 140V, damaging water pumps and appliances.",
+    location: "Railway Colony D-Block, Opposite Community Hall",
+    priority: "High",
+    assignee: "B. Venkatesh (APCPDCL Assistant Engineer)",
+    assigneeContact: "+91 94408 22334",
+    assigneeDesignation: "Assistant Engineer (Town Operations)",
+    status: "Completed",
+    submittedByVolunteer: {
+      name: "Ramesh Babu",
+      phone: "9848012345",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "3 days ago",
+    timestamp: new Date(Date.now() - 72 * 3600 * 1000).toISOString(),
     slaHoursRemaining: 0,
-    assignedOfficer: "APCPDCL Quick Response",
-    subject: "Low voltage and frequent transformer trips in evening peak hours",
-    description: "Transformer overload due to new apartment connections causing pump failures.",
-    notes: ["New 100kVA transformer installed and load balanced on 28 Aug 08:00 AM. Ticket resolved."]
+    notes: [
+      "3 days ago: APCPDCL team arrived for load assessment.",
+      "2 days ago: Additional 100kVA transformer installed and phase load balanced."
+    ]
+  },
+  {
+    id: "grv-105",
+    ticketNumber: "KDP-GRV-2026-0895",
+    citizenType: "Voter",
+    citizenName: "Dr. S. K. Basha",
+    citizenAge: 49,
+    citizenGender: "Male",
+    citizenPhone: "+91 97012 34567",
+    address: {
+      doorNo: "D.No 3/112",
+      wardVillage: "Old Bus Stand Area",
+      townMandal: "Kadapa Urban",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
+    subject: "Commercial vegetable market garbage accumulation near Primary Health Centre",
+    department: "Sanitation",
+    category: "Garbage Waste Accumulation / Drainage Overflow",
+    description: "Daily market waste not cleared by tractor for 48 hours. Strong stench entering OPD ward of health centre.",
+    location: "Behind Vegetable Market, PHC Lane",
+    priority: "Medium",
+    assignee: "Dr. G. Prabhakar (Municipal Health Officer)",
+    assigneeContact: "+91 94408 55667",
+    assigneeDesignation: "Chief Sanitary Inspector",
+    status: "Pending",
+    submittedByVolunteer: {
+      name: "K. Mohan Kumar",
+      phone: "9701234567",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "4 days ago",
+    timestamp: new Date(Date.now() - 96 * 3600 * 1000).toISOString(),
+    slaHoursRemaining: 12,
+    notes: [
+      "4 days ago: Sanitary Inspector notified.",
+      "Compactor truck deployed for immediate clearing."
+    ]
+  },
+  {
+    id: "grv-106",
+    citizenType: "Voter",
+    ticketNumber: "KDP-GRV-2026-0896",
+    citizenName: "B. Anjamma",
+    citizenAge: 55,
+    citizenGender: "Female",
+    citizenPhone: "+91 96521 44556",
+    address: {
+      doorNo: "D.No 5/12",
+      wardVillage: "Utukur Village",
+      townMandal: "Chinthakommadinne",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
+    subject: "Subsidized DAP fertilizer quota shortage at Rythu Bharosa Kendra",
+    department: "Agriculture & Irrigation",
+    category: "Canal Silt Removal / Subsidized Fertilizer",
+    description: "RBK received only 80 bags against demand of 400 bags for groundnut sowing season.",
+    location: "Utukur RBK Centre, Main Road",
+    priority: "Low",
+    assignee: "Ch. Anjaneyulu (Assistant Director of Agriculture)",
+    assigneeContact: "+91 94408 77889",
+    assigneeDesignation: "ADA - Kadapa Division",
+    status: "Can't be done",
+    submittedByVolunteer: {
+      name: "Lakshmi Prasanna",
+      phone: "9989023456",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "6 days ago",
+    timestamp: new Date(Date.now() - 144 * 3600 * 1000).toISOString(),
+    slaHoursRemaining: 0,
+    notes: [
+      "6 days ago: Inquired with Markfed district godown.",
+      "Closed with note: Central fertilizer rake delivery delayed statewide. Direct retail distribution advised as interim."
+    ]
+  },
+  {
+    id: "grv-107",
+    citizenType: "Cadre",
+    ticketNumber: "KDP-GRV-2026-0897",
+    citizenName: "M. Chenna Kesavulu",
+    citizenAge: 39,
+    citizenGender: "Male",
+    citizenPhone: "+91 99632 11223",
+    address: {
+      doorNo: "D.No 12/90",
+      wardVillage: "Nagarajupalle",
+      townMandal: "Pendlimarri",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
+    subject: "Agricultural land 1B record name error in Webland portal",
+    department: "Revenue & Land Administration",
+    category: "Passbook e-Seva / Boundary Dispute",
+    description: "Survey Number 184/2 name mismatch after digital re-survey. Requesting rectification file forwarding to RDO.",
+    location: "Nagarajupalle Tahsildar Jurisdiction",
+    priority: "Medium",
+    assignee: "S. Chennaiah (Mandal Revenue Officer)",
+    assigneeContact: "+91 94408 88990",
+    assigneeDesignation: "MRO / Tahsildar",
+    status: "Pending",
+    submittedByVolunteer: {
+      name: "K. Mohan Kumar",
+      phone: "9701234567",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "12 days ago",
+    timestamp: new Date(Date.now() - 280 * 3600 * 1000).toISOString(),
+    slaHoursRemaining: 24,
+    notes: [
+      "12 days ago: Document copies collected.",
+      "Deputy Tahsildar scheduled field inspection."
+    ]
+  },
+  {
+    id: "grv-108",
+    citizenType: "Voter",
+    ticketNumber: "KDP-GRV-2026-0898",
+    citizenName: "K. Sugunamma",
+    citizenAge: 42,
+    citizenGender: "Female",
+    citizenPhone: "+91 98855 66778",
+    address: {
+      doorNo: "D.No 8/45",
+      wardVillage: "Rami Reddy Nagar",
+      townMandal: "Kadapa Rural",
+      assembly: "Kadapa AC",
+      parliament: "Kadapa PC",
+      state: "Andhra Pradesh"
+    },
+    subject: "Shortage of anti-venom and diabetes medicines in local Urban PHC",
+    department: "Healthcare",
+    category: "PHC Doctor Availability & Medicine Stock",
+    description: "Elderly patients turned away without regular insulin and metformin stock for past two weeks.",
+    location: "Rami Reddy Nagar Urban PHC, Sector 2",
+    priority: "High",
+    assignee: "Dr. K. Sujatha (District Medical & Health Officer)",
+    assigneeContact: "+91 94408 66778",
+    assigneeDesignation: "DM&HO Liaison Kadapa",
+    status: "Pending",
+    submittedByVolunteer: {
+      name: "Suresh Reddy",
+      phone: "9440156789",
+      constituency: "Kadapa AC"
+    },
+    submittedDate: "18 days ago",
+    timestamp: new Date(Date.now() - 430 * 3600 * 1000).toISOString(),
+    slaHoursRemaining: 8,
+    notes: [
+      "18 days ago: Escalated to Central Drug Stores Kadapa.",
+      "Emergency batch indent approved."
+    ]
   }
 ];
 
