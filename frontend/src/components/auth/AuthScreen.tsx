@@ -11,20 +11,54 @@ interface AuthScreenProps {
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack }) => {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [selectedRole, setSelectedRole] = useState<string>(USER_PROFILES[0].id);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const profile = USER_PROFILES.find((p) => p.id === selectedRole) || USER_PROFILES[0];
-    onAuthenticated(profile);
+    const cleanEmail = email.trim().toLowerCase();
+    
+    // Check if user exists in database / predefined roster
+    const existing = USER_PROFILES.find((p) => p.email.toLowerCase() === cleanEmail);
+    if (existing) {
+      onAuthenticated(existing);
+      return;
+    }
+
+    // Dynamic resolution for new / custom credentials
+    const displayName =
+      name.trim() ||
+      cleanEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ||
+      "Campaign Director";
+
+    const newProfile: UserProfile = {
+      id: `usr_${Date.now()}`,
+      name: displayName,
+      email: cleanEmail || "leader@leaderslens.ai",
+      demoPassword: password || "Secure@2026",
+      role: "super_admin",
+      roleTitle: "Master System Administrator",
+      department: "Central Campaign Command",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
+      assignedConstituency: "All Constituencies (Full Command)",
+      clearanceLevel: "Level 1 (Full Access)",
+      permissions: {
+        canExportReports: true,
+        canEditStrategy: true,
+        canManageVolunteers: true,
+        canResolveGrievances: true,
+        canPublishLandingPage: true,
+        canViewConfidentialMetrics: true,
+        canManageSystemUsers: true
+      }
+    };
+    onAuthenticated(newProfile);
   };
 
   const handleGoogle = () => {
-    const profile = USER_PROFILES.find((p) => p.id === selectedRole) || USER_PROFILES[0];
-    onAuthenticated(profile);
+    const googleProfile = USER_PROFILES[0];
+    onAuthenticated(googleProfile);
   };
 
   return (
@@ -141,21 +175,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
                   placeholder="••••••••"
                   className={darkInput}
                 />
-              </Field>
-
-              <Field label="Continue as (RBAC role)">
-                <select
-                  data-testid="role-select"
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className={`${darkInput} appearance-none pr-8`}
-                >
-                  {USER_PROFILES.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
-                      {p.roleTitle}
-                    </option>
-                  ))}
-                </select>
               </Field>
 
               <button
