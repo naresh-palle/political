@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { UserProfile } from "../../types";
-import { USER_PROFILES } from "../../services/mockData";
+import { politicalApiService } from "../../services/api";
 import { LeadersLogo } from "../common/LeadersLogo";
 import { ArrowRight, Sparkles, ShieldCheck, Mail, KeyRound } from "lucide-react";
 
@@ -14,51 +14,71 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
+    setIsLoading(true);
     
-    // Check if user exists in database / predefined roster
-    const existing = USER_PROFILES.find((p) => p.email.toLowerCase() === cleanEmail);
-    if (existing) {
-      onAuthenticated(existing);
-      return;
-    }
-
-    // Dynamic resolution for new / custom credentials
-    const displayName =
-      name.trim() ||
-      cleanEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ||
-      "Campaign Director";
-
-    const newProfile: UserProfile = {
-      id: `usr_${Date.now()}`,
-      name: displayName,
-      email: cleanEmail || "leader@leaderslens.ai",
-      demoPassword: password || "Secure@2026",
-      role: "super_admin",
-      roleTitle: "Master System Administrator",
-      department: "Central Campaign Command",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
-      assignedConstituency: "All Constituencies (Full Command)",
-      clearanceLevel: "Level 1 (Full Access)",
-      permissions: {
-        canExportReports: true,
-        canEditStrategy: true,
-        canManageVolunteers: true,
-        canResolveGrievances: true,
-        canPublishLandingPage: true,
-        canViewConfidentialMetrics: true,
-        canManageSystemUsers: true
+    try {
+      // Check if user exists in database / dynamic roster
+      const users = await politicalApiService.getUsers();
+      const existing = users.find((p) => p.email.toLowerCase() === cleanEmail);
+      if (existing) {
+        onAuthenticated(existing);
+        return;
       }
-    };
-    onAuthenticated(newProfile);
+
+      // Dynamic resolution for new / custom credentials
+      const displayName =
+        name.trim() ||
+        cleanEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ||
+        "Campaign Director";
+
+      const newProfile: UserProfile = {
+        id: `usr_${Date.now()}`,
+        name: displayName,
+        email: cleanEmail || "leader@leaderslens.ai",
+        demoPassword: password || "Secure@2026",
+        role: "super_admin",
+        roleTitle: "Master System Administrator",
+        department: "Central Campaign Command",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
+        assignedConstituency: "All Constituencies (Full Command)",
+        clearanceLevel: "Level 1 (Full Access)",
+        partyId: "TDP",
+        partyName: "Telugu Desam Party",
+        partyAbbr: "TDP",
+        partyColor: "#FFD200",
+        partyEmoji: "🚲",
+        permissions: {
+          canExportReports: true,
+          canEditStrategy: true,
+          canManageVolunteers: true,
+          canResolveGrievances: true,
+          canPublishLandingPage: true,
+          canViewConfidentialMetrics: true,
+          canManageSystemUsers: true
+        }
+      };
+      onAuthenticated(newProfile);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogle = () => {
-    const googleProfile = USER_PROFILES[0];
-    onAuthenticated(googleProfile);
+  const handleGoogle = async () => {
+    setIsLoading(true);
+    try {
+      const users = await politicalApiService.getUsers();
+      const googleProfile = users[0];
+      if (googleProfile) {
+        onAuthenticated(googleProfile);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -186,30 +206,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
                 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
               </button>
 
-              {/* Quick Party Persona One-Click Access */}
-              <div className="pt-2 border-t border-[#22405E] space-y-2">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-[#D4A24C] text-center">
-                  Quick Demo Login by Party
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {USER_PROFILES.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => onAuthenticated(p)}
-                      className="p-1.5 rounded bg-[#0A1A2B] border border-[#22405E] hover:border-[#D4A24C] text-left flex items-center gap-1.5 text-[11px] text-[#F5EFE0] transition-colors cursor-pointer"
-                    >
-                      <span>{p.partyEmoji || "🏛️"}</span>
-                      <div className="truncate">
-                        <span className="font-bold">{p.partyAbbr || "ADM"}:</span>{" "}
-                        <span className="text-[#B9AF95] text-[10px]">{p.name.split(" ")[0]}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <p className="text-[11px] text-center text-[#8A8E9B]">
+              <p className="text-[11px] text-center text-[#8A8E9B] pt-1">
                 By continuing you agree to Leader's Lens Terms & Confidentiality Framework.
               </p>
             </form>
