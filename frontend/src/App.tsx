@@ -27,6 +27,7 @@ import { RoleManagement } from "./components/governance/RoleManagement";
 import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo, ElectedRepresentative, CandidateType } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
 import { politicalApiService } from "./services/api";
+import { PartyThemeProvider } from "./context/PartyThemeContext";
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
@@ -74,29 +75,6 @@ export function App() {
   });
 
   const [auditData, setAuditData] = useState<AuditReport | null>(null);
-
-  // Dynamically apply party theme tokens when an audit or party context is active
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const parties = await politicalApiService.getPoliticalParties();
-      if (!mounted) return;
-      const targetPartyId = auditData?.candidates?.[0]?.partyId || currentProfile.partyId;
-      if (targetPartyId) {
-        const matchedParty = parties.find((p) => p.id.toUpperCase() === targetPartyId.toUpperCase());
-        if (matchedParty) {
-          document.documentElement.style.setProperty("--party-primary", matchedParty.primaryColor || "#D4A24C");
-          document.documentElement.style.setProperty("--party-secondary", matchedParty.secondaryColor || "#B45309");
-          document.documentElement.style.setProperty("--party-accent", matchedParty.accentColor || "#F59E0B");
-          document.documentElement.style.setProperty("--party-gradient-start", matchedParty.gradientStart || matchedParty.primaryColor || "#D4A24C");
-          document.documentElement.style.setProperty("--party-gradient-end", matchedParty.gradientEnd || matchedParty.secondaryColor || "#EAB308");
-        }
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [currentProfile, auditData]);
 
   const [selectedGeo, setSelectedGeo] = useState<{
     stateId: string;
@@ -201,117 +179,119 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] text-[#121316] flex flex-col font-sans selection:bg-[#0B1A2C] selection:text-white">
-      {route === "home" ? (
-        <HomePage onEnter={() => setRoute("auth")} />
-      ) : route === "auth" ? (
-        <AuthScreen
-          onAuthenticated={handleAuthenticated}
-          onBack={() => setRoute("home")}
-        />
-      ) : (
-        <>
-      {/* Top Global App Shell */}
-      {!isPresentationMode && (
-        <Navbar
-          activeProduct={activeProduct}
-          onProductChange={handleProductChange}
-          isAuditView={viewState === "audit"}
-          onResetToSelect={handleResetToSelect}
-          currentProfile={currentProfile}
-          onSwitchProfile={handleSwitchProfile}
-          onGoHome={() => setRoute("home")}
-          onSignOut={handleSignOut}
-        />
-      )}
-
-      {/* Main Platform Body */}
-      <main className="flex-1">
-        {/* Module 1: STRENGTH AUDIT */}
-        {activeProduct === "pitch" && (
+    <PartyThemeProvider authenticatedUser={currentProfile}>
+      <div className="min-h-screen bg-[#FBFBF9] text-[#121316] flex flex-col font-sans selection:bg-[#0B1A2C] selection:text-white">
+        {route === "home" ? (
+          <HomePage onEnter={() => setRoute("auth")} />
+        ) : route === "auth" ? (
+          <AuthScreen
+            onAuthenticated={handleAuthenticated}
+            onBack={() => setRoute("home")}
+          />
+        ) : (
           <>
-            {viewState === "select" && (
-              <LocationSelector onGenerateAudit={handleStartAuditGeneration} />
-            )}
-
-            {viewState === "loading" && (
-              <AuditLoadingExperience
-                assemblyName={selectedGeo.assemblyName || "Constituency"}
-                onComplete={handleLoadingComplete}
+            {/* Top Global App Shell */}
+            {!isPresentationMode && (
+              <Navbar
+                activeProduct={activeProduct}
+                onProductChange={handleProductChange}
+                isAuditView={viewState === "audit"}
+                onResetToSelect={handleResetToSelect}
+                currentProfile={currentProfile}
+                onSwitchProfile={handleSwitchProfile}
+                onGoHome={() => setRoute("home")}
+                onSignOut={handleSignOut}
               />
             )}
 
-            {viewState === "audit" && auditData && (
-              <div className="animate-fadeIn">
-                <AuditHeader
-                  audit={auditData}
-                  onEnterPresentationMode={() => setIsPresentationMode(true)}
-                  onOpenExportModal={() => setIsExportModalOpen(true)}
+            {/* Main Platform Body */}
+            <main className="flex-1">
+              {/* Module 1: STRENGTH AUDIT */}
+              {activeProduct === "pitch" && (
+                <>
+                  {viewState === "select" && (
+                    <LocationSelector onGenerateAudit={handleStartAuditGeneration} />
+                  )}
+
+                  {viewState === "loading" && (
+                    <AuditLoadingExperience
+                      assemblyName={selectedGeo.assemblyName || "Constituency"}
+                      onComplete={handleLoadingComplete}
+                    />
+                  )}
+
+                  {viewState === "audit" && auditData && (
+                    <div className="animate-fadeIn">
+                      <AuditHeader
+                        audit={auditData}
+                        onEnterPresentationMode={() => setIsPresentationMode(true)}
+                        onOpenExportModal={() => setIsExportModalOpen(true)}
+                      />
+
+                      <AuditNav />
+
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
+                        <OverviewSection audit={auditData} />
+                        <CandidateSection candidates={auditData.candidates} />
+                        <SocialFootprintSection client={auditData.client} />
+                        <IssueIntelligenceSection issues={auditData.issues} />
+                        <OppositionSection candidates={auditData.candidates} />
+                        <VoterReachSection audit={auditData} />
+                        <DigitalAudienceSection audit={auditData} />
+                        <ReachGapSection audit={auditData} />
+                        <RecommendationsSection recommendations={auditData.recommendations} />
+                        <ScorecardSection
+                          scorecard={auditData.scorecard}
+                          overallScore={auditData.overallStrengthScore}
+                        />
+                        <DataConfidenceSection records={auditData.dataConfidence} />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Module 2: GRIEVANCE MANAGEMENT CRM */}
+              {activeProduct === "grievances" && <GrievanceManagement />}
+
+              {/* Module 3: SOCIAL MEDIA VOLUNTEER MONITORING */}
+              {activeProduct === "volunteers" && <VolunteerMonitoring />}
+
+              {/* Module 4: CAMPAIGN WEBSITE GENERATOR */}
+              {activeProduct === "webbuilder" && <CampaignWebsiteGenerator />}
+
+              {/* Module 5: ROLE-BASED ACCESS & GOVERNANCE */}
+              {activeProduct === "governance" && (
+                <RoleManagement
+                  currentProfile={currentProfile}
+                  onSwitchProfile={handleSwitchProfile}
                 />
+              )}
+            </main>
 
-                <AuditNav />
+            {/* Global Footer */}
+            {!isPresentationMode && <Footer />}
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
-                  <OverviewSection audit={auditData} />
-                  <CandidateSection candidates={auditData.candidates} />
-                  <SocialFootprintSection client={auditData.client} />
-                  <IssueIntelligenceSection issues={auditData.issues} />
-                  <OppositionSection candidates={auditData.candidates} />
-                  <VoterReachSection audit={auditData} />
-                  <DigitalAudienceSection audit={auditData} />
-                  <ReachGapSection audit={auditData} />
-                  <RecommendationsSection recommendations={auditData.recommendations} />
-                  <ScorecardSection
-                    scorecard={auditData.scorecard}
-                    overallScore={auditData.overallStrengthScore}
-                  />
-                  <DataConfidenceSection records={auditData.dataConfidence} />
-                </div>
-              </div>
+            {/* Presentation Mode Fullscreen Overlay */}
+            {isPresentationMode && auditData && (
+              <PresentationMode
+                audit={auditData}
+                onExit={() => setIsPresentationMode(false)}
+              />
+            )}
+
+            {/* PDF Export Modal */}
+            {isExportModalOpen && auditData && (
+              <ExportModal
+                audit={auditData}
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+              />
             )}
           </>
         )}
-
-        {/* Module 2: GRIEVANCE MANAGEMENT CRM */}
-        {activeProduct === "grievances" && <GrievanceManagement />}
-
-        {/* Module 3: SOCIAL MEDIA VOLUNTEER MONITORING */}
-        {activeProduct === "volunteers" && <VolunteerMonitoring />}
-
-        {/* Module 4: CAMPAIGN WEBSITE GENERATOR */}
-        {activeProduct === "webbuilder" && <CampaignWebsiteGenerator />}
-
-        {/* Module 5: ROLE-BASED ACCESS & GOVERNANCE */}
-        {activeProduct === "governance" && (
-          <RoleManagement
-            currentProfile={currentProfile}
-            onSwitchProfile={handleSwitchProfile}
-          />
-        )}
-      </main>
-
-      {/* Global Footer */}
-      {!isPresentationMode && <Footer />}
-
-      {/* Presentation Mode Fullscreen Overlay */}
-      {isPresentationMode && auditData && (
-        <PresentationMode
-          audit={auditData}
-          onExit={() => setIsPresentationMode(false)}
-        />
-      )}
-
-      {/* PDF Export Modal */}
-      {isExportModalOpen && auditData && (
-        <ExportModal
-          audit={auditData}
-          isOpen={isExportModalOpen}
-          onClose={() => setIsExportModalOpen(false)}
-        />
-      )}
-        </>
-      )}
-    </div>
+      </div>
+    </PartyThemeProvider>
   );
 }
 

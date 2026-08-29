@@ -2,7 +2,20 @@ export type ConfidenceLevel = "Verified" | "Estimated" | "Manual" | "Derived" | 
 
 export type PlatformType = "facebook" | "instagram" | "youtube" | "x";
 
+export type AdminUserRole = 
+  | "SUPER_ADMIN"
+  | "ADMIN"
+  | "SUPPORT"
+  | "PARTY_ADMIN"
+  | "CAMPAIGN_MANAGER"
+  | "POLITICAL_CONSULTANT"
+  | "ANALYST"
+  | "VOLUNTEER"
+  | "CLIENT"
+  | "VIEWER";
+
 export type UserRole = 
+  | AdminUserRole
   | "super_admin"
   | "campaign_director" 
   | "field_strategist" 
@@ -11,22 +24,38 @@ export type UserRole =
   | "volunteer_lead"
   | "booth_coordinator";
 
+export type UserAccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
+
 export interface UserProfile {
+  _id?: string;
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: UserRole;
+  roleId?: AdminUserRole | string;
   roleTitle: string;
   department?: string;
   demoPassword?: string;
   avatar: string;
+  profilePhotoUrl?: string;
   assignedConstituency: string;
-  clearanceLevel: "Tier 0 (Master Admin Clearance)" | "Level 1 (Full Access)" | "Level 2 (Operations)" | "Level 3 (Field Only)" | "Executive Briefing Only";
-  partyId?: string;
+  clearanceLevel: string;
+  partyId?: string | null;
   partyName?: string;
   partyAbbr?: string;
   partyColor?: string;
   partyEmoji?: string;
+  stateId?: string | null;
+  stateName?: string;
+  parliamentConstituencyId?: string | null;
+  parliamentConstituencyName?: string;
+  assemblyConstituencyId?: string | null;
+  assemblyConstituencyName?: string;
+  status?: UserAccountStatus;
+  lastLoginAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
   permissions: {
     canExportReports: boolean;
     canEditStrategy: boolean;
@@ -36,6 +65,18 @@ export interface UserProfile {
     canViewConfidentialMetrics: boolean;
     canManageSystemUsers?: boolean;
   };
+}
+
+export interface AuditLogEntry {
+  _id?: string;
+  id: string;
+  actorUserId: string;
+  actorName: string;
+  action: string;
+  targetUserId?: string;
+  targetUserName?: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
 }
 
 export interface StateInfo {

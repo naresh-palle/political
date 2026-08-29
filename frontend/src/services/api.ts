@@ -149,6 +149,277 @@ export const politicalApiService = {
     return { ...MOCK_POLITICAL_PARTIES[0], ...updates, id: partyId };
   },
 
+  // ----------------- ADMIN USER MANAGEMENT & AUDIT LOGS -----------------
+
+  async getAdminUsers(params: {
+    q?: string;
+    roleId?: string;
+    partyId?: string;
+    stateId?: string;
+    parliamentConstituencyId?: string;
+    assemblyConstituencyId?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<{
+    users: UserProfile[];
+    total: number;
+    page: number;
+    totalPages: number;
+    limit: number;
+  }> {
+    const page = params.page || 1;
+    const limit = params.limit || 10;
+    try {
+      const queryParams = new URLSearchParams();
+      if (params.q) queryParams.set("q", params.q);
+      if (params.roleId && params.roleId !== "ALL") queryParams.set("roleId", params.roleId);
+      if (params.partyId && params.partyId !== "ALL") queryParams.set("partyId", params.partyId);
+      if (params.stateId && params.stateId !== "ALL") queryParams.set("stateId", params.stateId);
+      if (params.parliamentConstituencyId && params.parliamentConstituencyId !== "ALL") queryParams.set("parliamentConstituencyId", params.parliamentConstituencyId);
+      if (params.assemblyConstituencyId && params.assemblyConstituencyId !== "ALL") queryParams.set("assemblyConstituencyId", params.assemblyConstituencyId);
+      if (params.status && params.status !== "ALL") queryParams.set("status", params.status);
+      queryParams.set("page", String(page));
+      queryParams.set("limit", String(limit));
+
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+    } catch (e) {
+      // Fallback to local memory / static
+    }
+
+    const allUsers = await this.getUsers();
+    let filtered = [...allUsers];
+
+    if (params.q) {
+      const ql = params.q.toLowerCase();
+      filtered = filtered.filter(
+        (u) =>
+          u.name.toLowerCase().includes(ql) ||
+          u.email.toLowerCase().includes(ql) ||
+          (u.phone && u.phone.toLowerCase().includes(ql)) ||
+          u.assignedConstituency.toLowerCase().includes(ql)
+      );
+    }
+    if (params.roleId && params.roleId !== "ALL") {
+      filtered = filtered.filter(
+        (u) => (u.roleId && u.roleId.toUpperCase() === params.roleId!.toUpperCase()) || u.role.toUpperCase() === params.roleId!.toUpperCase()
+      );
+    }
+    if (params.partyId && params.partyId !== "ALL") {
+      filtered = filtered.filter((u) => u.partyId && u.partyId.toUpperCase() === params.partyId!.toUpperCase());
+    }
+    if (params.stateId && params.stateId !== "ALL") {
+      filtered = filtered.filter((u) => u.stateId && u.stateId.toUpperCase() === params.stateId!.toUpperCase());
+    }
+    if (params.status && params.status !== "ALL") {
+      filtered = filtered.filter((u) => u.status && u.status.toUpperCase() === params.status!.toUpperCase());
+    }
+
+    const total = filtered.length;
+    const skip = (page - 1) * limit;
+    const paginated = filtered.slice(skip, skip + limit);
+
+    return {
+      users: paginated,
+      total,
+      page,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      limit
+    };
+  },
+
+  async getAdminUserDetail(userId: string): Promise<{ user: UserProfile; auditLogs: any[] }> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      // Fallback
+    }
+    const allUsers = await this.getUsers();
+    const match = allUsers.find((u) => u.id === userId) || allUsers[0];
+    return {
+      user: match,
+      auditLogs: [
+        {
+          id: "aud_sample_01",
+          actorUserId: "user-admin",
+          actorName: "Dr. Vikramaditya Varma",
+          action: "USER_ACTIVATED",
+          targetUserId: userId,
+          targetUserName: match?.name,
+          timestamp: new Date().toISOString(),
+          metadata: { note: "Security clearance verified by central administrator" }
+        }
+      ]
+    };
+  },
+
+  async createAdminUser(data: Partial<UserProfile> & { password?: string }): Promise<UserProfile> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.user;
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    const newUser: UserProfile = {
+      id: `usr_${Date.now()}`,
+      name: data.name || "New Operator",
+      email: data.email || "operator@leaderslens.ai",
+      phone: data.phone || "",
+      role: data.role || (data.roleId?.toLowerCase() as any) || "campaign_director",
+      roleId: data.roleId || "CAMPAIGN_MANAGER",
+      roleTitle: data.roleTitle || "Principal Campaign Director",
+      department: data.department || "Campaign Operations",
+      avatar: data.profilePhotoUrl || data.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250&auto=format&fit=crop&q=80",
+      assignedConstituency: data.assignedConstituency || "Constituency Command",
+      clearanceLevel: data.clearanceLevel || "Level 2 (Operations)",
+      partyId: data.partyId || null,
+      partyName: data.partyName,
+      stateId: data.stateId || null,
+      parliamentConstituencyId: data.parliamentConstituencyId || null,
+      assemblyConstituencyId: data.assemblyConstituencyId || null,
+      status: (data.status as any) || "ACTIVE",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      permissions: data.permissions || {
+        canExportReports: true,
+        canEditStrategy: true,
+        canManageVolunteers: true,
+        canResolveGrievances: true,
+        canPublishLandingPage: true,
+        canViewConfidentialMetrics: true,
+        canManageSystemUsers: false
+      }
+    };
+
+    if (cachedUsers) {
+      cachedUsers = [newUser, ...cachedUsers];
+    }
+    return newUser;
+  },
+
+  async updateAdminUser(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.user;
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    if (cachedUsers) {
+      cachedUsers = cachedUsers.map((u) => u.id === userId ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u);
+      const match = cachedUsers.find((u) => u.id === userId);
+      if (match) return match;
+    }
+    return { ...USER_PROFILES[0], ...updates, id: userId };
+  },
+
+  async updateAdminUserStatus(userId: string, status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING", reason?: string): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, reason, actorUserId: "user-admin", actorName: "Dr. Vikramaditya Varma" })
+      });
+      if (res.ok) return true;
+    } catch (e) {
+      // Fallback
+    }
+
+    if (cachedUsers) {
+      cachedUsers = cachedUsers.map((u) => u.id === userId ? { ...u, status, updatedAt: new Date().toISOString() } : u);
+    }
+    return true;
+  },
+
+  async resetAdminUserPassword(userId: string, newPassword: string): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword, actorUserId: "user-admin", actorName: "Dr. Vikramaditya Varma" })
+      });
+      if (res.ok) return true;
+    } catch (e) {
+      // Fallback
+    }
+    return true;
+  },
+
+  async deleteAdminUser(userId: string): Promise<boolean> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}`, {
+        method: "DELETE"
+      });
+      if (res.ok) return true;
+    } catch (e) {
+      // Fallback
+    }
+    if (cachedUsers) {
+      cachedUsers = cachedUsers.filter((u) => u.id !== userId);
+    }
+    return true;
+  },
+
+  async getAdminAuditLogs(params: { targetUserId?: string; action?: string; limit?: number } = {}): Promise<any[]> {
+    try {
+      const q = new URLSearchParams();
+      if (params.targetUserId) q.set("targetUserId", params.targetUserId);
+      if (params.action) q.set("action", params.action);
+      if (params.limit) q.set("limit", String(params.limit));
+
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/audit-logs?${q.toString()}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return [
+      {
+        id: "aud_01",
+        actorUserId: "user-admin",
+        actorName: "Dr. Vikramaditya Varma",
+        action: "USER_ACTIVATED",
+        targetUserId: "user-dir",
+        targetUserName: "Naresh Palle",
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        metadata: { role: "CAMPAIGN_MANAGER", partyId: "TDP", stateId: "AP" }
+      },
+      {
+        id: "aud_02",
+        actorUserId: "user-admin",
+        actorName: "Dr. Vikramaditya Varma",
+        action: "GEOGRAPHY_ASSIGNED",
+        targetUserId: "user-field",
+        targetUserName: "Venkatesh Rao",
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        metadata: { constituency: "Kadapa AC (AC-132)" }
+      }
+    ];
+  },
+
   async getCurrentRepresentative(acId: string): Promise<{
     representative: ElectedRepresentative | null;
     status: "CURRENT" | "FORMER" | "VACANT" | "UNAVAILABLE";

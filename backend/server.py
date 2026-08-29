@@ -605,55 +605,410 @@ async def login(credentials: LoginRequest):
                 }
     raise HTTPException(status_code=401, detail="Invalid email or password.")
 
+import hashlib
+import secrets
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    pw_hash = hashlib.sha256((salt + password).encode('utf-8')).hexdigest()
+    return f"{salt}${pw_hash}"
+
+def verify_password(password: str, stored_hash: str) -> bool:
+    if not stored_hash or "$" not in stored_hash:
+        return False
+    salt, pw_hash = stored_hash.split("$", 1)
+    return hashlib.sha256((salt + password).encode('utf-8')).hexdigest() == pw_hash
+
+def sanitize_user(user: dict) -> dict:
+    u = dict(user)
+    u.pop("passwordHash", None)
+    u.pop("demoPassword", None)
+    u.pop("_id", None)
+    return u
+
+async def record_audit_log(actor_user_id: str, actor_name: str, action: str, target_user_id: Optional[str] = None, target_user_name: Optional[str] = None, metadata: Optional[dict] = None):
+    log_doc = {
+        "id": f"aud_{uuid.uuid4().hex[:10]}",
+        "actorUserId": actor_user_id or "system_admin",
+        "actorName": actor_name or "System Administrator",
+        "action": action,
+        "targetUserId": target_user_id,
+        "targetUserName": target_user_name,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "metadata": metadata or {}
+    }
+    try:
+        await db.audit_logs.insert_one(log_doc)
+    except Exception as e:
+        logger.warning(f"Failed to record audit log: {e}")
+
+class AdminUserCreateModel(BaseModel):
+    name: str
+    email: str
+    phone: Optional[str] = ""
+    password: Optional[str] = "Leader@2026"
+    roleId: str = "CAMPAIGN_MANAGER"
+    roleTitle: Optional[str] = "Campaign Manager"
+    department: Optional[str] = "Campaign Operations"
+    partyId: Optional[str] = None
+    stateId: Optional[str] = None
+    parliamentConstituencyId: Optional[str] = None
+    assemblyConstituencyId: Optional[str] = None
+    assignedConstituency: Optional[str] = None
+    status: str = "ACTIVE"
+    clearanceLevel: Optional[str] = "Level 2 (Operations)"
+    profilePhotoUrl: Optional[str] = ""
+    permissions: Optional[dict] = None
+
+class AdminUserUpdateModel(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    roleId: Optional[str] = None
+    roleTitle: Optional[str] = None
+    department: Optional[str] = None
+    partyId: Optional[str] = None
+    stateId: Optional[str] = None
+    parliamentConstituencyId: Optional[str] = None
+    assemblyConstituencyId: Optional[str] = None
+    assignedConstituency: Optional[str] = None
+    status: Optional[str] = None
+    clearanceLevel: Optional[str] = None
+    profilePhotoUrl: Optional[str] = None
+    permissions: Optional[dict] = None
+
+class AdminUserStatusUpdateModel(BaseModel):
+    status: str # ACTIVE, INACTIVE, SUSPENDED, PENDING
+    reason: Optional[str] = None
+    actorUserId: Optional[str] = "user-admin"
+    actorName: Optional[str] = "Dr. Vikramaditya Varma"
+
+class AdminPasswordResetModel(BaseModel):
+    newPassword: str
+    actorUserId: Optional[str] = "user-admin"
+    actorName: Optional[str] = "Dr. Vikramaditya Varma"
+
+@api_router.get("/users")
 @api_router.get("/auth/users")
 async def get_system_users():
     try:
-        users = await db.users.find({}, {"_id": 0}).to_list(100)
+        users = await db.users.find({}, {"passwordHash": 0, "demoPassword": 0, "_id": 0}).to_list(200)
         if users:
             return users
     except Exception as e:
         logger.warning(f"MongoDB get_system_users: {e}")
-    return load_json_fallback("users.json")
+    raw_users = load_json_fallback("users.json")
+    return [sanitize_user(u) for u in raw_users]
 
-@api_router.post("/auth/register")
-async def register_user(req: RegisterRequest):
+# ----------------- ADMIN USER MANAGEMENT (MONGODB & RBAC) -----------------
+
+@api_router.get("/admin/users")
+async def get_admin_users(
+    q: Optional[str] = None,
+    roleId: Optional[str] = None,
+    partyId: Optional[str] = None,
+    stateId: Optional[str] = None,
+    parliamentConstituencyId: Optional[str] = None,
+    assemblyConstituencyId: Optional[str] = None,
+    status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100)
+):
+    try:
+        query = {}
+        if q:
+            regex = {"$regex": q, "$options": "i"}
+            query["$or"] = [{"name": regex}, {"email": regex}, {"phone": regex}, {"assignedConstituency": regex}]
+        if roleId and roleId.upper() != "ALL":
+            query["$or"] = [{"roleId": roleId.upper()}, {"role": roleId.lower()}]
+        if partyId and partyId.upper() != "ALL":
+            query["partyId"] = partyId.upper()
+        if stateId and stateId.upper() != "ALL":
+            query["stateId"] = stateId.upper()
+        if parliamentConstituencyId and parliamentConstituencyId.upper() != "ALL":
+            query["parliamentConstituencyId"] = parliamentConstituencyId
+        if assemblyConstituencyId and assemblyConstituencyId.upper() != "ALL":
+            query["assemblyConstituencyId"] = assemblyConstituencyId
+        if status and status.upper() != "ALL":
+            query["status"] = status.upper()
+
+        total = await db.users.count_documents(query)
+        if total > 0:
+            skip = (page - 1) * limit
+            cursor = db.users.find(query, {"passwordHash": 0, "demoPassword": 0, "_id": 0}).sort("createdAt", -1).skip(skip).limit(limit)
+            users_list = await cursor.to_list(limit)
+            return {
+                "users": users_list,
+                "total": total,
+                "page": page,
+                "totalPages": (total + limit - 1) // limit,
+                "limit": limit
+            }
+    except Exception as e:
+        logger.warning(f"MongoDB admin get_users query: {e}")
+
+    # Fallback to local data
+    raw_users = load_json_fallback("users.json")
+    sanitized = [sanitize_user(u) for u in raw_users]
+
+    if q:
+        ql = q.lower()
+        sanitized = [u for u in sanitized if ql in u.get("name", "").lower() or ql in u.get("email", "").lower() or ql in u.get("phone", "").lower()]
+    if roleId and roleId.upper() != "ALL":
+        sanitized = [u for u in sanitized if u.get("roleId", "").upper() == roleId.upper() or u.get("role", "").lower() == roleId.lower()]
+    if partyId and partyId.upper() != "ALL":
+        sanitized = [u for u in sanitized if str(u.get("partyId", "")).upper() == partyId.upper()]
+    if stateId and stateId.upper() != "ALL":
+        sanitized = [u for u in sanitized if str(u.get("stateId", "")).upper() == stateId.upper()]
+    if status and status.upper() != "ALL":
+        sanitized = [u for u in sanitized if str(u.get("status", "")).upper() == status.upper()]
+
+    total = len(sanitized)
+    skip = (page - 1) * limit
+    paged = sanitized[skip:skip + limit]
+    return {
+        "users": paged,
+        "total": total,
+        "page": page,
+        "totalPages": max(1, (total + limit - 1) // limit),
+        "limit": limit
+    }
+
+@api_router.get("/admin/users/{user_id}")
+async def get_admin_user_detail(user_id: str):
+    try:
+        user = await db.users.find_one({"id": user_id}, {"passwordHash": 0, "demoPassword": 0, "_id": 0})
+        if user:
+            audit_logs = await db.audit_logs.find({"targetUserId": user_id}, {"_id": 0}).sort("timestamp", -1).to_list(20)
+            return {
+                "user": user,
+                "auditLogs": audit_logs
+            }
+    except Exception as e:
+        logger.warning(f"MongoDB get user detail: {e}")
+
+    raw_users = load_json_fallback("users.json")
+    match = next((u for u in raw_users if u.get("id") == user_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "user": sanitize_user(match),
+        "auditLogs": []
+    }
+
+@api_router.post("/admin/users")
+async def create_admin_user(req: AdminUserCreateModel):
     email = req.email.strip().lower()
     try:
         existing = await db.users.find_one({"email": email})
         if existing:
-            raise HTTPException(status_code=400, detail="A user with this email address already exists.")
-        
-        new_user = {
-            "id": f"usr_{uuid.uuid4().hex[:8]}",
+            raise HTTPException(status_code=400, detail="A user with this email already exists.")
+
+        user_id = f"usr_{uuid.uuid4().hex[:8]}"
+        hashed_pw = hash_password(req.password or "Leader@2026")
+
+        # Resolve roleTitle and clearance
+        role_map = {
+            "SUPER_ADMIN": ("Master System Administrator", "Tier 0 (Master Admin Clearance)"),
+            "ADMIN": ("Application Administrator", "Tier 0 (Admin Clearance)"),
+            "SUPPORT": ("Support & Grievance Executive", "Level 2 (Operations)"),
+            "PARTY_ADMIN": ("Party Command Administrator", "Level 1 (Full Access)"),
+            "CAMPAIGN_MANAGER": ("Principal Campaign Director", "Level 1 (Full Access)"),
+            "POLITICAL_CONSULTANT": ("Senior Political Strategist", "Level 2 (Operations)"),
+            "ANALYST": ("Data & Media Analyst", "Level 2 (Operations)"),
+            "VOLUNTEER": ("Constituency Volunteer Lead", "Level 3 (Field Only)"),
+            "CLIENT": ("Executive Client Account", "Executive Briefing Only"),
+            "VIEWER": ("Read-Only Observer", "Level 3 (Field Only)")
+        }
+        mapped_title, mapped_clearance = role_map.get(req.roleId.upper(), ("Campaign Operator", "Level 2 (Operations)"))
+
+        default_perms = {
+            "canExportReports": req.roleId in ["SUPER_ADMIN", "ADMIN", "CAMPAIGN_MANAGER", "POLITICAL_CONSULTANT", "ANALYST", "CLIENT"],
+            "canEditStrategy": req.roleId in ["SUPER_ADMIN", "ADMIN", "CAMPAIGN_MANAGER", "POLITICAL_CONSULTANT"],
+            "canManageVolunteers": req.roleId in ["SUPER_ADMIN", "ADMIN", "CAMPAIGN_MANAGER", "VOLUNTEER"],
+            "canResolveGrievances": req.roleId in ["SUPER_ADMIN", "ADMIN", "SUPPORT", "CAMPAIGN_MANAGER", "VOLUNTEER"],
+            "canPublishLandingPage": req.roleId in ["SUPER_ADMIN", "ADMIN", "CAMPAIGN_MANAGER", "ANALYST"],
+            "canViewConfidentialMetrics": req.roleId in ["SUPER_ADMIN", "ADMIN", "CAMPAIGN_MANAGER", "POLITICAL_CONSULTANT", "ANALYST"],
+            "canManageSystemUsers": req.roleId in ["SUPER_ADMIN", "ADMIN"]
+        }
+
+        user_doc = {
+            "id": user_id,
             "name": req.name,
             "email": email,
-            "demoPassword": req.password,
-            "role": req.role,
-            "roleTitle": req.roleTitle or "Constituency Lead",
+            "phone": req.phone or "",
+            "passwordHash": hashed_pw,
+            "roleId": req.roleId.upper(),
+            "role": req.roleId.lower(),
+            "roleTitle": req.roleTitle or mapped_title,
             "department": req.department or "Operations",
-            "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
-            "assignedConstituency": req.assignedConstituency or "Unassigned",
-            "clearanceLevel": "Level 2 (Operations)",
-            "permissions": {
-                "canExportReports": True,
-                "canEditStrategy": False,
-                "canManageVolunteers": True,
-                "canResolveGrievances": True,
-                "canPublishLandingPage": False,
-                "canViewConfidentialMetrics": False,
-                "canManageSystemUsers": False
-            },
-            "createdAt": datetime.now(timezone.utc).isoformat()
+            "partyId": req.partyId,
+            "stateId": req.stateId,
+            "parliamentConstituencyId": req.parliamentConstituencyId,
+            "assemblyConstituencyId": req.assemblyConstituencyId,
+            "assignedConstituency": req.assignedConstituency or (f"{req.assemblyConstituencyId or req.parliamentConstituencyId or req.stateId or 'Global'}") ,
+            "clearanceLevel": req.clearanceLevel or mapped_clearance,
+            "status": req.status.upper(),
+            "profilePhotoUrl": req.profilePhotoUrl or "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250&auto=format&fit=crop&q=80",
+            "avatar": req.profilePhotoUrl or "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250&auto=format&fit=crop&q=80",
+            "permissions": req.permissions or default_perms,
+            "createdAt": datetime.now(timezone.utc).isoformat(),
+            "updatedAt": datetime.now(timezone.utc).isoformat(),
+            "lastLoginAt": None
         }
-        await db.users.insert_one(new_user)
-        # Return without MongoDB internal _id
-        new_user.pop("_id", None)
-        return {"status": "success", "user": new_user}
+
+        await db.users.insert_one(user_doc)
+        await record_audit_log(
+            actor_user_id="user-admin",
+            actor_name="Dr. Vikramaditya Varma",
+            action="USER_CREATED",
+            target_user_id=user_id,
+            target_user_name=req.name,
+            metadata={"email": email, "roleId": req.roleId, "partyId": req.partyId, "stateId": req.stateId}
+        )
+
+        return {"status": "success", "user": sanitize_user(user_doc)}
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"User registration error: {e}")
+        logger.error(f"Create user error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/admin/users/{user_id}")
+async def update_admin_user(user_id: str, req: AdminUserUpdateModel):
+    try:
+        existing = await db.users.find_one({"id": user_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        update_fields = {}
+        audit_changes = {}
+
+        for field, val in req.model_dump(exclude_unset=True).items():
+            if val is not None:
+                update_fields[field] = val
+                audit_changes[field] = val
+
+        if "roleId" in update_fields:
+            update_fields["roleId"] = update_fields["roleId"].upper()
+            update_fields["role"] = update_fields["roleId"].lower()
+        if "status" in update_fields:
+            update_fields["status"] = update_fields["status"].upper()
+
+        update_fields["updatedAt"] = datetime.now(timezone.utc).isoformat()
+
+        await db.users.update_one({"id": user_id}, {"$set": update_fields})
+        await record_audit_log(
+            actor_user_id="user-admin",
+            actor_name="Dr. Vikramaditya Varma",
+            action="USER_UPDATED",
+            target_user_id=user_id,
+            target_user_name=existing.get("name"),
+            metadata=audit_changes
+        )
+
+        updated_user = await db.users.find_one({"id": user_id}, {"passwordHash": 0, "demoPassword": 0, "_id": 0})
+        return {"status": "success", "user": updated_user}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update user error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.patch("/admin/users/{user_id}/status")
+async def update_admin_user_status(user_id: str, req: AdminUserStatusUpdateModel):
+    try:
+        existing = await db.users.find_one({"id": user_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        new_status = req.status.upper()
+        await db.users.update_one({"id": user_id}, {"$set": {"status": new_status, "updatedAt": datetime.now(timezone.utc).isoformat()}})
+
+        action_name = "USER_ACTIVATED" if new_status == "ACTIVE" else ("USER_SUSPENDED" if new_status == "SUSPENDED" else "USER_DEACTIVATED")
+        await record_audit_log(
+            actor_user_id=req.actorUserId or "user-admin",
+            actor_name=req.actorName or "Dr. Vikramaditya Varma",
+            action=action_name,
+            target_user_id=user_id,
+            target_user_name=existing.get("name"),
+            metadata={"previousStatus": existing.get("status"), "newStatus": new_status, "reason": req.reason}
+        )
+
+        return {"status": "success", "message": f"User status updated to {new_status}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Status update error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/users/{user_id}/reset-password")
+async def reset_admin_user_password(user_id: str, req: AdminPasswordResetModel):
+    try:
+        existing = await db.users.find_one({"id": user_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        hashed_pw = hash_password(req.newPassword)
+        await db.users.update_one({"id": user_id}, {"$set": {"passwordHash": hashed_pw, "updatedAt": datetime.now(timezone.utc).isoformat()}})
+
+        await record_audit_log(
+            actor_user_id=req.actorUserId or "user-admin",
+            actor_name=req.actorName or "Dr. Vikramaditya Varma",
+            action="PASSWORD_RESET",
+            target_user_id=user_id,
+            target_user_name=existing.get("name"),
+            metadata={"timestamp": datetime.now(timezone.utc).isoformat()}
+        )
+
+        return {"status": "success", "message": "User password reset successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/admin/users/{user_id}")
+async def delete_admin_user(user_id: str):
+    try:
+        existing = await db.users.find_one({"id": user_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        await db.users.delete_one({"id": user_id})
+        await record_audit_log(
+            actor_user_id="user-admin",
+            actor_name="Dr. Vikramaditya Varma",
+            action="USER_DELETED",
+            target_user_id=user_id,
+            target_user_name=existing.get("name"),
+            metadata={"email": existing.get("email")}
+        )
+
+        return {"status": "success", "message": "User deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete user error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/audit-logs")
+async def get_admin_audit_logs(
+    targetUserId: Optional[str] = None,
+    action: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=200)
+):
+    try:
+        query = {}
+        if targetUserId:
+            query["targetUserId"] = targetUserId
+        if action:
+            query["action"] = action
+        logs = await db.audit_logs.find(query, {"_id": 0}).sort("timestamp", -1).to_list(limit)
+        return logs
+    except Exception as e:
+        logger.warning(f"MongoDB get audit logs: {e}")
+        return []
 
 # ----------------- CITIZEN GRIEVANCES & CONTACTS (MONGODB) -----------------
 

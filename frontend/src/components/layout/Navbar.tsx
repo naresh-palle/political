@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { UserProfile } from "../../types";
 import { LeadersLogo } from "../common/LeadersLogo";
-import { USER_PROFILES } from "../../services/mockData";
+import { usePartyTheme } from "../../context/PartyThemeContext";
 import {
   Sparkles,
   Shield,
@@ -42,6 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -65,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[64px]">
           {/* Left Brand */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-5">
             <div
               data-testid="brand-home"
               className="flex items-center space-x-3 cursor-pointer group"
@@ -75,15 +76,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               title="Constituency Intelligence Workspace"
             >
-              <div className="relative w-9 h-9 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all">
-                <LeadersLogo size={36} />
+              {/* Dynamic Party Logo / Symbol if party user, else Leader's Lens Core Logo */}
+              <div className="relative w-9 h-9 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[#D4A24C]/30">
+                {partyLogo ? (
+                  <img src={partyLogo} alt={partyName || "Party Logo"} className="w-7 h-7 object-contain" />
+                ) : partySymbolEmoji ? (
+                  <span className="text-xl leading-none">{partySymbolEmoji}</span>
+                ) : (
+                  <LeadersLogo size={36} />
+                )}
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-[22px] tracking-[-0.01em] text-[#F5EFE0] leading-none">
                   Leader's<span className="italic gold-text"> Lens</span>
                 </span>
-                <span className="text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[#D4A24C] mt-1">
-                  Political Intelligence
+                <span className="text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[var(--party-primary)] mt-1 flex items-center gap-1.5">
+                  {isPartyThemeActive && partyName ? (
+                    <>
+                      <span>{partyName}</span>
+                      <span className="text-[#8A8E9B]">· Command</span>
+                    </>
+                  ) : (
+                    "Political Intelligence"
+                  )}
                 </span>
               </div>
             </div>
@@ -106,7 +121,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onProductChange("pitch")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "pitch"
-                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
+                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
@@ -116,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onProductChange("grievances")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "grievances"
-                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
+                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
@@ -126,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onProductChange("volunteers")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "volunteers"
-                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
+                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
@@ -136,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onProductChange("webbuilder")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "webbuilder"
-                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
+                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
@@ -146,11 +161,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onProductChange("governance")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "governance"
-                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
+                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
-              Team & RBAC
+              Admin & Users
             </button>
           </nav>
 
