@@ -48,8 +48,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div
               data-testid="brand-home"
               className="flex items-center space-x-3 cursor-pointer group"
-              onClick={onGoHome || onResetToSelect}
-              title="Return to Public Overview / Home"
+              onClick={() => {
+                onProductChange("pitch");
+                if (onResetToSelect) onResetToSelect();
+              }}
+              title="Constituency Intelligence Workspace"
             >
               <div className="relative w-9 h-9 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all">
                 <LeadersLogo size={36} />
@@ -132,17 +135,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Meta & User Persona */}
           <div className="flex items-center space-x-3">
-            {onGoHome && (
-              <button
-                onClick={onGoHome}
-                data-testid="nav-home-btn"
-                className="hidden md:inline-flex items-center text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] px-2.5 py-1.5 rounded bg-[#0F2338] border border-[#D4A24C]/25 hover:border-[#D4A24C]/70 transition-all cursor-pointer"
-                title="View Public Overview Landing Page"
-              >
-                <span>Public Overview</span>
-              </button>
-            )}
-
             <div className="hidden xl:flex items-center space-x-2 text-xs border-r border-[#D4A24C]/20 pr-4">
               <span className="inline-flex items-center">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
@@ -156,7 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 bg-[#142B45] border border-[#D4A24C]/25 rounded-lg hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
-                title="User profile & signout menu"
+                title="User profile menu"
               >
                 <img
                   src={currentProfile.avatar}
@@ -194,8 +186,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left"
                   >
                     <UserCheck className="w-4 h-4 text-[#D4A24C]" />
-                    <span>Switch Role / Team Roster</span>
+                    <span>Role & Permissions Settings</span>
                   </button>
+
+                  {onGoHome && (
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        onGoHome();
+                      }}
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left"
+                    >
+                      <Globe className="w-4 h-4 text-[#D4A24C]" />
+                      <span>View Public Marketing Page</span>
+                    </button>
+                  )}
 
                   {onSignOut && (
                     <button
@@ -206,37 +211,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 rounded-lg transition-colors text-left mt-1 border-t border-[#1E3A5A]"
                     >
                       <LogOut className="w-4 h-4 text-rose-400" />
-                      <span>Sign Out Session</span>
+                      <span>Sign Out</span>
                     </button>
                   )}
                 </div>
               )}
             </div>
-
-            {/* Quick Direct Sign Out Button */}
-            {onSignOut && (
-              <button
-                onClick={onSignOut}
-                title="Sign Out"
-                className="hidden sm:inline-flex items-center justify-center p-2 rounded-lg bg-[#0F2338] border border-rose-500/30 text-rose-400 hover:text-white hover:bg-rose-900/40 hover:border-rose-500/60 transition-all cursor-pointer text-xs"
-              >
-                <LogOut className="w-4 h-4 mr-1" />
-                <span className="font-semibold text-[11px]">Sign Out</span>
-              </button>
-            )}
           </div>
         </div>
 
         {/* Mobile Horizontal Navigation Tabs */}
         <div className="lg:hidden flex items-center space-x-2 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs">
-          {onGoHome && (
-            <button
-              onClick={onGoHome}
-              className="whitespace-nowrap px-2.5 py-1 rounded font-semibold text-[#D4A24C] bg-[#0F2338] border border-[#D4A24C]/30"
-            >
-              Overview
-            </button>
-          )}
           <button
             onClick={() => onProductChange("pitch")}
             className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
@@ -277,14 +262,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Team & RBAC
           </button>
-          {onSignOut && (
-            <button
-              onClick={onSignOut}
-              className="whitespace-nowrap px-2.5 py-1 rounded font-semibold text-rose-400 bg-rose-950/40 border border-rose-500/30"
-            >
-              Sign Out
-            </button>
-          )}
         </div>
       </div>
     </header>
