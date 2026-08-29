@@ -169,34 +169,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 bg-[#142B45] border border-[#D4A24C]/25 rounded-lg hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
-                title="User profile & party identity menu"
+                title="User profile menu"
               >
-                <div className="relative">
-                  <img
-                    src={currentProfile.avatar}
-                    alt={currentProfile.name}
-                    className="w-6 h-6 rounded-full object-cover border border-[#D4A24C]/40"
-                  />
-                  {currentProfile.partyEmoji && (
-                    <span className="absolute -bottom-1 -right-1 text-[10px] drop-shadow-xs">
-                      {currentProfile.partyEmoji}
-                    </span>
-                  )}
-                </div>
+                <img
+                  src={currentProfile.avatar}
+                  alt={currentProfile.name}
+                  className="w-6 h-6 rounded-full object-cover border border-[#D4A24C]/40"
+                />
                 <div className="hidden sm:flex flex-col text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-[#F5EFE0] leading-none">
-                      {currentProfile.name.split(" ")[0]}
-                    </span>
-                    {currentProfile.partyAbbr && (
-                      <span
-                        className="px-1.5 py-0.2 rounded text-[9px] font-bold text-white shadow-2xs"
-                        style={{ backgroundColor: currentProfile.partyColor || "#B45309" }}
-                      >
-                        {currentProfile.partyAbbr}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-xs font-bold text-[#F5EFE0] leading-none">
+                    {currentProfile.name.split(" ")[0]}
+                  </span>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-[#D4A24C] mt-0.5">
                     {currentProfile.role.replace("_", " ")}
                   </span>
@@ -206,61 +189,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* User Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-72 rounded-xl bg-[#0D2137] border border-[#D4A24C]/30 shadow-2xl p-2.5 z-50 animate-fadeIn">
-                  <div className="p-2.5 border-b border-[#1E3A5A] mb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-bold text-[#F5EFE0]">{currentProfile.name}</div>
-                      {currentProfile.partyAbbr && (
-                        <span
-                          className="px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-2xs flex items-center gap-1"
-                          style={{ backgroundColor: currentProfile.partyColor || "#B45309" }}
-                        >
-                          <span>{currentProfile.partyEmoji || "🏛️"}</span>
-                          <span>{currentProfile.partyAbbr}</span>
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[11px] text-[#B9AF95] truncate mt-0.5">{currentProfile.email}</div>
-                    <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-                      <span className="inline-flex items-center text-[10px] font-semibold text-[#D4A24C] bg-[#071322] px-2 py-0.5 rounded border border-[#D4A24C]/30">
-                        <Shield className="w-3 h-3 mr-1 text-[#D4A24C]" />
-                        {currentProfile.clearanceLevel.split("(")[0]}
-                      </span>
+                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0D2137] border border-[#D4A24C]/30 shadow-2xl p-2 z-50 animate-fadeIn">
+                  <div className="p-2.5 border-b border-[#1E3A5A] mb-1">
+                    <div className="text-xs font-bold text-[#F5EFE0]">{currentProfile.name}</div>
+                    <div className="text-[11px] text-[#B9AF95] truncate">{currentProfile.email}</div>
+                    <div className="mt-1.5 inline-flex items-center text-[10px] font-semibold text-[#D4A24C] bg-[#071322] px-2 py-0.5 rounded border border-[#D4A24C]/30">
+                      <Shield className="w-3 h-3 mr-1 text-[#D4A24C]" />
+                      {currentProfile.clearanceLevel}
                     </div>
                   </div>
-
-                  {/* Quick Party Persona Switcher */}
-                  {onSwitchProfile && (
-                    <div className="mb-2 pb-2 border-b border-[#1E3A5A]">
-                      <div className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center justify-between">
-                        <span>Switch Party Persona</span>
-                        <span className="text-[#B9AF95]">Auto-Themes UI</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
-                        {USER_PROFILES.map((p) => {
-                          const isActive = currentProfile.id === p.id;
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => {
-                                onSwitchProfile(p);
-                                setIsUserMenuOpen(false);
-                              }}
-                              className={`p-1.5 rounded-lg border text-left flex items-center gap-1.5 text-[11px] transition-all cursor-pointer ${
-                                isActive
-                                  ? "bg-[#1E3A5A] text-white border-[#D4A24C] font-bold"
-                                  : "bg-[#071322] text-[#D8CFB8] border-[#1E3A5A] hover:bg-[#142B45]"
-                              }`}
-                            >
-                              <span>{p.partyEmoji || "🏛️"}</span>
-                              <span className="truncate font-semibold">{p.partyAbbr || "ADM"}: <span className="font-normal text-[#B9AF95]">{p.name.split(" ")[0]}</span></span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
 
                   <button
                     onClick={() => {
@@ -270,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
                   >
                     <UserCheck className="w-4 h-4 text-[#D4A24C]" />
-                    <span>Role & Party Customizer</span>
+                    <span>Role & Permissions Settings</span>
                   </button>
 
                   {onGoHome && (

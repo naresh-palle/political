@@ -73,28 +73,30 @@ export function App() {
     return USER_PROFILES[0];
   });
 
-  // Dynamically apply party theme tokens based on active user's political party
+  const [auditData, setAuditData] = useState<AuditReport | null>(null);
+
+  // Dynamically apply party theme tokens when an audit or party context is active
   useEffect(() => {
     let mounted = true;
     (async () => {
       const parties = await politicalApiService.getPoliticalParties();
       if (!mounted) return;
-      const userPartyId = currentProfile.partyId || "TDP";
-      const matchedParty = parties.find((p) => p.id === userPartyId);
-      if (matchedParty) {
-        document.documentElement.style.setProperty("--party-primary", matchedParty.primaryColor || "#FFD200");
-        document.documentElement.style.setProperty("--party-secondary", matchedParty.secondaryColor || "#B45309");
-        document.documentElement.style.setProperty("--party-accent", matchedParty.accentColor || "#F59E0B");
-        document.documentElement.style.setProperty("--party-gradient-start", matchedParty.gradientStart || matchedParty.primaryColor || "#FFD200");
-        document.documentElement.style.setProperty("--party-gradient-end", matchedParty.gradientEnd || matchedParty.secondaryColor || "#EAB308");
+      const targetPartyId = auditData?.candidates?.[0]?.partyId || currentProfile.partyId;
+      if (targetPartyId) {
+        const matchedParty = parties.find((p) => p.id.toUpperCase() === targetPartyId.toUpperCase());
+        if (matchedParty) {
+          document.documentElement.style.setProperty("--party-primary", matchedParty.primaryColor || "#D4A24C");
+          document.documentElement.style.setProperty("--party-secondary", matchedParty.secondaryColor || "#B45309");
+          document.documentElement.style.setProperty("--party-accent", matchedParty.accentColor || "#F59E0B");
+          document.documentElement.style.setProperty("--party-gradient-start", matchedParty.gradientStart || matchedParty.primaryColor || "#D4A24C");
+          document.documentElement.style.setProperty("--party-gradient-end", matchedParty.gradientEnd || matchedParty.secondaryColor || "#EAB308");
+        }
       }
     })();
     return () => {
       mounted = false;
     };
-  }, [currentProfile]);
-
-  const [auditData, setAuditData] = useState<AuditReport | null>(null);
+  }, [currentProfile, auditData]);
 
   const [selectedGeo, setSelectedGeo] = useState<{
     stateId: string;
