@@ -87,21 +87,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               title="Constituency Intelligence Workspace"
             >
-              {/* Dynamic Party Logo / Symbol if party user, else Leader's Lens Core Logo */}
-              <div className="relative w-9 h-9 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[var(--party-primary)]/40 shadow-sm">
-                {partyLogo && !logoError ? (
-                  <img
-                    src={partyLogo}
-                    alt={partyName || "Party Logo"}
-                    referrerPolicy="no-referrer"
-                    onError={() => setLogoError(true)}
-                    className="w-7 h-7 object-contain"
-                  />
-                ) : partySymbolEmoji ? (
-                  <span className="text-xl leading-none select-none">{partySymbolEmoji}</span>
-                ) : (
-                  <LeadersLogo size={36} />
-                )}
+              {/* Permanent Leader's Lens Official Company Logo */}
+              <div className="relative w-9 h-9 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[#D4A24C]/40 shadow-sm">
+                <LeadersLogo size={36} />
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-[22px] tracking-[-0.01em] text-[#F5EFE0] leading-none">
@@ -110,8 +98,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[var(--party-primary)] mt-1 flex items-center gap-1.5">
                   {isPartyThemeActive && partyName ? (
                     <>
-                      <span>{partyName}</span>
-                      <span className="text-[#8A8E9B]">· Command</span>
+                      <span>{partySymbolEmoji || "🏛️"} {partyName}</span>
+                      <span className="text-[#8A8E9B]">· Command Portal</span>
                     </>
                   ) : (
                     "Political Intelligence"

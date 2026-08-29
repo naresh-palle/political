@@ -193,54 +193,63 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
     }
   };
 
-  const fieldClass =
-    "w-full appearance-none bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C] rounded-md px-3.5 py-3 pr-9 text-[13.5px] font-medium text-[#F5EFE0] focus:outline-none focus:ring-2 focus:ring-[#D4A24C] focus:border-transparent transition-colors cursor-pointer";
+  const fieldClass = isPartyThemeActive
+    ? "w-full appearance-none bg-white border-2 border-slate-300 hover:border-black rounded-lg px-3.5 py-3 pr-9 text-[14px] font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-colors cursor-pointer shadow-sm"
+    : "w-full appearance-none bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C] rounded-md px-3.5 py-3 pr-9 text-[13.5px] font-medium text-[#F5EFE0] focus:outline-none focus:ring-2 focus:ring-[#D4A24C] focus:border-transparent transition-colors cursor-pointer";
 
   return (
-    <div className="hero-dark">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 lg:pt-24 lg:pb-28">
+    <div
+      className={isPartyThemeActive ? "transition-colors duration-300 relative overflow-hidden" : "hero-dark"}
+      style={
+        isPartyThemeActive
+          ? {
+              background: `linear-gradient(180deg, ${currentParty?.primaryColor || "#FFD200"} 0%, ${currentParty?.gradientEnd || "#F5C400"} 60%, ${currentParty?.primaryColor || "#EAB308"} 100%)`,
+              color: "#0F172A"
+            }
+          : undefined
+      }
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20 lg:pt-16 lg:pb-24">
         {/* Editorial masthead */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-end mb-14 lg:mb-20 animate-rise">
-          <div className="lg:col-span-8 space-y-7">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-end mb-10 lg:mb-14 animate-rise">
+          <div className="lg:col-span-8 space-y-5">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="h-px w-10 gold-shimmer" aria-hidden />
+              <span className={`h-px w-10 ${isPartyThemeActive ? "bg-black/30" : "gold-shimmer"}`} aria-hidden />
               {isPartyThemeActive && partyName ? (
-                <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#071322]/90 border border-[var(--party-primary)]/50 rounded-full text-xs font-bold text-[var(--party-primary)] shadow-md">
-                  {partyLogo && !logoErr ? (
-                    <img
-                      src={partyLogo}
-                      alt={partyName}
-                      referrerPolicy="no-referrer"
-                      onError={() => setLogoErr(true)}
-                      className="w-4 h-4 object-contain"
-                    />
-                  ) : (
-                    <span className="text-sm leading-none">{partySymbolEmoji || "🏛️"}</span>
-                  )}
-                  <span>{partyName} · Command Center</span>
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-black text-white rounded-full text-xs font-bold shadow-lg">
+                  <span className="text-base leading-none">{partySymbolEmoji || "🏛️"}</span>
+                  <span className="tracking-wide">{partyName} · Electoral Command Portal</span>
                 </span>
               ) : (
                 <span className="eyebrow gold-text">Vol. I · Strength Intelligence</span>
               )}
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 border border-[#D4A24C]/40 rounded-full text-[10px] font-semibold tracking-wider text-[#E9C77A]">
-                <Sparkles className="w-3 h-3" /> Executive Edition
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${
+                isPartyThemeActive ? "bg-black/10 border border-black/20 text-black" : "border border-[#D4A24C]/40 text-[#E9C77A]"
+              }`}>
+                <Sparkles className="w-3 h-3" /> Executive Intelligence
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-[10px] font-mono-data text-emerald-400">
-                <Database className="w-2.5 h-2.5" /> Live Records
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono-data ${
+                isPartyThemeActive ? "bg-black/10 border border-black/20 text-black font-semibold" : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+              }`}>
+                <Database className="w-2.5 h-2.5" /> Verified ECI Records
               </span>
             </div>
 
-            <h1 className="font-display text-[56px] sm:text-[84px] lg:text-[110px] leading-[0.92] tracking-[-0.025em]">
-              <span className="cream-text">Constituency</span><br />
-              <span className="italic gold-text">intelligence,</span>
-              <span className="cream-text"> made legible.</span>
+            <h1 className={`font-display text-[56px] sm:text-[80px] lg:text-[98px] leading-[0.94] tracking-[-0.03em] ${
+              isPartyThemeActive ? "text-black" : "cream-text"
+            }`}>
+              <span>Constituency</span><br />
+              <span className={`italic ${isPartyThemeActive ? "text-[#92400E]" : "gold-text"}`}>intelligence,</span>
+              <span> made legible.</span>
             </h1>
 
-            <p className="text-[15px] sm:text-base text-[#D8CFB8] max-w-xl leading-relaxed">
+            <p className={`text-[15px] sm:text-base max-w-xl leading-relaxed ${
+              isPartyThemeActive ? "text-black/85 font-medium" : "text-[#D8CFB8]"
+            }`}>
               {isPartyThemeActive && partyName ? (
                 <>
-                  Executive-grade electoral intelligence, sentiment tracking, and cadre mobilization workspace configured for{" "}
-                  <strong className="text-[var(--party-primary)] font-semibold">{partyName}</strong>.
+                  Executive-grade electoral intelligence, ground sentiment triage, and cadre mobilization workspace configured for{" "}
+                  <strong className="text-black font-extrabold underline decoration-black/40 underline-offset-4">{partyName}</strong>.
                 </>
               ) : (
                 "A quiet, executive-grade view of candidate footprint, competitive position and digital reach — synthesised from verified electoral records, platform APIs and constituency-level social listening."
@@ -249,27 +258,41 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
           </div>
 
           <div className="lg:col-span-4 lg:pb-3">
-            <dl className="grid grid-cols-3 gap-x-4 gap-y-2 border-t border-[#D4A24C]/30 pt-6">
-              <Stat label="States / UTs" value={String(states.length || 36)} />
-              <Stat label="Signals" value="31,310" />
-              <Stat label="Refresh" value="Live" pulse />
+            <dl className={`grid grid-cols-3 gap-x-4 gap-y-2 border-t pt-5 ${
+              isPartyThemeActive ? "border-black/20 text-black" : "border-[#D4A24C]/30"
+            }`}>
+              <Stat label="States / UTs" value={String(states.length || 36)} isParty={isPartyThemeActive} />
+              <Stat label="Signals" value="31,310" isParty={isPartyThemeActive} />
+              <Stat label="Refresh" value="Live" pulse isParty={isPartyThemeActive} />
             </dl>
           </div>
         </div>
 
-        {/* Cascading selection panel (dark card floating over hero) */}
+        {/* Cascading selection panel */}
         <div
           data-testid="location-selector-panel"
-          className="bg-[#0E2137]/80 backdrop-blur border border-[#22405E] rounded-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.55)] overflow-hidden animate-rise-slow"
+          className={`${
+            isPartyThemeActive
+              ? "bg-white/95 text-slate-900 border-2 border-black/15 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.35)]"
+              : "bg-[#0E2137]/80 backdrop-blur border border-[#22405E] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.55)]"
+          } rounded-2xl overflow-hidden animate-rise-slow`}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-8 pt-6 sm:pt-7 pb-5 border-b border-[#22405E]">
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-8 pt-6 sm:pt-7 pb-5 border-b ${
+            isPartyThemeActive ? "border-gray-200" : "border-[#22405E]"
+          }`}>
             <div>
-              <span className="eyebrow gold-text">01 — Select target geography</span>
-              <h2 className="font-editorial text-[22px] font-medium cream-text mt-1">
+              <span className={`eyebrow ${isPartyThemeActive ? "text-amber-700 font-bold" : "gold-text"}`}>
+                01 — Select target geography
+              </span>
+              <h2 className={`font-editorial text-[22px] font-bold mt-1 ${
+                isPartyThemeActive ? "text-slate-900" : "cream-text"
+              }`}>
                 Where should we look?
               </h2>
             </div>
-            <div className="flex items-center gap-3 text-[11px] font-medium tracking-wide text-[#B9AF95] tabular">
+            <div className={`flex items-center gap-3 text-[11px] font-semibold tracking-wide tabular ${
+              isPartyThemeActive ? "text-slate-600" : "text-[#B9AF95]"
+            }`}>
               <span>Verified ECI Delimitation & Voter Records</span>
             </div>
           </div>
@@ -598,20 +621,22 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
   );
 };
 
-const Stat: React.FC<{ label: string; value: string; pulse?: boolean }> = ({ label, value, pulse }) => (
+const Stat: React.FC<{ label: string; value: string; pulse?: boolean; isParty?: boolean }> = ({ label, value, pulse, isParty }) => (
   <div>
-    <dt className="eyebrow text-[#B9AF95]">{label}</dt>
-    <dd className="font-display text-3xl gold-text mt-1 flex items-center gap-2">
+    <dt className={`eyebrow ${isParty ? "text-slate-800 font-bold" : "text-[#B9AF95]"}`}>{label}</dt>
+    <dd className={`font-display text-3xl mt-1 flex items-center gap-2 ${isParty ? "text-slate-950 font-bold" : "gold-text"}`}>
       {value}
-      {pulse && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-subtle" />}
+      {pulse && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-subtle" />}
     </dd>
   </div>
 );
 
-const FieldGroup: React.FC<{ label: string; step: string; children: React.ReactNode }> = ({ label, step, children }) => (
+const FieldGroup: React.FC<{ label: string; step: string; children: React.ReactNode; isParty?: boolean }> = ({ label, step, children, isParty }) => (
   <div className="space-y-2">
-    <label className="flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#B9AF95]">
-      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-[#D4A24C]/50 text-[9px] font-bold text-[#D4A24C]">
+    <label className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] ${isParty ? "text-slate-800" : "text-[#B9AF95]"}`}>
+      <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full border text-[9px] font-bold ${
+        isParty ? "border-black bg-black text-white" : "border-[#D4A24C]/50 text-[#D4A24C]"
+      }`}>
         {step}
       </span>
       {label}
@@ -620,16 +645,20 @@ const FieldGroup: React.FC<{ label: string; step: string; children: React.ReactN
   </div>
 );
 
-const SelectShell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+const SelectShell: React.FC<{ children: React.ReactNode; isParty?: boolean }> = ({ children, isParty }) => (
   <div className="relative">
     {children}
-    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D4A24C]" />
+    <ChevronDown className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
+      isParty ? "text-black" : "text-[#D4A24C]"
+    }`} />
   </div>
 );
 
-const PreviewMetric: React.FC<{ label: string; value: string; tone?: "gold" | "cream" }> = ({ label, value, tone = "cream" }) => (
+const PreviewMetric: React.FC<{ label: string; value: string; tone?: "gold" | "cream"; isParty?: boolean }> = ({ label, value, tone = "cream", isParty }) => (
   <div className="px-4 first:pl-0 last:pr-0">
-    <div className="eyebrow text-[#B9AF95]">{label}</div>
-    <div className={`font-mono-data text-lg font-semibold mt-0.5 ${tone === "gold" ? "gold-text" : "cream-text"}`}>{value}</div>
+    <div className={`eyebrow ${isParty ? "text-slate-700 font-bold" : "text-[#B9AF95]"}`}>{label}</div>
+    <div className={`font-mono-data text-lg font-bold mt-0.5 ${
+      isParty ? "text-slate-900" : (tone === "gold" ? "gold-text" : "cream-text")
+    }`}>{value}</div>
   </div>
 );
