@@ -91,13 +91,49 @@ export interface SocialPlatformAccount {
   lastActive: string;
 }
 
+export type RepresentativeStatus = "CURRENT" | "FORMER" | "VACANT";
+
+export type CandidateType =
+  | "CURRENT_MLA"
+  | "PROSPECTIVE_CANDIDATE"
+  | "MLA_IN_CHARGE"
+  | "PRIMARY_OPPOSITION"
+  | "SECONDARY_OPPOSITION"
+  | "OTHER";
+
+export interface ElectedRepresentative {
+  id: string;
+  stateId: string;
+  parliamentConstituencyId: string;
+  assemblyConstituencyId: string;
+  candidateId?: string;
+  name: string;
+  partyId: string;
+  designation: string;
+  electionDate: string;
+  electionType: string;
+  status: RepresentativeStatus;
+  termStart: string;
+  termEnd?: string;
+  reasonForChange?: string;
+  source: string;
+  sourceUrl?: string;
+  photoUrl?: string;
+  verifiedAt: string;
+  lastUpdatedAt: string;
+  party?: PoliticalParty;
+}
+
 export interface Candidate {
   id: string;
   name: string;
   party: string;
   partyAbbr: string;
   partyColor: string;
+  partyId?: string;
   isClient: boolean;
+  isCurrentRepresentative?: boolean;
+  candidateType?: CandidateType;
   role: string;
   avatarUrl: string;
   socialStrengthScore: number;

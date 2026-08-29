@@ -5,7 +5,8 @@ import {
   Candidate,
   AuditReport,
   PlatformAudienceDetail,
-  PoliticalParty
+  PoliticalParty,
+  ElectedRepresentative
 } from "../types";
 import {
   buildCompleteAudit,
@@ -14,7 +15,8 @@ import {
   MOCK_ASSEMBLIES,
   MOCK_CANDIDATES,
   MOCK_PLATFORM_AUDIENCES,
-  MOCK_POLITICAL_PARTIES
+  MOCK_POLITICAL_PARTIES,
+  MOCK_ELECTED_REPRESENTATIVES
 } from "./mockData";
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
@@ -36,18 +38,19 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
 let cachedStates: StateInfo[] | null = null;
 let cachedParliaments: ParliamentInfo[] | null = null;
 let cachedAssemblies: AssemblyInfo[] | null = null;
-
 let cachedParties: PoliticalParty[] | null = null;
+let cachedReps: ElectedRepresentative[] | null = null;
 
 async function loadStaticGeography() {
   if (!cachedStates) {
     try {
       const cleanBase = BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`;
-      const [resStates, resParls, resAssems, resParties] = await Promise.all([
+      const [resStates, resParls, resAssems, resParties, resReps] = await Promise.all([
         fetch(`${cleanBase}data/geography/states.json`),
         fetch(`${cleanBase}data/geography/parliaments.json`),
         fetch(`${cleanBase}data/geography/assemblies.json`),
-        fetch(`${cleanBase}data/geography/political_parties.json`)
+        fetch(`${cleanBase}data/geography/political_parties.json`),
+        fetch(`${cleanBase}data/geography/elected_representatives.json`)
       ]);
       if (resStates.ok && resParls.ok && resAssems.ok) {
         cachedStates = await resStates.json();
@@ -57,11 +60,15 @@ async function loadStaticGeography() {
       if (resParties.ok) {
         cachedParties = await resParties.json();
       }
+      if (resReps.ok) {
+        cachedReps = await resReps.json();
+      }
     } catch (e) {
       cachedStates = MOCK_STATES;
       cachedParliaments = MOCK_PARLIAMENTS;
       cachedAssemblies = MOCK_ASSEMBLIES;
       cachedParties = MOCK_POLITICAL_PARTIES;
+      cachedReps = MOCK_ELECTED_REPRESENTATIVES;
     }
   }
 }
@@ -118,6 +125,155 @@ export const politicalApiService = {
       if (matched) return matched;
     }
     return { ...MOCK_POLITICAL_PARTIES[0], ...updates, id: partyId };
+  },
+
+  async getCurrentRepresentative(acId: string): Promise<{
+    representative: ElectedRepresentative | null;
+    status: "CURRENT" | "FORMER" | "VACANT" | "UNAVAILABLE";
+    message?: string;
+  }> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/assembly-constituencies/${encodeURIComponent(acId)}/current-representative`);
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    await loadStaticGeography();
+    const parties = cachedParties || MOCK_POLITICAL_PARTIES;
+    const reps = cachedReps || MOCK_ELECTED_REPRESENTATIVES;
+
+    const current = reps.find(
+      (r) => r.assemblyConstituencyId.toUpperCase() === acId.toUpperCase() && r.status === "CURRENT"
+    );
+    if (current) {
+      const matchedParty = parties.find(
+        (p) => p.id.toUpperCase() === current.partyId.toUpperCase() || p.abbreviation.toUpperCase() === current.partyId.toUpperCase()
+      );
+      return {
+        representative: {
+          ...current,
+          party: matchedParty
+        },
+        status: "CURRENT"
+      };
+    }
+
+    const vacant = reps.find(
+      (r) => r.assemblyConstituencyId.toUpperCase() === acId.toUpperCase() && r.status === "VACANT"
+    );
+    if (vacant) {
+      return {
+        representative: null,
+        status: "VACANT",
+        message: "Seat currently vacant"
+      };
+    }
+
+    return {
+      representative: null,
+      status: "UNAVAILABLE",
+      message: "Current representative data unavailable"
+    };
+  },
+
+  async getRepresentativesHistory(acId: string): Promise<ElectedRepresentative[]> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/assembly-constituencies/${encodeURIComponent(acId)}/representatives-history`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    await loadStaticGeography();
+    const parties = cachedParties || MOCK_POLITICAL_PARTIES;
+    const reps = cachedReps || MOCK_ELECTED_REPRESENTATIVES;
+
+    return reps
+      .filter((r) => r.assemblyConstituencyId.toUpperCase() === acId.toUpperCase())
+      .map((r) => {
+        const matchedParty = parties.find(
+          (p) => p.id.toUpperCase() === r.partyId.toUpperCase() || p.abbreviation.toUpperCase() === r.partyId.toUpperCase()
+        );
+        return {
+          ...r,
+          party: matchedParty
+        };
+      });
+  },
+
+  async createElectedRepresentative(acId: string, payload: Partial<ElectedRepresentative>): Promise<ElectedRepresentative> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/assembly-constituencies/${encodeURIComponent(acId)}/representatives`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const created = await res.json();
+        if (cachedReps) {
+          cachedReps = [created, ...cachedReps];
+        }
+        return created;
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    const newRep: ElectedRepresentative = {
+      id: `REP-${Date.now()}`,
+      stateId: payload.stateId || "AP",
+      parliamentConstituencyId: payload.parliamentConstituencyId || "",
+      assemblyConstituencyId: acId,
+      name: payload.name || "Representative",
+      partyId: payload.partyId || "IND",
+      designation: payload.designation || "MLA",
+      electionDate: payload.electionDate || "2024-06-04",
+      electionType: payload.electionType || "General Election 2024",
+      status: payload.status || "CURRENT",
+      termStart: payload.termStart || "2024",
+      source: payload.source || "Official State Legislative Assembly",
+      verifiedAt: new Date().toISOString(),
+      lastUpdatedAt: new Date().toISOString(),
+      ...payload
+    };
+
+    if (cachedReps) {
+      cachedReps = [newRep, ...cachedReps];
+    }
+    return newRep;
+  },
+
+  async updateElectedRepresentative(acId: string, repId: string, updates: Partial<ElectedRepresentative>): Promise<ElectedRepresentative> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/assembly-constituencies/${encodeURIComponent(acId)}/representatives/${encodeURIComponent(repId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (cachedReps) {
+          cachedReps = cachedReps.map((r) => r.id === repId ? { ...r, ...updated } : r);
+        }
+        return updated;
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    if (cachedReps) {
+      cachedReps = cachedReps.map((r) => r.id === repId ? { ...r, ...updates } : r);
+      const matched = cachedReps.find((r) => r.id === repId);
+      if (matched) return matched;
+    }
+    return { ...MOCK_ELECTED_REPRESENTATIVES[0], ...updates, id: repId };
   },
   async getStates(): Promise<StateInfo[]> {
     try {

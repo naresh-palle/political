@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { UserProfile, UserRole, PoliticalParty } from "../../types";
-import { USER_PROFILES, MOCK_POLITICAL_PARTIES } from "../../services/mockData";
+import { UserProfile, UserRole, PoliticalParty, ElectedRepresentative } from "../../types";
+import { USER_PROFILES, MOCK_POLITICAL_PARTIES, MOCK_ELECTED_REPRESENTATIVES } from "../../services/mockData";
 import { politicalApiService } from "../../services/api";
 import {
   ShieldCheck,
@@ -20,7 +20,13 @@ import {
   Check,
   RefreshCw,
   Eye,
-  Layers
+  Layers,
+  Award,
+  Plus,
+  ExternalLink,
+  AlertCircle,
+  Calendar,
+  Building
 } from "lucide-react";
 
 interface RoleManagementProps {
@@ -32,7 +38,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   currentProfile,
   onSwitchProfile
 }) => {
-  const [activeTab, setActiveTab] = useState<"roles" | "branding" | "audit">("roles");
+  const [activeTab, setActiveTab] = useState<"roles" | "branding" | "representatives" | "audit">("roles");
   const [profiles, setProfiles] = useState<UserProfile[]>(USER_PROFILES);
   const [parties, setParties] = useState<PoliticalParty[]>(MOCK_POLITICAL_PARTIES);
   const [selectedPartyId, setSelectedPartyId] = useState<string>("TDP");
@@ -50,6 +56,25 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Representatives Ledger State
+  const [ledgerAcId, setLedgerAcId] = useState<string>("KDP-AC");
+  const [ledgerHistory, setLedgerHistory] = useState<ElectedRepresentative[]>([]);
+  const [isRepModalOpen, setIsRepModalOpen] = useState(false);
+  const [repFormName, setRepFormName] = useState("");
+  const [repFormPartyId, setRepFormPartyId] = useState("TDP");
+  const [repFormDesignation, setRepFormDesignation] = useState("MLA");
+  const [repFormElectionType, setRepFormElectionType] = useState("General Election 2024");
+  const [repFormElectionDate, setRepFormElectionDate] = useState("2024-06-04");
+  const [repFormStatus, setRepFormStatus] = useState<"CURRENT" | "FORMER" | "VACANT">("CURRENT");
+  const [repFormTermStart, setRepFormTermStart] = useState("2024");
+  const [repFormTermEnd, setRepFormTermEnd] = useState("");
+  const [repFormReason, setRepFormReason] = useState("");
+  const [repFormSource, setRepFormSource] = useState("Election Commission of India");
+  const [repFormSourceUrl, setRepFormSourceUrl] = useState("");
+  const [repFormPhotoUrl, setRepFormPhotoUrl] = useState("");
+  const [isRepSaving, setIsRepSaving] = useState(false);
+  const [repSaveSuccess, setRepSaveSuccess] = useState(false);
+
   useEffect(() => {
     (async () => {
       const fetched = await politicalApiService.getPoliticalParties();
@@ -61,6 +86,74 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       }
     })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const history = await politicalApiService.getRepresentativesHistory(ledgerAcId);
+      setLedgerHistory(history);
+    })();
+  }, [ledgerAcId]);
+
+  const handleSaveRepresentative = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsRepSaving(true);
+    setRepSaveSuccess(false);
+
+    const payload: Partial<ElectedRepresentative> = {
+      id: `REP-${ledgerAcId}-${Date.now()}`,
+      assemblyConstituencyId: ledgerAcId,
+      name: repFormName,
+      partyId: repFormPartyId,
+      designation: repFormDesignation,
+      electionType: repFormElectionType,
+      electionDate: repFormElectionDate,
+      status: repFormStatus,
+      termStart: repFormTermStart,
+      termEnd: repFormTermEnd || undefined,
+      reasonForChange: repFormReason || undefined,
+      source: repFormSource,
+      sourceUrl: repFormSourceUrl || undefined,
+      photoUrl: repFormPhotoUrl || undefined
+    };
+
+    try {
+      await politicalApiService.createElectedRepresentative(ledgerAcId, payload);
+      const updatedHistory = await politicalApiService.getRepresentativesHistory(ledgerAcId);
+      setLedgerHistory(updatedHistory);
+      setRepSaveSuccess(true);
+      setTimeout(() => {
+        setRepSaveSuccess(false);
+        setIsRepModalOpen(false);
+      }, 1500);
+    } catch (err) {
+      console.error("Failed to save representative", err);
+    } finally {
+      setIsRepSaving(false);
+    }
+  };
+
+  const handleMarkVacant = async () => {
+    if (!window.confirm("Are you sure you want to mark this constituency seat as officially VACANT?")) return;
+    setIsRepSaving(true);
+    try {
+      await politicalApiService.createElectedRepresentative(ledgerAcId, {
+        id: `REP-${ledgerAcId}-VACANT-${Date.now()}`,
+        assemblyConstituencyId: ledgerAcId,
+        name: "Seat Vacant",
+        partyId: "IND",
+        designation: "Vacant Seat",
+        status: "VACANT",
+        termStart: String(new Date().getFullYear()),
+        source: "Official Legislative Assembly Gazette"
+      });
+      const updatedHistory = await politicalApiService.getRepresentativesHistory(ledgerAcId);
+      setLedgerHistory(updatedHistory);
+    } catch (err) {
+      console.error("Failed to mark seat vacant", err);
+    } finally {
+      setIsRepSaving(false);
+    }
+  };
 
   const loadPartyToForm = (p: PoliticalParty) => {
     setPrimaryColor(p.primaryColor || "#FFD200");
@@ -201,6 +294,18 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         >
           <Palette className="w-4 h-4" />
           <span>Party Branding & Color Customizer</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("representatives")}
+          className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === "representatives"
+              ? "bg-[#1E3A5A] text-white shadow-sm"
+              : "text-[#626674] hover:bg-[#EFECE6] hover:text-[#112233]"
+          }`}
+        >
+          <Award className="w-4 h-4" />
+          <span>Elected Representatives Ledger</span>
         </button>
 
         <button
@@ -719,7 +824,6 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                       #1 in Constituency
                     </div>
                   </div>
-
                   <div className="p-4 bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl space-y-2">
                     <div className="flex justify-between text-xs font-semibold">
                       <span className="text-[#112233]">Platform Coverage</span>
@@ -754,7 +858,486 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         </div>
       )}
 
-      {/* TAB 3: SECURITY AUDIT TRAIL */}
+      {/* TAB 3: ELECTED REPRESENTATIVES LEDGER */}
+      {activeTab === "representatives" && (
+        <div className="space-y-8 animate-fadeIn">
+          {/* Top Controls: Constituency Selector & Actions */}
+          <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#ECEAE2] pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-[#B45309]" />
+                  <h3 className="text-sm font-semibold text-[#112233]">
+                    Official Elected Representatives Ledger (ECI & Legislative Assembly)
+                  </h3>
+                </div>
+                <p className="text-xs text-[#626674] mt-0.5">
+                  Authoritative tracking of current and historical MLAs. Prevents guessing or hardcoding names.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRepFormName("");
+                    setRepFormPartyId("TDP");
+                    setRepFormDesignation("MLA");
+                    setRepFormElectionType("General Election 2024");
+                    setRepFormElectionDate("2024-06-04");
+                    setRepFormStatus("CURRENT");
+                    setRepFormTermStart("2024");
+                    setRepFormTermEnd("");
+                    setRepFormReason("");
+                    setRepFormSource("Election Commission of India");
+                    setRepFormSourceUrl("");
+                    setRepFormPhotoUrl("");
+                    setIsRepModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#112233] hover:bg-[#1E3A5A] text-[#F5EFE0] text-xs font-bold rounded-lg shadow-sm transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Register / Change Representative</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleMarkVacant}
+                  disabled={isRepSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Mark Seat Vacant</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Constituency Switcher */}
+            <div className="flex items-center gap-3 pt-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A] shrink-0">
+                Inspect Constituency Ledger:
+              </label>
+              <select
+                value={ledgerAcId}
+                onChange={(e) => setLedgerAcId(e.target.value)}
+                className="bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-1.5 text-xs font-bold text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+              >
+                <option value="KDP-AC">Kadapa (AC-132) · Kadapa PC</option>
+                <option value="KML-AC">Kamalapuram (AC-133) · Kadapa PC</option>
+                <option value="PLV-AC">Pulivendla (AC-130) · Kadapa PC</option>
+                <option value="TPT-AC">Tirupati (AC-167) · Tirupati PC</option>
+                <option value="KUP-AC">Kuppam (AC-175) · Chittoor PC</option>
+                <option value="PTH-AC">Pithapuram (AC-041) · Kakinada PC</option>
+                <option value="MGL-AC">Mangalagiri (AC-087) · Guntur PC</option>
+                <option value="GNTW-AC">Guntur West (AC-094) · Guntur PC</option>
+                <option value="VSKE-AC">Visakhapatnam East (AC-021) · Visakhapatnam PC</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Current Representative Banner */}
+          {(() => {
+            const current = ledgerHistory.find((r) => r.status === "CURRENT");
+            const isVacant = ledgerHistory.some((r) => r.status === "VACANT");
+            if (current) {
+              return (
+                <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded text-[10px] font-bold uppercase tracking-wider">
+                        Active Incumbent MLA
+                      </span>
+                      <span className="text-xs text-[#7A7E8C]">
+                        {current.assemblyConstituencyId} · Term: {current.termStart}–Present
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono-data text-emerald-700 font-bold flex items-center gap-1">
+                      <ShieldCheck className="w-4 h-4" />
+                      Status: CURRENT
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={current.photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"}
+                        alt={current.name}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-[#B45309]"
+                      />
+                      <div className="space-y-1">
+                        <h4 className="text-lg font-bold text-[#112233]">{current.name}</h4>
+                        <div className="flex items-center gap-2 text-xs">
+                          {current.party && (
+                            <span
+                              className="px-2.5 py-0.5 rounded text-[11px] font-bold text-white shadow-2xs"
+                              style={{ backgroundColor: current.party.primaryColor || "#B45309" }}
+                            >
+                              {current.party.symbolEmoji} {current.party.abbreviation || current.party.shortName} · {current.party.name}
+                            </span>
+                          )}
+                          <span className="text-[#64748B] font-medium">({current.designation})</span>
+                        </div>
+                        <div className="text-[11px] text-[#71717A]">
+                          Election: {current.electionType} ({current.electionDate})
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl p-4 text-xs space-y-1 sm:max-w-xs">
+                      <div className="text-[10px] uppercase font-bold text-[#8A8E9B]">
+                        Verification Provenance
+                      </div>
+                      <div className="font-semibold text-[#112233] flex items-center gap-1.5">
+                        <span>{current.source}</span>
+                        {current.sourceUrl && (
+                          <a
+                            href={current.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#B45309] hover:underline"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-[#71717A] font-mono-data">
+                        Verified At: {new Date(current.verifiedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            } else if (isVacant) {
+              return (
+                <div className="p-6 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-4 text-amber-900">
+                  <AlertCircle className="w-8 h-8 text-amber-600 shrink-0" />
+                  <div>
+                    <h4 className="text-base font-bold">Seat Officially Recorded as VACANT</h4>
+                    <p className="text-xs text-amber-800/90 mt-0.5">
+                      This constituency currently has no serving MLA due to resignation, disqualification, or term transition.
+                    </p>
+                  </div>
+                </div>
+              );
+            } else {
+              return (
+                <div className="p-6 bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl flex items-center gap-4 text-[#64748B]">
+                  <AlertCircle className="w-8 h-8 text-[#94A3B8] shrink-0" />
+                  <div>
+                    <h4 className="text-base font-bold text-[#112233]">No Current Representative Record on File</h4>
+                    <p className="text-xs text-[#64748B] mt-0.5">
+                      Current representative data is unavailable. Click "Register / Change Representative" above to add the official gazetted record.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+          })()}
+
+          {/* Historical Succession Timeline */}
+          <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-[#112233]" />
+                <h3 className="text-sm font-semibold text-[#112233]">
+                  Representative Succession Ledger & History ({ledgerHistory.length} Records)
+                </h3>
+              </div>
+              <span className="text-xs text-[#8A8E9B]">Chronological Gazette Trail</span>
+            </div>
+
+            {ledgerHistory.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#8A8E9B]">
+                No historical records registered yet for {ledgerAcId}.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {ledgerHistory.map((rep, idx) => (
+                  <div
+                    key={rep.id || idx}
+                    className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs transition-all ${
+                      rep.status === "CURRENT"
+                        ? "bg-emerald-50/50 border-emerald-200 shadow-2xs"
+                        : rep.status === "VACANT"
+                        ? "bg-amber-50/50 border-amber-200"
+                        : "bg-[#FAF9F5] border-[#E5E3D8]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={rep.photoUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80"}
+                        alt={rep.name}
+                        className="w-10 h-10 rounded-full object-cover border border-[#D5D3C8]"
+                      />
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-[#112233] text-sm">{rep.name}</span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                              rep.status === "CURRENT"
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                : rep.status === "VACANT"
+                                ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                : "bg-zinc-200 text-zinc-700"
+                            }`}
+                          >
+                            {rep.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] text-[#626674]">
+                          {rep.party && (
+                            <span className="font-semibold text-[#112233]">
+                              {rep.party.abbreviation || rep.party.shortName} · {rep.party.name}
+                            </span>
+                          )}
+                          <span>·</span>
+                          <span>{rep.designation}</span>
+                        </div>
+                        {rep.reasonForChange && (
+                          <div className="text-[10px] text-amber-800 italic">
+                            Reason for transition: {rep.reasonForChange}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex sm:flex-col sm:items-end justify-between text-[11px] text-[#71717A] space-y-1">
+                      <div className="font-mono-data font-semibold text-[#112233]">
+                        Term: {rep.termStart}–{rep.termEnd || "Present"}
+                      </div>
+                      <div className="text-[10px] text-[#8A8E9B]">
+                        Source: {rep.source}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Modal Form for Registering/Updating Representative */}
+          {isRepModalOpen && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+              <div className="bg-white rounded-2xl border border-[#E0DED5] shadow-2xl max-w-xl w-full p-6 space-y-5 overflow-y-auto max-h-[90vh]">
+                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-[#112233]">
+                      Register / Update Representative ({ledgerAcId})
+                    </h3>
+                    <p className="text-xs text-[#626674]">
+                      Saves verified record to database; demotes existing CURRENT representative to FORMER.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsRepModalOpen(false)}
+                    className="text-[#8A8E9B] hover:text-[#112233] text-lg font-bold cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveRepresentative} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Leader Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={repFormName}
+                        onChange={(e) => setRepFormName(e.target.value)}
+                        placeholder="e.g. R. Madhavi Reddy"
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Political Party *
+                      </label>
+                      <select
+                        value={repFormPartyId}
+                        onChange={(e) => setRepFormPartyId(e.target.value)}
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      >
+                        {parties.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.abbreviation || p.shortName} · {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Designation
+                      </label>
+                      <input
+                        type="text"
+                        value={repFormDesignation}
+                        onChange={(e) => setRepFormDesignation(e.target.value)}
+                        placeholder="MLA / Minister"
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Record Status
+                      </label>
+                      <select
+                        value={repFormStatus}
+                        onChange={(e) => setRepFormStatus(e.target.value as any)}
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      >
+                        <option value="CURRENT">CURRENT (Active MLA)</option>
+                        <option value="FORMER">FORMER (Past Term)</option>
+                        <option value="VACANT">VACANT (Seat Vacant)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Election Date
+                      </label>
+                      <input
+                        type="date"
+                        value={repFormElectionDate}
+                        onChange={(e) => setRepFormElectionDate(e.target.value)}
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Term Start (Year)
+                      </label>
+                      <input
+                        type="text"
+                        value={repFormTermStart}
+                        onChange={(e) => setRepFormTermStart(e.target.value)}
+                        placeholder="2024"
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Term End (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={repFormTermEnd}
+                        onChange={(e) => setRepFormTermEnd(e.target.value)}
+                        placeholder="Leave blank if Current"
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                      Reason For Transition (If Former or By-Election)
+                    </label>
+                    <input
+                      type="text"
+                      value={repFormReason}
+                      onChange={(e) => setRepFormReason(e.target.value)}
+                      placeholder="e.g. By-election 2026, Resignation, Term Completed"
+                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Authoritative Source *
+                      </label>
+                      <select
+                        value={repFormSource}
+                        onChange={(e) => setRepFormSource(e.target.value)}
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      >
+                        <option value="Election Commission of India">Election Commission of India</option>
+                        <option value="Official State Legislative Assembly">Official State Legislative Assembly</option>
+                        <option value="State Chief Electoral Officer">State Chief Electoral Officer</option>
+                        <option value="Other verified official government source">Other verified official government source</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                        Official Gazette / Source URL
+                      </label>
+                      <input
+                        type="url"
+                        value={repFormSourceUrl}
+                        onChange={(e) => setRepFormSourceUrl(e.target.value)}
+                        placeholder="https://results.eci.gov.in/..."
+                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
+                      Photo / Portrait URL
+                    </label>
+                    <input
+                      type="url"
+                      value={repFormPhotoUrl}
+                      onChange={(e) => setRepFormPhotoUrl(e.target.value)}
+                      placeholder="https://.../photo.jpg"
+                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#ECEAE2]">
+                    <button
+                      type="button"
+                      onClick={() => setIsRepModalOpen(false)}
+                      className="px-4 py-2 text-xs font-semibold text-[#626674] hover:bg-[#EFECE6] rounded-lg cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={isRepSaving}
+                      className="inline-flex items-center gap-2 px-5 py-2 bg-[#112233] hover:bg-[#1E3A5A] text-[#F5EFE0] text-xs font-bold rounded-lg transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      {isRepSaving ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Saving to Master Database...</span>
+                        </>
+                      ) : repSaveSuccess ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Verified & Saved!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-3.5 h-3.5" />
+                          <span>Save & Commit Record</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 4: SECURITY AUDIT TRAIL */}
       {activeTab === "audit" && (
         <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4 animate-fadeIn">
           <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">

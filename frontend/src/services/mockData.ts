@@ -14,7 +14,9 @@ import {
   VolunteerSquad,
   VolunteerTask,
   CampaignLandingConfig,
-  PoliticalParty
+  PoliticalParty,
+  ElectedRepresentative,
+  CandidateType
 } from "../types";
 import {
   calculateVoterCoverage,
@@ -301,6 +303,114 @@ export const MOCK_POLITICAL_PARTIES: PoliticalParty[] = [
     gradientStart: "#0284C7",
     gradientEnd: "#075985",
     isActive: true
+  }
+];
+
+export const MOCK_ELECTED_REPRESENTATIVES: ElectedRepresentative[] = [
+  {
+    id: "REP-AP-AC132-2024",
+    stateId: "AP",
+    parliamentConstituencyId: "KDP-PC",
+    assemblyConstituencyId: "KDP-AC",
+    candidateId: "cand-kdp-1",
+    name: "R. Madhavi Reddy",
+    partyId: "TDP",
+    designation: "MLA",
+    electionDate: "2024-06-04",
+    electionType: "General Election 2024",
+    status: "CURRENT",
+    termStart: "2024",
+    termEnd: undefined,
+    reasonForChange: undefined,
+    source: "Election Commission of India",
+    sourceUrl: "https://results.eci.gov.in/AcResultGenJune2024/candidateswise-S01132.htm",
+    photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80",
+    verifiedAt: "2026-08-28T10:00:00Z",
+    lastUpdatedAt: "2026-08-28T10:00:00Z"
+  },
+  {
+    id: "REP-AP-AC132-2019",
+    stateId: "AP",
+    parliamentConstituencyId: "KDP-PC",
+    assemblyConstituencyId: "KDP-AC",
+    candidateId: "cand-kdp-former",
+    name: "Amzath Basha S. B.",
+    partyId: "YSRCP",
+    designation: "Former MLA & Deputy CM",
+    electionDate: "2019-05-23",
+    electionType: "General Election 2019",
+    status: "FORMER",
+    termStart: "2019",
+    termEnd: "2024",
+    reasonForChange: "Term completed; defeated in 2024 General Election",
+    source: "Official Andhra Pradesh Legislative Assembly",
+    sourceUrl: "https://aplegislature.org",
+    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+    verifiedAt: "2024-06-05T00:00:00Z",
+    lastUpdatedAt: "2024-06-05T00:00:00Z"
+  },
+  {
+    id: "REP-AP-AC133-2024",
+    stateId: "AP",
+    parliamentConstituencyId: "KDP-PC",
+    assemblyConstituencyId: "KML-AC",
+    candidateId: "cand-kml-1",
+    name: "Putha Krishna Chaitanya Reddy",
+    partyId: "TDP",
+    designation: "MLA",
+    electionDate: "2024-06-04",
+    electionType: "General Election 2024",
+    status: "CURRENT",
+    termStart: "2024",
+    termEnd: undefined,
+    reasonForChange: undefined,
+    source: "Election Commission of India",
+    sourceUrl: "https://results.eci.gov.in/AcResultGenJune2024/candidateswise-S01133.htm",
+    photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80",
+    verifiedAt: "2026-08-28T10:00:00Z",
+    lastUpdatedAt: "2026-08-28T10:00:00Z"
+  },
+  {
+    id: "REP-AP-AC130-2024",
+    stateId: "AP",
+    parliamentConstituencyId: "KDP-PC",
+    assemblyConstituencyId: "PLV-AC",
+    candidateId: "cand-plv-1",
+    name: "Y. S. Jagan Mohan Reddy",
+    partyId: "YSRCP",
+    designation: "MLA (Former Chief Minister)",
+    electionDate: "2024-06-04",
+    electionType: "General Election 2024",
+    status: "CURRENT",
+    termStart: "2024",
+    termEnd: undefined,
+    reasonForChange: undefined,
+    source: "Official Andhra Pradesh Legislative Assembly",
+    sourceUrl: "https://aplegislature.org",
+    photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&auto=format&fit=crop&q=80",
+    verifiedAt: "2026-08-28T10:00:00Z",
+    lastUpdatedAt: "2026-08-28T10:00:00Z"
+  },
+  {
+    id: "REP-AP-AC167-2024",
+    stateId: "AP",
+    parliamentConstituencyId: "TPT-PC",
+    assemblyConstituencyId: "TPT-AC",
+    candidateId: "cand-tpt-1",
+    name: "Arani Srinivasulu",
+    partyId: "JSP",
+    designation: "MLA",
+    electionDate: "2024-06-04",
+    electionType: "General Election 2024",
+    status: "CURRENT",
+    termStart: "2024",
+    termEnd: undefined,
+    reasonForChange: undefined,
+    source: "Election Commission of India",
+    sourceUrl: "https://results.eci.gov.in/AcResultGenJune2024/candidateswise-S01167.htm",
+    photoUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&auto=format&fit=crop&q=80",
+    verifiedAt: "2026-08-28T10:00:00Z",
+    lastUpdatedAt: "2026-08-28T10:00:00Z"
   }
 ];
 
@@ -1391,7 +1501,9 @@ export function buildCompleteAudit(
   assemblyId = "KDP-AC",
   customAssembly?: AssemblyInfo | null,
   customStateName?: string,
-  customParliamentName?: string
+  customParliamentName?: string,
+  representative?: ElectedRepresentative | null,
+  clientType?: CandidateType
 ): AuditReport {
   // Resolve State
   const state: StateInfo = customStateName
@@ -1435,7 +1547,113 @@ export function buildCompleteAudit(
     }
   }
 
-  const rankedCandList = rankCandidates(MOCK_CANDIDATES);
+  let candList: Candidate[] = [...MOCK_CANDIDATES];
+
+  if (representative && representative.status === "CURRENT") {
+    const isClientCurrentMla = clientType === "CURRENT_MLA" || !clientType;
+    const repParty = representative.party || {
+      id: representative.partyId,
+      name: representative.partyId,
+      shortName: representative.partyId,
+      abbreviation: representative.partyId,
+      primaryColor: "#FFD200"
+    };
+
+    const repCand: Candidate = {
+      id: `cand-${representative.id}`,
+      name: representative.name,
+      party: repParty.name,
+      partyAbbr: repParty.abbreviation || repParty.shortName,
+      partyColor: repParty.primaryColor || "#FFD200",
+      partyId: representative.partyId,
+      isClient: isClientCurrentMla,
+      isCurrentRepresentative: true,
+      candidateType: "CURRENT_MLA",
+      role: representative.designation || "Current MLA",
+      avatarUrl: representative.photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+      socialStrengthScore: isClientCurrentMla ? 78.4 : 76.2,
+      rank: isClientCurrentMla ? 1 : 2,
+      combinedFollowing: 142500,
+      verifiedPlatformsCount: 4,
+      totalPlatformsCount: 4,
+      postingFrequencyMonthly: 128,
+      avgEngagementRate: 5.4,
+      estimatedReach: 98400,
+      issueCoverageScore: 82,
+      socials: MOCK_CANDIDATES[0].socials
+    };
+
+    if (isClientCurrentMla) {
+      candList = [
+        repCand,
+        {
+          ...MOCK_CANDIDATES[1],
+          isClient: false,
+          isCurrentRepresentative: false,
+          candidateType: "PRIMARY_OPPOSITION"
+        },
+        {
+          ...MOCK_CANDIDATES[2],
+          isClient: false,
+          isCurrentRepresentative: false,
+          candidateType: "SECONDARY_OPPOSITION"
+        },
+        {
+          ...MOCK_CANDIDATES[3],
+          isClient: false,
+          isCurrentRepresentative: false,
+          candidateType: "OTHER"
+        }
+      ];
+    } else {
+      const clientCand: Candidate = {
+        id: "cand-challenger-client",
+        name: "Hon. Candidate Executive",
+        party: "People's Progressive Alliance",
+        partyAbbr: "PPA",
+        partyColor: "#0284C7",
+        isClient: true,
+        isCurrentRepresentative: false,
+        candidateType: clientType || "PROSPECTIVE_CANDIDATE",
+        role: clientType === "MLA_IN_CHARGE" ? "MLA-in-Charge" : "Prospective MLA Candidate",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+        socialStrengthScore: 79.8,
+        rank: 1,
+        combinedFollowing: 154000,
+        verifiedPlatformsCount: 4,
+        totalPlatformsCount: 4,
+        postingFrequencyMonthly: 142,
+        avgEngagementRate: 6.1,
+        estimatedReach: 104500,
+        issueCoverageScore: 86,
+        socials: MOCK_CANDIDATES[0].socials
+      };
+
+      candList = [
+        clientCand,
+        {
+          ...repCand,
+          isClient: false,
+          rank: 2,
+          socialStrengthScore: 74.5
+        },
+        {
+          ...MOCK_CANDIDATES[1],
+          isClient: false,
+          isCurrentRepresentative: false,
+          candidateType: "PRIMARY_OPPOSITION"
+        },
+        {
+          ...MOCK_CANDIDATES[2],
+          isClient: false,
+          isCurrentRepresentative: false,
+          candidateType: "SECONDARY_OPPOSITION"
+        }
+      ];
+    }
+  }
+
+  const rankedCandList = rankCandidates(candList);
   const client = rankedCandList.find((c) => c.isClient) || rankedCandList[0];
 
   const totalVoters = assembly.totalVoters || 250000;

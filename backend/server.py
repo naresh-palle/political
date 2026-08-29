@@ -234,6 +234,233 @@ async def get_candidates_by_assembly(ac_id: str):
         }
     ]
 
+# ----------------- ELECTED REPRESENTATIVE ENDPOINTS (ECI / STATE ASSEMBLY) -----------------
+
+class ElectedRepresentativeModel(BaseModel):
+    id: str
+    stateId: str
+    parliamentConstituencyId: str
+    assemblyConstituencyId: str
+    candidateId: Optional[str] = None
+    name: str
+    partyId: str
+    designation: Optional[str] = "MLA"
+    electionDate: Optional[str] = "2024-06-04"
+    electionType: Optional[str] = "General Election 2024"
+    status: str = "CURRENT"  # CURRENT | FORMER | VACANT
+    termStart: Optional[str] = "2024"
+    termEnd: Optional[str] = None
+    reasonForChange: Optional[str] = None
+    source: str = "Election Commission of India"
+    sourceUrl: Optional[str] = None
+    photoUrl: Optional[str] = None
+    verifiedAt: Optional[str] = None
+    lastUpdatedAt: Optional[str] = None
+
+class ElectedRepresentativeUpdate(BaseModel):
+    name: Optional[str] = None
+    partyId: Optional[str] = None
+    designation: Optional[str] = None
+    electionDate: Optional[str] = None
+    electionType: Optional[str] = None
+    status: Optional[str] = None
+    termStart: Optional[str] = None
+    termEnd: Optional[str] = None
+    reasonForChange: Optional[str] = None
+    source: Optional[str] = None
+    sourceUrl: Optional[str] = None
+    photoUrl: Optional[str] = None
+    verifiedAt: Optional[str] = None
+
+def resolve_representative_party(party_id: str, parties_list: list) -> dict:
+    for p in parties_list:
+        if p.get("id", "").upper() == party_id.upper() or p.get("abbreviation", "").upper() == party_id.upper():
+            return {
+                "id": p.get("id"),
+                "name": p.get("name"),
+                "shortName": p.get("shortName", p.get("name")),
+                "abbreviation": p.get("abbreviation", p.get("id")),
+                "logoUrl": p.get("logoUrl", ""),
+                "symbolEmoji": p.get("symbolEmoji", "🏛️"),
+                "primaryColor": p.get("primaryColor", "#FFD200"),
+                "secondaryColor": p.get("secondaryColor", "#B45309"),
+                "accentColor": p.get("accentColor", "#F59E0B")
+            }
+    return {
+        "id": party_id,
+        "name": party_id,
+        "shortName": party_id,
+        "abbreviation": party_id,
+        "logoUrl": "",
+        "symbolEmoji": "🏛️",
+        "primaryColor": "#64748B",
+        "secondaryColor": "#334155",
+        "accentColor": "#94A3B8"
+    }
+
+@api_router.get("/geography/assembly-constituencies/{ac_id}/current-representative")
+async def get_current_representative(ac_id: str):
+    ac_clean = ac_id.upper()
+    parties_fallback = load_json_fallback("political_parties.json")
+    
+    # Try MongoDB
+    try:
+        rep = await db.elected_representatives.find_one(
+            {"assemblyConstituencyId": {"$regex": f"^{ac_clean}$", "$options": "i"}, "status": "CURRENT"},
+            {"_id": 0}
+        )
+        if rep:
+            rep["party"] = resolve_representative_party(rep.get("partyId", ""), parties_fallback)
+            return {"representative": rep, "status": "CURRENT"}
+        
+        # Check if officially VACANT
+        vacant = await db.elected_representatives.find_one(
+            {"assemblyConstituencyId": {"$regex": f"^{ac_clean}$", "$options": "i"}, "status": "VACANT"},
+            {"_id": 0}
+        )
+        if vacant:
+            return {"representative": None, "status": "VACANT", "message": "Seat currently vacant"}
+    except Exception as e:
+        logger.warning(f"MongoDB get_current_representative: {e}")
+
+    # Fallback to elected_representatives.json
+    reps_fallback = load_json_fallback("elected_representatives.json")
+    for r in reps_fallback:
+        if r.get("assemblyConstituencyId", "").upper() == ac_clean and r.get("status", "").upper() == "CURRENT":
+            rep_copy = dict(r)
+            rep_copy["party"] = resolve_representative_party(r.get("partyId", ""), parties_fallback)
+            return {"representative": rep_copy, "status": "CURRENT"}
+            
+    for r in reps_fallback:
+        if r.get("assemblyConstituencyId", "").upper() == ac_clean and r.get("status", "").upper() == "VACANT":
+            return {"representative": None, "status": "VACANT", "message": "Seat currently vacant"}
+
+    return {
+        "representative": None,
+        "status": "UNAVAILABLE",
+        "message": "Current representative data unavailable"
+    }
+
+@api_router.get("/geography/assembly-constituencies/{ac_id}/representatives-history")
+async def get_representatives_history(ac_id: str):
+    ac_clean = ac_id.upper()
+    parties_fallback = load_json_fallback("political_parties.json")
+    
+    try:
+        history = await db.elected_representatives.find(
+            {"assemblyConstituencyId": {"$regex": f"^{ac_clean}$", "$options": "i"}},
+            {"_id": 0}
+        ).to_list(50)
+        if history:
+            for item in history:
+                item["party"] = resolve_representative_party(item.get("partyId", ""), parties_fallback)
+            return history
+    except Exception as e:
+        logger.warning(f"MongoDB get_representatives_history: {e}")
+
+    reps_fallback = load_json_fallback("elected_representatives.json")
+    matched = [r for r in reps_fallback if r.get("assemblyConstituencyId", "").upper() == ac_clean]
+    for m in matched:
+        m["party"] = resolve_representative_party(m.get("partyId", ""), parties_fallback)
+    return matched
+
+@api_router.post("/geography/assembly-constituencies/{ac_id}/representatives")
+async def create_elected_representative(ac_id: str, payload: ElectedRepresentativeModel):
+    now_iso = datetime.now(timezone.utc).isoformat()
+    rep_dict = payload.model_dump()
+    rep_dict["assemblyConstituencyId"] = ac_id
+    rep_dict["verifiedAt"] = rep_dict.get("verifiedAt") or now_iso
+    rep_dict["lastUpdatedAt"] = now_iso
+
+    try:
+        if rep_dict.get("status") == "CURRENT":
+            # Demote existing current to FORMER
+            await db.elected_representatives.update_many(
+                {"assemblyConstituencyId": ac_id, "status": "CURRENT"},
+                {"$set": {"status": "FORMER", "termEnd": str(datetime.now().year), "lastUpdatedAt": now_iso}}
+            )
+        await db.elected_representatives.insert_one(rep_dict)
+        inserted = await db.elected_representatives.find_one({"id": rep_dict["id"]}, {"_id": 0})
+        if inserted:
+            parties_fallback = load_json_fallback("political_parties.json")
+            inserted["party"] = resolve_representative_party(inserted.get("partyId", ""), parties_fallback)
+            return inserted
+    except Exception as e:
+        logger.warning(f"MongoDB create_elected_representative: {e}")
+
+    # Update local fallback
+    reps_fallback = load_json_fallback("elected_representatives.json")
+    if rep_dict.get("status") == "CURRENT":
+        for r in reps_fallback:
+            if r.get("assemblyConstituencyId", "").upper() == ac_id.upper() and r.get("status") == "CURRENT":
+                r["status"] = "FORMER"
+                r["termEnd"] = str(datetime.now().year)
+                r["lastUpdatedAt"] = now_iso
+    reps_fallback.append(rep_dict)
+    
+    try:
+        data_path = ROOT_DIR / "data" / "elected_representatives.json"
+        with open(data_path, "w", encoding="utf-8") as f:
+            json.dump(reps_fallback, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Writing fallback file: {e}")
+
+    parties_fallback = load_json_fallback("political_parties.json")
+    rep_dict["party"] = resolve_representative_party(rep_dict.get("partyId", ""), parties_fallback)
+    return rep_dict
+
+@api_router.put("/geography/assembly-constituencies/{ac_id}/representatives/{rep_id}")
+async def update_elected_representative(ac_id: str, rep_id: str, updates: ElectedRepresentativeUpdate):
+    update_data = {k: v for k, v in updates.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided for update")
+    
+    now_iso = datetime.now(timezone.utc).isoformat()
+    update_data["lastUpdatedAt"] = now_iso
+
+    try:
+        if update_data.get("status") == "CURRENT":
+            # Demote others to FORMER
+            await db.elected_representatives.update_many(
+                {"assemblyConstituencyId": ac_id, "status": "CURRENT", "id": {"$ne": rep_id}},
+                {"$set": {"status": "FORMER", "termEnd": str(datetime.now().year), "lastUpdatedAt": now_iso}}
+            )
+        await db.elected_representatives.update_one(
+            {"id": rep_id},
+            {"$set": update_data},
+            upsert=True
+        )
+        updated = await db.elected_representatives.find_one({"id": rep_id}, {"_id": 0})
+        if updated:
+            parties_fallback = load_json_fallback("political_parties.json")
+            updated["party"] = resolve_representative_party(updated.get("partyId", ""), parties_fallback)
+            return updated
+    except Exception as e:
+        logger.warning(f"MongoDB update_elected_representative: {e}")
+
+    reps_fallback = load_json_fallback("elected_representatives.json")
+    found = False
+    for r in reps_fallback:
+        if r.get("id") == rep_id:
+            r.update(update_data)
+            found = True
+            break
+    if not found:
+        reps_fallback.append({"id": rep_id, "assemblyConstituencyId": ac_id, **update_data})
+
+    try:
+        data_path = ROOT_DIR / "data" / "elected_representatives.json"
+        with open(data_path, "w", encoding="utf-8") as f:
+            json.dump(reps_fallback, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Writing fallback file: {e}")
+
+    parties_fallback = load_json_fallback("political_parties.json")
+    matched = next((r for r in reps_fallback if r.get("id") == rep_id), update_data)
+    matched_copy = dict(matched)
+    matched_copy["party"] = resolve_representative_party(matched_copy.get("partyId", ""), parties_fallback)
+    return matched_copy
+
 # ----------------- POLITICAL PARTY & BRAND THEME ENDPOINTS -----------------
 
 class PoliticalPartyModel(BaseModel):

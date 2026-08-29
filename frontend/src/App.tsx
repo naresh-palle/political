@@ -24,7 +24,7 @@ import { GrievanceManagement } from "./components/grievances/GrievanceManagement
 import { VolunteerMonitoring } from "./components/volunteers/VolunteerMonitoring";
 import { CampaignWebsiteGenerator } from "./components/webbuilder/CampaignWebsiteGenerator";
 import { RoleManagement } from "./components/governance/RoleManagement";
-import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo } from "./types";
+import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo, ElectedRepresentative, CandidateType } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
@@ -82,6 +82,8 @@ export function App() {
     parliamentName?: string;
     assemblyName?: string;
     assemblyObj?: AssemblyInfo | null;
+    representative?: ElectedRepresentative | null;
+    clientType?: CandidateType;
   }>({
     stateId: "AP",
     parliamentId: "KDP-PC",
@@ -89,7 +91,9 @@ export function App() {
     stateName: "Andhra Pradesh",
     parliamentName: "Kadapa",
     assemblyName: "Kadapa",
-    assemblyObj: null
+    assemblyObj: null,
+    representative: null,
+    clientType: "CURRENT_MLA"
   });
 
   const [isPresentationMode, setIsPresentationMode] = useState(false);
@@ -134,7 +138,9 @@ export function App() {
     assemblyId: string,
     stateObj?: StateInfo,
     parliamentObj?: ParliamentInfo,
-    assemblyObj?: AssemblyInfo | null
+    assemblyObj?: AssemblyInfo | null,
+    representative?: ElectedRepresentative | null,
+    clientType?: CandidateType
   ) => {
     setSelectedGeo({
       stateId,
@@ -143,7 +149,9 @@ export function App() {
       stateName: stateObj?.name || stateId,
       parliamentName: parliamentObj?.name || parliamentId,
       assemblyName: assemblyObj?.name || assemblyId,
-      assemblyObj: assemblyObj || null
+      assemblyObj: assemblyObj || null,
+      representative: representative || null,
+      clientType: clientType || "CURRENT_MLA"
     });
     setViewState("loading");
   };
@@ -155,7 +163,9 @@ export function App() {
       selectedGeo.assemblyId,
       selectedGeo.assemblyObj,
       selectedGeo.stateName,
-      selectedGeo.parliamentName
+      selectedGeo.parliamentName,
+      selectedGeo.representative,
+      selectedGeo.clientType
     );
     setAuditData(report);
     setViewState("audit");

@@ -1,6 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ArrowRight, Check, ChevronDown, Sparkles, Search, Database } from "lucide-react";
-import { StateInfo, ParliamentInfo, AssemblyInfo } from "../../types";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Sparkles,
+  Search,
+  Database,
+  Award,
+  ExternalLink,
+  ShieldCheck,
+  AlertCircle,
+  UserCheck,
+  User,
+  Flag
+} from "lucide-react";
+import { StateInfo, ParliamentInfo, AssemblyInfo, ElectedRepresentative, CandidateType } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { formatLakhs } from "../../calculations";
 
@@ -11,7 +25,9 @@ interface LocationSelectorProps {
     assemblyId: string,
     stateObj?: StateInfo,
     parliamentObj?: ParliamentInfo,
-    assemblyObj?: AssemblyInfo | null
+    assemblyObj?: AssemblyInfo | null,
+    representative?: ElectedRepresentative | null,
+    clientType?: CandidateType
   ) => void;
 }
 
@@ -24,6 +40,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
   const [selectedParliament, setSelectedParliament] = useState<string>("");
   const [selectedAssembly, setSelectedAssembly] = useState<string>("");
   const [currentAssemblyDetails, setCurrentAssemblyDetails] = useState<AssemblyInfo | null>(null);
+
+  // Current Representative state
+  const [currentRep, setCurrentRep] = useState<ElectedRepresentative | null>(null);
+  const [repStatus, setRepStatus] = useState<"CURRENT" | "FORMER" | "VACANT" | "UNAVAILABLE" | "LOADING">("LOADING");
+  const [clientType, setClientType] = useState<CandidateType>("CURRENT_MLA");
 
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -63,6 +84,34 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
       mounted = false;
     };
   }, []);
+
+  // Fetch verified representative whenever assembly changes
+  useEffect(() => {
+    if (!selectedAssembly) {
+      setCurrentRep(null);
+      setRepStatus("UNAVAILABLE");
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      setRepStatus("LOADING");
+      const res = await politicalApiService.getCurrentRepresentative(selectedAssembly);
+      if (!mounted) return;
+      if (res.status === "CURRENT" && res.representative) {
+        setCurrentRep(res.representative);
+        setRepStatus("CURRENT");
+      } else if (res.status === "VACANT") {
+        setCurrentRep(null);
+        setRepStatus("VACANT");
+      } else {
+        setCurrentRep(null);
+        setRepStatus("UNAVAILABLE");
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedAssembly]);
 
   const handleStateChange = async (stateId: string) => {
     setSelectedState(stateId);
@@ -133,7 +182,9 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
         selectedAssembly,
         currentStateObj,
         currentParliamentObj,
-        matchedAssembly
+        matchedAssembly,
+        currentRep,
+        clientType
       );
     }
   };
@@ -298,6 +349,177 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                     <PreviewMetric label="Total voters" value={formatLakhs(currentAssemblyDetails.totalVoters, true)} tone="cream" />
                     <PreviewMetric label="Candidates" value={String(currentAssemblyDetails.candidateCount || 4)} tone="gold" />
                     <PreviewMetric label="Digital universe" value={formatLakhs(currentAssemblyDetails.estimatedDigitalAudience, true)} tone="cream" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CURRENT ELECTED REPRESENTATIVE (MLA) PANEL */}
+            {selectedAssembly && (
+              <div className="rounded-xl border border-[#D4A24C]/30 bg-[#0A1A2B]/90 p-5 sm:p-6 space-y-4 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#22405E] pb-3">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-[#D4A24C]" />
+                    <span className="eyebrow gold-text">Current Elected Representative</span>
+                  </div>
+                  {currentRep && (
+                    <div className="flex items-center gap-2 text-[10px] text-[#B9AF95]">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Verified: {new Date(currentRep.verifiedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                    </div>
+                  )}
+                </div>
+
+                {repStatus === "LOADING" ? (
+                  <div className="py-4 text-center text-xs text-[#B9AF95] animate-pulse">
+                    Verifying official representative records from Election Commission of India...
+                  </div>
+                ) : repStatus === "CURRENT" && currentRep ? (
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img
+                          src={currentRep.photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"}
+                          alt={currentRep.name}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-[#D4A24C]"
+                        />
+                        <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 bg-[#D4A24C] text-[#0B1A2C] text-[9px] font-bold rounded-full">
+                          MLA
+                        </span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded text-[10px] font-bold uppercase tracking-wider">
+                            Current MLA
+                          </span>
+                          <span className="text-[11px] text-[#B9AF95]">
+                            {currentRep.electionType || "General Election 2024"}
+                          </span>
+                        </div>
+
+                        <h4 className="text-lg font-bold text-[#F5EFE0] leading-tight">
+                          {currentRep.name}
+                        </h4>
+
+                        <div className="flex items-center gap-2 text-xs">
+                          {currentRep.party && (
+                            <span
+                              className="px-2 py-0.5 rounded text-[11px] font-semibold text-white flex items-center gap-1 shadow-2xs"
+                              style={{ backgroundColor: currentRep.party.primaryColor || "#B45309" }}
+                            >
+                              <span>{currentRep.party.symbolEmoji || "🏛️"}</span>
+                              <span>{currentRep.party.abbreviation || currentRep.party.shortName}</span>
+                              <span className="text-white/80 text-[10px]">· {currentRep.party.name}</span>
+                            </span>
+                          )}
+                          <span className="text-[#8A8E9B] text-[11px]">({currentRep.designation})</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:items-end justify-center text-xs space-y-1 bg-[#0F2338] p-3 rounded-lg border border-[#22405E]">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8A8E9B]">
+                        Authoritative Source
+                      </span>
+                      <div className="flex items-center gap-1.5 font-medium text-[#E2DCB8]">
+                        <span>{currentRep.source}</span>
+                        {currentRep.sourceUrl && (
+                          <a
+                            href={currentRep.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#D4A24C] hover:text-[#F5EFE0]"
+                            title="Verify source"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-emerald-400 font-mono-data">
+                        ✓ Verified & Immutable Record
+                      </span>
+                    </div>
+                  </div>
+                ) : repStatus === "VACANT" ? (
+                  <div className="flex items-center gap-3 p-4 bg-amber-950/40 border border-amber-500/30 rounded-lg text-amber-200 text-xs">
+                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">Seat Currently Vacant</div>
+                      <div className="text-[11px] text-amber-300/80">
+                        Official Election Commission notification pending or by-election scheduled.
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-4 bg-[#0F2338] border border-[#22405E] rounded-lg text-[#B9AF95] text-xs">
+                    <AlertCircle className="w-5 h-5 text-[#8A8E9B] shrink-0" />
+                    <div>
+                      <div className="font-bold text-[#E2DCB8]">Current Representative Data Unavailable</div>
+                      <div className="text-[11px] text-[#8A8E9B]">
+                        No verified government gazette or ECI record found for this segment. Will sync on next automated election ledger refresh.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Client Designation Switch */}
+                <div className="pt-3 border-t border-[#22405E] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Assign Strategic Client Role For Audit</span>
+                    </label>
+                    <span className="text-[10px] text-[#8A8E9B]">Drives competitive positioning in report</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {[
+                      {
+                        type: "CURRENT_MLA" as CandidateType,
+                        label: "Current MLA",
+                        desc: currentRep ? `Incumbent (${currentRep.name.split(" ")[0]})` : "Incumbent MLA",
+                        disabled: !currentRep
+                      },
+                      {
+                        type: "PROSPECTIVE_CANDIDATE" as CandidateType,
+                        label: "Prospective Candidate",
+                        desc: "New challenger / campaign",
+                        disabled: false
+                      },
+                      {
+                        type: "MLA_IN_CHARGE" as CandidateType,
+                        label: "MLA-in-Charge",
+                        desc: "Constituency coordinator",
+                        disabled: false
+                      },
+                      {
+                        type: "PRIMARY_OPPOSITION" as CandidateType,
+                        label: "Opposition Contender",
+                        desc: "Primary opposition nominee",
+                        disabled: false
+                      }
+                    ].map((item) => {
+                      const isSelected = clientType === item.type;
+                      return (
+                        <button
+                          key={item.type}
+                          type="button"
+                          disabled={item.disabled}
+                          onClick={() => setClientType(item.type)}
+                          className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                            isSelected
+                              ? "bg-[#D4A24C] text-[#0B1A2C] border-[#D4A24C] font-bold shadow-sm"
+                              : "bg-[#0F2338] text-[#D8CFB8] border-[#22405E] hover:border-[#D4A24C]/60"
+                          }`}
+                        >
+                          <div className="text-xs font-bold leading-tight">{item.label}</div>
+                          <div className={`text-[10px] mt-0.5 truncate ${isSelected ? "text-[#0B1A2C]/80" : "text-[#8A8E9B]"}`}>
+                            {item.desc}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
