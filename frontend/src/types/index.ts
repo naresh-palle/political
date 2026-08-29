@@ -39,6 +39,25 @@ export interface StateInfo {
   code: string;
 }
 
+export interface PoliticalParty {
+  id: string;
+  name: string;
+  shortName: string;
+  abbreviation: string;
+  logoUrl: string;
+  symbolEmoji?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  lightBackground?: string;
+  darkBackground?: string;
+  textColor?: string;
+  mutedTextColor?: string;
+  gradientStart?: string;
+  gradientEnd?: string;
+  isActive?: boolean;
+}
+
 export interface ParliamentInfo {
   id: string;
   stateId: string;

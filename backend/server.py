@@ -234,6 +234,104 @@ async def get_candidates_by_assembly(ac_id: str):
         }
     ]
 
+# ----------------- POLITICAL PARTY & BRAND THEME ENDPOINTS -----------------
+
+class PoliticalPartyModel(BaseModel):
+    id: str
+    name: str
+    shortName: str
+    abbreviation: str
+    logoUrl: str
+    symbolEmoji: Optional[str] = "🏛️"
+    primaryColor: str
+    secondaryColor: str
+    accentColor: str
+    lightBackground: Optional[str] = "#F8FAFC"
+    darkBackground: Optional[str] = "#0F172A"
+    textColor: Optional[str] = "#1E293B"
+    mutedTextColor: Optional[str] = "#64748B"
+    gradientStart: Optional[str] = None
+    gradientEnd: Optional[str] = None
+    isActive: bool = True
+
+class PoliticalPartyUpdate(BaseModel):
+    name: Optional[str] = None
+    shortName: Optional[str] = None
+    abbreviation: Optional[str] = None
+    logoUrl: Optional[str] = None
+    symbolEmoji: Optional[str] = None
+    primaryColor: Optional[str] = None
+    secondaryColor: Optional[str] = None
+    accentColor: Optional[str] = None
+    lightBackground: Optional[str] = None
+    darkBackground: Optional[str] = None
+    gradientStart: Optional[str] = None
+    gradientEnd: Optional[str] = None
+    isActive: Optional[bool] = None
+
+@api_router.get("/political-parties")
+async def get_political_parties():
+    try:
+        parties = await db.political_parties.find({"isActive": True}, {"_id": 0}).to_list(100)
+        if parties:
+            return parties
+    except Exception as e:
+        logger.warning(f"MongoDB get_political_parties: {e}")
+    return load_json_fallback("political_parties.json")
+
+@api_router.get("/political-parties/{party_id}")
+async def get_political_party(party_id: str):
+    try:
+        party = await db.political_parties.find_one({"id": party_id.upper()}, {"_id": 0})
+        if party:
+            return party
+    except Exception as e:
+        logger.warning(f"MongoDB get_political_party: {e}")
+    fallback = load_json_fallback("political_parties.json")
+    for p in fallback:
+        if p["id"].upper() == party_id.upper() or p.get("abbreviation", "").upper() == party_id.upper():
+            return p
+    raise HTTPException(status_code=404, detail="Political party not found")
+
+@api_router.put("/political-parties/{party_id}")
+async def update_political_party(party_id: str, updates: PoliticalPartyUpdate):
+    update_data = {k: v for k, v in updates.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided for update")
+    
+    party_id_clean = party_id.upper()
+    try:
+        await db.political_parties.update_one(
+            {"id": party_id_clean},
+            {"$set": update_data},
+            upsert=True
+        )
+        updated = await db.political_parties.find_one({"id": party_id_clean}, {"_id": 0})
+        if updated:
+            return updated
+    except Exception as e:
+        logger.warning(f"MongoDB update_political_party: {e}")
+    
+    # Update local fallback
+    fallback = load_json_fallback("political_parties.json")
+    found = False
+    for p in fallback:
+        if p["id"].upper() == party_id_clean:
+            p.update(update_data)
+            found = True
+            break
+    if not found:
+        fallback.append({"id": party_id_clean, **update_data})
+    
+    try:
+        data_path = ROOT_DIR / "data" / "political_parties.json"
+        with open(data_path, "w", encoding="utf-8") as f:
+            json.dump(fallback, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Writing fallback file: {e}")
+    
+    return next((p for p in fallback if p["id"].upper() == party_id_clean), update_data)
+
 # ----------------- USER & AUTHENTICATION ENDPOINTS (MONGODB) -----------------
 
 class LoginRequest(BaseModel):

@@ -4,7 +4,8 @@ import {
   AssemblyInfo,
   Candidate,
   AuditReport,
-  PlatformAudienceDetail
+  PlatformAudienceDetail,
+  PoliticalParty
 } from "../types";
 import {
   buildCompleteAudit,
@@ -12,7 +13,8 @@ import {
   MOCK_PARLIAMENTS,
   MOCK_ASSEMBLIES,
   MOCK_CANDIDATES,
-  MOCK_PLATFORM_AUDIENCES
+  MOCK_PLATFORM_AUDIENCES,
+  MOCK_POLITICAL_PARTIES
 } from "./mockData";
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
@@ -35,29 +37,88 @@ let cachedStates: StateInfo[] | null = null;
 let cachedParliaments: ParliamentInfo[] | null = null;
 let cachedAssemblies: AssemblyInfo[] | null = null;
 
+let cachedParties: PoliticalParty[] | null = null;
+
 async function loadStaticGeography() {
   if (!cachedStates) {
     try {
       const cleanBase = BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`;
-      const [resStates, resParls, resAssems] = await Promise.all([
+      const [resStates, resParls, resAssems, resParties] = await Promise.all([
         fetch(`${cleanBase}data/geography/states.json`),
         fetch(`${cleanBase}data/geography/parliaments.json`),
-        fetch(`${cleanBase}data/geography/assemblies.json`)
+        fetch(`${cleanBase}data/geography/assemblies.json`),
+        fetch(`${cleanBase}data/geography/political_parties.json`)
       ]);
       if (resStates.ok && resParls.ok && resAssems.ok) {
         cachedStates = await resStates.json();
         cachedParliaments = await resParls.json();
         cachedAssemblies = await resAssems.json();
       }
+      if (resParties.ok) {
+        cachedParties = await resParties.json();
+      }
     } catch (e) {
       cachedStates = MOCK_STATES;
       cachedParliaments = MOCK_PARLIAMENTS;
       cachedAssemblies = MOCK_ASSEMBLIES;
+      cachedParties = MOCK_POLITICAL_PARTIES;
     }
   }
 }
 
 export const politicalApiService = {
+  async getPoliticalParties(): Promise<PoliticalParty[]> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/political-parties`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    await loadStaticGeography();
+    return cachedParties || MOCK_POLITICAL_PARTIES;
+  },
+
+  async getPoliticalPartyById(partyId: string): Promise<PoliticalParty | undefined> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/political-parties/${encodeURIComponent(partyId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.id) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    const parties = await this.getPoliticalParties();
+    return parties.find((p) => p.id.toUpperCase() === partyId.toUpperCase() || p.abbreviation.toUpperCase() === partyId.toUpperCase());
+  },
+
+  async updatePoliticalParty(partyId: string, updates: Partial<PoliticalParty>): Promise<PoliticalParty> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/political-parties/${encodeURIComponent(partyId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (cachedParties) {
+          cachedParties = cachedParties.map((p) => p.id.toUpperCase() === partyId.toUpperCase() ? { ...p, ...updated } : p);
+        }
+        return updated;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    if (cachedParties) {
+      cachedParties = cachedParties.map((p) => p.id.toUpperCase() === partyId.toUpperCase() ? { ...p, ...updates } : p);
+      const matched = cachedParties.find((p) => p.id.toUpperCase() === partyId.toUpperCase());
+      if (matched) return matched;
+    }
+    return { ...MOCK_POLITICAL_PARTIES[0], ...updates, id: partyId };
+  },
   async getStates(): Promise<StateInfo[]> {
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/states`);

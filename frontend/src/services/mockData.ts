@@ -13,7 +13,8 @@ import {
   DesignatedVolunteer,
   VolunteerSquad,
   VolunteerTask,
-  CampaignLandingConfig
+  CampaignLandingConfig,
+  PoliticalParty
 } from "../types";
 import {
   calculateVoterCoverage,
@@ -171,6 +172,135 @@ export const USER_PROFILES: UserProfile[] = [
       canViewConfidentialMetrics: false,
       canManageSystemUsers: false
     }
+  }
+];
+
+export const MOCK_POLITICAL_PARTIES: PoliticalParty[] = [
+  {
+    id: "TDP",
+    name: "Telugu Desam Party",
+    shortName: "TDP",
+    abbreviation: "TDP",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Telugu_Desam_Party_flag.svg/240px-Telugu_Desam_Party_flag.svg.png",
+    symbolEmoji: "🚲",
+    primaryColor: "#FFD200",
+    secondaryColor: "#B45309",
+    accentColor: "#F59E0B",
+    lightBackground: "#FEFCE8",
+    darkBackground: "#18181B",
+    textColor: "#1E293B",
+    mutedTextColor: "#71717A",
+    gradientStart: "#FFD200",
+    gradientEnd: "#EAB308",
+    isActive: true
+  },
+  {
+    id: "BJP",
+    name: "Bharatiya Janata Party",
+    shortName: "BJP",
+    abbreviation: "BJP",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Bharatiya_Janata_Party_logo.svg/240px-Bharatiya_Janata_Party_logo.svg.png",
+    symbolEmoji: "🪷",
+    primaryColor: "#FF671F",
+    secondaryColor: "#046A38",
+    accentColor: "#F97316",
+    lightBackground: "#FFF7ED",
+    darkBackground: "#18181B",
+    textColor: "#1E293B",
+    mutedTextColor: "#71717A",
+    gradientStart: "#FF671F",
+    gradientEnd: "#C2410C",
+    isActive: true
+  },
+  {
+    id: "INC",
+    name: "Indian National Congress",
+    shortName: "Congress",
+    abbreviation: "INC",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Indian_National_Congress_hand_logo.svg/240px-Indian_National_Congress_hand_logo.svg.png",
+    symbolEmoji: "✋",
+    primaryColor: "#0099FF",
+    secondaryColor: "#138808",
+    accentColor: "#0284C7",
+    lightBackground: "#F0F9FF",
+    darkBackground: "#18181B",
+    textColor: "#1E293B",
+    mutedTextColor: "#71717A",
+    gradientStart: "#0099FF",
+    gradientEnd: "#0369A1",
+    isActive: true
+  },
+  {
+    id: "YSRCP",
+    name: "Yuvajana Sramika Rythu Congress Party",
+    shortName: "YSRCP",
+    abbreviation: "YSRCP",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/YSR_Congress_Party_Flag.svg/240px-YSR_Congress_Party_Flag.svg.png",
+    symbolEmoji: "🚁",
+    primaryColor: "#15803D",
+    secondaryColor: "#1D4ED8",
+    accentColor: "#16A34A",
+    lightBackground: "#F0FDF4",
+    darkBackground: "#18181B",
+    textColor: "#1E293B",
+    mutedTextColor: "#71717A",
+    gradientStart: "#15803D",
+    gradientEnd: "#1D4ED8",
+    isActive: true
+  },
+  {
+    id: "BRS",
+    name: "Bharat Rashtra Samithi",
+    shortName: "BRS",
+    abbreviation: "BRS",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Bharat_Rashtra_Samithi_flag.svg/240px-Bharat_Rashtra_Samithi_flag.svg.png",
+    symbolEmoji: "🚗",
+    primaryColor: "#EC4899",
+    secondaryColor: "#BE185D",
+    accentColor: "#F472B6",
+    lightBackground: "#FDF2F8",
+    darkBackground: "#18181B",
+    textColor: "#1E293B",
+    mutedTextColor: "#71717A",
+    gradientStart: "#EC4899",
+    gradientEnd: "#9D174D",
+    isActive: true
+  },
+  {
+    id: "JSP",
+    name: "Jana Sena Party",
+    shortName: "JSP",
+    abbreviation: "JSP",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Jana_Sena_Party_Flag.svg/240px-Jana_Sena_Party_Flag.svg.png",
+    symbolEmoji: "🥛",
+    primaryColor: "#DC2626",
+    secondaryColor: "#1E293B",
+    accentColor: "#EF4444",
+    lightBackground: "#FEF2F2",
+    darkBackground: "#18181B",
+    textColor: "#1E293B",
+    mutedTextColor: "#71717A",
+    gradientStart: "#DC2626",
+    gradientEnd: "#991B1B",
+    isActive: true
+  },
+  {
+    id: "AAP",
+    name: "Aam Aadmi Party",
+    shortName: "AAP",
+    abbreviation: "AAP",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Aam_Aadmi_Party_flag_%28India%29.svg/240px-Aam_Aadmi_Party_flag_%28India%29.svg.png",
+    symbolEmoji: "🧹",
+    primaryColor: "#0284C7",
+    secondaryColor: "#F59E0B",
+    accentColor: "#38BDF8",
+    lightBackground: "#F0F9FF",
+    darkBackground: "#18181B",
+    textColor: "#1E293B",
+    mutedTextColor: "#71717A",
+    gradientStart: "#0284C7",
+    gradientEnd: "#075985",
+    isActive: true
   }
 ];
 
