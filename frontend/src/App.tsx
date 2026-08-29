@@ -27,14 +27,51 @@ import { RoleManagement } from "./components/governance/RoleManagement";
 import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
 
+const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
+const ROUTE_STORAGE_KEY = "leaders_lens_route";
+const PRODUCT_STORAGE_KEY = "leaders_lens_active_product";
+
 export function App() {
-  const [route, setRoute] = useState<"home" | "auth" | "app">("home");
+  const [route, setRoute] = useState<"home" | "auth" | "app">(() => {
+    try {
+      const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+      const savedRoute = localStorage.getItem(ROUTE_STORAGE_KEY) as "home" | "auth" | "app" | null;
+      if (savedUser && (savedRoute === "app" || !savedRoute)) {
+        return "app";
+      }
+      return savedRoute || "home";
+    } catch {
+      return "home";
+    }
+  });
+
   const [viewState, setViewState] = useState<"select" | "loading" | "audit">("select");
+  
   const [activeProduct, setActiveProduct] = useState<
     "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance"
-  >("pitch");
+  >(() => {
+    try {
+      const savedProduct = localStorage.getItem(PRODUCT_STORAGE_KEY);
+      if (
+        savedProduct &&
+        ["pitch", "grievances", "volunteers", "webbuilder", "governance"].includes(savedProduct)
+      ) {
+        return savedProduct as any;
+      }
+    } catch {}
+    return "pitch";
+  });
 
-  const [currentProfile, setCurrentProfile] = useState<UserProfile>(USER_PROFILES[0]);
+  const [currentProfile, setCurrentProfile] = useState<UserProfile>(() => {
+    try {
+      const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (savedUser) {
+        return JSON.parse(savedUser);
+      }
+    } catch {}
+    return USER_PROFILES[0];
+  });
+
   const [auditData, setAuditData] = useState<AuditReport | null>(null);
 
   const [selectedGeo, setSelectedGeo] = useState<{
@@ -57,6 +94,39 @@ export function App() {
 
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  const handleProductChange = (product: "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => {
+    setActiveProduct(product);
+    try {
+      localStorage.setItem(PRODUCT_STORAGE_KEY, product);
+    } catch {}
+  };
+
+  const handleAuthenticated = (profile: UserProfile) => {
+    setCurrentProfile(profile);
+    setRoute("app");
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+      localStorage.setItem(ROUTE_STORAGE_KEY, "app");
+    } catch {}
+  };
+
+  const handleSignOut = () => {
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(ROUTE_STORAGE_KEY);
+      localStorage.removeItem(PRODUCT_STORAGE_KEY);
+    } catch {}
+    setRoute("home");
+    setViewState("select");
+  };
+
+  const handleSwitchProfile = (profile: UserProfile) => {
+    setCurrentProfile(profile);
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+    } catch {}
+  };
 
   const handleStartAuditGeneration = (
     stateId: string,
@@ -102,7 +172,7 @@ export function App() {
         <HomePage onEnter={() => setRoute("auth")} />
       ) : route === "auth" ? (
         <AuthScreen
-          onAuthenticated={(p) => { setCurrentProfile(p); setRoute("app"); }}
+          onAuthenticated={handleAuthenticated}
           onBack={() => setRoute("home")}
         />
       ) : (
@@ -111,15 +181,12 @@ export function App() {
       {!isPresentationMode && (
         <Navbar
           activeProduct={activeProduct}
-          onProductChange={(p) => setActiveProduct(p)}
+          onProductChange={handleProductChange}
           isAuditView={viewState === "audit"}
           onResetToSelect={handleResetToSelect}
           currentProfile={currentProfile}
           onGoHome={() => setRoute("home")}
-          onSignOut={() => {
-            setRoute("home");
-            setViewState("select");
-          }}
+          onSignOut={handleSignOut}
         />
       )}
 
@@ -183,7 +250,7 @@ export function App() {
         {activeProduct === "governance" && (
           <RoleManagement
             currentProfile={currentProfile}
-            onSwitchProfile={(profile) => setCurrentProfile(profile)}
+            onSwitchProfile={handleSwitchProfile}
           />
         )}
       </main>
