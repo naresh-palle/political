@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { AuditReport } from "../../types";
 import { formatLakhs, formatPercentage } from "../../calculations";
 import { Tooltip } from "../common/Tooltip";
@@ -35,7 +35,7 @@ export const VoterReachSection: React.FC<VoterReachSectionProps> = ({ audit }) =
           <div>
             <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#7E8290] mb-1">
               <span>Total Registered Electorate</span>
-              <Tooltip content="Official registered voter count from ECI final electoral rolls for Kadapa AC." />
+              <Tooltip content={`Official registered voter count from ECI final electoral rolls for ${audit.assembly.name} AC.`} />
             </div>
             <div className="font-editorial text-4xl sm:text-5xl font-bold text-[#112233]">
               {formatLakhs(voterStats.totalVoters, true)}

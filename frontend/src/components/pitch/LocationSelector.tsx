@@ -5,7 +5,14 @@ import { politicalApiService } from "../../services/api";
 import { formatLakhs } from "../../calculations";
 
 interface LocationSelectorProps {
-  onGenerateAudit: (stateId: string, parliamentId: string, assemblyId: string) => void;
+  onGenerateAudit: (
+    stateId: string,
+    parliamentId: string,
+    assemblyId: string,
+    stateObj?: StateInfo,
+    parliamentObj?: ParliamentInfo,
+    assemblyObj?: AssemblyInfo | null
+  ) => void;
 }
 
 export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAudit }) => {
@@ -119,7 +126,15 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedState && selectedParliament && selectedAssembly) {
-      onGenerateAudit(selectedState, selectedParliament, selectedAssembly);
+      const matchedAssembly = currentAssemblyDetails || assemblies.find((a) => a.id === selectedAssembly) || null;
+      onGenerateAudit(
+        selectedState,
+        selectedParliament,
+        selectedAssembly,
+        currentStateObj,
+        currentParliamentObj,
+        matchedAssembly
+      );
     }
   };
 

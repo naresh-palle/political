@@ -24,7 +24,7 @@ import { GrievanceManagement } from "./components/grievances/GrievanceManagement
 import { VolunteerMonitoring } from "./components/volunteers/VolunteerMonitoring";
 import { CampaignWebsiteGenerator } from "./components/webbuilder/CampaignWebsiteGenerator";
 import { RoleManagement } from "./components/governance/RoleManagement";
-import { AuditReport, UserProfile } from "./types";
+import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
 
 export function App() {
@@ -37,17 +37,44 @@ export function App() {
   const [currentProfile, setCurrentProfile] = useState<UserProfile>(USER_PROFILES[0]);
   const [auditData, setAuditData] = useState<AuditReport | null>(null);
 
-  const [selectedGeo, setSelectedGeo] = useState({
+  const [selectedGeo, setSelectedGeo] = useState<{
+    stateId: string;
+    parliamentId: string;
+    assemblyId: string;
+    stateName?: string;
+    parliamentName?: string;
+    assemblyName?: string;
+    assemblyObj?: AssemblyInfo | null;
+  }>({
     stateId: "AP",
     parliamentId: "KDP-PC",
-    assemblyId: "KDP-AC"
+    assemblyId: "KDP-AC",
+    stateName: "Andhra Pradesh",
+    parliamentName: "Kadapa",
+    assemblyName: "Kadapa",
+    assemblyObj: null
   });
 
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const handleStartAuditGeneration = (stateId: string, parliamentId: string, assemblyId: string) => {
-    setSelectedGeo({ stateId, parliamentId, assemblyId });
+  const handleStartAuditGeneration = (
+    stateId: string,
+    parliamentId: string,
+    assemblyId: string,
+    stateObj?: StateInfo,
+    parliamentObj?: ParliamentInfo,
+    assemblyObj?: AssemblyInfo | null
+  ) => {
+    setSelectedGeo({
+      stateId,
+      parliamentId,
+      assemblyId,
+      stateName: stateObj?.name || stateId,
+      parliamentName: parliamentObj?.name || parliamentId,
+      assemblyName: assemblyObj?.name || assemblyId,
+      assemblyObj: assemblyObj || null
+    });
     setViewState("loading");
   };
 
@@ -55,7 +82,10 @@ export function App() {
     const report = buildCompleteAudit(
       selectedGeo.stateId,
       selectedGeo.parliamentId,
-      selectedGeo.assemblyId
+      selectedGeo.assemblyId,
+      selectedGeo.assemblyObj,
+      selectedGeo.stateName,
+      selectedGeo.parliamentName
     );
     setAuditData(report);
     setViewState("audit");
@@ -104,7 +134,7 @@ export function App() {
 
             {viewState === "loading" && (
               <AuditLoadingExperience
-                assemblyName="Kadapa"
+                assemblyName={selectedGeo.assemblyName || "Constituency"}
                 onComplete={handleLoadingComplete}
               />
             )}
