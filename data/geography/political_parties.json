@@ -9,13 +9,14 @@
     "primaryColor": "#FFD200",
     "secondaryColor": "#B45309",
     "accentColor": "#F59E0B",
-    "lightBackground": "#FEFCE8",
+    "lightBackground": "#FFFBEB",
     "darkBackground": "#18181B",
     "textColor": "#1E293B",
     "mutedTextColor": "#71717A",
     "gradientStart": "#FFD200",
     "gradientEnd": "#EAB308",
-    "isActive": true
+    "isActive": true,
+    "backgroundImageUrl": "./images/party-backgrounds/tdp-bg.jpg"
   },
   {
     "id": "BJP",
@@ -33,7 +34,8 @@
     "mutedTextColor": "#71717A",
     "gradientStart": "#FF671F",
     "gradientEnd": "#C2410C",
-    "isActive": true
+    "isActive": true,
+    "backgroundImageUrl": "./images/party-backgrounds/bjp-bg.jpg"
   },
   {
     "id": "INC",
@@ -42,7 +44,7 @@
     "abbreviation": "INC",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Indian_National_Congress_hand_logo.svg/240px-Indian_National_Congress_hand_logo.svg.png",
     "symbolEmoji": "✋",
-    "primaryColor": "#0099FF",
+    "primaryColor": "#0284C7",
     "secondaryColor": "#138808",
     "accentColor": "#0284C7",
     "lightBackground": "#F0F9FF",
@@ -51,7 +53,8 @@
     "mutedTextColor": "#71717A",
     "gradientStart": "#0099FF",
     "gradientEnd": "#0369A1",
-    "isActive": true
+    "isActive": true,
+    "backgroundImageUrl": "./images/party-backgrounds/inc-bg.jpg"
   },
   {
     "id": "YSRCP",
@@ -69,7 +72,8 @@
     "mutedTextColor": "#71717A",
     "gradientStart": "#15803D",
     "gradientEnd": "#1D4ED8",
-    "isActive": true
+    "isActive": true,
+    "backgroundImageUrl": "./images/party-backgrounds/ysrcp-bg.jpg"
   },
   {
     "id": "BRS",
@@ -87,7 +91,8 @@
     "mutedTextColor": "#71717A",
     "gradientStart": "#EC4899",
     "gradientEnd": "#9D174D",
-    "isActive": true
+    "isActive": true,
+    "backgroundImageUrl": "./images/party-backgrounds/brs-bg.jpg"
   },
   {
     "id": "JSP",
@@ -95,7 +100,7 @@
     "shortName": "JSP",
     "abbreviation": "JSP",
     "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Jana_Sena_Party_Flag.svg/240px-Jana_Sena_Party_Flag.svg.png",
-    "symbolEmoji": "🥛",
+    "symbolEmoji": "⭐",
     "primaryColor": "#DC2626",
     "secondaryColor": "#1E293B",
     "accentColor": "#EF4444",
@@ -105,7 +110,8 @@
     "mutedTextColor": "#71717A",
     "gradientStart": "#DC2626",
     "gradientEnd": "#991B1B",
-    "isActive": true
+    "isActive": true,
+    "backgroundImageUrl": "./images/party-backgrounds/jsp-bg.jpg"
   },
   {
     "id": "AAP",
@@ -123,7 +129,8 @@
     "mutedTextColor": "#71717A",
     "gradientStart": "#0284C7",
     "gradientEnd": "#075985",
-    "isActive": true
+    "isActive": true,
+    "backgroundImageUrl": "./images/party-backgrounds/aap-bg.jpg"
   },
   {
     "id": "DMK",
