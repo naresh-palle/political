@@ -6,7 +6,8 @@ import {
   AuditReport,
   PlatformAudienceDetail,
   PoliticalParty,
-  ElectedRepresentative
+  ElectedRepresentative,
+  UserProfile
 } from "../types";
 import {
   buildCompleteAudit,
@@ -16,7 +17,8 @@ import {
   MOCK_CANDIDATES,
   MOCK_PLATFORM_AUDIENCES,
   MOCK_POLITICAL_PARTIES,
-  MOCK_ELECTED_REPRESENTATIVES
+  MOCK_ELECTED_REPRESENTATIVES,
+  USER_PROFILES
 } from "./mockData";
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
@@ -40,17 +42,19 @@ let cachedParliaments: ParliamentInfo[] | null = null;
 let cachedAssemblies: AssemblyInfo[] | null = null;
 let cachedParties: PoliticalParty[] | null = null;
 let cachedReps: ElectedRepresentative[] | null = null;
+let cachedUsers: UserProfile[] | null = null;
 
 async function loadStaticGeography() {
   if (!cachedStates) {
     try {
       const cleanBase = BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`;
-      const [resStates, resParls, resAssems, resParties, resReps] = await Promise.all([
+      const [resStates, resParls, resAssems, resParties, resReps, resUsers] = await Promise.all([
         fetch(`${cleanBase}data/geography/states.json`),
         fetch(`${cleanBase}data/geography/parliaments.json`),
         fetch(`${cleanBase}data/geography/assemblies.json`),
         fetch(`${cleanBase}data/geography/political_parties.json`),
-        fetch(`${cleanBase}data/geography/elected_representatives.json`)
+        fetch(`${cleanBase}data/geography/elected_representatives.json`),
+        fetch(`${cleanBase}data/users.json`)
       ]);
       if (resStates.ok && resParls.ok && resAssems.ok) {
         cachedStates = await resStates.json();
@@ -63,17 +67,35 @@ async function loadStaticGeography() {
       if (resReps.ok) {
         cachedReps = await resReps.json();
       }
+      if (resUsers.ok) {
+        cachedUsers = await resUsers.json();
+      }
     } catch (e) {
       cachedStates = MOCK_STATES;
       cachedParliaments = MOCK_PARLIAMENTS;
       cachedAssemblies = MOCK_ASSEMBLIES;
       cachedParties = MOCK_POLITICAL_PARTIES;
       cachedReps = MOCK_ELECTED_REPRESENTATIVES;
+      cachedUsers = USER_PROFILES;
     }
   }
 }
 
 export const politicalApiService = {
+  async getUsers(): Promise<UserProfile[]> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/users`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    await loadStaticGeography();
+    return cachedUsers || USER_PROFILES;
+  },
+
   async getPoliticalParties(): Promise<PoliticalParty[]> {
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/political-parties`);

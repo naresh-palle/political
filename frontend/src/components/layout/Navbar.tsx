@@ -237,27 +237,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <span className="text-[#B9AF95]">Auto-Themes UI</span>
                       </div>
                       <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
-                        {[
-                          { id: "user-tdp-cand", label: "TDP Leader", abbr: "TDP", emoji: "🚲", color: "#FFD200" },
-                          { id: "user-ysrcp-dir", label: "YSRCP Lead", abbr: "YSRCP", emoji: "☀️", color: "#0055A5" },
-                          { id: "user-jsp-strategist", label: "JSP Strategist", abbr: "JSP", emoji: "⭐", color: "#D62828" },
-                          { id: "user-bjp-coord", label: "BJP Lead", abbr: "BJP", emoji: "🪷", color: "#FF9933" },
-                          { id: "user-inc-lead", label: "INC President", abbr: "INC", emoji: "✋", color: "#138808" },
-                          { id: "user-brs-analyst", label: "BRS Media", abbr: "BRS", emoji: "🚗", color: "#FF69B4" },
-                          { id: "user-aap-vol", label: "AAP Cadre", abbr: "AAP", emoji: "🧹", color: "#0072B8" },
-                          { id: "user-admin", label: "Super Admin", abbr: "ADM", emoji: "⚡", color: "#64748B" }
-                        ].map((p) => {
+                        {USER_PROFILES.map((p) => {
                           const isActive = currentProfile.id === p.id;
                           return (
                             <button
                               key={p.id}
                               type="button"
                               onClick={() => {
-                                const found = USER_PROFILES.find((u) => u.id === p.id);
-                                if (found) {
-                                  onSwitchProfile(found);
-                                  setIsUserMenuOpen(false);
-                                }
+                                onSwitchProfile(p);
+                                setIsUserMenuOpen(false);
                               }}
                               className={`p-1.5 rounded-lg border text-left flex items-center gap-1.5 text-[11px] transition-all cursor-pointer ${
                                 isActive
@@ -265,8 +253,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                                   : "bg-[#071322] text-[#D8CFB8] border-[#1E3A5A] hover:bg-[#142B45]"
                               }`}
                             >
-                              <span>{p.emoji}</span>
-                              <span className="truncate">{p.abbr}</span>
+                              <span>{p.partyEmoji || "🏛️"}</span>
+                              <span className="truncate font-semibold">{p.partyAbbr || "ADM"}: <span className="font-normal text-[#B9AF95]">{p.name.split(" ")[0]}</span></span>
                             </button>
                           );
                         })}
