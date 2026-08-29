@@ -101,10 +101,17 @@ export function App() {
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+  const isAdmin =
+    currentProfile?.roleId === "SUPER_ADMIN" ||
+    currentProfile?.roleId === "ADMIN" ||
+    currentProfile?.role === "super_admin" ||
+    currentProfile?.permissions?.canManageSystemUsers === true;
+
   const handleProductChange = (product: "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => {
-    setActiveProduct(product);
+    const targetProduct = product === "governance" && !isAdmin ? "pitch" : product;
+    setActiveProduct(targetProduct);
     try {
-      localStorage.setItem(PRODUCT_STORAGE_KEY, product);
+      localStorage.setItem(PRODUCT_STORAGE_KEY, targetProduct);
     } catch {}
   };
 
@@ -260,8 +267,8 @@ export function App() {
               {/* Module 4: CAMPAIGN WEBSITE GENERATOR */}
               {activeProduct === "webbuilder" && <CampaignWebsiteGenerator />}
 
-              {/* Module 5: ROLE-BASED ACCESS & GOVERNANCE */}
-              {activeProduct === "governance" && (
+              {/* Module 5: ROLE-BASED ACCESS & GOVERNANCE (ADMIN ONLY) */}
+              {activeProduct === "governance" && isAdmin && (
                 <RoleManagement
                   currentProfile={currentProfile}
                   onSwitchProfile={handleSwitchProfile}

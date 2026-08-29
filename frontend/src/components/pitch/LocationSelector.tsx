@@ -17,6 +17,7 @@ import {
 import { StateInfo, ParliamentInfo, AssemblyInfo, ElectedRepresentative, CandidateType } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { formatLakhs } from "../../calculations";
+import { usePartyTheme } from "../../context/PartyThemeContext";
 
 interface LocationSelectorProps {
   onGenerateAudit: (
@@ -32,6 +33,9 @@ interface LocationSelectorProps {
 }
 
 export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAudit }) => {
+  const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
+  const [logoErr, setLogoErr] = useState(false);
+
   const [states, setStates] = useState<StateInfo[]>([]);
   const [parliaments, setParliaments] = useState<ParliamentInfo[]>([]);
   const [assemblies, setAssemblies] = useState<AssemblyInfo[]>([]);
@@ -198,27 +202,49 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
         {/* Editorial masthead */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-end mb-14 lg:mb-20 animate-rise">
           <div className="lg:col-span-8 space-y-7">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="h-px w-10 gold-shimmer" aria-hidden />
-              <span className="eyebrow gold-text">Vol. I · Strength Intelligence</span>
+              {isPartyThemeActive && partyName ? (
+                <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#071322]/90 border border-[var(--party-primary)]/50 rounded-full text-xs font-bold text-[var(--party-primary)] shadow-md">
+                  {partyLogo && !logoErr ? (
+                    <img
+                      src={partyLogo}
+                      alt={partyName}
+                      referrerPolicy="no-referrer"
+                      onError={() => setLogoErr(true)}
+                      className="w-4 h-4 object-contain"
+                    />
+                  ) : (
+                    <span className="text-sm leading-none">{partySymbolEmoji || "🏛️"}</span>
+                  )}
+                  <span>{partyName} · Command Center</span>
+                </span>
+              ) : (
+                <span className="eyebrow gold-text">Vol. I · Strength Intelligence</span>
+              )}
               <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 border border-[#D4A24C]/40 rounded-full text-[10px] font-semibold tracking-wider text-[#E9C77A]">
                 <Sparkles className="w-3 h-3" /> Executive Edition
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-[10px] font-mono-data text-emerald-400">
-                <Database className="w-2.5 h-2.5" /> MongoDB Integrated
+                <Database className="w-2.5 h-2.5" /> Live Records
               </span>
             </div>
 
-            <h1 className="font-display text-[64px] sm:text-[92px] lg:text-[124px] leading-[0.92] tracking-[-0.025em]">
+            <h1 className="font-display text-[56px] sm:text-[84px] lg:text-[110px] leading-[0.92] tracking-[-0.025em]">
               <span className="cream-text">Constituency</span><br />
-              <span className="italic gold-text">strength,</span>
+              <span className="italic gold-text">intelligence,</span>
               <span className="cream-text"> made legible.</span>
             </h1>
 
             <p className="text-[15px] sm:text-base text-[#D8CFB8] max-w-xl leading-relaxed">
-              A quiet, executive-grade view of candidate footprint, competitive position and
-              digital reach — synthesised from verified electoral records, platform APIs and
-              constituency-level social listening.
+              {isPartyThemeActive && partyName ? (
+                <>
+                  Executive-grade electoral intelligence, sentiment tracking, and cadre mobilization workspace configured for{" "}
+                  <strong className="text-[var(--party-primary)] font-semibold">{partyName}</strong>.
+                </>
+              ) : (
+                "A quiet, executive-grade view of candidate footprint, competitive position and digital reach — synthesised from verified electoral records, platform APIs and constituency-level social listening."
+              )}
             </p>
           </div>
 
