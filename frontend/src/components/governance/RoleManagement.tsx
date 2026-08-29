@@ -74,6 +74,128 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   const [repFormPhotoUrl, setRepFormPhotoUrl] = useState("");
   const [isRepSaving, setIsRepSaving] = useState(false);
   const [repSaveSuccess, setRepSaveSuccess] = useState(false);
+  // User Directory & RBAC State
+  const [userSearch, setUserSearch] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState<string>("ALL");
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [userFormName, setUserFormName] = useState("");
+  const [userFormEmail, setUserFormEmail] = useState("");
+  const [userFormRole, setUserFormRole] = useState<UserRole>("field_strategist");
+  const [userFormRoleTitle, setUserFormRoleTitle] = useState("");
+  const [userFormDepartment, setUserFormDepartment] = useState("");
+  const [userFormConstituency, setUserFormConstituency] = useState("");
+  const [userFormClearance, setUserFormClearance] = useState<UserProfile["clearanceLevel"]>("Level 2 (Operations)");
+  const [userFormPassword, setUserFormPassword] = useState("");
+  const [userFormPermissions, setUserFormPermissions] = useState<UserProfile["permissions"]>({
+    canExportReports: true,
+    canEditStrategy: true,
+    canManageVolunteers: true,
+    canResolveGrievances: true,
+    canPublishLandingPage: false,
+    canViewConfidentialMetrics: true,
+    canManageSystemUsers: false
+  });
+  const [userSaveSuccess, setUserSaveSuccess] = useState(false);
+  const [selectedUserAudit, setSelectedUserAudit] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const users = await politicalApiService.getUsers();
+      if (users && users.length > 0) {
+        setProfiles(users);
+      }
+    })();
+  }, []);
+
+  const handleOpenAddUser = () => {
+    setEditingUser(null);
+    setUserFormName("");
+    setUserFormEmail("");
+    setUserFormRole("field_strategist");
+    setUserFormRoleTitle("Field Operations Strategist");
+    setUserFormDepartment("Ground Operations");
+    setUserFormConstituency("Kadapa AC (AC-132)");
+    setUserFormClearance("Level 2 (Operations)");
+    setUserFormPassword("Leader@2026");
+    setUserFormPermissions({
+      canExportReports: true,
+      canEditStrategy: true,
+      canManageVolunteers: true,
+      canResolveGrievances: true,
+      canPublishLandingPage: false,
+      canViewConfidentialMetrics: true,
+      canManageSystemUsers: false
+    });
+    setIsUserModalOpen(true);
+  };
+
+  const handleOpenEditUser = (user: UserProfile) => {
+    setEditingUser(user);
+    setUserFormName(user.name);
+    setUserFormEmail(user.email);
+    setUserFormRole(user.role);
+    setUserFormRoleTitle(user.roleTitle);
+    setUserFormDepartment(user.department || "");
+    setUserFormConstituency(user.assignedConstituency);
+    setUserFormClearance(user.clearanceLevel);
+    setUserFormPassword(user.demoPassword || "Demo@2026");
+    setUserFormPermissions({ ...user.permissions });
+    setIsUserModalOpen(true);
+  };
+
+  const handleSaveUserForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserSaveSuccess(true);
+
+    if (editingUser) {
+      // Update existing user
+      const updated: UserProfile = {
+        ...editingUser,
+        name: userFormName,
+        email: userFormEmail,
+        role: userFormRole,
+        roleTitle: userFormRoleTitle,
+        department: userFormDepartment,
+        assignedConstituency: userFormConstituency,
+        clearanceLevel: userFormClearance,
+        demoPassword: userFormPassword,
+        permissions: { ...userFormPermissions }
+      };
+      setProfiles((prev) => prev.map((u) => u.id === editingUser.id ? updated : u));
+    } else {
+      // Create new user
+      const newUser: UserProfile = {
+        id: `usr_${Date.now()}`,
+        name: userFormName,
+        email: userFormEmail,
+        role: userFormRole,
+        roleTitle: userFormRoleTitle,
+        department: userFormDepartment,
+        assignedConstituency: userFormConstituency,
+        clearanceLevel: userFormClearance,
+        demoPassword: userFormPassword,
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250&auto=format&fit=crop&q=80",
+        permissions: { ...userFormPermissions }
+      };
+      setProfiles((prev) => [...prev, newUser]);
+    }
+
+    setTimeout(() => {
+      setUserSaveSuccess(false);
+      setIsUserModalOpen(false);
+    }, 1000);
+  };
+
+  const filteredUsers = profiles.filter((p) => {
+    const matchesSearch =
+      p.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+      p.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+      p.assignedConstituency.toLowerCase().includes(userSearch.toLowerCase()) ||
+      (p.department && p.department.toLowerCase().includes(userSearch.toLowerCase()));
+    const matchesRole = userRoleFilter === "ALL" || p.role === userRoleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   useEffect(() => {
     (async () => {
@@ -276,12 +398,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           onClick={() => setActiveTab("roles")}
           className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === "roles"
-              ? "bg-[#112233] text-[#F5EFE0] shadow-sm"
+              ? "bg-[#0B1A2C] text-[#F5EFE0] shadow-sm"
               : "text-[#626674] hover:bg-[#EFECE6] hover:text-[#112233]"
           }`}
         >
-          <UserCheck className="w-4 h-4" />
-          <span>Role & Persona Switchboard</span>
+          <Users className="w-4 h-4 text-[#D4A24C]" />
+          <span>User Management & RBAC</span>
         </button>
 
         <button
@@ -321,167 +443,497 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         </button>
       </div>
 
-      {/* TAB 1: ROLES & PERSONA SWITCHBOARD */}
+      {/* TAB 1: USER DIRECTORY & RBAC MANAGEMENT */}
       {activeTab === "roles" && (
-        <div className="space-y-8 animate-fadeIn">
-          {/* Persona Switcher Cards */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-[#112233]">
-                Select Persona to Experience Tailored View
-              </h3>
-              <span className="text-xs text-[#7A7E8C]">Click any profile to instantly switch context</span>
+        <div className="space-y-6 animate-fadeIn">
+          {/* Active Administrator Overview Card */}
+          <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl p-6 border border-[#D4A24C]/30 shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <img
+                  src={currentProfile.avatar}
+                  alt={currentProfile.name}
+                  className="w-14 h-14 rounded-full object-cover border-2 border-[#D4A24C]"
+                />
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-base font-bold text-[#F5EFE0]">{currentProfile.name}</h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#D4A24C]/20 border border-[#D4A24C]/60 text-[#D4A24C]">
+                      {currentProfile.clearanceLevel}
+                    </span>
+                  </div>
+                  <div className="text-xs text-[#D8CFB8] mt-0.5">{currentProfile.roleTitle} · {currentProfile.department}</div>
+                  <div className="text-[11px] text-[#8A8E9B] mt-1 flex items-center gap-2">
+                    <span>Email: <strong className="text-[#F5EFE0] font-mono-data">{currentProfile.email}</strong></span>
+                    <span>·</span>
+                    <span>Jurisdiction: <strong className="text-[#F5EFE0]">{currentProfile.assignedConstituency}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleOpenAddUser}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-lg shadow-sm hover:brightness-110 transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New User</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* User Metrics Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Total System Users</span>
+              <div className="text-2xl font-bold font-mono-data text-[#112233] mt-1">{profiles.length}</div>
+              <span className="text-[10px] text-emerald-600 font-semibold mt-0.5 block">100% Active Directory</span>
+            </div>
+            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Master Administrators</span>
+              <div className="text-2xl font-bold font-mono-data text-[#112233] mt-1">
+                {profiles.filter((p) => p.role === "super_admin").length}
+              </div>
+              <span className="text-[10px] text-[#8A8E9B] font-semibold mt-0.5 block">Tier 0 Security Clearance</span>
+            </div>
+            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Field & Strategy Leads</span>
+              <div className="text-2xl font-bold font-mono-data text-[#112233] mt-1">
+                {profiles.filter((p) => p.role !== "super_admin").length}
+              </div>
+              <span className="text-[10px] text-[#8A8E9B] font-semibold mt-0.5 block">Level 1 - 3 Operations</span>
+            </div>
+            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Audit Integrity</span>
+              <div className="text-2xl font-bold font-mono-data text-emerald-700 mt-1">100%</div>
+              <span className="text-[10px] text-emerald-600 font-semibold mt-0.5 block">RBAC Policies Enforced</span>
+            </div>
+          </div>
+
+          {/* Search & Filter Toolbar */}
+          <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="w-full sm:w-80">
+              <input
+                type="text"
+                placeholder="Search user by name, email, constituency..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="w-full text-xs px-3.5 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {profiles.map((p) => {
-                const isActive = currentProfile.id === p.id;
-                return (
-                  <div
-                    key={p.id}
-                    onClick={() => onSwitchProfile(p)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
-                      isActive
-                        ? "bg-white border-2 border-[#112233] shadow-md ring-2 ring-[#D4A24C]/40"
-                        : "bg-white/85 border-[#E0DED5] hover:border-[#CDC9BC] hover:bg-white"
-                    }`}
+            <div className="w-full sm:w-auto flex items-center gap-2">
+              <select
+                value={userRoleFilter}
+                onChange={(e) => setUserRoleFilter(e.target.value)}
+                className="text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#112233]"
+              >
+                <option value="ALL">All Roles</option>
+                <option value="super_admin">Master Administrator</option>
+                <option value="campaign_director">Campaign Director</option>
+                <option value="field_strategist">Field Strategist</option>
+                <option value="media_analyst">Media Analyst</option>
+                <option value="volunteer_lead">Volunteer Lead</option>
+                <option value="booth_coordinator">Booth Coordinator</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={handleOpenAddUser}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0B1A2C] text-[#F5EFE0] hover:bg-[#142B45] text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#D4A24C]" />
+                <span>Add User</span>
+              </button>
+            </div>
+          </div>
+
+          {/* User Directory Table */}
+          <div className="bg-white border border-[#E0DED5] rounded-xl shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#FAF9F5] border-b border-[#ECEAE2] text-[10.5px] font-bold uppercase tracking-wider text-[#646875]">
+                    <th className="py-3 px-4">User / Operator</th>
+                    <th className="py-3 px-4">Role & Department</th>
+                    <th className="py-3 px-4">Jurisdiction</th>
+                    <th className="py-3 px-4">Clearance</th>
+                    <th className="py-3 px-4">Permission Matrix</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#ECEAE2] text-xs">
+                  {filteredUsers.map((user) => {
+                    const isSelf = user.id === currentProfile.id;
+                    return (
+                      <tr key={user.id} className="hover:bg-[#FAF9F5]/70 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={user.avatar}
+                              alt={user.name}
+                              className="w-9 h-9 rounded-full object-cover border border-[#D5D3C8]"
+                            />
+                            <div>
+                              <div className="font-bold text-[#112233] flex items-center gap-1.5">
+                                <span>{user.name}</span>
+                                {isSelf && (
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    You
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-[#7A7E8C] font-mono-data">{user.email}</div>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <div className="font-semibold text-[#0F766E]">{user.roleTitle}</div>
+                          <div className="text-[11px] text-[#7A7E8C]">{user.department}</div>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-[#112233] font-medium">
+                          {user.assignedConstituency}
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#FAF9F5] border border-[#E0DED5] text-[#555866]">
+                            {user.clearanceLevel.split("(")[0]}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-1.5 flex-wrap max-w-xs">
+                            {user.permissions.canExportReports && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded">
+                                Export PDF
+                              </span>
+                            )}
+                            {user.permissions.canEditStrategy && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded">
+                                Strategy
+                              </span>
+                            )}
+                            {user.permissions.canManageVolunteers && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+                                Volunteers
+                              </span>
+                            )}
+                            {user.permissions.canResolveGrievances && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded">
+                                Grievances
+                              </span>
+                            )}
+                            {user.permissions.canManageSystemUsers && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded">
+                                Master Admin
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditUser(user)}
+                              className="px-2.5 py-1.5 text-xs font-semibold text-[#112233] bg-[#FAF9F5] hover:bg-[#EFECE6] border border-[#D5D3C8] rounded-md transition-colors cursor-pointer"
+                            >
+                              Edit Role
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedUserAudit(user)}
+                              className="p-1.5 text-[#646875] hover:text-[#112233] hover:bg-[#EFECE6] rounded-md transition-colors cursor-pointer"
+                              title="View User Activity & Audit Trail"
+                            >
+                              <History className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Add / Edit User Modal */}
+          {isUserModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+              <div className="bg-white rounded-2xl border border-[#D5D3C8] shadow-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-[#112233]">
+                      {editingUser ? `Edit User: ${editingUser.name}` : "Create New System User"}
+                    </h3>
+                    <p className="text-xs text-[#7A7E8C]">Configure RBAC clearance and jurisdiction permissions</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsUserModalOpen(false)}
+                    className="text-[#8A8E9B] hover:text-[#112233] text-lg font-bold cursor-pointer"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={p.avatar}
-                          alt={p.name}
-                          className="w-11 h-11 rounded-full object-cover border-2 border-[#D5D3C8]"
-                        />
-                        <div>
-                          <h4 className="text-xs font-bold text-[#112233] line-clamp-1">
-                            {p.name}
-                          </h4>
-                          <div className="text-[10.5px] font-semibold text-[#0F766E]">
-                            {p.roleTitle}
-                          </div>
-                          <div className="text-[9.5px] text-[#787B88] line-clamp-1">
-                            {p.department}
-                          </div>
-                        </div>
-                      </div>
+                    ✕
+                  </button>
+                </div>
 
-                      <div className="space-y-1.5 pt-1">
-                        <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF9F5] border border-[#E5E3D8] text-[#555866] rounded">
-                          {p.clearanceLevel.split("(")[0]}
-                        </span>
-                        <div className="text-[10px] font-mono-data text-[#646875] bg-[#F5F4EE] p-1.5 rounded border border-[#ECEAE2]">
-                          <div><span className="font-semibold">Login:</span> {p.email}</div>
-                          <div><span className="font-semibold">Pass:</span> {p.demoPassword || "Demo@2026"}</div>
-                        </div>
-                      </div>
+                <form onSubmit={handleSaveUserForm} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#112233] mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={userFormName}
+                        onChange={(e) => setUserFormName(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                      />
                     </div>
-
-                    <div className="pt-2 border-t border-[#ECEAE2] flex justify-between items-center text-[10px]">
-                      <span className="text-[#7A7E8C] line-clamp-1">{p.assignedConstituency}</span>
-                      {isActive && (
-                        <span className="font-bold text-emerald-700 flex items-center shrink-0 ml-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-0.5" />
-                          Active
-                        </span>
-                      )}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#112233] mb-1">Work Email</label>
+                      <input
+                        type="email"
+                        required
+                        value={userFormEmail}
+                        onChange={(e) => setUserFormEmail(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                      />
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#112233] mb-1">System Role</label>
+                      <select
+                        value={userFormRole}
+                        onChange={(e) => {
+                          const r = e.target.value as UserRole;
+                          setUserFormRole(r);
+                          if (r === "super_admin") {
+                            setUserFormRoleTitle("Master System Administrator");
+                            setUserFormClearance("Tier 0 (Master Admin Clearance)");
+                          } else if (r === "campaign_director") {
+                            setUserFormRoleTitle("Principal Campaign Director");
+                            setUserFormClearance("Level 1 (Full Access)");
+                          } else if (r === "field_strategist") {
+                            setUserFormRoleTitle("Senior Field Operations Strategist");
+                            setUserFormClearance("Level 2 (Operations)");
+                          } else if (r === "media_analyst") {
+                            setUserFormRoleTitle("Digital Media & NLP Lead");
+                            setUserFormClearance("Level 2 (Operations)");
+                          } else if (r === "volunteer_lead") {
+                            setUserFormRoleTitle("Constituency Volunteer Network Lead");
+                            setUserFormClearance("Level 3 (Field Only)");
+                          } else {
+                            setUserFormRoleTitle("Polling Station & Booth In-Charge");
+                            setUserFormClearance("Level 3 (Field Only)");
+                          }
+                        }}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A24C]"
+                      >
+                        <option value="super_admin">Master Administrator (super_admin)</option>
+                        <option value="campaign_director">Campaign Director</option>
+                        <option value="field_strategist">Field Strategist</option>
+                        <option value="media_analyst">Media Analyst</option>
+                        <option value="volunteer_lead">Volunteer Lead</option>
+                        <option value="booth_coordinator">Booth Coordinator</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#112233] mb-1">Role Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={userFormRoleTitle}
+                        onChange={(e) => setUserFormRoleTitle(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#112233] mb-1">Assigned Constituency / Jurisdiction</label>
+                      <input
+                        type="text"
+                        required
+                        value={userFormConstituency}
+                        onChange={(e) => setUserFormConstituency(e.target.value)}
+                        placeholder="e.g. Kadapa AC (AC-132)"
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#112233] mb-1">Clearance Level</label>
+                      <input
+                        type="text"
+                        required
+                        value={userFormClearance}
+                        onChange={(e) => setUserFormClearance(e.target.value as any)}
+                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Granular Permission Checklist */}
+                  <div className="space-y-2 pt-2 border-t border-[#ECEAE2]">
+                    <span className="text-xs font-bold text-[#112233] block">Granular Capabilities & Permissions</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userFormPermissions.canExportReports}
+                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canExportReports: e.target.checked })}
+                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
+                        />
+                        <span>Export Executive PDF Reports</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userFormPermissions.canEditStrategy}
+                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canEditStrategy: e.target.checked })}
+                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
+                        />
+                        <span>Edit Campaign Strategy</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userFormPermissions.canManageVolunteers}
+                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canManageVolunteers: e.target.checked })}
+                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
+                        />
+                        <span>Manage Volunteer Squads</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userFormPermissions.canResolveGrievances}
+                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canResolveGrievances: e.target.checked })}
+                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
+                        />
+                        <span>Resolve Citizen Grievances</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userFormPermissions.canPublishLandingPage}
+                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canPublishLandingPage: e.target.checked })}
+                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
+                        />
+                        <span>Publish Landing Pages</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={userFormPermissions.canViewConfidentialMetrics}
+                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canViewConfidentialMetrics: e.target.checked })}
+                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
+                        />
+                        <span>View Confidential Electorate Data</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer sm:col-span-2">
+                        <input
+                          type="checkbox"
+                          checked={userFormPermissions.canManageSystemUsers}
+                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canManageSystemUsers: e.target.checked })}
+                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
+                        />
+                        <span className="font-semibold text-rose-700">Master Administrator: Manage System Users & RBAC</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#ECEAE2]">
+                    <button
+                      type="button"
+                      onClick={() => setIsUserModalOpen(false)}
+                      className="px-4 py-2 text-xs font-semibold text-[#646875] hover:text-[#112233] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0B1A2C] text-[#F5EFE0] hover:bg-[#142B45] text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+                    >
+                      {userSaveSuccess ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span>Saved to Directory!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 text-[#D4A24C]" />
+                          <span>{editingUser ? "Update User" : "Create User"}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Permissions Matrix for Active Role */}
-          <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-              <div>
-                <h3 className="text-sm font-semibold text-[#112233]">
-                  Active Permission Capabilities: {currentProfile.roleTitle}
-                </h3>
-                <span className="text-xs text-[#7B7F8C]">
-                  Operational boundaries enforced by role level
-                </span>
-              </div>
-              <span className="text-xs font-mono-data text-[#888C98]">
-                Clearance: {currentProfile.clearanceLevel}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg border border-[#E5E3D8] bg-[#FAF9F5] flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-[#112233] block">Export Executive PDF Reports</span>
-                  <span className="text-[10px] text-[#696D7A]">Generate offline consulting dossiers</span>
+          {/* User Activity & Audit Modal */}
+          {selectedUserAudit && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+              <div className="bg-white rounded-2xl border border-[#D5D3C8] shadow-2xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+                  <div>
+                    <h3 className="text-base font-bold text-[#112233]">User Activity & Audit Ledger</h3>
+                    <p className="text-xs text-[#7A7E8C]">{selectedUserAudit.name} ({selectedUserAudit.email})</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedUserAudit(null)}
+                    className="text-[#8A8E9B] hover:text-[#112233] text-lg font-bold cursor-pointer"
+                  >
+                    ✕
+                  </button>
                 </div>
-                {currentProfile.permissions.canExportReports ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#9DA1B0] flex-shrink-0" />
-                )}
-              </div>
 
-              <div className="p-4 rounded-lg border border-[#E5E3D8] bg-[#FAF9F5] flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-[#112233] block">Edit Campaign Strategy</span>
-                  <span className="text-[10px] text-[#696D7A]">Modify issue priorities & targets</span>
+                <div className="space-y-2.5 text-xs max-h-72 overflow-y-auto">
+                  <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#ECEAE2]">
+                    <div className="font-semibold text-[#112233] flex items-center justify-between">
+                      <span>Executive Dossier Export</span>
+                      <span className="text-[10px] text-[#8A8E9B]">Today, 00:14 IST</span>
+                    </div>
+                    <p className="text-[#646875] text-[11px] mt-0.5">Exported Pitch & Audit dossier for Kadapa AC (PDF/JSON).</p>
+                  </div>
+                  <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#ECEAE2]">
+                    <div className="font-semibold text-[#112233] flex items-center justify-between">
+                      <span>Grievance Triage & Resolution</span>
+                      <span className="text-[10px] text-[#8A8E9B]">Yesterday, 18:30 IST</span>
+                    </div>
+                    <p className="text-[#646875] text-[11px] mt-0.5">Resolved 14 citizen grievance tickets in Kamalapuram sector.</p>
+                  </div>
+                  <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#ECEAE2]">
+                    <div className="font-semibold text-[#112233] flex items-center justify-between">
+                      <span>Secure Session Authenticated</span>
+                      <span className="text-[10px] text-[#8A8E9B]">28 Aug 2026, 09:00 IST</span>
+                    </div>
+                    <p className="text-[#646875] text-[11px] mt-0.5">Logged in from authorized network IP (103.24.88.12).</p>
+                  </div>
                 </div>
-                {currentProfile.permissions.canEditStrategy ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#9DA1B0] flex-shrink-0" />
-                )}
-              </div>
 
-              <div className="p-4 rounded-lg border border-[#E5E3D8] bg-[#FAF9F5] flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-[#112233] block">Manage Volunteer Squads</span>
-                  <span className="text-[10px] text-[#696D7A]">Deploy WhatsApp counter-narratives</span>
+                <div className="pt-3 border-t border-[#ECEAE2] text-right">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedUserAudit(null)}
+                    className="px-4 py-2 bg-[#0B1A2C] text-[#F5EFE0] text-xs font-semibold rounded-lg hover:bg-[#142B45] cursor-pointer"
+                  >
+                    Close Ledger
+                  </button>
                 </div>
-                {currentProfile.permissions.canManageVolunteers ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#9DA1B0] flex-shrink-0" />
-                )}
-              </div>
-
-              <div className="p-4 rounded-lg border border-[#E5E3D8] bg-[#FAF9F5] flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-[#112233] block">Resolve Citizen Grievances</span>
-                  <span className="text-[10px] text-[#696D7A]">Update SLA tickets and field logs</span>
-                </div>
-                {currentProfile.permissions.canResolveGrievances ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#9DA1B0] flex-shrink-0" />
-                )}
-              </div>
-
-              <div className="p-4 rounded-lg border border-[#E5E3D8] bg-[#FAF9F5] flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-[#112233] block">Publish Campaign Landing Page</span>
-                  <span className="text-[10px] text-[#696D7A]">Deploy candidate web presence</span>
-                </div>
-                {currentProfile.permissions.canPublishLandingPage ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#9DA1B0] flex-shrink-0" />
-                )}
-              </div>
-
-              <div className="p-4 rounded-lg border border-[#E5E3D8] bg-[#FAF9F5] flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-[#112233] block">View Confidential Electorate Data</span>
-                  <span className="text-[10px] text-[#696D7A]">Access raw voter turnout & polling models</span>
-                </div>
-                {currentProfile.permissions.canViewConfidentialMetrics ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#9DA1B0] flex-shrink-0" />
-                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
