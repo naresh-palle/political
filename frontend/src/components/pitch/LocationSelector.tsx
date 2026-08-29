@@ -199,11 +199,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
 
   return (
     <div
-      className={isPartyThemeActive ? "transition-colors duration-300 relative overflow-hidden" : "hero-dark"}
+      className={isPartyThemeActive ? "transition-colors duration-300 relative" : "hero-dark"}
       style={
         isPartyThemeActive
           ? {
-              background: `linear-gradient(180deg, ${currentParty?.primaryColor || "#FFD200"} 0%, ${currentParty?.gradientEnd || "#F5C400"} 60%, ${currentParty?.primaryColor || "#EAB308"} 100%)`,
+              background: "transparent",
               color: "#0F172A"
             }
           : undefined

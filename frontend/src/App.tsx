@@ -26,8 +26,7 @@ import { CampaignWebsiteGenerator } from "./components/webbuilder/CampaignWebsit
 import { RoleManagement } from "./components/governance/RoleManagement";
 import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo, ElectedRepresentative, CandidateType } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
-import { politicalApiService } from "./services/api";
-import { PartyThemeProvider } from "./context/PartyThemeContext";
+import { PartyThemeProvider, usePartyTheme } from "./context/PartyThemeContext";
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
@@ -192,24 +191,7 @@ function AppInner() {
 
   return (
     <PartyThemeProvider authenticatedUser={currentProfile}>
-      <div
-        className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${
-          isPartyUser
-            ? "text-slate-900 selection:bg-black selection:text-white"
-            : "bg-[#0B1A2C] text-[#F5EFE0] selection:bg-[#D4A24C] selection:text-black"
-        }`}
-        style={
-          isPartyUser
-            ? {
-                backgroundColor: "var(--party-light-bg, #FEFCE8)",
-                color: "var(--party-text, #0F172A)"
-              }
-            : {
-                backgroundColor: "#0B1A2C",
-                color: "#F5EFE0"
-              }
-        }
-      >
+      <AppCanvas isPartyUser={isPartyUser}>
         {route === "home" ? (
           <HomePage onEnter={() => setRoute("auth")} />
         ) : route === "auth" ? (
@@ -319,8 +301,51 @@ function AppInner() {
             )}
           </>
         )}
-      </div>
+      </AppCanvas>
     </PartyThemeProvider>
+  );
+}
+
+function AppCanvas({
+  isPartyUser,
+  children
+}: {
+  isPartyUser: boolean;
+  children: React.ReactNode;
+}) {
+  const { currentParty, isPartyThemeActive, partyBackground } = usePartyTheme();
+  const bgImg = isPartyThemeActive
+    ? (partyBackground || "./images/party-backgrounds/tdp-bg.jpg")
+    : "./images/party-backgrounds/admin-bg.jpg";
+
+  return (
+    <div
+      className={`min-h-screen flex flex-col font-sans transition-all duration-500 relative ${
+        isPartyThemeActive
+          ? "text-slate-900 selection:bg-black selection:text-white"
+          : "bg-[#0B1A2C] text-[#F5EFE0] selection:bg-[#D4A24C] selection:text-black"
+      }`}
+      style={{
+        backgroundImage: `url(${bgImg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
+        backgroundColor: isPartyThemeActive ? (currentParty?.lightBackground || "#FFFBEB") : "#0B1A2C",
+        color: isPartyThemeActive ? (currentParty?.textColor || "#0F172A") : "#F5EFE0"
+      }}
+    >
+      {/* Subtle translucent tint layer for party users or admin users to ensure high contrast */}
+      <div
+        className={`fixed inset-0 pointer-events-none z-0 ${
+          isPartyThemeActive ? "bg-white/30 backdrop-blur-[0.5px]" : "bg-[#0B1A2C]/65 backdrop-blur-[0.5px]"
+        }`}
+        aria-hidden="true"
+      />
+      <div className="relative z-10 flex-1 flex flex-col">
+        {children}
+      </div>
+    </div>
   );
 }
 

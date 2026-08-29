@@ -21,6 +21,7 @@ export interface PartyThemeContextValue {
   partyAbbreviation: string | null;
   partyLogo: string | null;
   partySymbolEmoji: string | null;
+  partyBackground: string | null;
   partyPrimaryColor: string;
   partySecondaryColor: string;
   partyAccentColor: string;
@@ -36,6 +37,7 @@ const PartyThemeContext = createContext<PartyThemeContextValue>({
   partyAbbreviation: null,
   partyLogo: null,
   partySymbolEmoji: null,
+  partyBackground: null,
   partyPrimaryColor: NEUTRAL_THEME.primary,
   partySecondaryColor: NEUTRAL_THEME.secondary,
   partyAccentColor: NEUTRAL_THEME.accent,
@@ -140,6 +142,7 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
       partyAbbreviation: currentParty ? currentParty.abbreviation : null,
       partyLogo: currentParty ? currentParty.logoUrl : null,
       partySymbolEmoji: currentParty ? (currentParty.symbolEmoji || "🏛️") : null,
+      partyBackground: currentParty?.backgroundImageUrl || null,
       partyPrimaryColor: currentParty?.primaryColor || NEUTRAL_THEME.primary,
       partySecondaryColor: currentParty?.secondaryColor || NEUTRAL_THEME.secondary,
       partyAccentColor: currentParty?.accentColor || NEUTRAL_THEME.accent,

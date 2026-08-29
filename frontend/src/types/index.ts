@@ -17,6 +17,15 @@ export type AdminUserRole =
 export type UserRole = 
   | AdminUserRole
   | "super_admin"
+  | "admin"
+  | "support"
+  | "party_admin"
+  | "campaign_manager"
+  | "political_consultant"
+  | "analyst"
+  | "volunteer"
+  | "client"
+  | "viewer"
   | "campaign_director" 
   | "field_strategist" 
   | "media_analyst" 
@@ -35,6 +44,7 @@ export interface UserProfile {
   role: UserRole;
   roleId?: AdminUserRole | string;
   roleTitle: string;
+  designation?: string;
   department?: string;
   demoPassword?: string;
   avatar: string;
@@ -92,6 +102,7 @@ export interface PoliticalParty {
   abbreviation: string;
   logoUrl: string;
   symbolEmoji?: string;
+  backgroundImageUrl?: string;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
