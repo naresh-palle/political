@@ -33,17 +33,29 @@
     --ll-emerald-bright: #10B981;
     --ll-teal: #0E7C86;
     --ll-critical: #B91C1C;
+
+    /* Dynamic Party Design Tokens (Default Neutral Fallbacks) */
+    --party-primary: #D4A24C;
+    --party-secondary: #B45309;
+    --party-accent: #E07A1F;
+    --party-light-bg: #FAF9F5;
+    --party-dark-bg: #0B1A2C;
+    --party-text: #1E293B;
+    --party-muted: #64748B;
+    --party-gradient-start: #D4A24C;
+    --party-gradient-end: #E07A1F;
   }
 
   html { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--ll-ivory);
-    color: #121316;
+    background-color: var(--party-light-bg, var(--ll-ivory));
+    color: var(--party-text, #121316);
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    transition: background-color 300ms ease, color 300ms ease;
     font-feature-settings: "cv02","cv03","cv04","cv11";
   }
 
@@ -76,8 +88,8 @@
 /* ------------------ Dark editorial hero surface ------------------ */
 .hero-dark {
   background:
-    radial-gradient(ellipse 90% 60% at 15% 0%, rgba(224, 122, 31, 0.18), transparent 55%),
-    radial-gradient(ellipse 60% 70% at 100% 20%, rgba(212, 162, 76, 0.14), transparent 60%),
+    radial-gradient(ellipse 90% 60% at 15% 0%, color-mix(in srgb, var(--party-primary, #E07A1F) 28%, transparent), transparent 55%),
+    radial-gradient(ellipse 60% 70% at 100% 20%, color-mix(in srgb, var(--party-secondary, #D4A24C) 22%, transparent), transparent 60%),
     linear-gradient(180deg, #0B1A2C 0%, #0E2137 45%, #0B1A2C 100%);
   color: #F5EFE0;
   position: relative;
@@ -107,7 +119,7 @@
 }
 .hero-dark > * { position: relative; z-index: 1; }
 
-.gold-text { color: #E9C77A; }
+.gold-text { color: var(--party-primary, #E9C77A); }
 .cream-text { color: #F5EFE0; }
 
 /* Bright metric chips */
@@ -163,11 +175,13 @@
 
 .card-editorial {
   background: #FFFFFF;
-  border: 1px solid var(--ll-rule);
+  border: 1px solid color-mix(in srgb, var(--party-primary, #D4A24C) 20%, var(--ll-rule));
   border-radius: 12px;
   transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
 }
-.card-editorial:hover { border-color: var(--ll-rule-strong); }
+.card-editorial:hover {
+  border-color: color-mix(in srgb, var(--party-primary, #D4A24C) 45%, var(--ll-rule-strong));
+}
 
 @media print {
   body { background-color: #ffffff !important; color: #000000 !important; font-size: 12pt !important; }

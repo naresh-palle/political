@@ -56,7 +56,7 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
   const [currentParty, setCurrentParty] = useState<PoliticalParty | null>(null);
   const [partyCache, setPartyCache] = useState<Map<string, PoliticalParty>>(new Map());
 
-  // Apply CSS design tokens to :root
+  // Apply CSS design tokens to :root and document.body
   const applyThemeTokens = useCallback((tokens: typeof NEUTRAL_THEME) => {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
@@ -69,6 +69,11 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
     root.style.setProperty("--party-muted", tokens.muted);
     root.style.setProperty("--party-gradient-start", tokens.gradientStart);
     root.style.setProperty("--party-gradient-end", tokens.gradientEnd);
+
+    if (document.body) {
+      document.body.style.backgroundColor = tokens.lightBg;
+      document.body.style.color = tokens.text;
+    }
   }, []);
 
   // Fetch single party with caching
