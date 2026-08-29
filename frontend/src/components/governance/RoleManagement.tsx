@@ -366,10 +366,21 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         </div>
                       </div>
 
-                      <div className="space-y-1 pt-1">
-                        <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF9F5] border border-[#E5E3D8] text-[#555866] rounded">
-                          {p.clearanceLevel}
-                        </span>
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {p.partyAbbr && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 text-white rounded shadow-2xs"
+                              style={{ backgroundColor: p.partyColor || "#B45309" }}
+                            >
+                              <span>{p.partyEmoji || "🏛️"}</span>
+                              <span>{p.partyAbbr}</span>
+                            </span>
+                          )}
+                          <span className="inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FAF9F5] border border-[#E5E3D8] text-[#555866] rounded">
+                            {p.clearanceLevel.split("(")[0]}
+                          </span>
+                        </div>
                         <div className="text-[10px] font-mono-data text-[#646875] bg-[#F5F4EE] p-1.5 rounded border border-[#ECEAE2]">
                           <div><span className="font-semibold">Login:</span> {p.email}</div>
                           <div><span className="font-semibold">Pass:</span> {p.demoPassword || "Demo@2026"}</div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { UserProfile } from "../../types";
 import { LeadersLogo } from "../common/LeadersLogo";
+import { USER_PROFILES } from "../../services/mockData";
 import {
   Sparkles,
   Shield,
@@ -22,6 +23,7 @@ interface NavbarProps {
   isAuditView?: boolean;
   onResetToSelect?: () => void;
   currentProfile: UserProfile;
+  onSwitchProfile?: (profile: UserProfile) => void;
   onOpenRoleModal?: () => void;
   onGoHome?: () => void;
   onSignOut?: () => void;
@@ -33,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   isAuditView = false,
   onResetToSelect,
   currentProfile,
+  onSwitchProfile,
   onOpenRoleModal,
   onGoHome,
   onSignOut
@@ -98,32 +101,32 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Center Navigation Products */}
-          <nav data-testid="global-nav" className="hidden lg:flex items-center gap-1">
+          <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
             <button
               onClick={() => onProductChange("pitch")}
-              className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "pitch"
-                  ? "text-[#0B1A2C] bg-[#D4A24C] shadow-[0_4px_16px_-4px_rgba(212,162,76,0.5)]"
+                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
-              Strength Audit
+              Pitch / Audit
             </button>
             <button
               onClick={() => onProductChange("grievances")}
-              className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "grievances"
-                  ? "text-[#0B1A2C] bg-[#D4A24C]"
+                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
-              Grievance CRM
+              Grievances
             </button>
             <button
               onClick={() => onProductChange("volunteers")}
-              className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "volunteers"
-                  ? "text-[#0B1A2C] bg-[#D4A24C]"
+                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
@@ -131,9 +134,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => onProductChange("webbuilder")}
-              className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "webbuilder"
-                  ? "text-[#0B1A2C] bg-[#D4A24C]"
+                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
@@ -141,9 +144,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => onProductChange("governance")}
-              className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 activeProduct === "governance"
-                  ? "text-[#0B1A2C] bg-[#D4A24C]"
+                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
               }`}
             >
@@ -166,17 +169,34 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 bg-[#142B45] border border-[#D4A24C]/25 rounded-lg hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
-                title="User profile menu"
+                title="User profile & party identity menu"
               >
-                <img
-                  src={currentProfile.avatar}
-                  alt={currentProfile.name}
-                  className="w-6 h-6 rounded-full object-cover border border-[#D4A24C]/40"
-                />
+                <div className="relative">
+                  <img
+                    src={currentProfile.avatar}
+                    alt={currentProfile.name}
+                    className="w-6 h-6 rounded-full object-cover border border-[#D4A24C]/40"
+                  />
+                  {currentProfile.partyEmoji && (
+                    <span className="absolute -bottom-1 -right-1 text-[10px] drop-shadow-xs">
+                      {currentProfile.partyEmoji}
+                    </span>
+                  )}
+                </div>
                 <div className="hidden sm:flex flex-col text-left">
-                  <span className="text-xs font-bold text-[#F5EFE0] leading-none">
-                    {currentProfile.name.split(" ")[0]}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-[#F5EFE0] leading-none">
+                      {currentProfile.name.split(" ")[0]}
+                    </span>
+                    {currentProfile.partyAbbr && (
+                      <span
+                        className="px-1.5 py-0.2 rounded text-[9px] font-bold text-white shadow-2xs"
+                        style={{ backgroundColor: currentProfile.partyColor || "#B45309" }}
+                      >
+                        {currentProfile.partyAbbr}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-[#D4A24C] mt-0.5">
                     {currentProfile.role.replace("_", " ")}
                   </span>
@@ -186,25 +206,83 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* User Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0D2137] border border-[#D4A24C]/30 shadow-2xl p-2 z-50 animate-fadeIn">
-                  <div className="p-2.5 border-b border-[#1E3A5A] mb-1">
-                    <div className="text-xs font-bold text-[#F5EFE0]">{currentProfile.name}</div>
-                    <div className="text-[11px] text-[#B9AF95] truncate">{currentProfile.email}</div>
-                    <div className="mt-1.5 inline-flex items-center text-[10px] font-semibold text-[#D4A24C] bg-[#071322] px-2 py-0.5 rounded border border-[#D4A24C]/30">
-                      <Shield className="w-3 h-3 mr-1 text-[#D4A24C]" />
-                      {currentProfile.clearanceLevel}
+                <div className="absolute right-0 mt-2 w-72 rounded-xl bg-[#0D2137] border border-[#D4A24C]/30 shadow-2xl p-2.5 z-50 animate-fadeIn">
+                  <div className="p-2.5 border-b border-[#1E3A5A] mb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-bold text-[#F5EFE0]">{currentProfile.name}</div>
+                      {currentProfile.partyAbbr && (
+                        <span
+                          className="px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-2xs flex items-center gap-1"
+                          style={{ backgroundColor: currentProfile.partyColor || "#B45309" }}
+                        >
+                          <span>{currentProfile.partyEmoji || "🏛️"}</span>
+                          <span>{currentProfile.partyAbbr}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-[#B9AF95] truncate mt-0.5">{currentProfile.email}</div>
+                    <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center text-[10px] font-semibold text-[#D4A24C] bg-[#071322] px-2 py-0.5 rounded border border-[#D4A24C]/30">
+                        <Shield className="w-3 h-3 mr-1 text-[#D4A24C]" />
+                        {currentProfile.clearanceLevel.split("(")[0]}
+                      </span>
                     </div>
                   </div>
+
+                  {/* Quick Party Persona Switcher */}
+                  {onSwitchProfile && (
+                    <div className="mb-2 pb-2 border-b border-[#1E3A5A]">
+                      <div className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center justify-between">
+                        <span>Switch Party Persona</span>
+                        <span className="text-[#B9AF95]">Auto-Themes UI</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
+                        {[
+                          { id: "user-tdp-cand", label: "TDP Leader", abbr: "TDP", emoji: "🚲", color: "#FFD200" },
+                          { id: "user-ysrcp-dir", label: "YSRCP Lead", abbr: "YSRCP", emoji: "☀️", color: "#0055A5" },
+                          { id: "user-jsp-strategist", label: "JSP Strategist", abbr: "JSP", emoji: "⭐", color: "#D62828" },
+                          { id: "user-bjp-coord", label: "BJP Lead", abbr: "BJP", emoji: "🪷", color: "#FF9933" },
+                          { id: "user-inc-lead", label: "INC President", abbr: "INC", emoji: "✋", color: "#138808" },
+                          { id: "user-brs-analyst", label: "BRS Media", abbr: "BRS", emoji: "🚗", color: "#FF69B4" },
+                          { id: "user-aap-vol", label: "AAP Cadre", abbr: "AAP", emoji: "🧹", color: "#0072B8" },
+                          { id: "user-admin", label: "Super Admin", abbr: "ADM", emoji: "⚡", color: "#64748B" }
+                        ].map((p) => {
+                          const isActive = currentProfile.id === p.id;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                const found = USER_PROFILES.find((u) => u.id === p.id);
+                                if (found) {
+                                  onSwitchProfile(found);
+                                  setIsUserMenuOpen(false);
+                                }
+                              }}
+                              className={`p-1.5 rounded-lg border text-left flex items-center gap-1.5 text-[11px] transition-all cursor-pointer ${
+                                isActive
+                                  ? "bg-[#1E3A5A] text-white border-[#D4A24C] font-bold"
+                                  : "bg-[#071322] text-[#D8CFB8] border-[#1E3A5A] hover:bg-[#142B45]"
+                              }`}
+                            >
+                              <span>{p.emoji}</span>
+                              <span className="truncate">{p.abbr}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       onProductChange("governance");
                     }}
-                    className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left"
+                    className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
                   >
                     <UserCheck className="w-4 h-4 text-[#D4A24C]" />
-                    <span>Role & Permissions Settings</span>
+                    <span>Role & Party Customizer</span>
                   </button>
 
                   {onGoHome && (
@@ -213,7 +291,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsUserMenuOpen(false);
                         onGoHome();
                       }}
-                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left"
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
                     >
                       <Globe className="w-4 h-4 text-[#D4A24C]" />
                       <span>View Public Marketing Page</span>
@@ -226,7 +304,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsUserMenuOpen(false);
                         onSignOut();
                       }}
-                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 rounded-lg transition-colors text-left mt-1 border-t border-[#1E3A5A]"
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 rounded-lg transition-colors text-left mt-1 border-t border-[#1E3A5A] cursor-pointer"
                     >
                       <LogOut className="w-4 h-4 text-rose-400" />
                       <span>Sign Out</span>

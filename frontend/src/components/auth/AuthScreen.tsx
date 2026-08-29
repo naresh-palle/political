@@ -180,11 +180,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
               <button
                 type="submit"
                 data-testid="auth-submit-btn"
-                className="group w-full inline-flex items-center justify-center px-5 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-[13.5px] font-bold rounded-md transition-all shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)]"
+                className="group w-full inline-flex items-center justify-center px-5 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-[13.5px] font-bold rounded-md transition-all shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)] cursor-pointer"
               >
                 {mode === "signin" ? "Sign in" : "Create account"}
                 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
               </button>
+
+              {/* Quick Party Persona One-Click Access */}
+              <div className="pt-2 border-t border-[#22405E] space-y-2">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-[#D4A24C] text-center">
+                  Quick Demo Login by Party
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {USER_PROFILES.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => onAuthenticated(p)}
+                      className="p-1.5 rounded bg-[#0A1A2B] border border-[#22405E] hover:border-[#D4A24C] text-left flex items-center gap-1.5 text-[11px] text-[#F5EFE0] transition-colors cursor-pointer"
+                    >
+                      <span>{p.partyEmoji || "🏛️"}</span>
+                      <div className="truncate">
+                        <span className="font-bold">{p.partyAbbr || "ADM"}:</span>{" "}
+                        <span className="text-[#B9AF95] text-[10px]">{p.name.split(" ")[0]}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <p className="text-[11px] text-center text-[#8A8E9B]">
                 By continuing you agree to Leader's Lens Terms & Confidentiality Framework.

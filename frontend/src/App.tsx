@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { HomePage } from "./components/marketing/HomePage";
@@ -26,6 +26,7 @@ import { CampaignWebsiteGenerator } from "./components/webbuilder/CampaignWebsit
 import { RoleManagement } from "./components/governance/RoleManagement";
 import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo, ElectedRepresentative, CandidateType } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
+import { politicalApiService } from "./services/api";
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
@@ -71,6 +72,27 @@ export function App() {
     } catch {}
     return USER_PROFILES[0];
   });
+
+  // Dynamically apply party theme tokens based on active user's political party
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const parties = await politicalApiService.getPoliticalParties();
+      if (!mounted) return;
+      const userPartyId = currentProfile.partyId || "TDP";
+      const matchedParty = parties.find((p) => p.id === userPartyId);
+      if (matchedParty) {
+        document.documentElement.style.setProperty("--party-primary", matchedParty.primaryColor || "#FFD200");
+        document.documentElement.style.setProperty("--party-secondary", matchedParty.secondaryColor || "#B45309");
+        document.documentElement.style.setProperty("--party-accent", matchedParty.accentColor || "#F59E0B");
+        document.documentElement.style.setProperty("--party-gradient-start", matchedParty.gradientStart || matchedParty.primaryColor || "#FFD200");
+        document.documentElement.style.setProperty("--party-gradient-end", matchedParty.gradientEnd || matchedParty.secondaryColor || "#EAB308");
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [currentProfile]);
 
   const [auditData, setAuditData] = useState<AuditReport | null>(null);
 
@@ -195,6 +217,7 @@ export function App() {
           isAuditView={viewState === "audit"}
           onResetToSelect={handleResetToSelect}
           currentProfile={currentProfile}
+          onSwitchProfile={handleSwitchProfile}
           onGoHome={() => setRoute("home")}
           onSignOut={handleSignOut}
         />

@@ -22,6 +22,11 @@ export interface UserProfile {
   avatar: string;
   assignedConstituency: string;
   clearanceLevel: "Tier 0 (Master Admin Clearance)" | "Level 1 (Full Access)" | "Level 2 (Operations)" | "Level 3 (Field Only)" | "Executive Briefing Only";
+  partyId?: string;
+  partyName?: string;
+  partyAbbr?: string;
+  partyColor?: string;
+  partyEmoji?: string;
   permissions: {
     canExportReports: boolean;
     canEditStrategy: boolean;
