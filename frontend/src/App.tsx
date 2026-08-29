@@ -34,6 +34,10 @@ const ROUTE_STORAGE_KEY = "leaders_lens_route";
 const PRODUCT_STORAGE_KEY = "leaders_lens_active_product";
 
 export function App() {
+  return <AppInner />;
+}
+
+function AppInner() {
   const [route, setRoute] = useState<"home" | "auth" | "app">(() => {
     try {
       const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -115,13 +119,12 @@ export function App() {
     } catch {}
   };
 
-  const handleAuthenticated = (profile: UserProfile) => {
-    setCurrentProfile(profile);
-    setRoute("app");
+  const handleAuthenticated = (user: UserProfile) => {
+    setCurrentProfile(user);
     try {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
-      localStorage.setItem(ROUTE_STORAGE_KEY, "app");
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     } catch {}
+    setRoute("app");
   };
 
   const handleSignOut = () => {
@@ -185,9 +188,28 @@ export function App() {
     setViewState("select");
   };
 
+  const isPartyUser = Boolean(currentProfile?.partyId);
+
   return (
     <PartyThemeProvider authenticatedUser={currentProfile}>
-      <div className="min-h-screen bg-[#FBFBF9] text-[#121316] flex flex-col font-sans selection:bg-[#0B1A2C] selection:text-white">
+      <div
+        className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${
+          isPartyUser
+            ? "text-slate-900 selection:bg-black selection:text-white"
+            : "bg-[#0B1A2C] text-[#F5EFE0] selection:bg-[#D4A24C] selection:text-black"
+        }`}
+        style={
+          isPartyUser
+            ? {
+                backgroundColor: "var(--party-light-bg, #FEFCE8)",
+                color: "var(--party-text, #0F172A)"
+              }
+            : {
+                backgroundColor: "#0B1A2C",
+                color: "#F5EFE0"
+              }
+        }
+      >
         {route === "home" ? (
           <HomePage onEnter={() => setRoute("auth")} />
         ) : route === "auth" ? (

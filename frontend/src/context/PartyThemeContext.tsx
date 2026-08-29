@@ -6,7 +6,7 @@ const NEUTRAL_THEME = {
   primary: "#D4A24C",
   secondary: "#B45309",
   accent: "#E07A1F",
-  lightBg: "#FAF9F5",
+  lightBg: "#0B1A2C",
   darkBg: "#0B1A2C",
   text: "#F5EFE0",
   muted: "#B9AF95",
