@@ -1,0 +1,92 @@
+[
+  {
+    "id": "MDL-KDP-URB",
+    "stateId": "AP",
+    "assemblyConstituencyId": "KDP-AC",
+    "name": "Kadapa Urban",
+    "code": "M-01",
+    "totalVillages": 8,
+    "totalVoters": 165000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-KDP-RUR",
+    "stateId": "AP",
+    "assemblyConstituencyId": "KDP-AC",
+    "name": "Kadapa Rural",
+    "code": "M-02",
+    "totalVillages": 14,
+    "totalVoters": 72000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-KDP-CNR",
+    "stateId": "AP",
+    "assemblyConstituencyId": "KDP-AC",
+    "name": "Chennur",
+    "code": "M-03",
+    "totalVillages": 12,
+    "totalVoters": 48000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-PLV-01",
+    "stateId": "AP",
+    "assemblyConstituencyId": "PLV-AC",
+    "name": "Pulivendula Town",
+    "code": "M-01",
+    "totalVillages": 10,
+    "totalVoters": 95000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-PLV-02",
+    "stateId": "AP",
+    "assemblyConstituencyId": "PLV-AC",
+    "name": "Vempalli",
+    "code": "M-02",
+    "totalVillages": 16,
+    "totalVoters": 68000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-PTH-01",
+    "stateId": "AP",
+    "assemblyConstituencyId": "PTH-AC",
+    "name": "Pithapuram Urban",
+    "code": "M-01",
+    "totalVillages": 11,
+    "totalVoters": 112000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-GJW-01",
+    "stateId": "TG",
+    "assemblyConstituencyId": "GJW-AC",
+    "name": "Gajwel Central",
+    "code": "M-01",
+    "totalVillages": 15,
+    "totalVoters": 120000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-KDG-01",
+    "stateId": "TG",
+    "assemblyConstituencyId": "KDG-AC",
+    "name": "Kodangal Mandal",
+    "code": "M-01",
+    "totalVillages": 18,
+    "totalVoters": 98000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-GSM-01",
+    "stateId": "TG",
+    "assemblyConstituencyId": "GSM-AC",
+    "name": "Goshamahal Central",
+    "code": "M-01",
+    "totalVillages": 6,
+    "totalVoters": 142000,
+    "isActive": true
+  }
+]
