@@ -302,19 +302,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   )}
 
-                  {onGoHome && (
-                    <button
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        onGoHome();
-                      }}
-                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
-                    >
-                      <Globe className="w-4 h-4 text-[#D4A24C]" />
-                      <span>View Public Marketing Page</span>
-                    </button>
-                  )}
-
                   {onSignOut && (
                     <button
                       onClick={() => {

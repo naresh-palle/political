@@ -250,7 +250,6 @@ function AppInner() {
               onResetToSelect={handleResetToSelect}
               currentProfile={currentProfile}
               onSwitchProfile={handleSwitchProfile}
-              onGoHome={() => setRoute("home")}
               onSignOut={handleSignOut}
             />
 
