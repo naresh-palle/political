@@ -114,7 +114,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 
   return (
     <div
-      className="hero-dark min-h-screen flex flex-col justify-between px-4 py-8 sm:py-12 relative"
+      className="hero-dark min-h-screen flex flex-col items-center justify-center px-4 py-8 relative"
       style={{
         backgroundImage: "url(./images/party-backgrounds/admin-bg.jpg)",
         backgroundSize: "cover",
@@ -123,181 +123,82 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         backgroundAttachment: "fixed"
       }}
     >
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[#0B1A2C]/65 backdrop-blur-[0.5px]" aria-hidden="true" />
-      <div className="relative z-10 flex-1 flex flex-col justify-between max-w-5xl mx-auto w-full">
-        {/* Top Branding Bar */}
-        <div className="w-full flex items-center justify-between pb-6">
-          <div className="flex items-center gap-2.5">
-            <LeadersLogo size={32} />
-            <span className="font-display text-[20px] cream-text leading-none">
-              Leader's <span className="italic gold-text">Lens</span>
-            </span>
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[#0B1A2C]/75 backdrop-blur-sm" aria-hidden="true" />
+      
+      <div className="relative z-10 w-full max-w-md mx-auto my-auto animate-rise">
+        {/* Single Company Logo and Name */}
+        <div className="flex flex-col items-center justify-center mb-6 text-center">
+          <div className="p-3 rounded-2xl bg-[#0E2137]/80 border border-[#D4A24C]/40 shadow-xl mb-3">
+            <LeadersLogo size={44} />
           </div>
-
-          <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/30">
-            Official Access Gateway
-          </span>
-        </div>
-
-      <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center animate-rise flex-1">
-        {/* Editorial left */}
-        <div className="lg:col-span-3 space-y-7">
-          <div className="flex items-center gap-3">
-            <LeadersLogo size={40} />
-            <div>
-              <div className="font-display text-[22px] cream-text leading-none">
-                Leader's <span className="italic gold-text">Lens</span>
-              </div>
-              <div className="eyebrow text-[#D4A24C] mt-1">Political Intelligence</div>
-            </div>
-          </div>
-
-          <h1 className="font-display text-[34px] sm:text-[40px] lg:text-[48px] leading-[1.05] tracking-[-0.02em]">
-            <span className="cream-text">Sign in to your</span>{" "}
-            <span className="italic gold-text">command room.</span>
+          <h1 className="font-display text-3xl cream-text leading-none tracking-tight">
+            Leader's <span className="italic gold-text">Lens</span>
           </h1>
-          <p className="text-sm text-[#D8CFB8] max-w-md leading-relaxed">
-            Constituency intelligence, grievance operations and volunteer command — access
-            calibrated to your role, from the field to the executive briefing.
+          <p className="text-[11px] text-[#D4A24C] font-mono uppercase tracking-widest mt-1.5 font-semibold">
+            Political Intelligence Platform
           </p>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2 text-[11px] text-[#B9AF95]">
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Role-based access</span>
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" /> Verified ECI Data Hierarchy</span>
-          </div>
-
-          {/* Quick Demo Credentials Selector */}
-          <div className="p-4 rounded-xl bg-[#0E2137]/90 border border-[#D4A24C]/30 space-y-2.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
-              Quick 4-Tier Persona Login:
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("admin@leaderslens.ai");
-                  setPassword("SuperAdmin@2026");
-                }}
-                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
-              >
-                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 1: PLATFORM ADMIN</strong>
-                <span className="text-[#8A8E9B] text-[9.5px] block truncate">admin@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[9.5px] font-mono">SuperAdmin@2026</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("mla.kadapa@leaderslens.ai");
-                  setPassword("MlaKadapa@2026");
-                }}
-                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
-              >
-                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 2: POLITICAL (MLA)</strong>
-                <span className="text-[#8A8E9B] text-[9.5px] block truncate">mla.kadapa@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[9.5px] font-mono">MlaKadapa@2026</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("director.kadapa.urban@leaderslens.ai");
-                  setPassword("DirectorKadapaUrban@2026");
-                }}
-                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
-              >
-                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 3: DIRECTOR</strong>
-                <span className="text-[#8A8E9B] text-[9.5px] block truncate">director.kadapa.urban@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[9.5px] font-mono">DirectorKadapaUrban@2026</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("volunteer.kadapa.urban1@leaderslens.ai");
-                  setPassword("VolunteerKadapa1@2026");
-                }}
-                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
-              >
-                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 4: VOLUNTEER</strong>
-                <span className="text-[#8A8E9B] text-[9.5px] block truncate">volunteer.kadapa.urban1@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[9.5px] font-mono">VolunteerKadapa1@2026</span>
-              </button>
+        {/* Clean Sign In Card */}
+        <div
+          data-testid="auth-card"
+          className="bg-[#0E2137]/90 backdrop-blur-md border border-[#D4A24C]/30 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] overflow-hidden"
+        >
+          {/* Card Header */}
+          <div className="p-5 border-b border-[#22405E] bg-[#071322]/70 flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center">
+              <Lock className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-[#F5EFE0] tracking-wide">Sign In</h2>
+              <p className="text-[11.5px] text-[#8A8E9B]">Enter your credentials to continue</p>
             </div>
           </div>
 
-          <div className="pt-2 text-[11px] text-[#8E9CAE]">
-            Developed and Maintained by{" "}
-            <a
-              href="https://palramai.in"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[#D4A24C] hover:underline font-semibold"
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5">
+            <Field label="Work email" icon={<Mail className="w-3.5 h-3.5" />}>
+              <input
+                data-testid="email-input"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@leaderslens.ai"
+                className={darkInput}
+                autoComplete="email"
+              />
+            </Field>
+
+            <Field label="Password" icon={<KeyRound className="w-3.5 h-3.5" />}>
+              <input
+                data-testid="password-input"
+                type="password"
+                required
+                minLength={4}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className={darkInput}
+                autoComplete="current-password"
+              />
+            </Field>
+
+            <button
+              type="submit"
+              data-testid="auth-submit-btn"
+              disabled={isLoading}
+              className="group w-full inline-flex items-center justify-center px-5 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-sm font-bold rounded-xl transition-all shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)] cursor-pointer disabled:opacity-50"
             >
-              palramai.in
-            </a>
-          </div>
+              <span>{isLoading ? "Signing in..." : "Sign In"}</span>
+              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+            </button>
+
+            <p className="text-[11px] text-center text-[#8A8E9B] pt-1">
+              Protected by Leader's Lens Security Framework
+            </p>
+          </form>
         </div>
-
-        {/* Auth card right */}
-        <div className="lg:col-span-2">
-          <div
-            data-testid="auth-card"
-            className="bg-[#0E2137]/85 backdrop-blur border border-[#D4A24C]/25 rounded-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.55)] overflow-hidden"
-          >
-            {/* Header */}
-            <div className="p-5 border-b border-[#22405E] bg-[#071322]/60 flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center">
-                <Lock className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider">Executive Sign In</h3>
-                <p className="text-[11px] text-[#8A8E9B]">Enter official credentials or select persona</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5">
-              <Field label="Work email" icon={<Mail className="w-3.5 h-3.5" />}>
-                <input
-                  data-testid="email-input"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@leaderslens.ai"
-                  className={darkInput}
-                />
-              </Field>
-              <Field label="Password" icon={<KeyRound className="w-3.5 h-3.5" />}>
-                <input
-                  data-testid="password-input"
-                  type="password"
-                  required
-                  minLength={4}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className={darkInput}
-                />
-              </Field>
-
-              <button
-                type="submit"
-                data-testid="auth-submit-btn"
-                disabled={isLoading}
-                className="group w-full inline-flex items-center justify-center px-5 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-[13.5px] font-bold rounded-md transition-all shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)] cursor-pointer disabled:opacity-50"
-              >
-                <span>{isLoading ? "Authenticating..." : "Sign in to Command Room"}</span>
-                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-              </button>
-
-              <p className="text-[11px] text-center text-[#8A8E9B] pt-1">
-                By continuing you agree to Leader's Lens Terms & Confidentiality Framework.
-              </p>
-            </form>
-          </div>
-        </div>
-      </div>
       </div>
     </div>
   );
