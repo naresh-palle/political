@@ -62,7 +62,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     currentUser.role === "campaign_manager" ||
     currentUser.role === "party_admin";
   const isAdmin =
-    currentUser.primaryRole === "ADMIN" ||
+    currentUser.primaryRole === "SUPER_ADMIN" ||
+    currentUser.primaryRole === "POLITICAL_ADMIN" ||
+    currentUser.isPlatformAdmin ||
+    currentUser.isPoliticalAdmin ||
     currentUser.roleId === "SUPER_ADMIN" ||
     currentUser.roleId === "ADMIN" ||
     currentUser.role === "super_admin";

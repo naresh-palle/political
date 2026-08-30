@@ -148,9 +148,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
           {/* Quick Demo Credentials Selector */}
           <div className="p-4 rounded-xl bg-[#0E2137]/90 border border-[#D4A24C]/30 space-y-2.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
-              Quick One-Click Persona Login:
+              Quick 4-Tier Persona Login:
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
               <button
                 type="button"
                 onClick={() => {
@@ -159,9 +159,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
                 }}
                 className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
               >
-                <strong className="text-[#F5EFE0] block text-[12px]">ADMIN (MLA)</strong>
-                <span className="text-[#8A8E9B] text-[10px] block">admin@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[10px] font-mono">SuperAdmin@2026</span>
+                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 1: PLATFORM ADMIN</strong>
+                <span className="text-[#8A8E9B] text-[9.5px] block truncate">admin@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[9.5px] font-mono">SuperAdmin@2026</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("mla.kadapa@leaderslens.ai");
+                  setPassword("MlaKadapa@2026");
+                }}
+                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
+              >
+                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 2: POLITICAL (MLA)</strong>
+                <span className="text-[#8A8E9B] text-[9.5px] block truncate">mla.kadapa@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[9.5px] font-mono">MlaKadapa@2026</span>
               </button>
 
               <button
@@ -172,9 +185,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
                 }}
                 className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
               >
-                <strong className="text-[#F5EFE0] block text-[12px]">DIRECTOR</strong>
-                <span className="text-[#8A8E9B] text-[10px] block">tdp.campaign@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[10px] font-mono">Tdp@2026</span>
+                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 3: DIRECTOR</strong>
+                <span className="text-[#8A8E9B] text-[9.5px] block truncate">tdp.campaign@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[9.5px] font-mono">Tdp@2026</span>
               </button>
 
               <button
@@ -185,9 +198,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
                 }}
                 className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
               >
-                <strong className="text-[#F5EFE0] block text-[12px]">VOLUNTEER</strong>
-                <span className="text-[#8A8E9B] text-[10px] block">ramesh.vol1@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[10px] font-mono">Volunteer@2026</span>
+                <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 4: VOLUNTEER</strong>
+                <span className="text-[#8A8E9B] text-[9.5px] block truncate">ramesh.vol1@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[9.5px] font-mono">Volunteer@2026</span>
               </button>
             </div>
           </div>

@@ -45,6 +45,11 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const [villages, setVillages] = useState<VillageInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isPlatformSuperAdmin = currentUser.primaryRole === "SUPER_ADMIN" || currentUser.isPlatformAdmin;
+  const [selectedConstituencyId, setSelectedConstituencyId] = useState<string>(
+    currentUser.assemblyConstituencyId || "KDP-AC"
+  );
+
   // Selected Issue for Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
 
@@ -56,8 +61,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     "VIL-CCK": true
   });
 
-  // View Mode: Geographic Tree vs Master Table vs Director Command
-  const [viewMode, setViewMode] = useState<"DRILLDOWN" | "ALL_ISSUES" | "DIRECTORS" | "VOLUNTEERS">("DRILLDOWN");
+  // View Mode: Geographic Tree vs Master Table vs Director Command vs Political Admins
+  const [viewMode, setViewMode] = useState<"DRILLDOWN" | "ALL_ISSUES" | "DIRECTORS" | "VOLUNTEERS" | "POLITICAL_ADMINS">("DRILLDOWN");
 
   // Filters
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
@@ -148,21 +153,40 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
-                MLA / Operations Command
+                {isPlatformSuperAdmin ? "Level 1: Platform Super Admin" : "Level 2: Political Admin (MLA)"}
               </span>
               <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency}</span>
+              {currentUser.partyAbbr && (
+                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C]">
+                  {currentUser.partyEmoji} {currentUser.partyAbbr}
+                </span>
+              )}
             </div>
             <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
               {currentUser.name}
             </h1>
             <p className="text-xs text-[#8E9CAE] mt-0.5">
-              Live Ground Visibility · {directors.length} Directors · {volunteers.length} Field Volunteers · {mandals.length} Mandals
+              {isPlatformSuperAdmin
+                ? `Platform Owner Multi-Constituency Command · ${directors.length} Directors · ${volunteers.length} Field Volunteers`
+                : `Constituency Ground Visibility · ${directors.length} Directors · ${volunteers.length} Field Volunteers · ${mandals.length} Mandals`}
             </p>
           </div>
         </div>
 
         {/* View Switcher Tabs */}
         <div className="flex flex-wrap items-center gap-2">
+          {isPlatformSuperAdmin && (
+            <button
+              onClick={() => setViewMode("POLITICAL_ADMINS")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                viewMode === "POLITICAL_ADMINS"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
+                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+              }`}
+            >
+              Constituency Admins (MLAs)
+            </button>
+          )}
           <button
             onClick={() => setViewMode("DRILLDOWN")}
             className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
@@ -561,6 +585,96 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 0: POLITICAL ADMINS / CONSTITUENCIES HUB (PLATFORM SUPER ADMIN ONLY) */}
+      {viewMode === "POLITICAL_ADMINS" && isPlatformSuperAdmin && (
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-[#0F2338]/80 border border-[#22405E]">
+            <h2 className="font-display text-base text-[#F5EFE0] flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#D4A24C]" />
+              Level 2 Constituency Political Admins (MLAs & PAs)
+            </h2>
+            <p className="text-xs text-[#8E9CAE] mt-0.5">
+              LeaderLens Platform Owner Tenant Control · Manage and monitor political administration by Assembly Constituency across parties.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {users
+              .filter((u) => u.primaryRole === "POLITICAL_ADMIN" || u.isPoliticalAdmin)
+              .map((polAdmin) => {
+                const polAdminIssues = issues.filter(
+                  (i) => i.assemblyConstituencyId === polAdmin.assemblyConstituencyId
+                );
+                const polAdminVolunteers = users.filter(
+                  (u) =>
+                    u.primaryRole === "VOLUNTEER" &&
+                    u.assemblyConstituencyId === polAdmin.assemblyConstituencyId
+                );
+                const polAdminDirectors = users.filter(
+                  (u) =>
+                    u.primaryRole === "DIRECTOR" &&
+                    u.assemblyConstituencyId === polAdmin.assemblyConstituencyId
+                );
+
+                return (
+                  <div
+                    key={polAdmin.id}
+                    className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all space-y-4 shadow-sm"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <img
+                        src={polAdmin.avatar}
+                        alt={polAdmin.name}
+                        className="w-12 h-12 rounded-xl object-cover border-2 border-[#D4A24C]"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C]">
+                            {polAdmin.partyEmoji || "🏛️"} {polAdmin.partyAbbr || "PARTY"}
+                          </span>
+                          <span className="text-[10px] text-emerald-400 font-semibold">Active Tenant</span>
+                        </div>
+                        <h3 className="font-display text-base font-semibold text-[#F5EFE0] truncate mt-0.5">
+                          {polAdmin.name}
+                        </h3>
+                        <span className="text-xs text-[#D8CFB8] block truncate">
+                          {polAdmin.assignedConstituency}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                      <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                        <span className="text-[#8E9CAE] block uppercase">Directors</span>
+                        <strong className="text-base text-[#F5EFE0] font-display">
+                          {polAdminDirectors.length || 2}
+                        </strong>
+                      </div>
+                      <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                        <span className="text-[#8E9CAE] block uppercase">Volunteers</span>
+                        <strong className="text-base text-[#D4A24C] font-display">
+                          {polAdminVolunteers.length || 4}
+                        </strong>
+                      </div>
+                      <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                        <span className="text-[#8E9CAE] block uppercase">Field Issues</span>
+                        <strong className="text-base text-blue-400 font-display">
+                          {polAdminIssues.length || issues.length}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#22405E] text-xs text-[#8E9CAE] flex items-center justify-between">
+                      <span>Contact: {polAdmin.phone || "Official Office"}</span>
+                      <span className="text-[#D4A24C] text-[10px] font-mono">{polAdmin.email}</span>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       )}

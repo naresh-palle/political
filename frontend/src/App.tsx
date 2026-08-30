@@ -96,14 +96,18 @@ function AppInner() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const primaryRole = currentProfile?.primaryRole || (
-    currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.roleId === "ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.role === "admin"
-      ? "ADMIN"
+    currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.isPlatformAdmin
+      ? "SUPER_ADMIN"
+      : currentProfile?.roleId === "ADMIN" || currentProfile?.role === "admin" || currentProfile?.isPoliticalAdmin
+      ? "POLITICAL_ADMIN"
       : currentProfile?.roleId === "VOLUNTEER" || currentProfile?.role === "volunteer"
       ? "VOLUNTEER"
       : "DIRECTOR"
   );
 
-  const isAdmin = primaryRole === "ADMIN";
+  const isPlatformAdmin = primaryRole === "SUPER_ADMIN";
+  const isPoliticalAdmin = primaryRole === "POLITICAL_ADMIN";
+  const isAdmin = isPlatformAdmin || isPoliticalAdmin;
 
   // Role routing enforcement: non-admins can only access fieldops & grievances
   useEffect(() => {

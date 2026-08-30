@@ -35,7 +35,7 @@ export type UserRole =
 
 export type UserAccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
 
-export type PrimaryRole = "ADMIN" | "DIRECTOR" | "VOLUNTEER";
+export type PrimaryRole = "SUPER_ADMIN" | "POLITICAL_ADMIN" | "DIRECTOR" | "VOLUNTEER";
 
 export interface UserProfile {
   _id?: string;
@@ -44,6 +44,8 @@ export interface UserProfile {
   email: string;
   phone?: string;
   primaryRole?: PrimaryRole;
+  isPlatformAdmin?: boolean;
+  isPoliticalAdmin?: boolean;
   role: UserRole;
   roleId?: AdminUserRole | string;
   roleTitle: string;

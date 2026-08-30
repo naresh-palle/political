@@ -9,10 +9,12 @@ interface FieldOpsManagerProps {
 }
 
 export const FieldOpsManager: React.FC<FieldOpsManagerProps> = ({ currentUser }) => {
-  // Determine Primary Role
+  // Determine 4-tier Primary Role
   const role = currentUser.primaryRole || (
-    currentUser.roleId === "SUPER_ADMIN" || currentUser.roleId === "ADMIN" || currentUser.role === "super_admin" || currentUser.role === "admin"
-      ? "ADMIN"
+    currentUser.roleId === "SUPER_ADMIN" || currentUser.role === "super_admin" || currentUser.isPlatformAdmin
+      ? "SUPER_ADMIN"
+      : currentUser.roleId === "ADMIN" || currentUser.role === "admin" || currentUser.isPoliticalAdmin
+      ? "POLITICAL_ADMIN"
       : currentUser.roleId === "VOLUNTEER" || currentUser.role === "volunteer"
       ? "VOLUNTEER"
       : "DIRECTOR"
@@ -26,5 +28,6 @@ export const FieldOpsManager: React.FC<FieldOpsManagerProps> = ({ currentUser })
     return <DirectorOperationsDashboard currentUser={currentUser} />;
   }
 
+  // Renders for both Level 1 Platform Super Admin and Level 2 Political / Constituency Admin
   return <AdminOperationsDashboard currentUser={currentUser} />;
 };
