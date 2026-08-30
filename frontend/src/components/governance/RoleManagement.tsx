@@ -117,15 +117,13 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   // Determine Current User Clearance Level
   const isSuperAdmin =
     currentProfile.email === "admin@leaderslens.ai" ||
-    currentProfile.primaryRole === "SUPER_ADMIN" ||
-    currentProfile.isPlatformAdmin ||
-    currentProfile.roleId === "SUPER_ADMIN" ||
-    currentProfile.role === "super_admin";
+    currentProfile.email === "support@leaderslens.ai" ||
+    (currentProfile.primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin && !currentProfile.partyId);
 
   const isPoliticalAdmin =
     !isSuperAdmin &&
     (currentProfile.primaryRole === "POLITICAL_ADMIN" ||
-      currentProfile.isPoliticalAdmin ||
+      !!currentProfile.isPoliticalAdmin ||
       currentProfile.roleId === "ADMIN" ||
       currentProfile.role === "admin");
 
@@ -147,10 +145,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       const users = await politicalApiService.getUsers();
       if (users && users.length > 0) {
         setProfiles(users);
+        return;
       }
     } catch (e) {
       console.error("Failed to load users", e);
     }
+    setProfiles(USER_PROFILES);
   };
 
   // Check if current user can create users

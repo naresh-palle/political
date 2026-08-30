@@ -45,7 +45,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const [villages, setVillages] = useState<VillageInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isPlatformSuperAdmin = currentUser.primaryRole === "SUPER_ADMIN" || currentUser.isPlatformAdmin;
+  const isPlatformSuperAdmin =
+    currentUser.email === "admin@leaderslens.ai" ||
+    currentUser.email === "support@leaderslens.ai" ||
+    (currentUser.primaryRole === "SUPER_ADMIN" && !!currentUser.isPlatformAdmin && !currentUser.partyId);
   const [selectedConstituencyId, setSelectedConstituencyId] = useState<string>(
     currentUser.assemblyConstituencyId || "KDP-AC"
   );
@@ -142,40 +145,34 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 animate-fadeIn text-[#F5EFE0]">
-      {/* MLA / PA Executive Command Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#D4A24C]/40 shadow-xl">
-        <div className="flex items-center gap-4">
-          <img
-            src={currentUser.avatar}
-            alt={currentUser.name}
-            className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C]"
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
-                {isPlatformSuperAdmin ? "Level 1: Platform Super Admin" : "Level 2: Political Admin (MLA)"}
-              </span>
-              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency}</span>
-              {currentUser.partyAbbr && (
-                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C]">
-                  {currentUser.partyEmoji} {currentUser.partyAbbr}
+      {/* Executive Command Header */}
+      {isPlatformSuperAdmin ? (
+        /* LEVEL 1: SUPER ADMIN MASTER BANNER */
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#D4A24C]/40 shadow-xl">
+          <div className="flex items-center gap-4">
+            <img
+              src={currentUser.avatar}
+              alt={currentUser.name}
+              className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C]"
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
+                  Level 1: Platform Super Admin
                 </span>
-              )}
+                <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "National Command Center"}</span>
+              </div>
+              <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
+                {currentUser.name}
+              </h1>
+              <p className="text-xs text-[#8E9CAE] mt-0.5">
+                Platform Master Oversight · {directors.length} Directors · {volunteers.length} Field Volunteers across all states
+              </p>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
-              {currentUser.name}
-            </h1>
-            <p className="text-xs text-[#8E9CAE] mt-0.5">
-              {isPlatformSuperAdmin
-                ? `Platform Owner Multi-Constituency Command · ${directors.length} Directors · ${volunteers.length} Field Volunteers`
-                : `Constituency Ground Visibility · ${directors.length} Directors · ${volunteers.length} Field Volunteers · ${mandals.length} Mandals`}
-            </p>
           </div>
-        </div>
 
-        {/* View Switcher Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
-          {isPlatformSuperAdmin && (
+          {/* View Switcher Tabs (Super Admin) */}
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setViewMode("POLITICAL_ADMINS")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
@@ -186,49 +183,153 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             >
               Constituency Admins (MLAs)
             </button>
-          )}
-          <button
-            onClick={() => setViewMode("DRILLDOWN")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-              viewMode === "DRILLDOWN"
-                ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
-            }`}
-          >
-            Geographic Tree
-          </button>
-          <button
-            onClick={() => setViewMode("ALL_ISSUES")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-              viewMode === "ALL_ISSUES"
-                ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
-            }`}
-          >
-            Master Issues ({totalIssues})
-          </button>
-          <button
-            onClick={() => setViewMode("DIRECTORS")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-              viewMode === "DIRECTORS"
-                ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
-            }`}
-          >
-            Directors ({directors.length})
-          </button>
-          <button
-            onClick={() => setViewMode("VOLUNTEERS")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-              viewMode === "VOLUNTEERS"
-                ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
-            }`}
-          >
-            Volunteers ({volunteers.length})
-          </button>
+            <button
+              onClick={() => setViewMode("DRILLDOWN")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                viewMode === "DRILLDOWN"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
+                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+              }`}
+            >
+              Geographic Tree
+            </button>
+            <button
+              onClick={() => setViewMode("ALL_ISSUES")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                viewMode === "ALL_ISSUES"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
+                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+              }`}
+            >
+              Master Issues ({totalIssues})
+            </button>
+            <button
+              onClick={() => setViewMode("DIRECTORS")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                viewMode === "DIRECTORS"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
+                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+              }`}
+            >
+              Directors ({directors.length})
+            </button>
+            <button
+              onClick={() => setViewMode("VOLUNTEERS")}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                viewMode === "VOLUNTEERS"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
+                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+              }`}
+            >
+              Volunteers ({volunteers.length})
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* LEVEL 2: FULL MLA CONSTITUENCY COMMAND PROFILE CARD */
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#10243C] to-[#0A1728] border border-[#D4A24C]/40 shadow-2xl space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+              <div className="relative">
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg"
+                />
+                <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-[#071322] border border-[#D4A24C] text-xs font-mono">
+                  {currentUser.partyEmoji || "🏛️"}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10.5px] font-bold uppercase tracking-widest px-3 py-0.5 rounded-full bg-[#D4A24C] text-[#071322] font-mono">
+                    LEVEL 2: POLITICAL ADMIN (MLA)
+                  </span>
+                  {currentUser.partyName && (
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1.5">
+                      <span>{currentUser.partyEmoji}</span>
+                      <span>{currentUser.partyName} ({currentUser.partyAbbr})</span>
+                    </span>
+                  )}
+                  <span className="text-xs font-medium text-[#8E9CAE] bg-[#071322] px-2.5 py-0.5 rounded-full border border-[#22405E]">
+                    {currentUser.assignedConstituency || "Kadapa AC (AC-132)"}
+                  </span>
+                </div>
+
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#F5EFE0] tracking-tight">
+                  {currentUser.name}
+                </h1>
+
+                <p className="text-xs text-[#D8CFB8] flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span>🏛️ <strong>Role:</strong> Member of the Legislative Assembly (MLA)</span>
+                  <span>📍 <strong>Camp Office:</strong> MLA Camp Office, 7-Roads Junction, Kadapa, AP</span>
+                  <span>📞 <strong>Office Hotline:</strong> {currentUser.phone || "+91 98850 22331"}</span>
+                </p>
+
+                {/* Key Ministerial / MLA Focus Portfolios */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold mr-1">
+                    Constituency Portfolios:
+                  </span>
+                  {["Civic Infrastructure & Drainage", "Drinking Water Pipeline Augmentation", "Public Health & Hospital Care"].map((dept) => (
+                    <span
+                      key={dept}
+                      className="text-[10.5px] px-2.5 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/20 font-medium"
+                    >
+                      {dept}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* View Switcher Tabs (Level 2 MLA) */}
+            <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
+              <button
+                onClick={() => setViewMode("DRILLDOWN")}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                  viewMode === "DRILLDOWN"
+                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                }`}
+              >
+                Constituency Tree
+              </button>
+              <button
+                onClick={() => setViewMode("ALL_ISSUES")}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                  viewMode === "ALL_ISSUES"
+                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                }`}
+              >
+                Constituency Issues ({totalIssues})
+              </button>
+              <button
+                onClick={() => setViewMode("DIRECTORS")}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                  viewMode === "DIRECTORS"
+                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                }`}
+              >
+                My Directors ({directors.length})
+              </button>
+              <button
+                onClick={() => setViewMode("VOLUNTEERS")}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
+                  viewMode === "VOLUNTEERS"
+                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                }`}
+              >
+                Squad Volunteers ({volunteers.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Overview Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -265,22 +366,26 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
-      {/* VIEW 1: INTERACTIVE MLA GEOGRAPHIC DRILLDOWN TREE */}
+      {/* VIEW 1: INTERACTIVE GEOGRAPHIC DRILLDOWN TREE */}
       {viewMode === "DRILLDOWN" && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#0F2338]/80 border border-[#22405E]">
             <div>
               <h2 className="font-display text-base text-[#F5EFE0] flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#D4A24C]" />
-                Constituency Ground Hierarchy: State → AC → Mandal → Village → Volunteer → Issues
+                {isPlatformSuperAdmin
+                  ? "Constituency Ground Hierarchy: State → AC → Mandal → Village → Volunteer → Issues"
+                  : "Constituency Operational Hierarchy · Ground Verification Tree"}
               </h2>
               <p className="text-xs text-[#8E9CAE] mt-0.5">
-                Click any Mandal or Village node to expand real-time status and proof records.
+                {isPlatformSuperAdmin
+                  ? "Click any Mandal or Village node to expand real-time status and proof records."
+                  : "Real-time status, verified field records, and photo proofs across all constituent mandals."}
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs">
               <span className="px-2.5 py-1 rounded bg-[#071322] border border-[#22405E] text-[#D4A24C]">
-                Kadapa AC (AC-132)
+                {currentUser.assignedConstituency || "Kadapa AC (AC-132)"}
               </span>
             </div>
           </div>

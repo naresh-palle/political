@@ -74,8 +74,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       // Filter volunteers assigned to this director
       const assignedVols = allUsers.filter(
         (u) =>
-          u.primaryRole === "VOLUNTEER" &&
-          (u.directorId === currentUser.id || !u.directorId || currentUser.roleId === "SUPER_ADMIN")
+          (u.primaryRole === "VOLUNTEER" || u.roleId === "VOLUNTEER" || u.role === "volunteer") &&
+          (u.directorId === currentUser.id ||
+            u.directorName === currentUser.name ||
+            (u.partyId && currentUser.partyId && u.partyId === currentUser.partyId) ||
+            !u.directorId)
       );
 
       setVolunteers(assignedVols);
