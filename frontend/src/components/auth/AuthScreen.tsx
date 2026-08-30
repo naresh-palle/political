@@ -125,28 +125,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
     >
       <div className="fixed inset-0 pointer-events-none z-0 bg-[#0B1A2C]/65 backdrop-blur-[0.5px]" aria-hidden="true" />
       <div className="relative z-10 flex-1 flex flex-col justify-between max-w-5xl mx-auto w-full">
-        {/* Top back navigation bar */}
+        {/* Top Branding Bar */}
         <div className="w-full flex items-center justify-between pb-6">
-        <button
-          type="button"
-          onClick={onBack}
-          data-testid="auth-back-btn"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] px-3.5 py-2 rounded-lg bg-[#0F2338] border border-[#D4A24C]/30 hover:border-[#D4A24C]/80 transition-all cursor-pointer shadow-sm"
-        >
-          <span>← Back to Overview / Home</span>
-        </button>
+          <div className="flex items-center gap-2.5">
+            <LeadersLogo size={32} />
+            <span className="font-display text-[20px] cream-text leading-none">
+              Leader's <span className="italic gold-text">Lens</span>
+            </span>
+          </div>
 
-        <div
-          onClick={onBack}
-          className="flex items-center gap-2.5 cursor-pointer group"
-          title="Return to Home"
-        >
-          <LeadersLogo size={30} />
-          <span className="font-display text-[18px] cream-text leading-none group-hover:text-[#D4A24C] transition-colors">
-            Leader's <span className="italic gold-text">Lens</span>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/30">
+            Official Access Gateway
           </span>
         </div>
-      </div>
 
       <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center animate-rise flex-1">
         {/* Editorial left */}

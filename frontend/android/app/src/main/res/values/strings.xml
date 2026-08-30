@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Leader\'s Lens</string>
+    <string name="title_activity_main">Leader\'s Lens</string>
+    <string name="package_name">ai.leaderslens.app</string>
+    <string name="custom_url_scheme">ai.leaderslens.app</string>
+</resources>

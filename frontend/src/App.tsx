@@ -38,16 +38,15 @@ export function App() {
 }
 
 function AppInner() {
-  const [route, setRoute] = useState<"home" | "auth" | "app">(() => {
+  const [route, setRoute] = useState<"auth" | "app">(() => {
     try {
       const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-      const savedRoute = localStorage.getItem(ROUTE_STORAGE_KEY) as "home" | "auth" | "app" | null;
-      if (savedUser && (savedRoute === "app" || !savedRoute)) {
+      if (savedUser) {
         return "app";
       }
-      return savedRoute || "home";
+      return "auth";
     } catch {
-      return "home";
+      return "auth";
     }
   });
 
@@ -161,7 +160,7 @@ function AppInner() {
       localStorage.removeItem(ROUTE_STORAGE_KEY);
       localStorage.removeItem(PRODUCT_STORAGE_KEY);
     } catch {}
-    setRoute("home");
+    setRoute("auth");
     setViewState("select");
   };
 
@@ -230,14 +229,9 @@ function AppInner() {
   return (
     <PartyThemeProvider authenticatedUser={currentProfile}>
       <AppCanvas>
-        {route === "home" && (
-          <HomePage onEnter={() => setRoute("auth")} />
-        )}
-
         {route === "auth" && (
           <AuthScreen
             onAuthenticated={handleAuthenticated}
-            onBack={() => setRoute("home")}
           />
         )}
 
