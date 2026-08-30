@@ -164,27 +164,27 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
               <button
                 type="button"
                 onClick={() => {
-                  setEmail("tdp.campaign@leaderslens.ai");
-                  setPassword("Tdp@2026");
+                  setEmail("director.kadapa.urban@leaderslens.ai");
+                  setPassword("DirectorKadapaUrban@2026");
                 }}
                 className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
               >
                 <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 3: DIRECTOR</strong>
-                <span className="text-[#8A8E9B] text-[9.5px] block truncate">tdp.campaign@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[9.5px] font-mono">Tdp@2026</span>
+                <span className="text-[#8A8E9B] text-[9.5px] block truncate">director.kadapa.urban@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[9.5px] font-mono">DirectorKadapaUrban@2026</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setEmail("ramesh.vol1@leaderslens.ai");
-                  setPassword("Volunteer@2026");
+                  setEmail("volunteer.kadapa.urban1@leaderslens.ai");
+                  setPassword("VolunteerKadapa1@2026");
                 }}
                 className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
               >
                 <strong className="text-[#F5EFE0] block text-[11px]">LEVEL 4: VOLUNTEER</strong>
-                <span className="text-[#8A8E9B] text-[9.5px] block truncate">ramesh.vol1@leaderslens.ai</span>
-                <span className="text-[#D4A24C] text-[9.5px] font-mono">Volunteer@2026</span>
+                <span className="text-[#8A8E9B] text-[9.5px] block truncate">volunteer.kadapa.urban1@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[9.5px] font-mono">VolunteerKadapa1@2026</span>
               </button>
             </div>
           </div>
