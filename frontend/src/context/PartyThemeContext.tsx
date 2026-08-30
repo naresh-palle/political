@@ -102,8 +102,13 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
 
   // Load and apply theme for the currently authenticated user's partyId
   const syncUserPartyTheme = useCallback(async () => {
-    if (!authenticatedUser || !authenticatedUser.partyId) {
-      // Neutral platform theme
+    // Platform Super Admins always use Neutral dark theme
+    if (
+      !authenticatedUser ||
+      !authenticatedUser.partyId ||
+      authenticatedUser.primaryRole === "SUPER_ADMIN" ||
+      authenticatedUser.isPlatformAdmin
+    ) {
       setCurrentParty(null);
       applyThemeTokens(NEUTRAL_THEME);
       return;
@@ -131,7 +136,7 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
 
   useEffect(() => {
     syncUserPartyTheme();
-  }, [authenticatedUser?.partyId, syncUserPartyTheme]);
+  }, [authenticatedUser?.id, authenticatedUser?.partyId, authenticatedUser?.primaryRole, syncUserPartyTheme]);
 
   const value = useMemo<PartyThemeContextValue>(() => {
     const isPartyThemeActive = !!currentParty;

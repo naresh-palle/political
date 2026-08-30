@@ -881,45 +881,45 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
           ROLE 2: VOLUNTEER SECTION (Submission Portal Only)
           ========================================================================= */}
       {activeRole === "volunteer" && (
-        <div className="space-y-6 animate-fadeIn">
+        <div className="space-y-6 animate-fadeIn text-[#F5EFE0]">
           {/* Volunteer Not Logged In -> Designated Mobile Login Flow */}
           {!loggedVolunteer ? (
-            <div className="max-w-xl mx-auto bg-white border border-[#E0DED5] rounded-2xl p-6 sm:p-8 shadow-md space-y-6">
+            <div className="max-w-xl mx-auto bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
               <div className="text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-[#D4A24C] flex items-center justify-center mx-auto">
-                  <Lock className="w-6 h-6 text-[#0B1A2C]" />
+                <div className="w-12 h-12 rounded-2xl bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center mx-auto shadow-inner">
+                  <Lock className="w-6 h-6 text-[#D4A24C]" />
                 </div>
-                <h2 className="font-editorial text-2xl font-normal text-[#112233]">
+                <h2 className="font-display text-2xl font-normal text-[#F5EFE0]">
                   Volunteer Field Access
                 </h2>
-                <p className="text-xs text-[#666A78] max-w-sm mx-auto">
+                <p className="text-xs text-[#8E9CAE] max-w-sm mx-auto">
                   Enter your designated mobile number. Only authorized constituency volunteers are permitted to log in and submit grievances.
                 </p>
               </div>
 
               {/* Sample Registered Numbers Notice for quick reference */}
-              <div className="bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl p-3.5 text-xs text-[#4A4E5C] space-y-1.5">
-                <div className="flex items-center space-x-1.5 font-bold text-[#112233] text-[11px] uppercase tracking-wider">
+              <div className="bg-[#071322] border border-[#22405E] rounded-xl p-3.5 text-xs text-[#8E9CAE] space-y-1.5">
+                <div className="flex items-center space-x-1.5 font-bold text-[#D4A24C] text-[11px] uppercase tracking-wider">
                   <Info className="w-3.5 h-3.5 text-[#D4A24C]" />
                   <span>Designated Authorized Numbers:</span>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-1 font-mono-data text-[11px]">
+                <div className="flex flex-wrap gap-2 pt-1 font-mono text-[11px]">
                   {designatedVolunteers.map((v) => (
                     <button
                       key={v.id}
                       type="button"
                       onClick={() => setVolunteerMobileInput(v.mobile)}
-                      className="px-2 py-1 bg-white border border-[#D5D3C8] hover:border-[#D4A24C] rounded text-[#112233] transition-colors"
+                      className="px-2.5 py-1 bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C] rounded-lg text-[#F5EFE0] transition-colors"
                     >
-                      {v.name}: <strong className="text-[#0B1A2C]">{v.mobile}</strong>
+                      {v.name}: <strong className="text-[#D4A24C]">{v.mobile}</strong>
                     </button>
                   ))}
                 </div>
               </div>
 
               {volunteerAuthError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-start space-x-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                <div className="p-3 bg-rose-950/40 border border-rose-800 rounded-xl text-xs text-rose-300 flex items-start space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
                   <span>{volunteerAuthError}</span>
                 </div>
               )}
@@ -927,25 +927,25 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {!otpSent ? (
                 <form onSubmit={handleSendOtp} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider block">
+                    <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider block">
                       Designated Mobile Number
                     </label>
                     <div className="relative">
-                      <Phone className="w-4 h-4 text-[#8A8E9B] absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Phone className="w-4 h-4 text-[#8E9CAE] absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="tel"
                         required
                         placeholder="e.g. 9848012345 or 123456"
                         value={volunteerMobileInput}
                         onChange={(e) => setVolunteerMobileInput(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-sm font-mono-data text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#112233]"
+                        className="w-full pl-9 pr-4 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-sm font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#0B1A2C] hover:bg-[#142B45] text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
+                    className="w-full py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
                   >
                     <span>Request Authentication OTP</span>
                     <ArrowRight className="w-4 h-4" />
@@ -953,18 +953,18 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </form>
               ) : (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-900 flex items-center justify-between">
+                  <div className="p-3 bg-emerald-950/40 border border-emerald-800 rounded-xl text-xs text-emerald-300 flex items-center justify-between">
                     <span className="flex items-center space-x-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       <span>OTP sent to <strong>+91 {volunteerMobileInput}</strong></span>
                     </span>
-                    <span className="font-mono-data font-bold bg-emerald-200 px-2 py-0.5 rounded text-[11px]">
+                    <span className="font-mono font-bold bg-emerald-900/60 border border-emerald-700 text-emerald-200 px-2 py-0.5 rounded text-[11px]">
                       OTP: {simulatedOtp}
                     </span>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider block">
+                    <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider block">
                       Enter 4-Digit OTP Code
                     </label>
                     <input
@@ -973,7 +973,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       maxLength={6}
                       value={enteredOtp}
                       onChange={(e) => setEnteredOtp(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-center text-lg tracking-widest font-mono-data text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#112233]"
+                      className="w-full px-4 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-center text-lg tracking-widest font-mono text-[#D4A24C] focus:outline-none focus:border-[#D4A24C]"
                     />
                   </div>
 
@@ -981,13 +981,13 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
-                      className="w-1/3 py-2.5 bg-[#FAF9F5] hover:bg-[#ECEAE2] border border-[#D5D3C8] text-[#555866] text-xs font-semibold rounded-xl"
+                      className="w-1/3 py-2.5 bg-[#071322] hover:bg-[#142B45] border border-[#22405E] text-[#8E9CAE] text-xs font-semibold rounded-xl transition-colors"
                     >
                       Change Number
                     </button>
                     <button
                       type="submit"
-                      className="w-2/3 py-2.5 bg-[#0B1A2C] hover:bg-[#142B45] text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
+                      className="w-2/3 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <span>Verify & Enter Field Intake</span>
                       <Check className="w-4 h-4" />
@@ -1000,20 +1000,20 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
             /* Logged In Volunteer Intake Experience */
             <div className="space-y-6">
               {/* Volunteer Active Session Header */}
-              <div className="bg-white border border-[#E0DED5] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold font-editorial text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center font-bold font-display text-lg">
                     {loggedVolunteer.name.charAt(0)}
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-sm text-[#112233]">{loggedVolunteer.name}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <span className="font-bold text-sm text-[#F5EFE0]">{loggedVolunteer.name}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40">
                         Designated Field Volunteer
                       </span>
                     </div>
-                    <div className="text-xs text-[#666A78] flex items-center space-x-2 mt-0.5">
-                      <span className="font-mono-data">Mobile: +91 {loggedVolunteer.mobile}</span>
+                    <div className="text-xs text-[#8E9CAE] flex items-center space-x-2 mt-0.5">
+                      <span className="font-mono text-[#D8CFB8]">Mobile: +91 {loggedVolunteer.mobile}</span>
                       <span>·</span>
                       <span>{loggedVolunteer.constituency} ({loggedVolunteer.mandal})</span>
                     </div>
@@ -1024,14 +1024,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <button
                     type="button"
                     onClick={() => setShowVolunteerReceiptList(!showVolunteerReceiptList)}
-                    className="px-3 py-1.5 text-xs font-semibold text-[#112233] bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg hover:bg-[#ECEAE2] transition-colors"
+                    className="px-3 py-1.5 text-xs font-semibold text-[#F5EFE0] bg-[#071322] border border-[#22405E] rounded-lg hover:border-[#D4A24C] transition-colors"
                   >
                     {showVolunteerReceiptList ? "Back to Intake Form" : "My Logged Receipts"}
                   </button>
                   <button
                     type="button"
                     onClick={handleVolunteerLogout}
-                    className="px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors"
+                    className="px-3 py-1.5 text-xs font-semibold text-rose-300 bg-rose-950/40 border border-rose-800 rounded-lg hover:bg-rose-900/60 transition-colors"
                   >
                     Log Out
                   </button>
@@ -1039,47 +1039,47 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Notice of Restrictions */}
-              <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3.5 text-xs text-amber-900 flex items-center justify-between">
+              <div className="bg-[#071322] border border-[#22405E] rounded-xl p-3.5 text-xs text-[#D8CFB8] flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Shield className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                  <Shield className="w-4 h-4 text-[#D4A24C] flex-shrink-0" />
                   <span>
-                    <strong>Field Security Policy:</strong> Volunteers have submission clearance only. You can register citizen grievances and receive receipt IDs. Executive dashboards and editing of submitted tickets are restricted to Managers.
+                    <strong className="text-[#D4A24C]">Field Security Policy:</strong> Volunteers have submission clearance only. You can register citizen grievances and receive receipt IDs. Executive dashboards and editing of submitted tickets are restricted to Managers.
                   </span>
                 </div>
               </div>
 
               {showVolunteerReceiptList ? (
                 /* Volunteer's Personal Submitted Receipts Log */
-                <div className="bg-white border border-[#E0DED5] rounded-2xl p-6 shadow-xs space-y-4">
-                  <h3 className="font-editorial text-xl font-normal text-[#112233]">
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
+                  <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
                     My Submitted Tickets ({grievances.filter((g) => g.submittedByVolunteer?.phone === loggedVolunteer.mobile).length})
                   </h3>
                   <div className="space-y-3">
                     {grievances
                       .filter((g) => g.submittedByVolunteer?.phone === loggedVolunteer.mobile)
                       .map((item) => (
-                        <div key={item.id} className="p-4 rounded-xl border border-[#E0DED5] bg-[#FAF9F5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div key={item.id} className="p-4 rounded-xl border border-[#22405E] bg-[#071322] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
-                              <span className="font-mono-data font-bold text-xs bg-[#112233] text-white px-2 py-0.5 rounded">
+                              <span className="font-mono font-bold text-xs bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 px-2 py-0.5 rounded">
                                 {item.ticketNumber}
                               </span>
-                              <span className="text-xs font-semibold text-[#112233]">{item.citizenName} ({item.citizenType})</span>
+                              <span className="text-xs font-semibold text-[#F5EFE0]">{item.citizenName} ({item.citizenType})</span>
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadge(item.status)}`}>
                                 {item.status}
                               </span>
                             </div>
-                            <p className="text-xs text-[#4A4E5C] line-clamp-1">{item.subject}</p>
-                            <div className="text-[11px] text-[#787C8A]">
+                            <p className="text-xs text-[#D8CFB8] line-clamp-1">{item.subject}</p>
+                            <div className="text-[11px] text-[#8E9CAE]">
                               <span>{item.department} · {item.address?.townMandal}</span>
                               <span className="mx-1.5">·</span>
-                              <span className="font-mono-data">{item.submittedDate}</span>
+                              <span className="font-mono text-[#D8CFB8]">{item.submittedDate}</span>
                             </div>
                           </div>
-                          <div className="text-right sm:border-l border-[#E5E3D8] sm:pl-4 text-xs">
-                            <span className="text-[10px] uppercase text-[#8A8E9B] font-bold block">Assigned PoC</span>
-                            <span className="font-semibold text-[#112233] block">{item.assignee}</span>
-                            <span className="font-mono-data text-[11px] text-[#0F766E]">{item.assigneeContact}</span>
+                          <div className="text-right sm:border-l border-[#22405E] sm:pl-4 text-xs">
+                            <span className="text-[10px] uppercase text-[#8E9CAE] font-bold block">Assigned PoC</span>
+                            <span className="font-semibold text-[#F5EFE0] block">{item.assignee}</span>
+                            <span className="font-mono text-[11px] text-[#D4A24C]">{item.assigneeContact}</span>
                           </div>
                         </div>
                       ))}
@@ -1087,15 +1087,15 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
               ) : (
                 /* Volunteer 2-Section Intake Registration Form */
-                <div className="bg-white border border-[#E0DED5] rounded-2xl p-6 sm:p-8 shadow-md space-y-8">
-                  <div className="border-b border-[#ECEAE2] pb-4">
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-8">
+                  <div className="border-b border-[#22405E] pb-4">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                       Fast-Track Field Intake
                     </span>
-                    <h2 className="font-editorial text-2xl sm:text-3xl font-normal text-[#112233]">
+                    <h2 className="font-display text-2xl sm:text-3xl font-normal text-[#F5EFE0]">
                       Log Citizen Grievance
                     </h2>
-                    <p className="text-xs text-[#666A78] mt-1">
+                    <p className="text-xs text-[#8E9CAE] mt-1">
                       Complete Personal Details and Issue Details. Assignee Point of Contact is auto-fetched directly from the central directory.
                     </p>
                   </div>
@@ -1105,19 +1105,19 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         SECTION 1: PERSONAL DETAILS
                         ========================================= */}
                     <div className="space-y-4">
-                      <div className="flex items-center space-x-2 border-b border-[#F0EFE8] pb-2">
-                        <span className="w-6 h-6 rounded-full bg-[#112233] text-white flex items-center justify-center text-xs font-bold">
+                      <div className="flex items-center space-x-2 border-b border-[#22405E] pb-2">
+                        <span className="w-6 h-6 rounded-full bg-[#D4A24C] text-[#0B1A2C] flex items-center justify-center text-xs font-bold">
                           1
                         </span>
-                        <h3 className="font-editorial text-xl font-normal text-[#112233]">
+                        <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
                           Personal Details Section
                         </h3>
                       </div>
 
                       {/* Citizen Classification Option: Voter / Cadre / Leader */}
                       <div className="space-y-1.5">
-                        <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider block">
-                          Citizen Classification <span className="text-rose-500">*</span>
+                        <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider block">
+                          Citizen Classification <span className="text-rose-400">*</span>
                         </label>
                         <div className="grid grid-cols-3 gap-3 max-w-md">
                           {(["Voter", "Cadre", "Leader"] as GrievanceCitizenType[]).map((type) => (
@@ -1127,8 +1127,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               onClick={() => setCitizenType(type)}
                               className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                                 citizenType === type
-                                  ? "bg-[#0B1A2C] text-[#F5EFE0] border-[#0B1A2C] shadow-xs"
-                                  : "bg-[#FAF9F5] border-[#D5D3C8] text-[#555866] hover:bg-[#EFEFE8]"
+                                  ? "bg-[#D4A24C] text-[#0B1A2C] border-[#D4A24C] shadow-md"
+                                  : "bg-[#071322] border-[#22405E] text-[#8E9CAE] hover:text-[#F5EFE0] hover:border-[#D4A24C]/40"
                               }`}
                             >
                               {type === "Voter" ? "🗳️ Voter" : type === "Cadre" ? "🚩 Cadre" : "⭐ Leader"}
@@ -1140,8 +1140,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
                         {/* 1. Name */}
                         <div className="space-y-1 sm:col-span-2">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            1. Citizen Name <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            1. Citizen Name <span className="text-rose-400">*</span>
                           </label>
                           <input
                             type="text"
@@ -1149,14 +1149,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. K. Sudhakar Reddy"
                             value={citizenName}
                             onChange={(e) => setCitizenName(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs text-[#112233] focus:outline-none focus:ring-1 focus:ring-[#112233]"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                           />
                         </div>
 
                         {/* 2. Age */}
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            2. Age <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            2. Age <span className="text-rose-400">*</span>
                           </label>
                           <input
                             type="number"
@@ -1166,19 +1166,19 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. 45"
                             value={citizenAge}
                             onChange={(e) => setCitizenAge(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs font-mono-data text-[#112233] focus:outline-none focus:ring-1 focus:ring-[#112233]"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                           />
                         </div>
 
                         {/* 3. Gender */}
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            3. Gender <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            3. Gender <span className="text-rose-400">*</span>
                           </label>
                           <select
                             value={citizenGender}
                             onChange={(e) => setCitizenGender(e.target.value as any)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs text-[#112233] cursor-pointer"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                           >
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -1190,8 +1190,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       {/* 4. Mobile */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            4. Citizen Mobile Number <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            4. Citizen Mobile Number <span className="text-rose-400">*</span>
                           </label>
                           <input
                             type="tel"
@@ -1199,13 +1199,13 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="+91 98480 12345"
                             value={citizenPhone}
                             onChange={(e) => setCitizenPhone(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs font-mono-data text-[#112233] focus:outline-none focus:ring-1 focus:ring-[#112233]"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                           />
                         </div>
 
                         {/* 5. Address - Door No */}
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
                             5. Address (D.No)
                           </label>
                           <input
@@ -1213,35 +1213,35 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. D.No 14/231-A"
                             value={doorNo}
                             onChange={(e) => setDoorNo(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs text-[#112233]"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
                           />
                         </div>
                       </div>
 
                       {/* Address Hierarchy Sub-fields: Ward/Village, Town/Mandal, Assembly, Parliament, State */}
-                      <div className="p-4 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8] space-y-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] block">
+                      <div className="p-4 bg-[#071322] rounded-xl border border-[#22405E] space-y-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           Hierarchical Administrative Jurisdiction:
                         </span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#666A78]">Ward / Village</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">Ward / Village</label>
                             <input
                               type="text"
                               required
                               placeholder="e.g. Chinna Chowk"
                               value={wardVillage}
                               onChange={(e) => handleVillageChange(e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-[#D5D3C8] rounded-lg text-xs"
+                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#666A78]">Town / Mandal</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">Town / Mandal</label>
                             <select
                               value={townMandal}
                               onChange={(e) => handleMandalChange(e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-[#D5D3C8] rounded-lg text-xs cursor-pointer"
+                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                             >
                               {MANDALS_LIST.map((m) => (
                                 <option key={m} value={m}>{m}</option>
@@ -1250,32 +1250,32 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#666A78]">Assembly</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">Assembly</label>
                             <input
                               type="text"
                               value={assembly}
                               onChange={(e) => setAssembly(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#F0EFE8] border border-[#D5D3C8] rounded-lg text-xs font-semibold text-[#112233]"
+                              className="w-full px-3 py-2 bg-[#142B45] border border-[#22405E] rounded-lg text-xs font-semibold text-[#D4A24C]"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#666A78]">Parliament</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">Parliament</label>
                             <input
                               type="text"
                               value={parliament}
                               onChange={(e) => setParliament(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#F0EFE8] border border-[#D5D3C8] rounded-lg text-xs font-semibold text-[#112233]"
+                              className="w-full px-3 py-2 bg-[#142B45] border border-[#22405E] rounded-lg text-xs font-semibold text-[#D4A24C]"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#666A78]">State</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">State</label>
                             <input
                               type="text"
                               value={stateName}
                               onChange={(e) => setStateName(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#F0EFE8] border border-[#D5D3C8] rounded-lg text-xs font-semibold text-[#112233]"
+                              className="w-full px-3 py-2 bg-[#142B45] border border-[#22405E] rounded-lg text-xs font-semibold text-[#D4A24C]"
                             />
                           </div>
                         </div>
@@ -1285,20 +1285,20 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     {/* =========================================
                         SECTION 2: ISSUE DETAILS
                         ========================================= */}
-                    <div className="space-y-4 pt-4 border-t border-[#ECEAE2]">
-                      <div className="flex items-center space-x-2 border-b border-[#F0EFE8] pb-2">
-                        <span className="w-6 h-6 rounded-full bg-[#112233] text-white flex items-center justify-center text-xs font-bold">
+                    <div className="space-y-4 pt-4 border-t border-[#22405E]">
+                      <div className="flex items-center space-x-2 border-b border-[#22405E] pb-2">
+                        <span className="w-6 h-6 rounded-full bg-[#D4A24C] text-[#0B1A2C] flex items-center justify-center text-xs font-bold">
                           2
                         </span>
-                        <h3 className="font-editorial text-xl font-normal text-[#112233]">
+                        <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
                           Issue Details Section
                         </h3>
                       </div>
 
                       {/* 1. Issue Subject */}
                       <div className="space-y-1">
-                        <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                          1. Issue Title / Subject <span className="text-rose-500">*</span>
+                        <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                          1. Issue Title / Subject <span className="text-rose-400">*</span>
                         </label>
                         <input
                           type="text"
@@ -1306,20 +1306,20 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="e.g. Broken drinking water pipeline causing contamination on Street 4"
                           value={issueSubject}
                           onChange={(e) => setIssueSubject(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs font-semibold text-[#112233] focus:outline-none focus:ring-1 focus:ring-[#112233]"
+                          className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-semibold text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                         />
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* 2. Department */}
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            2. Department <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            2. Department <span className="text-rose-400">*</span>
                           </label>
                           <select
                             value={selectedDept}
                             onChange={(e) => handleDeptChange(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs font-semibold text-[#112233] cursor-pointer"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-semibold text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                           >
                             {Object.keys(DEPARTMENT_CATEGORIES).map((dept) => (
                               <option key={dept} value={dept}>{dept}</option>
@@ -1329,13 +1329,13 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                         {/* 3. Category */}
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            3. Category <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            3. Category <span className="text-rose-400">*</span>
                           </label>
                           <select
                             value={selectedCat}
                             onChange={(e) => handleCatChange(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs text-[#112233] cursor-pointer"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                           >
                             {(DEPARTMENT_CATEGORIES[selectedDept] || []).map((cat) => (
                               <option key={cat} value={cat}>{cat}</option>
@@ -1346,8 +1346,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                       {/* 4. Description */}
                       <div className="space-y-1">
-                        <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                          4. Description / Citizen Voice Transcript <span className="text-rose-500">*</span>
+                        <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                          4. Description / Citizen Voice Transcript <span className="text-rose-400">*</span>
                         </label>
                         <textarea
                           rows={3}
@@ -1355,15 +1355,15 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="Provide full description of the grievance, affected households, background observations, and urgency notes..."
                           value={issueDescription}
                           onChange={(e) => setIssueDescription(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs text-[#112233] focus:outline-none focus:ring-1 focus:ring-[#112233]"
+                          className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                         />
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* 5. Location */}
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            5. Specific Location / Landmark <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            5. Specific Location / Landmark <span className="text-rose-400">*</span>
                           </label>
                           <input
                             type="text"
@@ -1371,14 +1371,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. Opposite Community Hall, Street 4, Chinna Chowk"
                             value={issueLocation}
                             onChange={(e) => setIssueLocation(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] rounded-xl text-xs text-[#112233]"
+                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
                           />
                         </div>
 
                         {/* 6. Priority */}
                         <div className="space-y-1">
-                          <label className="text-[11px] uppercase font-bold text-[#555866] tracking-wider">
-                            6. Priority (Urgency Level) <span className="text-rose-500">*</span>
+                          <label className="text-[11px] uppercase font-bold text-[#8E9CAE] tracking-wider">
+                            6. Priority (Urgency Level) <span className="text-rose-400">*</span>
                           </label>
                           <div className="grid grid-cols-3 gap-2">
                             {(["Low", "Medium", "High"] as GrievancePriority[]).map((p) => (
@@ -1389,11 +1389,11 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                                 className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer text-center ${
                                   issuePriority === p
                                     ? p === "High"
-                                      ? "bg-rose-600 text-white border-rose-600 shadow-xs"
+                                      ? "bg-rose-600 text-white border-rose-500 shadow-md"
                                       : p === "Medium"
-                                      ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                                      : "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                                    : "bg-[#FAF9F5] border-[#D5D3C8] text-[#666A78] hover:bg-[#EFEFE8]"
+                                      ? "bg-amber-600 text-white border-amber-500 shadow-md"
+                                      : "bg-emerald-600 text-white border-emerald-500 shadow-md"
+                                    : "bg-[#071322] border-[#22405E] text-[#8E9CAE] hover:text-[#F5EFE0]"
                                 }`}
                               >
                                 {p}
@@ -1404,64 +1404,64 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       </div>
 
                       {/* 7. Assignee (Auto-Fetched from Central Contact Database) */}
-                      <div className="p-4 bg-[#F5F9F7] rounded-xl border border-emerald-300 space-y-3">
+                      <div className="p-4 bg-[#071322] rounded-xl border border-emerald-800/80 space-y-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex items-center space-x-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
-                            <label className="text-xs uppercase font-bold text-emerald-950 tracking-wider">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <label className="text-xs uppercase font-bold text-emerald-300 tracking-wider">
                               7. Assignee Point of Contact (Auto-Fetched Live)
                             </label>
                           </div>
-                          <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                          <span className="text-[11px] font-semibold text-emerald-300 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-800">
                             ✓ Auto-Matched from Manager Directory
                           </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#555866]">Assignee Officer Name</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">Assignee Officer Name</label>
                             <input
                               type="text"
                               value={assigneeName}
                               onChange={(e) => setAssigneeName(e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-[#D5D3C8] rounded-lg text-xs font-semibold text-[#112233]"
+                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs font-semibold text-[#F5EFE0]"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#555866]">Official Designation</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">Official Designation</label>
                             <input
                               type="text"
                               value={assigneeDesignation}
                               onChange={(e) => setAssigneeDesignation(e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-[#D5D3C8] rounded-lg text-xs text-[#112233]"
+                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs text-[#F5EFE0]"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-[#555866]">Official Contact Phone</label>
+                            <label className="text-[10px] font-bold uppercase text-[#8E9CAE]">Official Contact Phone</label>
                             <input
                               type="text"
                               value={assigneeContact}
                               onChange={(e) => setAssigneeContact(e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border-[#D5D3C8] rounded-lg text-xs font-mono-data text-[#112233]"
+                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs font-mono text-[#D4A24C]"
                             />
                           </div>
                         </div>
 
-                        <div className="text-[11px] text-emerald-900/80 pt-1">
-                          Auto-linked based on Department: <strong>{selectedDept}</strong> · Jurisdiction: <strong>{townMandal}</strong>.
+                        <div className="text-[11px] text-emerald-400/80 pt-1">
+                          Auto-linked based on Department: <strong className="text-emerald-300">{selectedDept}</strong> · Jurisdiction: <strong className="text-emerald-300">{townMandal}</strong>.
                         </div>
                       </div>
                     </div>
 
                     {/* Submit Action */}
-                    <div className="flex items-center justify-end space-x-4 pt-4 border-t border-[#ECEAE2]">
+                    <div className="flex items-center justify-end space-x-4 pt-4 border-t border-[#22405E]">
                       <button
                         type="submit"
-                        className="px-8 py-3 bg-[#0B1A2C] hover:bg-[#142B45] text-[#F5EFE0] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center space-x-2 cursor-pointer"
+                        className="px-8 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center space-x-2 cursor-pointer"
                       >
-                        <Send className="w-4 h-4 text-[#D4A24C]" />
+                        <Send className="w-4 h-4 text-[#0B1A2C]" />
                         <span>Submit Ticket (Generate ID)</span>
                       </button>
                     </div>
@@ -1474,46 +1474,46 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
           {/* Ticket Registration Success Modal */}
           {submittedReceipt && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-              <div className="bg-white border border-[#D4A24C]/40 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 text-[#112233]">
-                <div className="text-center space-y-2 border-b border-[#ECEAE2] pb-5">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center mx-auto">
+              <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 text-[#F5EFE0]">
+                <div className="text-center space-y-2 border-b border-[#22405E] pb-5">
+                  <div className="w-14 h-14 rounded-full bg-emerald-950/40 border border-emerald-800 text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                     Submission Confirmed
                   </span>
-                  <h3 className="font-editorial text-2xl font-normal text-[#112233]">
+                  <h3 className="font-display text-2xl font-normal text-[#F5EFE0]">
                     Ticket Registered Successfully
                   </h3>
                   <div className="pt-1">
-                    <span className="px-4 py-1.5 bg-[#0B1A2C] text-[#F5EFE0] font-mono-data font-bold text-sm rounded-lg tracking-wider">
+                    <span className="px-4 py-1.5 bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 font-mono font-bold text-sm rounded-lg tracking-wider">
                       {submittedReceipt.ticketNumber}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs bg-[#FAF9F5] p-4 rounded-xl border border-[#E5E3D8]">
-                  <div className="flex justify-between border-b border-[#ECEAE2] pb-1.5">
-                    <span className="text-[#787C8A]">Citizen Name:</span>
-                    <strong className="text-[#112233]">{submittedReceipt.citizenName} ({submittedReceipt.citizenType})</strong>
+                <div className="space-y-2 text-xs bg-[#071322] p-4 rounded-xl border border-[#22405E]">
+                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                    <span className="text-[#8E9CAE]">Citizen Name:</span>
+                    <strong className="text-[#F5EFE0]">{submittedReceipt.citizenName} ({submittedReceipt.citizenType})</strong>
                   </div>
-                  <div className="flex justify-between border-b border-[#ECEAE2] pb-1.5">
-                    <span className="text-[#787C8A]">Department:</span>
-                    <strong className="text-[#112233]">{submittedReceipt.department}</strong>
+                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                    <span className="text-[#8E9CAE]">Department:</span>
+                    <strong className="text-[#F5EFE0]">{submittedReceipt.department}</strong>
                   </div>
-                  <div className="flex justify-between border-b border-[#ECEAE2] pb-1.5">
-                    <span className="text-[#787C8A]">Priority:</span>
+                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                    <span className="text-[#8E9CAE]">Priority:</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadge(submittedReceipt.priority)}`}>
                       {submittedReceipt.priority} Priority
                     </span>
                   </div>
-                  <div className="flex justify-between border-b border-[#ECEAE2] pb-1.5">
-                    <span className="text-[#787C8A]">Assigned Officer:</span>
-                    <strong className="text-[#112233]">{submittedReceipt.assignee}</strong>
+                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                    <span className="text-[#8E9CAE]">Assigned Officer:</span>
+                    <strong className="text-[#F5EFE0]">{submittedReceipt.assignee}</strong>
                   </div>
                   <div className="flex justify-between pt-0.5">
-                    <span className="text-[#787C8A]">Initial Status:</span>
-                    <span className="font-bold text-blue-700">Pending (Under Triage)</span>
+                    <span className="text-[#8E9CAE]">Initial Status:</span>
+                    <span className="font-bold text-blue-400">Pending (Under Triage)</span>
                   </div>
                 </div>
 
@@ -1524,14 +1524,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       setSubmittedReceipt(null);
                       setShowVolunteerReceiptList(true);
                     }}
-                    className="px-4 py-2.5 bg-[#FAF9F5] border border-[#D5D3C8] text-xs font-semibold rounded-xl text-[#112233] hover:bg-[#EFEFE8]"
+                    className="px-4 py-2.5 bg-[#071322] border border-[#22405E] text-xs font-semibold rounded-xl text-[#F5EFE0] hover:border-[#D4A24C] transition-colors"
                   >
                     View All My Receipts
                   </button>
                   <button
                     type="button"
                     onClick={() => setSubmittedReceipt(null)}
-                    className="px-5 py-2.5 bg-[#0B1A2C] text-white text-xs font-bold rounded-xl hover:bg-[#142B45]"
+                    className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                   >
                     Log Another Grievance
                   </button>
@@ -1546,46 +1546,46 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
           ROLE 1: MANAGER SECTION (Executive Command Center & Full Control)
           ========================================================================= */}
       {activeRole === "manager" && (
-        <div className="space-y-8 animate-fadeIn">
+        <div className="space-y-8 animate-fadeIn text-[#F5EFE0]">
           {/* Manager Navigation Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E0DED5] pb-4">
-            <div className="flex items-center space-x-2 bg-[#FAF9F5] p-1 rounded-xl border border-[#D5D3C8]">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#22405E] pb-4">
+            <div className="flex items-center space-x-2 bg-[#071322] p-1.5 rounded-xl border border-[#22405E] overflow-x-auto">
               <button
                 onClick={() => setManagerTab("overview")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "overview"
-                    ? "bg-[#112233] text-white shadow-xs"
-                    : "text-[#666A78] hover:text-[#112233]"
+                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
                 }`}
               >
                 1. KPI Overview & Analytics
               </button>
               <button
                 onClick={() => setManagerTab("tickets")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "tickets"
-                    ? "bg-[#112233] text-white shadow-xs"
-                    : "text-[#666A78] hover:text-[#112233]"
+                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
                 }`}
               >
                 2. Master Ticket Explorer ({grievances.length})
               </button>
               <button
                 onClick={() => setManagerTab("contacts")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "contacts"
-                    ? "bg-[#112233] text-white shadow-xs"
-                    : "text-[#666A78] hover:text-[#112233]"
+                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
                 }`}
               >
                 3. Contact Database ({contacts.length} PoCs)
               </button>
               <button
                 onClick={() => setManagerTab("volunteers")}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "volunteers"
-                    ? "bg-[#112233] text-white shadow-xs"
-                    : "text-[#666A78] hover:text-[#112233]"
+                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
                 }`}
               >
                 4. Volunteer Whitelist Access ({designatedVolunteers.length})
@@ -1597,10 +1597,10 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 setActiveRole("volunteer");
                 setLoggedVolunteer(designatedVolunteers[0]);
               }}
-              className="inline-flex items-center px-3.5 py-2 bg-[#FAF9F5] border border-[#D5D3C8] hover:border-[#112233] rounded-lg text-xs font-semibold text-[#112233] transition-colors cursor-pointer"
+              className="inline-flex items-center px-4 py-2.5 bg-[#142B45] border border-[#D4A24C]/40 hover:bg-[#D4A24C] hover:text-[#0B1A2C] rounded-xl text-xs font-bold text-[#D4A24C] transition-all shadow-md cursor-pointer"
             >
-              <Smartphone className="w-3.5 h-3.5 mr-1.5 text-[#D4A24C]" />
-              Test Field Volunteer Submission Form →
+              <Smartphone className="w-4 h-4 mr-1.5 text-[#D4A24C] group-hover:text-[#0B1A2C]" />
+              <span>Test Field Volunteer Submission Form →</span>
             </button>
           </div>
 
@@ -1610,152 +1610,152 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {/* 8 Essential Executive KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                 {/* 1. Total Logged Tickets */}
-                <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-xs col-span-2 sm:col-span-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8E9B] block">
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors col-span-2 sm:col-span-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CAE] block">
                     1. Total Logged Tickets
                   </span>
-                  <div className="font-editorial text-3xl font-bold text-[#112233] mt-1 font-mono-data">
+                  <div className="font-display text-3xl font-bold text-[#F5EFE0] mt-1 font-mono">
                     {totalTickets}
                   </div>
-                  <span className="text-[11px] text-[#717582] mt-1 block">
+                  <span className="text-[11px] text-[#8E9CAE] mt-1 block">
                     Constituency-Wide Intake
                   </span>
                 </div>
 
                 {/* 2. Priority: High */}
-                <div className="bg-white border border-rose-200 bg-rose-50/30 rounded-xl p-4 shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800 block">
+                <div className="bg-[#0B1A2C] border border-rose-900/50 bg-rose-950/20 rounded-xl p-4 shadow-sm hover:border-rose-500/50 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-300 block">
                     High Priority
                   </span>
-                  <div className="font-editorial text-2xl font-bold text-rose-700 mt-1 font-mono-data">
+                  <div className="font-display text-2xl font-bold text-rose-400 mt-1 font-mono">
                     {highPriorityCount}
                   </div>
-                  <span className="text-[10px] text-rose-600 mt-0.5 block">
+                  <span className="text-[10px] text-rose-400 mt-0.5 block font-semibold">
                     Fast-Track Escalation
                   </span>
                 </div>
 
-                {/* 2. Priority: Medium */}
-                <div className="bg-white border border-amber-200 bg-amber-50/30 rounded-xl p-4 shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">
+                {/* 3. Priority: Medium */}
+                <div className="bg-[#0B1A2C] border border-amber-900/50 bg-amber-950/20 rounded-xl p-4 shadow-sm hover:border-amber-500/50 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
                     Medium Priority
                   </span>
-                  <div className="font-editorial text-2xl font-bold text-amber-700 mt-1 font-mono-data">
+                  <div className="font-display text-2xl font-bold text-amber-400 mt-1 font-mono">
                     {mediumPriorityCount}
                   </div>
-                  <span className="text-[10px] text-amber-600 mt-0.5 block">
+                  <span className="text-[10px] text-amber-400 mt-0.5 block font-semibold">
                     Standard 24h SLA
                   </span>
                 </div>
 
-                {/* 2. Priority: Low */}
-                <div className="bg-white border border-emerald-200 bg-emerald-50/30 rounded-xl p-4 shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
+                {/* 4. Priority: Low */}
+                <div className="bg-[#0B1A2C] border border-emerald-900/50 bg-emerald-950/20 rounded-xl p-4 shadow-sm hover:border-emerald-500/50 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
                     Low Priority
                   </span>
-                  <div className="font-editorial text-2xl font-bold text-emerald-700 mt-1 font-mono-data">
+                  <div className="font-display text-2xl font-bold text-emerald-400 mt-1 font-mono">
                     {lowPriorityCount}
                   </div>
-                  <span className="text-[10px] text-emerald-600 mt-0.5 block">
+                  <span className="text-[10px] text-emerald-400 mt-0.5 block font-semibold">
                     Scheduled Works
                   </span>
                 </div>
 
-                {/* 6. Completed Tickets */}
-                <div className="bg-white border border-emerald-300 rounded-xl p-4 shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-900 block">
+                {/* 5. Completed Tickets */}
+                <div className="bg-[#0B1A2C] border border-emerald-800/60 rounded-xl p-4 shadow-sm hover:border-emerald-400/60 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
                     6. Completed
                   </span>
-                  <div className="font-editorial text-2xl font-bold text-emerald-800 mt-1 font-mono-data">
+                  <div className="font-display text-2xl font-bold text-emerald-400 mt-1 font-mono">
                     {completedCount}
                   </div>
-                  <span className="text-[10px] text-emerald-700 mt-0.5 block font-semibold">
+                  <span className="text-[10px] text-emerald-400 mt-0.5 block font-semibold">
                     {((completedCount / (totalTickets || 1)) * 100).toFixed(1)}% Resolution
                   </span>
                 </div>
 
-                {/* 7. Pending Tickets */}
-                <div className="bg-white border border-blue-200 rounded-xl p-4 shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-900 block">
+                {/* 6. Pending Tickets */}
+                <div className="bg-[#0B1A2C] border border-blue-800/60 rounded-xl p-4 shadow-sm hover:border-blue-400/60 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
                     7. Pending
                   </span>
-                  <div className="font-editorial text-2xl font-bold text-blue-700 mt-1 font-mono-data">
+                  <div className="font-display text-2xl font-bold text-blue-400 mt-1 font-mono">
                     {pendingCount}
                   </div>
-                  <span className="text-[10px] text-blue-600 mt-0.5 block">
+                  <span className="text-[10px] text-blue-400 mt-0.5 block font-semibold">
                     In Field Triage
                   </span>
                 </div>
 
-                {/* 8. Can't be done */}
-                <div className="bg-white border border-slate-300 rounded-xl p-4 shadow-xs">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 block">
+                {/* 7. Can't be done */}
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                     8. Can't Be Done
                   </span>
-                  <div className="font-editorial text-2xl font-bold text-slate-800 mt-1 font-mono-data">
+                  <div className="font-display text-2xl font-bold text-slate-300 mt-1 font-mono">
                     {cantBeDoneCount}
                   </div>
-                  <span className="text-[10px] text-slate-600 mt-0.5 block">
+                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block font-medium">
                     Policy Restricted
                   </span>
                 </div>
               </div>
 
               {/* Volunteer Activity & Time-Series Intake Analytics */}
-              <div className="bg-white border border-[#E0DED5] rounded-2xl p-6 shadow-xs space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ECEAE2] pb-4">
+              <div className="bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-4">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                       Volunteer Filing Performance
                     </span>
-                    <h3 className="font-editorial text-xl sm:text-2xl font-normal text-[#112233]">
+                    <h3 className="font-display text-xl sm:text-2xl font-normal text-[#F5EFE0]">
                       Volunteer Activity: Daily, Weekly & Monthly Breakdown
                     </h3>
-                    <p className="text-xs text-[#666A78]">
+                    <p className="text-xs text-[#8E9CAE]">
                       Track which volunteers have filed citizen requests across day, week, and monthly intervals.
                     </p>
                   </div>
                 </div>
 
                 {/* Volunteer Metrics Table */}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-xl border border-[#22405E]">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-[#E0DED5] bg-[#FAF9F5] text-[#555866] uppercase text-[10px] tracking-wider font-bold">
-                        <th className="py-3 px-4">Volunteer Name</th>
-                        <th className="py-3 px-4">Designated Mobile</th>
-                        <th className="py-3 px-4">Assigned Mandal</th>
-                        <th className="py-3 px-4 text-center bg-blue-50 text-blue-900">Today (Day)</th>
-                        <th className="py-3 px-4 text-center bg-indigo-50 text-indigo-900">This Week</th>
-                        <th className="py-3 px-4 text-center bg-amber-50 text-amber-900">This Month</th>
-                        <th className="py-3 px-4 text-center bg-[#112233] text-white">Total Filed</th>
-                        <th className="py-3 px-4 text-center text-emerald-800">Resolved</th>
+                      <tr className="border-b border-[#22405E] bg-[#071322] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
+                        <th className="py-3.5 px-4">Volunteer Name</th>
+                        <th className="py-3.5 px-4">Designated Mobile</th>
+                        <th className="py-3.5 px-4">Assigned Mandal</th>
+                        <th className="py-3.5 px-4 text-center bg-blue-950/40 text-blue-300">Today (Day)</th>
+                        <th className="py-3.5 px-4 text-center bg-indigo-950/40 text-indigo-300">This Week</th>
+                        <th className="py-3.5 px-4 text-center bg-amber-950/40 text-amber-300">This Month</th>
+                        <th className="py-3.5 px-4 text-center bg-[#142B45] text-[#D4A24C]">Total Filed</th>
+                        <th className="py-3.5 px-4 text-center text-emerald-400">Resolved</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#F0EFE8]">
+                    <tbody className="divide-y divide-[#22405E]/40">
                       {volunteerAnalytics.map((v) => (
-                        <tr key={v.id} className="hover:bg-[#FAF9F5] transition-colors">
-                          <td className="py-3 px-4 font-semibold text-[#112233] flex items-center space-x-2">
-                            <span className="w-7 h-7 rounded-full bg-[#112233] text-white flex items-center justify-center text-[10px] font-bold">
+                        <tr key={v.id} className="hover:bg-[#142B45]/50 transition-colors">
+                          <td className="py-3 px-4 font-semibold text-[#F5EFE0] flex items-center space-x-2.5">
+                            <span className="w-7 h-7 rounded-full bg-[#D4A24C] text-[#0B1A2C] flex items-center justify-center text-[10px] font-bold shadow-xs">
                               {v.name.charAt(0)}
                             </span>
                             <span>{v.name}</span>
                           </td>
-                          <td className="py-3 px-4 font-mono-data text-[#555866]">+91 {v.mobile}</td>
-                          <td className="py-3 px-4 text-[#555866]">{v.mandal}</td>
-                          <td className="py-3 px-4 text-center font-bold font-mono-data bg-blue-50/50 text-blue-900">
+                          <td className="py-3 px-4 font-mono text-[#D8CFB8]">+91 {v.mobile}</td>
+                          <td className="py-3 px-4 text-[#D8CFB8]">{v.mandal}</td>
+                          <td className="py-3 px-4 text-center font-bold font-mono bg-blue-950/20 text-blue-400">
                             {v.dayCount}
                           </td>
-                          <td className="py-3 px-4 text-center font-bold font-mono-data bg-indigo-50/50 text-indigo-900">
+                          <td className="py-3 px-4 text-center font-bold font-mono bg-indigo-950/20 text-indigo-400">
                             {v.weekCount}
                           </td>
-                          <td className="py-3 px-4 text-center font-bold font-mono-data bg-amber-50/50 text-amber-900">
+                          <td className="py-3 px-4 text-center font-bold font-mono bg-amber-950/20 text-amber-400">
                             {v.monthCount}
                           </td>
-                          <td className="py-3 px-4 text-center font-bold font-mono-data text-sm text-[#112233]">
+                          <td className="py-3 px-4 text-center font-bold font-mono text-sm bg-[#142B45]/40 text-[#D4A24C]">
                             {v.totalFiled}
                           </td>
-                          <td className="py-3 px-4 text-center font-bold font-mono-data text-emerald-700">
+                          <td className="py-3 px-4 text-center font-bold font-mono text-emerald-400">
                             {v.resolvedCount}
                           </td>
                         </tr>
@@ -1768,35 +1768,35 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {/* Two-Column Analytics: 3. Department Wise & 4. Area Wise */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* 3. Department Wise Issues */}
-                <div className="lg:col-span-6 bg-white border border-[#E0DED5] rounded-2xl p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+                <div className="lg:col-span-6 bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8E9B] block">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                         Pillar 3
                       </span>
-                      <h4 className="font-editorial text-lg font-normal text-[#112233]">
+                      <h4 className="font-display text-lg font-normal text-[#F5EFE0]">
                         3. Department Wise Issues
                       </h4>
                     </div>
-                    <span className="text-xs font-mono-data text-[#787C8A]">
+                    <span className="text-xs font-mono text-[#8E9CAE]">
                       {Object.keys(departmentCounts).length} Departments
                     </span>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     {Object.entries(departmentCounts).map(([dept, count]) => {
                       const pct = ((count / (totalTickets || 1)) * 100).toFixed(0);
                       return (
-                        <div key={dept} className="space-y-1">
+                        <div key={dept} className="space-y-1.5">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-semibold text-[#112233]">{dept}</span>
-                            <span className="font-mono-data text-[#666A78]">
-                              <strong>{count}</strong> tickets ({pct}%)
+                            <span className="font-semibold text-[#F5EFE0]">{dept}</span>
+                            <span className="font-mono text-[#8E9CAE]">
+                              <strong className="text-[#D4A24C]">{count}</strong> tickets ({pct}%)
                             </span>
                           </div>
-                          <div className="w-full h-2 bg-[#F2F0E8] rounded-full overflow-hidden">
+                          <div className="w-full h-2 bg-[#071322] border border-[#22405E] rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-[#112233] rounded-full transition-all"
+                              className="h-full bg-gradient-to-r from-[#D4A24C] to-[#E07A1F] rounded-full transition-all"
                               style={{ width: `${Math.max(Number(pct), 4)}%` }}
                             />
                           </div>
@@ -1807,35 +1807,35 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 4. Area Wise Issues */}
-                <div className="lg:col-span-6 bg-white border border-[#E0DED5] rounded-2xl p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+                <div className="lg:col-span-6 bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8E9B] block">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                         Pillar 4
                       </span>
-                      <h4 className="font-editorial text-lg font-normal text-[#112233]">
+                      <h4 className="font-display text-lg font-normal text-[#F5EFE0]">
                         4. Area Wise Issues (Mandals & Wards)
                       </h4>
                     </div>
-                    <span className="text-xs font-mono-data text-[#787C8A]">
-                      Kadapa Assembly Constituency
+                    <span className="text-xs font-mono text-[#8E9CAE]">
+                      {activeMla.constituency}
                     </span>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     {Object.entries(mandalCounts).map(([mandal, count]) => {
                       const pct = ((count / (totalTickets || 1)) * 100).toFixed(0);
                       return (
-                        <div key={mandal} className="space-y-1">
+                        <div key={mandal} className="space-y-1.5">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-semibold text-[#112233]">{mandal}</span>
-                            <span className="font-mono-data text-[#666A78]">
-                              <strong>{count}</strong> tickets ({pct}%)
+                            <span className="font-semibold text-[#F5EFE0]">{mandal}</span>
+                            <span className="font-mono text-[#8E9CAE]">
+                              <strong className="text-blue-400">{count}</strong> tickets ({pct}%)
                             </span>
                           </div>
-                          <div className="w-full h-2 bg-[#F2F0E8] rounded-full overflow-hidden">
+                          <div className="w-full h-2 bg-[#071322] border border-[#22405E] rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-[#D4A24C] rounded-full transition-all"
+                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all"
                               style={{ width: `${Math.max(Number(pct), 4)}%` }}
                             />
                           </div>
@@ -1848,61 +1848,61 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
               {/* Demographics Strip: Gender & Classification Breakdown */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white border border-[#E0DED5] rounded-2xl p-5 shadow-xs space-y-3">
-                  <h4 className="font-editorial text-base font-normal text-[#112233]">
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-5 shadow-xl space-y-3">
+                  <h4 className="font-display text-base font-normal text-[#F5EFE0]">
                     Citizen Gender Intake Ratio
                   </h4>
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="p-3 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8]">
-                      <span className="text-[10px] uppercase font-bold text-[#787C8A] block">Male</span>
-                      <div className="font-editorial text-xl font-bold text-[#112233] mt-1 font-mono-data">{genderStats.Male}</div>
-                      <span className="text-[10px] text-[#787C8A]">{((genderStats.Male / (totalTickets || 1)) * 100).toFixed(0)}%</span>
+                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                      <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">Male</span>
+                      <div className="font-display text-xl font-bold text-blue-400 mt-1 font-mono">{genderStats.Male}</div>
+                      <span className="text-[10px] text-[#8E9CAE]">{((genderStats.Male / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8]">
-                      <span className="text-[10px] uppercase font-bold text-[#787C8A] block">Female</span>
-                      <div className="font-editorial text-xl font-bold text-[#112233] mt-1 font-mono-data">{genderStats.Female}</div>
-                      <span className="text-[10px] text-[#787C8A]">{((genderStats.Female / (totalTickets || 1)) * 100).toFixed(0)}%</span>
+                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                      <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">Female</span>
+                      <div className="font-display text-xl font-bold text-rose-400 mt-1 font-mono">{genderStats.Female}</div>
+                      <span className="text-[10px] text-[#8E9CAE]">{((genderStats.Female / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8]">
-                      <span className="text-[10px] uppercase font-bold text-[#787C8A] block">Other</span>
-                      <div className="font-editorial text-xl font-bold text-[#112233] mt-1 font-mono-data">{genderStats.Other}</div>
-                      <span className="text-[10px] text-[#787C8A]">{((genderStats.Other / (totalTickets || 1)) * 100).toFixed(0)}%</span>
+                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                      <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">Other</span>
+                      <div className="font-display text-xl font-bold text-amber-400 mt-1 font-mono">{genderStats.Other}</div>
+                      <span className="text-[10px] text-[#8E9CAE]">{((genderStats.Other / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white border border-[#E0DED5] rounded-2xl p-5 shadow-xs space-y-3">
-                  <h4 className="font-editorial text-base font-normal text-[#112233]">
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-5 shadow-xl space-y-3">
+                  <h4 className="font-display text-base font-normal text-[#F5EFE0]">
                     Citizen Type Distribution
                   </h4>
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="p-3 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8]">
-                      <span className="text-[10px] uppercase font-bold text-[#787C8A] block">🗳️ Voter</span>
-                      <div className="font-editorial text-xl font-bold text-[#112233] mt-1 font-mono-data">{citizenTypeStats.Voter}</div>
-                      <span className="text-[10px] text-[#787C8A]">{((citizenTypeStats.Voter / (totalTickets || 1)) * 100).toFixed(0)}%</span>
+                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                      <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">🗳️ Voter</span>
+                      <div className="font-display text-xl font-bold text-emerald-400 mt-1 font-mono">{citizenTypeStats.Voter}</div>
+                      <span className="text-[10px] text-[#8E9CAE]">{((citizenTypeStats.Voter / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8]">
-                      <span className="text-[10px] uppercase font-bold text-[#787C8A] block">🚩 Cadre</span>
-                      <div className="font-editorial text-xl font-bold text-[#112233] mt-1 font-mono-data">{citizenTypeStats.Cadre}</div>
-                      <span className="text-[10px] text-[#787C8A]">{((citizenTypeStats.Cadre / (totalTickets || 1)) * 100).toFixed(0)}%</span>
+                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                      <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">🚩 Cadre</span>
+                      <div className="font-display text-xl font-bold text-[#D4A24C] mt-1 font-mono">{citizenTypeStats.Cadre}</div>
+                      <span className="text-[10px] text-[#8E9CAE]">{((citizenTypeStats.Cadre / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8]">
-                      <span className="text-[10px] uppercase font-bold text-[#787C8A] block">⭐ Leader</span>
-                      <div className="font-editorial text-xl font-bold text-[#112233] mt-1 font-mono-data">{citizenTypeStats.Leader}</div>
-                      <span className="text-[10px] text-[#787C8A]">{((citizenTypeStats.Leader / (totalTickets || 1)) * 100).toFixed(0)}%</span>
+                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                      <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">⭐ Leader</span>
+                      <div className="font-display text-xl font-bold text-purple-400 mt-1 font-mono">{citizenTypeStats.Leader}</div>
+                      <span className="text-[10px] text-[#8E9CAE]">{((citizenTypeStats.Leader / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* 5. Ticket Assigned Persons Workload */}
-              <div className="bg-white border border-[#E0DED5] rounded-2xl p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+              <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8E9B] block">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                       Pillar 5
                     </span>
-                    <h4 className="font-editorial text-lg font-normal text-[#112233]">
+                    <h4 className="font-display text-lg font-normal text-[#F5EFE0]">
                       5. Ticket Assigned Persons & Officers Workload
                     </h4>
                   </div>
@@ -1910,15 +1910,15 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {assigneeStats.map((a) => (
-                    <div key={a.name} className="p-3.5 bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl flex items-center justify-between">
+                    <div key={a.name} className="p-3.5 bg-[#071322] border border-[#22405E] rounded-xl flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <span className="font-semibold text-xs text-[#112233] block">{a.name}</span>
-                        <span className="text-[10px] text-[#666A78] block">{a.designation}</span>
-                        <span className="font-mono-data text-[10px] text-[#0F766E]">{a.contact}</span>
+                        <span className="font-semibold text-xs text-[#F5EFE0] block">{a.name}</span>
+                        <span className="text-[10px] text-[#8E9CAE] block">{a.designation}</span>
+                        <span className="font-mono text-[10px] text-[#D4A24C]">{a.contact}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-xl font-editorial font-bold text-[#112233] font-mono-data">{a.count}</span>
-                        <span className="text-[9px] uppercase font-bold text-[#8A8E9B] block">Active Tickets</span>
+                        <span className="text-xl font-display font-bold text-[#F5EFE0] font-mono">{a.count}</span>
+                        <span className="text-[9px] uppercase font-bold text-[#8E9CAE] block">Active Tickets</span>
                       </div>
                     </div>
                   ))}
@@ -1929,17 +1929,17 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
           {/* TAB 2: MASTER TICKET EXPLORER & DETAIL INSPECTOR */}
           {managerTab === "tickets" && (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-6 animate-fadeIn text-[#F5EFE0]">
               {/* Filter Bar */}
-              <div className="bg-white border border-[#E0DED5] rounded-2xl p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="bg-[#0F2338] border border-[#22405E] rounded-2xl p-4 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="relative flex-1 w-full">
-                  <Search className="w-4 h-4 text-[#8C909E] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-[#8E9CAE] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="Search by ticket #, citizen name, phone, issue, or location..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-xs bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#112233]"
+                    className="w-full pl-9 pr-4 py-2 text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:outline-none focus:border-[#D4A24C]"
                   />
                 </div>
 
@@ -1948,7 +1948,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <select
                     value={filterPriority}
                     onChange={(e) => setFilterPriority(e.target.value)}
-                    className="bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg px-2.5 py-1.5 text-xs text-[#112233] cursor-pointer"
+                    className="bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
                   >
                     <option value="All">All Priorities</option>
                     <option value="High">High</option>
@@ -1960,7 +1960,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg px-2.5 py-1.5 text-xs text-[#112233] cursor-pointer"
+                    className="bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
                   >
                     <option value="All">All Statuses</option>
                     <option value="Pending">Pending</option>
@@ -1972,7 +1972,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <select
                     value={filterDepartment}
                     onChange={(e) => setFilterDepartment(e.target.value)}
-                    className="bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg px-2.5 py-1.5 text-xs text-[#112233] cursor-pointer"
+                    className="bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
                   >
                     <option value="All">All Departments</option>
                     {Object.keys(DEPARTMENT_CATEGORIES).map((d) => (
@@ -1986,9 +1986,9 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Ticket List (Left 5 Cols) */}
                 <div className="lg:col-span-5 space-y-3">
-                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#797D8B] px-1">
+                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#8E9CAE] px-1">
                     <span>Grievance Inflow ({filteredGrievances.length})</span>
-                    <span className="font-mono-data text-[11px] text-[#4A4E5C]">Showing live stream</span>
+                    <span className="font-mono text-[11px] text-[#D4A24C]">Live Redressal Stream</span>
                   </div>
 
                   <div className="space-y-3 max-h-[750px] overflow-y-auto pr-1">
@@ -2000,12 +2000,12 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           onClick={() => setActiveTicket(item)}
                           className={`p-4 rounded-xl border transition-all cursor-pointer ${
                             isSelected
-                              ? "bg-white border-2 border-[#112233] shadow-md ring-1 ring-[#112233]/10"
-                              : "bg-white border-[#E0DED5] hover:border-[#CDC9BC]"
+                              ? "bg-[#142B45] border-2 border-[#D4A24C] shadow-lg"
+                              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/60"
                           }`}
                         >
                           <div className="flex items-center justify-between text-xs mb-1.5">
-                            <span className="font-mono-data font-bold text-[#112233]">
+                            <span className="font-mono font-bold text-[#D4A24C]">
                               {item.ticketNumber}
                             </span>
                             <div className="flex items-center space-x-1.5">
@@ -2018,13 +2018,13 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             </div>
                           </div>
 
-                          <h4 className="text-xs sm:text-sm font-semibold text-[#112233] line-clamp-1">
+                          <h4 className="text-xs sm:text-sm font-semibold text-[#F5EFE0] line-clamp-1">
                             {item.subject}
                           </h4>
 
-                          <div className="flex items-center justify-between text-[11px] text-[#717582] mt-2 pt-2 border-t border-[#F2F1EA]">
+                          <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] mt-2 pt-2 border-t border-[#22405E]/60">
                             <span>{item.citizenName} ({item.citizenType})</span>
-                            <span className="font-mono-data">{item.submittedDate}</span>
+                            <span className="font-mono text-[#D8CFB8]">{item.submittedDate}</span>
                           </div>
                         </div>
                       );
@@ -2035,12 +2035,12 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 {/* Ticket Detail Inspector (Right 7 Cols) */}
                 <div className="lg:col-span-7">
                   {activeTicket ? (
-                    <div className="bg-white border border-[#E0DED5] rounded-2xl p-6 shadow-xs space-y-6">
+                    <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-6">
                       {/* Ticket Header & Status Management Controls */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ECEAE2] pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-4">
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-mono-data text-xs font-bold px-2 py-0.5 bg-[#112233] text-white rounded">
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 rounded">
                               {activeTicket.ticketNumber}
                             </span>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadge(activeTicket.priority)}`}>
@@ -2050,7 +2050,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               {activeTicket.status}
                             </span>
                           </div>
-                          <h3 className="font-editorial text-xl sm:text-2xl font-normal text-[#112233] mt-2">
+                          <h3 className="font-display text-xl sm:text-2xl font-normal text-[#F5EFE0] mt-2">
                             {activeTicket.subject}
                           </h3>
                         </div>
@@ -2061,8 +2061,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             onClick={() => handleUpdateTicketStatus(activeTicket.id, "Completed")}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors inline-flex items-center cursor-pointer ${
                               activeTicket.status === "Completed"
-                                ? "bg-emerald-800 text-white font-bold"
-                                : "bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100"
+                                ? "bg-emerald-600 text-white font-bold shadow-sm"
+                                : "bg-emerald-950/40 text-emerald-300 border border-emerald-800 hover:bg-emerald-900/60"
                             }`}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
@@ -2072,8 +2072,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             onClick={() => handleUpdateTicketStatus(activeTicket.id, "Pending")}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors inline-flex items-center cursor-pointer ${
                               activeTicket.status === "Pending"
-                                ? "bg-blue-800 text-white font-bold"
-                                : "bg-blue-50 text-blue-800 border border-blue-300 hover:bg-blue-100"
+                                ? "bg-blue-600 text-white font-bold shadow-sm"
+                                : "bg-blue-950/40 text-blue-300 border border-blue-800 hover:bg-blue-900/60"
                             }`}
                           >
                             <Clock className="w-3.5 h-3.5 mr-1" />
@@ -2083,8 +2083,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             onClick={() => handleUpdateTicketStatus(activeTicket.id, "Can't be done")}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors inline-flex items-center cursor-pointer ${
                               activeTicket.status === "Can't be done"
-                                ? "bg-slate-800 text-white font-bold"
-                                : "bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200"
+                                ? "bg-slate-700 text-white font-bold shadow-sm"
+                                : "bg-slate-800/40 text-slate-300 border border-slate-700 hover:bg-slate-700/60"
                             }`}
                           >
                             <XCircle className="w-3.5 h-3.5 mr-1" />
@@ -2095,38 +2095,38 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                       {/* Citizen Personal Details Section */}
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] block">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           1. Citizen Personal Profile & Classification
                         </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8] text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#071322] rounded-xl border border-[#22405E] text-xs">
                           <div>
-                            <span className="text-[10px] uppercase text-[#888C99] font-bold block">Citizen Name</span>
-                            <span className="font-semibold text-[#112233]">{activeTicket.citizenName}</span>
+                            <span className="text-[10px] uppercase text-[#8E9CAE] font-bold block">Citizen Name</span>
+                            <span className="font-semibold text-[#F5EFE0]">{activeTicket.citizenName}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase text-[#888C99] font-bold block">Option / Type</span>
+                            <span className="text-[10px] uppercase text-[#8E9CAE] font-bold block">Option / Type</span>
                             <span className="font-bold text-[#D4A24C]">{activeTicket.citizenType}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase text-[#888C99] font-bold block">Age & Gender</span>
-                            <span className="text-[#112233]">{activeTicket.citizenAge} yrs · {activeTicket.citizenGender}</span>
+                            <span className="text-[10px] uppercase text-[#8E9CAE] font-bold block">Age & Gender</span>
+                            <span className="text-[#F5EFE0]">{activeTicket.citizenAge} yrs · {activeTicket.citizenGender}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase text-[#888C99] font-bold block">Mobile</span>
-                            <span className="font-mono-data text-[#112233]">{activeTicket.citizenPhone}</span>
+                            <span className="text-[10px] uppercase text-[#8E9CAE] font-bold block">Mobile</span>
+                            <span className="font-mono text-[#D8CFB8]">{activeTicket.citizenPhone}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Address Hierarchy Breakdown */}
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] block">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           Citizen Address Details
                         </span>
-                        <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#ECEAE2] text-xs space-y-1.5">
-                          <div className="flex items-center space-x-2 text-[#112233]">
+                        <div className="p-3.5 bg-[#071322] rounded-xl border border-[#22405E] text-xs space-y-1.5">
+                          <div className="flex items-center space-x-2 text-[#F5EFE0]">
                             <MapPin className="w-4 h-4 text-[#D4A24C] flex-shrink-0" />
-                            <span className="font-semibold">
+                            <span className="font-semibold text-[#D8CFB8]">
                               {activeTicket.address?.doorNo ? `${activeTicket.address.doorNo}, ` : ""}
                               {activeTicket.address?.wardVillage}, {activeTicket.address?.townMandal}, {activeTicket.address?.assembly}, {activeTicket.address?.parliament}, {activeTicket.address?.state}
                             </span>
@@ -2136,43 +2136,43 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                       {/* Issue Description */}
                       <div className="space-y-2 text-xs">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B]">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]">
                           2. Issue Description & Location
                         </span>
-                        <div className="p-4 bg-[#FAF9F5] rounded-xl border border-[#ECEAE2] space-y-2">
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#555866] border-b border-[#ECEAE2] pb-2">
-                            <span>Department: <strong className="text-[#112233]">{activeTicket.department}</strong></span>
+                        <div className="p-4 bg-[#071322] rounded-xl border border-[#22405E] space-y-2">
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8E9CAE] border-b border-[#22405E] pb-2">
+                            <span>Department: <strong className="text-[#F5EFE0]">{activeTicket.department}</strong></span>
                             <span>·</span>
-                            <span>Category: <strong className="text-[#112233]">{activeTicket.category}</strong></span>
+                            <span>Category: <strong className="text-[#F5EFE0]">{activeTicket.category}</strong></span>
                             <span>·</span>
-                            <span>Location: <strong className="text-[#112233]">{activeTicket.location}</strong></span>
+                            <span>Location: <strong className="text-[#F5EFE0]">{activeTicket.location}</strong></span>
                           </div>
-                          <p className="text-[#2F323E] leading-relaxed pt-1">
+                          <p className="text-[#D8CFB8] leading-relaxed pt-1">
                             {activeTicket.description}
                           </p>
                         </div>
                       </div>
 
                       {/* Assignee Information & Reassignment Option */}
-                      <div className="p-4 bg-[#FAF9F5] rounded-xl border border-[#E5E3D8] space-y-3 text-xs">
+                      <div className="p-4 bg-[#071322] rounded-xl border border-[#22405E] space-y-3 text-xs">
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] block">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                               Assigned Officer / PoC
                             </span>
-                            <span className="font-bold text-sm text-[#112233]">{activeTicket.assignee}</span>
-                            <span className="text-xs text-[#666A78] block">{activeTicket.assigneeDesignation} · {activeTicket.assigneeContact}</span>
+                            <span className="font-bold text-sm text-[#F5EFE0]">{activeTicket.assignee}</span>
+                            <span className="text-xs text-[#8E9CAE] block">{activeTicket.assigneeDesignation} · {activeTicket.assigneeContact}</span>
                           </div>
 
                           {/* Reassign dropdown */}
                           <div className="text-right">
-                            <label className="text-[10px] uppercase font-bold text-[#888C99] block mb-1">Reassign PoC</label>
+                            <label className="text-[10px] uppercase font-bold text-[#8E9CAE] block mb-1">Reassign PoC</label>
                             <select
                               onChange={(e) => {
                                 const selected = contacts.find((c) => c.id === e.target.value);
                                 if (selected) handleReassignTicket(activeTicket.id, selected);
                               }}
-                              className="bg-white border border-[#D5D3C8] rounded-lg px-2.5 py-1 text-xs text-[#112233] cursor-pointer"
+                              className="bg-[#0B1A2C] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:border-[#D4A24C]"
                             >
                               <option value="">Choose new PoC...</option>
                               {contacts.map((c) => (
@@ -2185,22 +2185,22 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         </div>
 
                         {/* Volunteer Submitter Tag */}
-                        <div className="pt-2 border-t border-[#ECEAE2] flex items-center justify-between text-[11px] text-[#666A78]">
-                          <span>Logged by Volunteer: <strong className="text-[#112233]">{activeTicket.submittedByVolunteer?.name}</strong> (+91 {activeTicket.submittedByVolunteer?.phone})</span>
-                          <span className="font-mono-data">{activeTicket.submittedDate}</span>
+                        <div className="pt-2 border-t border-[#22405E] flex items-center justify-between text-[11px] text-[#8E9CAE]">
+                          <span>Logged by Volunteer: <strong className="text-[#D4A24C]">{activeTicket.submittedByVolunteer?.name}</strong> (+91 {activeTicket.submittedByVolunteer?.phone})</span>
+                          <span className="font-mono text-[#D8CFB8]">{activeTicket.submittedDate}</span>
                         </div>
                       </div>
 
                       {/* Liaison Notes & Action Trail */}
-                      <div className="space-y-3 pt-2 border-t border-[#ECEAE2] text-xs">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] block">
+                      <div className="space-y-3 pt-2 border-t border-[#22405E] text-xs">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           Field Liaison Resolution Log & Notes
                         </span>
 
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {activeTicket.notes.map((note, idx) => (
-                            <div key={idx} className="flex items-start space-x-2 text-xs text-[#454957] bg-[#FAF9F5] p-2.5 rounded-lg border border-[#E5E3D8]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#112233] mt-1.5 flex-shrink-0" />
+                            <div key={idx} className="flex items-start space-x-2 text-xs text-[#D8CFB8] bg-[#071322] p-2.5 rounded-lg border border-[#22405E]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#D4A24C] mt-1.5 flex-shrink-0" />
                               <span>{note}</span>
                             </div>
                           ))}
@@ -2214,11 +2214,11 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             value={resolutionNoteInput}
                             onChange={(e) => setResolutionNoteInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddResolutionNote(activeTicket.id)}
-                            className="flex-1 px-3 py-2 text-xs bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#112233]"
+                            className="flex-1 px-3 py-2 text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-lg focus:outline-none focus:border-[#D4A24C]"
                           />
                           <button
                             onClick={() => handleAddResolutionNote(activeTicket.id)}
-                            className="px-3.5 py-2 bg-[#112233] text-white text-xs font-semibold rounded-lg hover:bg-[#07121F] transition-colors cursor-pointer"
+                            className="px-3.5 py-2 bg-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-lg hover:brightness-110 transition-all cursor-pointer"
                           >
                             <Send className="w-3.5 h-3.5" />
                           </button>
@@ -2226,7 +2226,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-white border border-[#E0DED5] rounded-2xl p-12 text-center text-xs text-[#7A7E8C]">
+                    <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-12 text-center text-xs text-[#8E9CAE]">
                       Select a grievance ticket to inspect details and assign field officers.
                     </div>
                   )}
@@ -2237,23 +2237,23 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
           {/* TAB 3: CONTACT DATABASE (POINT OF CONTACTS DIRECTORY) */}
           {managerTab === "contacts" && (
-            <div className="bg-white border border-[#E0DED5] rounded-2xl p-6 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ECEAE2] pb-5">
+            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn text-[#F5EFE0]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-5">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                     Central PoC Registry
                   </span>
-                  <h3 className="font-editorial text-2xl font-normal text-[#112233]">
+                  <h3 className="font-display text-2xl font-normal text-[#F5EFE0]">
                     Constituency Contact Database
                   </h3>
-                  <p className="text-xs text-[#666A78] mt-0.5">
+                  <p className="text-xs text-[#8E9CAE] mt-0.5">
                     Department, category, village, mandal, and assembly level point of contacts. Field volunteers automatically fetch these contacts during grievance intake.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setIsAddContactModalOpen(true)}
-                  className="inline-flex items-center px-4 py-2.5 bg-[#112233] hover:bg-[#07121F] text-[#FBFBF9] text-xs font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
+                  className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
                   Add New Contact PoC
@@ -2261,42 +2261,42 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Contacts Table */}
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-xl border border-[#22405E]">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-[#E0DED5] bg-[#FAF9F5] text-[#555866] uppercase text-[10px] tracking-wider font-bold">
-                      <th className="py-3 px-4">Officer / PoC Name</th>
-                      <th className="py-3 px-4">Department & Category</th>
-                      <th className="py-3 px-4">Jurisdiction (Village/Mandal/Assembly)</th>
-                      <th className="py-3 px-4">Designation</th>
-                      <th className="py-3 px-4">Phone & Email</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
+                    <tr className="border-b border-[#22405E] bg-[#071322] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
+                      <th className="py-3.5 px-4">Officer / PoC Name</th>
+                      <th className="py-3.5 px-4">Department & Category</th>
+                      <th className="py-3.5 px-4">Jurisdiction (Village/Mandal/Assembly)</th>
+                      <th className="py-3.5 px-4">Designation</th>
+                      <th className="py-3.5 px-4">Phone & Email</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F0EFE8]">
+                  <tbody className="divide-y divide-[#22405E]/40">
                     {contacts.map((c) => (
-                      <tr key={c.id} className="hover:bg-[#FAF9F5] transition-colors">
-                        <td className="py-3 px-4 font-semibold text-[#112233]">
+                      <tr key={c.id} className="hover:bg-[#142B45]/50 transition-colors">
+                        <td className="py-3 px-4 font-semibold text-[#F5EFE0]">
                           {c.pocName}
                         </td>
                         <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200 block w-fit">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 block w-fit">
                             {c.department}
                           </span>
-                          <span className="text-[11px] text-[#666A78] mt-0.5 block">{c.category}</span>
+                          <span className="text-[11px] text-[#8E9CAE] mt-0.5 block">{c.category}</span>
                         </td>
-                        <td className="py-3 px-4 text-[#555866]">
-                          <span className="font-semibold text-[#112233]">{c.village}</span>, {c.mandal} ({c.assembly})
+                        <td className="py-3 px-4 text-[#D8CFB8]">
+                          <span className="font-semibold text-[#F5EFE0]">{c.village}</span>, {c.mandal} ({c.assembly})
                         </td>
-                        <td className="py-3 px-4 text-[#555866]">{c.designation}</td>
+                        <td className="py-3 px-4 text-[#8E9CAE]">{c.designation}</td>
                         <td className="py-3 px-4">
-                          <span className="font-mono-data text-[#0F766E] font-semibold block">{c.phone}</span>
-                          <span className="text-[10px] text-[#787C8A]">{c.email}</span>
+                          <span className="font-mono text-[#D4A24C] font-semibold block">{c.phone}</span>
+                          <span className="text-[10px] text-[#8E9CAE]">{c.email}</span>
                         </td>
                         <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => handleDeleteContact(c.id)}
-                            className="text-rose-600 hover:text-rose-800 p-1 rounded hover:bg-rose-50 cursor-pointer"
+                            className="text-rose-400 hover:text-rose-300 p-1 rounded hover:bg-rose-950/40 cursor-pointer"
                             title="Delete Contact"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -2310,20 +2310,20 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
               {/* Add Contact Modal */}
               {isAddContactModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-                  <div className="bg-white border border-[#E0DED5] rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5">
-                    <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                  <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 text-[#F5EFE0]">
+                    <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8E9B]">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]">
                           Directory Entry
                         </span>
-                        <h3 className="font-editorial text-2xl font-normal text-[#112233]">
+                        <h3 className="font-display text-2xl font-normal text-[#F5EFE0]">
                           Add New Point of Contact
                         </h3>
                       </div>
                       <button
                         onClick={() => setIsAddContactModalOpen(false)}
-                        className="text-xs font-bold text-[#717582] hover:text-[#112233]"
+                        className="text-xs font-bold text-[#8E9CAE] hover:text-white"
                       >
                         ✕
                       </button>
@@ -2331,27 +2331,27 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                     <form onSubmit={handleAddContact} className="space-y-4 text-xs">
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-[#555866]">Officer / PoC Name</label>
+                        <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Officer / PoC Name</label>
                         <input
                           type="text"
                           required
                           placeholder="e.g. M. Ramesh (Irrigation Liaison)"
                           value={newContactName}
                           onChange={(e) => setNewContactName(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs"
+                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-[#555866]">Department</label>
+                          <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Department</label>
                           <select
                             value={newContactDept}
                             onChange={(e) => {
                               setNewContactDept(e.target.value);
                               setNewContactCat(DEPARTMENT_CATEGORIES[e.target.value]?.[0] || "");
                             }}
-                            className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs cursor-pointer"
+                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                           >
                             {Object.keys(DEPARTMENT_CATEGORIES).map((d) => (
                               <option key={d} value={d}>{d}</option>
@@ -2360,11 +2360,11 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-[#555866]">Category</label>
+                          <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Category</label>
                           <select
                             value={newContactCat}
                             onChange={(e) => setNewContactCat(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs cursor-pointer"
+                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                           >
                             {(DEPARTMENT_CATEGORIES[newContactDept] || []).map((c) => (
                               <option key={c} value={c}>{c}</option>
@@ -2375,21 +2375,21 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                       <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-[#555866]">Village / Ward</label>
+                          <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Village / Ward</label>
                           <input
                             type="text"
                             placeholder="e.g. Chinna Chowk"
                             value={newContactVillage}
                             onChange={(e) => setNewContactVillage(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs"
+                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-[#555866]">Mandal</label>
+                          <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Mandal</label>
                           <select
                             value={newContactMandal}
                             onChange={(e) => setNewContactMandal(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs cursor-pointer"
+                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                           >
                             {MANDALS_LIST.map((m) => (
                               <option key={m} value={m}>{m}</option>
@@ -2397,62 +2397,62 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           </select>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-[#555866]">Assembly</label>
+                          <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Assembly</label>
                           <input
                             type="text"
                             value={newContactAssembly}
                             onChange={(e) => setNewContactAssembly(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs"
+                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-[#555866]">Official Designation</label>
+                          <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Official Designation</label>
                           <input
                             type="text"
                             placeholder="e.g. Executive Engineer Water Works"
                             value={newContactDesignation}
                             onChange={(e) => setNewContactDesignation(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs"
+                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-[#555866]">Official Phone</label>
+                          <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Official Phone</label>
                           <input
                             type="tel"
                             required
                             placeholder="+91 94408 11223"
                             value={newContactPhone}
                             onChange={(e) => setNewContactPhone(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs font-mono-data"
+                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl font-mono focus:border-[#D4A24C]"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-[#555866]">Email</label>
+                        <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Email</label>
                         <input
                           type="email"
                           placeholder="poc@kadapa.gov.in"
                           value={newContactEmail}
                           onChange={(e) => setNewContactEmail(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs"
+                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                         />
                       </div>
 
-                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[#ECEAE2]">
+                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[#22405E]">
                         <button
                           type="button"
                           onClick={() => setIsAddContactModalOpen(false)}
-                          className="px-4 py-2 text-xs font-semibold text-[#5B5F6C]"
+                          className="px-4 py-2 text-xs font-semibold text-[#8E9CAE] hover:text-white"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="px-5 py-2.5 bg-[#112233] text-white text-xs font-semibold rounded-lg hover:bg-[#07121F]"
+                          className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                         >
                           Save Contact PoC
                         </button>
@@ -2466,23 +2466,23 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
           {/* TAB 4: VOLUNTEER WHITELIST & ACCESS MANAGEMENT */}
           {managerTab === "volunteers" && (
-            <div className="bg-white border border-[#E0DED5] rounded-2xl p-6 sm:p-8 shadow-xs space-y-6 animate-fadeIn">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#ECEAE2] pb-5">
+            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn text-[#F5EFE0]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-5">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                     Access Control Registry
                   </span>
-                  <h3 className="font-editorial text-2xl font-normal text-[#112233]">
+                  <h3 className="font-display text-2xl font-normal text-[#F5EFE0]">
                     Designated Volunteer Mobile Whitelist
                   </h3>
-                  <p className="text-xs text-[#666A78] mt-0.5">
+                  <p className="text-xs text-[#8E9CAE] mt-0.5">
                     Only these designated mobile numbers can receive OTP authentication and file grievances for this constituency.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setIsAddVolunteerModalOpen(true)}
-                  className="inline-flex items-center px-4 py-2.5 bg-[#112233] hover:bg-[#07121F] text-[#FBFBF9] text-xs font-semibold rounded-xl transition-all shadow-xs cursor-pointer"
+                  className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
                   Add Designated Volunteer
@@ -2490,35 +2490,35 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Volunteers Table */}
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-xl border border-[#22405E]">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-[#E0DED5] bg-[#FAF9F5] text-[#555866] uppercase text-[10px] tracking-wider font-bold">
-                      <th className="py-3 px-4">Volunteer Name</th>
-                      <th className="py-3 px-4">Designated Mobile (OTP Whitelist)</th>
-                      <th className="py-3 px-4">Assigned Constituency</th>
-                      <th className="py-3 px-4">Mandal Assignment</th>
-                      <th className="py-3 px-4">Access Status</th>
-                      <th className="py-3 px-4 text-right">Toggle Access</th>
+                    <tr className="border-b border-[#22405E] bg-[#071322] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
+                      <th className="py-3.5 px-4">Volunteer Name</th>
+                      <th className="py-3.5 px-4">Designated Mobile (OTP Whitelist)</th>
+                      <th className="py-3.5 px-4">Assigned Constituency</th>
+                      <th className="py-3.5 px-4">Mandal Assignment</th>
+                      <th className="py-3.5 px-4">Access Status</th>
+                      <th className="py-3.5 px-4 text-right">Toggle Access</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F0EFE8]">
+                  <tbody className="divide-y divide-[#22405E]/40">
                     {designatedVolunteers.map((v) => (
-                      <tr key={v.id} className="hover:bg-[#FAF9F5] transition-colors">
-                        <td className="py-3 px-4 font-semibold text-[#112233]">
+                      <tr key={v.id} className="hover:bg-[#142B45]/50 transition-colors">
+                        <td className="py-3 px-4 font-semibold text-[#F5EFE0]">
                           {v.name}
                         </td>
-                        <td className="py-3 px-4 font-mono-data text-sm font-bold text-[#112233]">
+                        <td className="py-3 px-4 font-mono text-sm font-bold text-[#D4A24C]">
                           +91 {v.mobile}
                         </td>
-                        <td className="py-3 px-4 text-[#555866]">{v.constituency}</td>
-                        <td className="py-3 px-4 text-[#555866]">{v.mandal}</td>
+                        <td className="py-3 px-4 text-[#D8CFB8]">{v.constituency}</td>
+                        <td className="py-3 px-4 text-[#D8CFB8]">{v.mandal}</td>
                         <td className="py-3 px-4">
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                               v.active
-                                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                                : "bg-rose-100 text-rose-800 border-rose-300"
+                                ? "bg-emerald-950/40 text-emerald-400 border-emerald-800"
+                                : "bg-rose-950/40 text-rose-400 border-rose-800"
                             }`}
                           >
                             {v.active ? "Authorized Active" : "Suspended"}
@@ -2527,7 +2527,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => handleToggleVolunteerStatus(v.id)}
-                            className="px-2.5 py-1 text-[11px] font-semibold rounded border border-[#D5D3C8] hover:bg-[#ECEAE2] cursor-pointer"
+                            className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-[#22405E] bg-[#071322] text-[#F5EFE0] hover:border-[#D4A24C] transition-colors cursor-pointer"
                           >
                             {v.active ? "Revoke Access" : "Grant Access"}
                           </button>
@@ -2540,15 +2540,15 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
               {/* Add Volunteer Modal */}
               {isAddVolunteerModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-                  <div className="bg-white border border-[#E0DED5] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-                    <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-                      <h3 className="font-editorial text-xl font-normal text-[#112233]">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+                  <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-[#F5EFE0]">
+                    <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+                      <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
                         Add Designated Volunteer
                       </h3>
                       <button
                         onClick={() => setIsAddVolunteerModalOpen(false)}
-                        className="text-xs font-bold text-[#717582] hover:text-[#112233]"
+                        className="text-xs font-bold text-[#8E9CAE] hover:text-white"
                       >
                         ✕
                       </button>
@@ -2556,35 +2556,35 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                     <form onSubmit={handleAddVolunteer} className="space-y-4 text-xs">
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-[#555866]">Volunteer Full Name</label>
+                        <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Volunteer Full Name</label>
                         <input
                           type="text"
                           required
                           placeholder="e.g. M. Chenna Kesavulu"
                           value={newVolName}
                           onChange={(e) => setNewVolName(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs"
+                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-[#555866]">Designated Mobile Number</label>
+                        <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Designated Mobile Number</label>
                         <input
                           type="tel"
                           required
                           placeholder="9848012345"
                           value={newVolMobile}
                           onChange={(e) => setNewVolMobile(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs font-mono-data"
+                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl font-mono focus:border-[#D4A24C]"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-[#555866]">Assigned Mandal</label>
+                        <label className="text-[10px] uppercase font-bold text-[#8E9CAE]">Assigned Mandal</label>
                         <select
                           value={newVolMandal}
                           onChange={(e) => setNewVolMandal(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#FAF9F5] border border-[#D5D3C8] rounded-lg text-xs cursor-pointer"
+                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                         >
                           {MANDALS_LIST.map((m) => (
                             <option key={m} value={m}>{m}</option>
@@ -2592,17 +2592,17 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         </select>
                       </div>
 
-                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[#ECEAE2]">
+                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[#22405E]">
                         <button
                           type="button"
                           onClick={() => setIsAddVolunteerModalOpen(false)}
-                          className="px-4 py-2 text-xs font-semibold text-[#5B5F6C]"
+                          className="px-4 py-2 text-xs font-semibold text-[#8E9CAE] hover:text-white"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="px-5 py-2 bg-[#112233] text-white text-xs font-semibold rounded-lg hover:bg-[#07121F]"
+                          className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                         >
                           Authorize Volunteer
                         </button>

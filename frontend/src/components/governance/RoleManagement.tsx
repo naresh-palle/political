@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { UserProfile, UserRole, PrimaryRole, PoliticalParty, ElectedRepresentative } from "../../types";
 import { USER_PROFILES, MOCK_POLITICAL_PARTIES, MOCK_ELECTED_REPRESENTATIVES } from "../../services/mockData";
 import { politicalApiService } from "../../services/api";
@@ -342,7 +342,58 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
     }
   };
 
-  const filteredUsers = profiles.filter((p) => {
+  // Scoped users list based on active role hierarchy:
+  // - Super Admin: sees ALL users across all 4 tiers
+  // - Political Admin: sees ONLY Directors belonging to his/her party & constituency
+  // - Director: sees ONLY Volunteers belonging to his/her squad & mandals
+  const scopedProfiles = useMemo(() => {
+    if (isSuperAdmin) {
+      return profiles;
+    }
+    if (isPoliticalAdmin) {
+      return profiles.filter((p) => {
+        const isDirectorUser =
+          p.primaryRole === "DIRECTOR" ||
+          p.roleId === "CAMPAIGN_MANAGER" ||
+          p.role === "campaign_manager";
+        const matchesParty =
+          !p.partyId ||
+          !currentProfile.partyId ||
+          p.partyId === currentProfile.partyId;
+        const matchesConstituency =
+          !p.assemblyConstituencyId ||
+          !currentProfile.assemblyConstituencyId ||
+          p.assemblyConstituencyId === currentProfile.assemblyConstituencyId ||
+          (p.assignedConstituency &&
+            currentProfile.assignedConstituency &&
+            (p.assignedConstituency
+              .toLowerCase()
+              .includes(currentProfile.assignedConstituency.toLowerCase().split(" ")[0]) ||
+              currentProfile.assignedConstituency
+                .toLowerCase()
+                .includes(p.assignedConstituency.toLowerCase().split(" ")[0])));
+        return isDirectorUser && (matchesParty || matchesConstituency);
+      });
+    }
+    if (isDirector) {
+      return profiles.filter((p) => {
+        const isVolunteerUser =
+          p.primaryRole === "VOLUNTEER" ||
+          p.roleId === "VOLUNTEER" ||
+          p.role === "volunteer";
+        const matchesDirector =
+          p.directorId === currentProfile.id ||
+          p.directorName?.toLowerCase() === currentProfile.name.toLowerCase() ||
+          (p.assignedMandalId &&
+            currentProfile.assignedMandalIds?.includes(p.assignedMandalId)) ||
+          p.partyId === currentProfile.partyId;
+        return isVolunteerUser && matchesDirector;
+      });
+    }
+    return [];
+  }, [profiles, isSuperAdmin, isPoliticalAdmin, isDirector, currentProfile]);
+
+  const filteredUsers = scopedProfiles.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(userSearch.toLowerCase()) ||
       p.email.toLowerCase().includes(userSearch.toLowerCase()) ||
@@ -386,14 +437,18 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
               <span className="text-xs text-[#D8CFB8]">{currentProfile.assignedConstituency}</span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
-              Access Control & User Governance
+              {isSuperAdmin
+                ? "Access Control & Master User Governance"
+                : isPoliticalAdmin
+                ? "Constituency Directors Governance"
+                : "Squad Volunteer Directory & Assignments"}
             </h1>
             <p className="text-xs text-[#8E9CAE] mt-0.5">
               {isSuperAdmin
                 ? "Full Platform User Management · Multi-Tenant Provisioning & Audit Trails"
                 : isPoliticalAdmin
-                ? "Constituency Director Governance & Volunteer Cadre Deployment"
-                : "Squad Volunteer Assignment & Verification"}
+                ? "Manage and deploy Volunteer Managers (Directors) across your Assembly Constituency"
+                : "Manage and verify field volunteers assigned to your mandal squad"}
             </p>
           </div>
         </div>
@@ -427,7 +482,13 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>User Directory & RBAC ({profiles.length})</span>
+          <span>
+            {isSuperAdmin
+              ? `User Directory & RBAC (${scopedProfiles.length})`
+              : isPoliticalAdmin
+              ? `Constituency Directors (${scopedProfiles.length})`
+              : `Squad Volunteers (${scopedProfiles.length})`}
+          </span>
         </button>
 
         {isSuperAdmin && (
@@ -476,53 +537,157 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         <div className="space-y-6 animate-fadeIn">
           {/* User Metrics Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CAE] block">
-                Total Active Users
-              </span>
-              <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
-                {profiles.length}
-              </div>
-              <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" /> 100% RBAC Active
-              </span>
-            </div>
+            {isSuperAdmin ? (
+              <>
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CAE] block">
+                    Total Active Users
+                  </span>
+                  <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
+                    {profiles.length}
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> 100% RBAC Active
+                  </span>
+                </div>
 
-            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
-                Platform Super Admins (L1)
-              </span>
-              <div className="text-2xl font-bold font-display text-[#D4A24C] mt-1">
-                {countL1}
-              </div>
-              <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                Protected Multi-Tenant Clearance
-              </span>
-            </div>
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
+                    Platform Super Admins (L1)
+                  </span>
+                  <div className="text-2xl font-bold font-display text-[#D4A24C] mt-1">
+                    {countL1}
+                  </div>
+                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                    Protected Multi-Tenant Clearance
+                  </span>
+                </div>
 
-            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
-                Political Admins & Directors (L2/L3)
-              </span>
-              <div className="text-2xl font-bold font-display text-blue-400 mt-1">
-                {countL2 + countL3}
-              </div>
-              <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                {countL2} MLAs · {countL3} Directors
-              </span>
-            </div>
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
+                    Political Admins & Directors (L2/L3)
+                  </span>
+                  <div className="text-2xl font-bold font-display text-blue-400 mt-1">
+                    {countL2 + countL3}
+                  </div>
+                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                    {countL2} MLAs · {countL3} Directors
+                  </span>
+                </div>
 
-            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                Field Volunteers (L4)
-              </span>
-              <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
-                {countL4}
-              </div>
-              <span className="text-[10px] text-emerald-400 mt-0.5 block">
-                Grassroots Ground Force
-              </span>
-            </div>
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
+                    Field Volunteers (L4)
+                  </span>
+                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
+                    {countL4}
+                  </div>
+                  <span className="text-[10px] text-emerald-400 mt-0.5 block">
+                    Grassroots Ground Force
+                  </span>
+                </div>
+              </>
+            ) : isPoliticalAdmin ? (
+              <>
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
+                    Constituency Directors
+                  </span>
+                  <div className="text-2xl font-bold font-display text-amber-400 mt-1">
+                    {scopedProfiles.length}
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> 100% Active Squads
+                  </span>
+                </div>
+
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
+                    Assigned Mandals
+                  </span>
+                  <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
+                    6 Mandals
+                  </div>
+                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                    Urban & Rural Covered
+                  </span>
+                </div>
+
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
+                    Supervised Cadre
+                  </span>
+                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
+                    {profiles.filter((p) => p.primaryRole === "VOLUNTEER" && (!p.partyId || p.partyId === currentProfile.partyId)).length}
+                  </div>
+                  <span className="text-[10px] text-emerald-400 mt-0.5 block">
+                    Field Volunteers in AC
+                  </span>
+                </div>
+
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
+                    Governance Clearance
+                  </span>
+                  <div className="text-2xl font-bold font-display text-blue-400 mt-1">
+                    Level 4
+                  </div>
+                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                    Constituency Command
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
+                    Squad Volunteers
+                  </span>
+                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
+                    {scopedProfiles.length}
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Field Force Active
+                  </span>
+                </div>
+
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
+                    Assigned Villages
+                  </span>
+                  <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
+                    4 Villages
+                  </div>
+                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                    Ground Reach 100%
+                  </span>
+                </div>
+
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
+                    Director Supervision
+                  </span>
+                  <div className="text-2xl font-bold font-display text-amber-400 mt-1">
+                    Level 3
+                  </div>
+                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                    Squad Manager Clearance
+                  </span>
+                </div>
+
+                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
+                    Audit Status
+                  </span>
+                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
+                    Verified
+                  </div>
+                  <span className="text-[10px] text-emerald-400 mt-0.5 block">
+                    Task Integrity Enforced
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Search & Filter Toolbar */}
@@ -531,7 +696,13 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
               <input
                 type="text"
-                placeholder="Search user by name, email, jurisdiction..."
+                placeholder={
+                  isSuperAdmin
+                    ? "Search user by name, email, jurisdiction..."
+                    : isPoliticalAdmin
+                    ? "Search constituency directors by name, mandal..."
+                    : "Search squad volunteers by name, village..."
+                }
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 className="w-full bg-[#071322] border border-[#22405E] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
@@ -539,17 +710,41 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
             </div>
 
             <div className="w-full sm:w-auto flex items-center gap-2">
-              <select
-                value={userRoleFilter}
-                onChange={(e) => setUserRoleFilter(e.target.value)}
-                className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
-              >
-                <option value="ALL">All Roles</option>
-                <option value="SUPER_ADMIN">Level 1: Platform Super Admin</option>
-                <option value="POLITICAL_ADMIN">Level 2: Political Admin (MLA)</option>
-                <option value="DIRECTOR">Level 3: Director</option>
-                <option value="VOLUNTEER">Level 4: Field Volunteer</option>
-              </select>
+              {isSuperAdmin && (
+                <select
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                  className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
+                >
+                  <option value="ALL">All Platform Roles</option>
+                  <option value="SUPER_ADMIN">Level 1: Platform Super Admin</option>
+                  <option value="POLITICAL_ADMIN">Level 2: Political Admin (MLA)</option>
+                  <option value="DIRECTOR">Level 3: Director</option>
+                  <option value="VOLUNTEER">Level 4: Field Volunteer</option>
+                </select>
+              )}
+
+              {isPoliticalAdmin && (
+                <select
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                  className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
+                >
+                  <option value="ALL">All Constituency Directors</option>
+                  <option value="DIRECTOR">Active Directors Only</option>
+                </select>
+              )}
+
+              {isDirector && (
+                <select
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                  className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
+                >
+                  <option value="ALL">All Squad Volunteers</option>
+                  <option value="VOLUNTEER">Active Volunteers Only</option>
+                </select>
+              )}
 
               {canCreateUsers && (
                 <button
@@ -558,7 +753,13 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D4A24C] text-[#071322] hover:brightness-110 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add User</span>
+                  <span>
+                    {isSuperAdmin
+                      ? "Add System User"
+                      : isPoliticalAdmin
+                      ? "Add Director"
+                      : "Add Volunteer"}
+                  </span>
                 </button>
               )}
             </div>
