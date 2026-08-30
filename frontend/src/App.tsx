@@ -297,7 +297,9 @@ function AppInner() {
               )}
 
               {/* Module 3: GRIEVANCE MANAGEMENT CRM */}
-              {activeProduct === "grievances" && <GrievanceManagement />}
+              {activeProduct === "grievances" && (
+                <GrievanceManagement currentProfile={currentProfile} />
+              )}
 
               {/* Module 4: SOCIAL MEDIA VOLUNTEER MONITORING (ADMIN ONLY) */}
               {activeProduct === "volunteers" && isAdmin && <VolunteerMonitoring />}

@@ -5,7 +5,8 @@ import {
   DesignatedVolunteer,
   GrievancePriority,
   GrievanceStatus,
-  GrievanceCitizenType
+  GrievanceCitizenType,
+  UserProfile
 } from "../../types";
 import {
   MOCK_GRIEVANCES,
@@ -44,6 +45,114 @@ import {
   Eye,
   Info
 } from "lucide-react";
+
+export interface MlaMinisterialInfo {
+  name: string;
+  constituency: string;
+  constituencyCode: string;
+  partyId: string;
+  partyName: string;
+  partyEmoji: string;
+  partyColor: string;
+  role: string;
+  isMinister: boolean;
+  ministerialDepartments?: string[];
+  photoUrl: string;
+  contactOffice: string;
+}
+
+export const MLA_MINISTERIAL_REGISTRY: Record<string, MlaMinisterialInfo> = {
+  "TDP_KADAPA": {
+    name: "R. Madhavi Reddy",
+    constituency: "Kadapa Assembly Constituency",
+    constituencyCode: "AC-132",
+    partyId: "TDP",
+    partyName: "Telugu Desam Party",
+    partyEmoji: "🚲",
+    partyColor: "#FFD200",
+    role: "Member of the Legislative Assembly (MLA)",
+    isMinister: false,
+    ministerialDepartments: [
+      "Civic Infrastructure & Urban Drainage",
+      "Drinking Water Pipeline Augmentation",
+      "Public Health & Hospital Empanelment"
+    ],
+    photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80",
+    contactOffice: "MLA Camp Office, 7-Roads Junction, Kadapa, AP"
+  },
+  "JSP_PITHAPURAM": {
+    name: "Konidela Pawan Kalyan",
+    constituency: "Pithapuram Assembly Constituency",
+    constituencyCode: "AC-041",
+    partyId: "JSP",
+    partyName: "Jana Sena Party",
+    partyEmoji: "⭐",
+    partyColor: "#DC2626",
+    role: "Deputy Chief Minister of Andhra Pradesh",
+    isMinister: true,
+    ministerialDepartments: [
+      "Panchayat Raj & Rural Development",
+      "Rural Water Supply & Sanitation",
+      "Environment, Forest, Science & Technology"
+    ],
+    photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&auto=format&fit=crop&q=80",
+    contactOffice: "Deputy CM Secretariat, Amaravati / Pithapuram Camp Office"
+  },
+  "YSRCP_PULIVENDULA": {
+    name: "Y. S. Jagan Mohan Reddy",
+    constituency: "Pulivendula Assembly Constituency",
+    constituencyCode: "AC-133",
+    partyId: "YSRCP",
+    partyName: "Yuvajana Sramika Rythu Congress Party",
+    partyEmoji: "🚁",
+    partyColor: "#15803D",
+    role: "Member of the Legislative Assembly (MLA) · Leader of YSRCP",
+    isMinister: false,
+    ministerialDepartments: [
+      "Irrigation & Canal Water Distribution",
+      "Rythu Bharosa & Farmer Welfare",
+      "Pension & DBT Entitlements"
+    ],
+    photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80",
+    contactOffice: "YSRCP Central Office, Tadepalli / Pulivendula Camp Office"
+  },
+  "TDP_MANGALAGIRI": {
+    name: "Nara Lokesh",
+    constituency: "Mangalagiri Assembly Constituency",
+    constituencyCode: "AC-087",
+    partyId: "TDP",
+    partyName: "Telugu Desam Party",
+    partyEmoji: "🚲",
+    partyColor: "#FFD200",
+    role: "Minister for Human Resources Development (HRD), IT & Electronics, RTGS",
+    isMinister: true,
+    ministerialDepartments: [
+      "Human Resources Development (Education)",
+      "Information Technology, Electronics & Communications (IT&E)",
+      "Real Time Governance Society (RTGS)"
+    ],
+    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+    contactOffice: "Ministerial Chamber, 4th Block, AP Secretariat, Velagapudi"
+  },
+  "TDP_KUPPAM": {
+    name: "N. Chandrababu Naidu",
+    constituency: "Kuppam Assembly Constituency",
+    constituencyCode: "AC-175",
+    partyId: "TDP",
+    partyName: "Telugu Desam Party",
+    partyEmoji: "🚲",
+    partyColor: "#FFD200",
+    role: "Hon'ble Chief Minister of Andhra Pradesh",
+    isMinister: true,
+    ministerialDepartments: [
+      "General Administration Department (GAD)",
+      "Law & Order and Home Affairs",
+      "Public Policy, Investment Promotion & Capital Region"
+    ],
+    photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+    contactOffice: "Chief Minister's Office (CMO), 1st Block, AP Secretariat, Velagapudi"
+  }
+};
 
 // Department & Category Tree for Andhra Pradesh / Constituency Grievances
 export const DEPARTMENT_CATEGORIES: Record<string, string[]> = {
@@ -114,9 +223,32 @@ const MANDALS_LIST = [
   "Vallur"
 ];
 
-export const GrievanceManagement: React.FC = () => {
+interface GrievanceManagementProps {
+  currentProfile?: UserProfile;
+}
+
+export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ currentProfile }) => {
   // Global Active Role: Manager vs Volunteer
   const [activeRole, setActiveRole] = useState<"manager" | "volunteer">("manager");
+
+  // Active MLA Profile Resolution
+  const activeMla: MlaMinisterialInfo = useMemo(() => {
+    if (currentProfile) {
+      if (currentProfile.partyId === "JSP" || currentProfile.assignedConstituency?.toLowerCase().includes("pithapuram")) {
+        return MLA_MINISTERIAL_REGISTRY["JSP_PITHAPURAM"];
+      }
+      if (currentProfile.partyId === "YSRCP" || currentProfile.assignedConstituency?.toLowerCase().includes("pulivendula")) {
+        return MLA_MINISTERIAL_REGISTRY["YSRCP_PULIVENDULA"];
+      }
+      if (currentProfile.assignedConstituency?.toLowerCase().includes("mangalagiri")) {
+        return MLA_MINISTERIAL_REGISTRY["TDP_MANGALAGIRI"];
+      }
+      if (currentProfile.assignedConstituency?.toLowerCase().includes("kuppam")) {
+        return MLA_MINISTERIAL_REGISTRY["TDP_KUPPAM"];
+      }
+    }
+    return MLA_MINISTERIAL_REGISTRY["TDP_KADAPA"];
+  }, [currentProfile]);
 
   // Master Data State
   const [grievances, setGrievances] = useState<GrievanceItem[]>(MOCK_GRIEVANCES);
@@ -651,52 +783,98 @@ export const GrievanceManagement: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-fadeIn">
-      {/* Top Banner: Role Selection Ribbon */}
-      <div className="bg-[#0B1A2C] text-[#F5EFE0] p-4 sm:p-5 rounded-2xl border border-[#D4A24C]/30 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
-            <Building2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C]">
-                Platform Pillar 2 · Constituency Grievance Command
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30 font-mono-data">
-                Kadapa AC
+      {/* Executive MLA & Ministerial Leadership Banner */}
+      <div className="bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] text-[#F5EFE0] p-5 sm:p-6 rounded-2xl border border-[#D4A24C]/40 shadow-xl space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          {/* MLA Identity & Photo */}
+          <div className="flex items-start sm:items-center gap-4">
+            <div className="relative">
+              <img
+                src={activeMla.photoUrl}
+                alt={activeMla.name}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-md"
+              />
+              <span className="absolute -bottom-1 -right-1 text-base bg-[#071322] px-1.5 py-0.5 rounded-full border border-[#D4A24C]/50">
+                {activeMla.partyEmoji}
               </span>
             </div>
-            <h1 className="font-editorial text-2xl sm:text-3xl text-white font-normal mt-0.5">
-              Grievance Intelligence & Resolution
-            </h1>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
+                  {activeMla.partyEmoji} {activeMla.partyName} ({activeMla.partyId})
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#142B45] text-[#8E9CAE] border border-[#22405E]">
+                  {activeMla.constituencyCode}
+                </span>
+                {activeMla.isMinister && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-[#D4A24C] text-[#0B1A2C] shadow-xs">
+                    ★ Ministerial Office
+                  </span>
+                )}
+              </div>
+
+              <h1 className="font-display text-xl sm:text-2xl text-[#F5EFE0] font-normal">
+                {activeMla.name}
+              </h1>
+
+              <div className="text-xs text-[#D8CFB8] font-medium flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
+                <span>{activeMla.constituency}, Andhra Pradesh</span>
+              </div>
+
+              <div className="text-xs text-[#D4A24C] font-semibold">
+                {activeMla.role}
+              </div>
+            </div>
+          </div>
+
+          {/* Role Toggle Switch */}
+          <div className="flex items-center self-start lg:self-center bg-[#071322] p-1.5 rounded-xl border border-[#22405E]">
+            <button
+              onClick={() => setActiveRole("manager")}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeRole === "manager"
+                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-md font-bold"
+                  : "text-[#B9AF95] hover:text-white"
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5" />
+              <span>1. Manager Section</span>
+            </button>
+            <button
+              onClick={() => setActiveRole("volunteer")}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeRole === "volunteer"
+                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-md font-bold"
+                  : "text-[#B9AF95] hover:text-white"
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>2. Volunteer Section</span>
+            </button>
           </div>
         </div>
 
-        {/* Role Toggle Switch */}
-        <div className="flex items-center bg-[#071322] p-1.5 rounded-xl border border-[#22405E]">
-          <button
-            onClick={() => setActiveRole("manager")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeRole === "manager"
-                ? "bg-[#D4A24C] text-[#0B1A2C] shadow-md font-bold"
-                : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            <Shield className="w-3.5 h-3.5" />
-            <span>1. Manager Section</span>
-          </button>
-          <button
-            onClick={() => setActiveRole("volunteer")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeRole === "volunteer"
-                ? "bg-[#D4A24C] text-[#0B1A2C] shadow-md font-bold"
-                : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span>2. Volunteer Section</span>
-          </button>
-        </div>
+        {/* Ministerial Portfolios Strip (if Minister or MLA Department Focus) */}
+        {activeMla.ministerialDepartments && activeMla.ministerialDepartments.length > 0 && (
+          <div className="pt-3 border-t border-[#22405E]/60 flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1 flex-shrink-0">
+              <Briefcase className="w-3.5 h-3.5" />
+              {activeMla.isMinister ? "Ministerial Portfolios:" : "Key Department Focus:"}
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {activeMla.ministerialDepartments.map((dept, i) => (
+                <span
+                  key={i}
+                  className="px-2.5 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[11px] text-[#F5EFE0] font-medium"
+                >
+                  {dept}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* =========================================================================
@@ -2437,6 +2615,20 @@ export const GrievanceManagement: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Footer Attribution */}
+      <div className="text-center py-4 border-t border-[#22405E]/40 text-xs text-[#8E9CAE]">
+        Developed and Maintained by{" "}
+        <a
+          href="https://palramai.in"
+          target="_blank"
+          rel="noreferrer"
+          className="text-[#D4A24C] font-semibold hover:underline"
+        >
+          palramai.in
+        </a>
+      </div>
     </div>
   );
 };
+
