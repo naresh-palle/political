@@ -219,7 +219,7 @@ function AppInner() {
   };
 
   return (
-    <PartyThemeProvider>
+    <PartyThemeProvider authenticatedUser={currentProfile}>
       <AppCanvas>
         {route === "home" && (
           <HomePage onEnter={() => setRoute("auth")} />
