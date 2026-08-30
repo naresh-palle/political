@@ -597,6 +597,35 @@ export const politicalApiService = {
     return list.filter((p) => p.stateId.toUpperCase() === stateId.toUpperCase());
   },
 
+  async getAssemblies(stateId?: string): Promise<AssemblyInfo[]> {
+    try {
+      const url = stateId
+        ? `${RENDER_BACKEND_URL}/geography/states/${encodeURIComponent(stateId)}/assembly-constituencies`
+        : `${RENDER_BACKEND_URL}/geography/assembly-constituencies`;
+      const res = await fetchWithTimeout(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          return data.map((a: any) => ({
+            ...a,
+            parliamentId: a.parliamentConstituencyId || a.parliamentId
+          }));
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+    await loadStaticGeography();
+    let list = cachedAssemblies || MOCK_ASSEMBLIES;
+    if (stateId) {
+      list = list.filter((a) => a.stateId?.toUpperCase() === stateId.toUpperCase());
+    }
+    return list.map((a: any) => ({
+      ...a,
+      parliamentId: (a as any).parliamentConstituencyId || a.parliamentId
+    }));
+  },
+
   async getAssembliesByParliament(parliamentId: string): Promise<AssemblyInfo[]> {
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/parliament-constituencies/${encodeURIComponent(parliamentId)}/assembly-constituencies`);

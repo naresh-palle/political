@@ -93,6 +93,11 @@ export interface StateInfo {
   id: string;
   name: string;
   code: string;
+  countryId?: string;
+  type?: "STATE" | "UNION_TERRITORY" | string;
+  totalParliamentaryConstituencies?: number;
+  totalAssemblyConstituencies?: number;
+  isActive?: boolean;
 }
 
 export interface PoliticalParty {

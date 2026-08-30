@@ -567,10 +567,42 @@ export const MOCK_ELECTED_REPRESENTATIVES: ElectedRepresentative[] = [
 ];
 
 export const MOCK_STATES: StateInfo[] = [
-  { id: "AP", name: "Andhra Pradesh", code: "AP" },
-  { id: "TS", name: "Telangana", code: "TS" },
-  { id: "KA", name: "Karnataka", code: "KA" },
-  { id: "TN", name: "Tamil Nadu", code: "TN" }
+  { id: "AP", name: "Andhra Pradesh", code: "AP", totalAssemblyConstituencies: 175, totalParliamentaryConstituencies: 25 },
+  { id: "AR", name: "Arunachal Pradesh", code: "AR", totalAssemblyConstituencies: 60, totalParliamentaryConstituencies: 2 },
+  { id: "AS", name: "Assam", code: "AS", totalAssemblyConstituencies: 126, totalParliamentaryConstituencies: 14 },
+  { id: "BR", name: "Bihar", code: "BR", totalAssemblyConstituencies: 243, totalParliamentaryConstituencies: 40 },
+  { id: "CG", name: "Chhattisgarh", code: "CG", totalAssemblyConstituencies: 90, totalParliamentaryConstituencies: 11 },
+  { id: "GA", name: "Goa", code: "GA", totalAssemblyConstituencies: 40, totalParliamentaryConstituencies: 2 },
+  { id: "GJ", name: "Gujarat", code: "GJ", totalAssemblyConstituencies: 182, totalParliamentaryConstituencies: 26 },
+  { id: "HR", name: "Haryana", code: "HR", totalAssemblyConstituencies: 90, totalParliamentaryConstituencies: 10 },
+  { id: "HP", name: "Himachal Pradesh", code: "HP", totalAssemblyConstituencies: 68, totalParliamentaryConstituencies: 4 },
+  { id: "JH", name: "Jharkhand", code: "JH", totalAssemblyConstituencies: 81, totalParliamentaryConstituencies: 14 },
+  { id: "KA", name: "Karnataka", code: "KA", totalAssemblyConstituencies: 224, totalParliamentaryConstituencies: 28 },
+  { id: "KL", name: "Kerala", code: "KL", totalAssemblyConstituencies: 140, totalParliamentaryConstituencies: 20 },
+  { id: "MP", name: "Madhya Pradesh", code: "MP", totalAssemblyConstituencies: 230, totalParliamentaryConstituencies: 29 },
+  { id: "MH", name: "Maharashtra", code: "MH", totalAssemblyConstituencies: 288, totalParliamentaryConstituencies: 48 },
+  { id: "MN", name: "Manipur", code: "MN", totalAssemblyConstituencies: 60, totalParliamentaryConstituencies: 2 },
+  { id: "ML", name: "Meghalaya", code: "ML", totalAssemblyConstituencies: 60, totalParliamentaryConstituencies: 2 },
+  { id: "MZ", name: "Mizoram", code: "MZ", totalAssemblyConstituencies: 40, totalParliamentaryConstituencies: 1 },
+  { id: "NL", name: "Nagaland", code: "NL", totalAssemblyConstituencies: 60, totalParliamentaryConstituencies: 1 },
+  { id: "OD", name: "Odisha", code: "OD", totalAssemblyConstituencies: 147, totalParliamentaryConstituencies: 21 },
+  { id: "PB", name: "Punjab", code: "PB", totalAssemblyConstituencies: 117, totalParliamentaryConstituencies: 13 },
+  { id: "RJ", name: "Rajasthan", code: "RJ", totalAssemblyConstituencies: 200, totalParliamentaryConstituencies: 25 },
+  { id: "SK", name: "Sikkim", code: "SK", totalAssemblyConstituencies: 32, totalParliamentaryConstituencies: 1 },
+  { id: "TN", name: "Tamil Nadu", code: "TN", totalAssemblyConstituencies: 234, totalParliamentaryConstituencies: 39 },
+  { id: "TS", name: "Telangana", code: "TS", totalAssemblyConstituencies: 119, totalParliamentaryConstituencies: 17 },
+  { id: "TR", name: "Tripura", code: "TR", totalAssemblyConstituencies: 60, totalParliamentaryConstituencies: 2 },
+  { id: "UP", name: "Uttar Pradesh", code: "UP", totalAssemblyConstituencies: 403, totalParliamentaryConstituencies: 80 },
+  { id: "UK", name: "Uttarakhand", code: "UK", totalAssemblyConstituencies: 70, totalParliamentaryConstituencies: 5 },
+  { id: "WB", name: "West Bengal", code: "WB", totalAssemblyConstituencies: 294, totalParliamentaryConstituencies: 42 },
+  { id: "AN", name: "Andaman and Nicobar Islands", code: "AN", totalAssemblyConstituencies: 0, totalParliamentaryConstituencies: 1 },
+  { id: "CH", name: "Chandigarh", code: "CH", totalAssemblyConstituencies: 0, totalParliamentaryConstituencies: 1 },
+  { id: "DN", name: "Dadra & Nagar Haveli and Daman & Diu", code: "DN", totalAssemblyConstituencies: 0, totalParliamentaryConstituencies: 2 },
+  { id: "DL", name: "Delhi (NCT)", code: "DL", totalAssemblyConstituencies: 70, totalParliamentaryConstituencies: 7 },
+  { id: "JK", name: "Jammu and Kashmir", code: "JK", totalAssemblyConstituencies: 90, totalParliamentaryConstituencies: 5 },
+  { id: "LA", name: "Ladakh", code: "LA", totalAssemblyConstituencies: 0, totalParliamentaryConstituencies: 1 },
+  { id: "LD", name: "Lakshadweep", code: "LD", totalAssemblyConstituencies: 0, totalParliamentaryConstituencies: 1 },
+  { id: "PY", name: "Puducherry", code: "PY", totalAssemblyConstituencies: 30, totalParliamentaryConstituencies: 1 }
 ];
 
 export const MOCK_PARLIAMENTS: ParliamentInfo[] = [

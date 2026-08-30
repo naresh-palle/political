@@ -110,8 +110,19 @@ function AppInner() {
     currentProfile?.role === "super_admin" ||
     currentProfile?.permissions?.canManageSystemUsers === true;
 
+  // Enforce Grievances module for non-admin users
+  useEffect(() => {
+    if (!isAdmin && activeProduct !== "grievances") {
+      setActiveProduct("grievances");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "grievances");
+      } catch {}
+    }
+  }, [isAdmin, activeProduct]);
+
   const handleProductChange = (product: "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => {
-    const targetProduct = product === "governance" && !isAdmin ? "pitch" : product;
+    // Non-admin users are strictly restricted to Grievances
+    const targetProduct = !isAdmin ? "grievances" : product;
     setActiveProduct(targetProduct);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, targetProduct);
@@ -120,6 +131,19 @@ function AppInner() {
 
   const handleAuthenticated = (user: UserProfile) => {
     setCurrentProfile(user);
+    const userIsAdmin =
+      user.roleId === "SUPER_ADMIN" ||
+      user.roleId === "ADMIN" ||
+      user.role === "super_admin" ||
+      user.permissions?.canManageSystemUsers === true;
+
+    if (!userIsAdmin) {
+      setActiveProduct("grievances");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "grievances");
+      } catch {}
+    }
+
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     } catch {}
@@ -138,6 +162,19 @@ function AppInner() {
 
   const handleSwitchProfile = (profile: UserProfile) => {
     setCurrentProfile(profile);
+    const userIsAdmin =
+      profile.roleId === "SUPER_ADMIN" ||
+      profile.roleId === "ADMIN" ||
+      profile.role === "super_admin" ||
+      profile.permissions?.canManageSystemUsers === true;
+
+    if (!userIsAdmin) {
+      setActiveProduct("grievances");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "grievances");
+      } catch {}
+    }
+
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
     } catch {}

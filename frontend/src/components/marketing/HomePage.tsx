@@ -26,33 +26,47 @@ const STATE_STATS: Record<string, { constituencies: number; signalsPerDay: numbe
 
 export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
   const [states, setStates] = useState<StateInfo[]>(MOCK_STATES);
+  const [assemblies, setAssemblies] = useState<AssemblyInfo[]>(MOCK_ASSEMBLIES);
   const [stateId, setStateId] = useState<string>("AP");
   const [leftAcId, setLeftAcId] = useState<string>("KDP-AC");
   const [rightAcId, setRightAcId] = useState<string>("PRD-AC");
 
   useEffect(() => {
     (async () => {
-      const list = await politicalApiService.getStates();
-      if (list && list.length > 0) setStates(list);
+      const [stateList, assemblyList] = await Promise.all([
+        politicalApiService.getStates(),
+        politicalApiService.getAssemblies()
+      ]);
+      if (stateList && stateList.length > 0) setStates(stateList);
+      if (assemblyList && assemblyList.length > 0) setAssemblies(assemblyList);
     })();
   }, []);
 
-  const stats = STATE_STATS[stateId] || {
-    constituencies: states.find((s) => s.id === stateId)?.id ? 120 : 60,
-    signalsPerDay: 28500,
-    verifiedProfiles: 750,
-    grievances: 5400,
+  const currentState = states.find((s) => s.id === stateId) || states[0] || MOCK_STATES[0];
+  const acCount = currentState.totalAssemblyConstituencies || STATE_STATS[stateId]?.constituencies || 60;
+
+  const stats = {
+    constituencies: acCount,
+    signalsPerDay: STATE_STATS[stateId]?.signalsPerDay || Math.round(acCount * 180),
+    verifiedProfiles: STATE_STATS[stateId]?.verifiedProfiles || Math.round(acCount * 6.5),
+    grievances: STATE_STATS[stateId]?.grievances || Math.round(acCount * 48),
     confidence: "Verified" as TrustLevel
   };
 
-  const currentState = states.find((s) => s.id === stateId) || states[0] || MOCK_STATES[0];
+  const eligibleAcs = useMemo(() => {
+    const list = assemblies.filter((a) => a.stateId === stateId);
+    return list.length > 0 ? list : assemblies.filter((a) => a.stateId === "AP" || !a.stateId);
+  }, [assemblies, stateId]);
 
-  const eligibleAcs = useMemo(
-    () => MOCK_ASSEMBLIES.filter((a) => a.stateId === stateId || stateId === "AP"),
-    [stateId]
-  );
+  useEffect(() => {
+    if (eligibleAcs.length > 0) {
+      setLeftAcId(eligibleAcs[0].id);
+      setRightAcId(eligibleAcs.length > 1 ? eligibleAcs[1].id : eligibleAcs[0].id);
+    }
+  }, [eligibleAcs]);
+
   const leftAc = eligibleAcs.find((a) => a.id === leftAcId) || eligibleAcs[0] || MOCK_ASSEMBLIES[0];
-  const rightAc = eligibleAcs.find((a) => a.id === rightAcId) || eligibleAcs[1] || MOCK_ASSEMBLIES[1];
+  const rightAc = eligibleAcs.find((a) => a.id === rightAcId) || (eligibleAcs.length > 1 ? eligibleAcs[1] : eligibleAcs[0]) || MOCK_ASSEMBLIES[1] || MOCK_ASSEMBLIES[0];
 
   return (
     <div
@@ -156,7 +170,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
                   onChange={(e) => setStateId(e.target.value)}
                   className="appearance-none bg-[#0F2338] border border-[#D4A24C]/30 hover:border-[#D4A24C]/70 rounded-md pl-3 pr-8 py-2 text-[13px] text-[#F5EFE0] font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#D4A24C]/40 transition-colors"
                 >
-                  {MOCK_STATES.map((st) => (
+                  {states.map((st) => (
                     <option key={st.id} value={st.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
                       {st.name} ({st.code})
                     </option>
@@ -174,7 +188,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
             </div>
 
             {/* Rolling verified feed */}
-            <VerifiedFeed stateId={stateId} />
+            <VerifiedFeed stateId={stateId} stateName={currentState.name} />
 
             <div className="rounded-xl border border-[#D4A24C]/25 bg-gradient-to-br from-[#122A44] to-[#0F2338] px-5 py-4 flex items-center gap-3">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />

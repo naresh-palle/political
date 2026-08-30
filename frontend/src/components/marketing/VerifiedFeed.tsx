@@ -48,8 +48,18 @@ const tone = (level: string) => {
   }
 };
 
-export const VerifiedFeed: React.FC<{ stateId: string }> = ({ stateId }) => {
-  const items = useMemo(() => BASE_FEED[stateId] || BASE_FEED.AP, [stateId]);
+export const VerifiedFeed: React.FC<{ stateId: string; stateName?: string }> = ({ stateId, stateName = "State" }) => {
+  const items = useMemo(() => {
+    if (BASE_FEED[stateId]) return BASE_FEED[stateId];
+    return [
+      { id: `${stateId}-1`, icon: <ShieldCheck className="w-4 h-4" />, eyebrow: "Verified", headline: `${stateName} AC electoral rolls verified with ECI`, meta: "ECI · 2 min ago" },
+      { id: `${stateId}-2`, icon: <Radio className="w-4 h-4" />,       eyebrow: "Live",     headline: `Candidate social handles and feeds synchronized`, meta: "Google · 8 min ago" },
+      { id: `${stateId}-3`, icon: <Vote className="w-4 h-4" />,        eyebrow: "Verified", headline: `Delimited AC boundaries and booth clusters indexed`, meta: "ECI · 16 min ago" },
+      { id: `${stateId}-4`, icon: <TrendingUp className="w-4 h-4" />,  eyebrow: "Derived",  headline: `Citizen sentiment graph active across ${stateName} ACs`, meta: "NLP · 27 min ago" },
+      { id: `${stateId}-5`, icon: <Users2 className="w-4 h-4" />,      eyebrow: "Live",     headline: `Constituency volunteer relay squads online`, meta: "Field · 35 min ago" }
+    ];
+  }, [stateId, stateName]);
+
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {

@@ -120,18 +120,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Center Navigation Products (Role-Protected) */}
+          {/* Center Navigation Products (Role-Protected: Non-admins only see Grievances) */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
-            <button
-              onClick={() => onProductChange("pitch")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                activeProduct === "pitch"
-                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                  : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-              }`}
-            >
-              Pitch / Audit
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => onProductChange("pitch")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                  activeProduct === "pitch"
+                    ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
+                    : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                }`}
+              >
+                Pitch / Audit
+              </button>
+            )}
             <button
               onClick={() => onProductChange("grievances")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
@@ -142,39 +144,39 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               Grievances
             </button>
-            <button
-              onClick={() => onProductChange("volunteers")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                activeProduct === "volunteers"
-                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                  : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-              }`}
-            >
-              Volunteers
-            </button>
-            <button
-              onClick={() => onProductChange("webbuilder")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                activeProduct === "webbuilder"
-                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                  : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-              }`}
-            >
-              Web Studio
-            </button>
-
-            {/* ADMIN & USERS TAB — STRICTLY RESTRICTED TO SUPER_ADMIN & ADMIN */}
             {isAdmin && (
-              <button
-                onClick={() => onProductChange("governance")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                  activeProduct === "governance"
-                    ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                    : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-                }`}
-              >
-                Admin & Users
-              </button>
+              <>
+                <button
+                  onClick={() => onProductChange("volunteers")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeProduct === "volunteers"
+                      ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
+                      : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                  }`}
+                >
+                  Volunteers
+                </button>
+                <button
+                  onClick={() => onProductChange("webbuilder")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeProduct === "webbuilder"
+                      ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
+                      : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                  }`}
+                >
+                  Web Studio
+                </button>
+                <button
+                  onClick={() => onProductChange("governance")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeProduct === "governance"
+                      ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
+                      : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                  }`}
+                >
+                  Admin & Users
+                </button>
+              </>
             )}
           </nav>
 
@@ -275,14 +277,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Horizontal Navigation Tabs */}
         <div className="lg:hidden flex items-center space-x-2 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs">
-          <button
-            onClick={() => onProductChange("pitch")}
-            className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-              activeProduct === "pitch" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
-            }`}
-          >
-            Audit
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => onProductChange("pitch")}
+              className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
+                activeProduct === "pitch" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+              }`}
+            >
+              Audit
+            </button>
+          )}
           <button
             onClick={() => onProductChange("grievances")}
             className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
@@ -291,30 +295,34 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Grievances
           </button>
-          <button
-            onClick={() => onProductChange("volunteers")}
-            className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-              activeProduct === "volunteers" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
-            }`}
-          >
-            Volunteers
-          </button>
-          <button
-            onClick={() => onProductChange("webbuilder")}
-            className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-              activeProduct === "webbuilder" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
-            }`}
-          >
-            Web Studio
-          </button>
-          <button
-            onClick={() => onProductChange("governance")}
-            className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-              activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
-            }`}
-          >
-            Team & RBAC
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => onProductChange("volunteers")}
+                className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
+                  activeProduct === "volunteers" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+                }`}
+              >
+                Volunteers
+              </button>
+              <button
+                onClick={() => onProductChange("webbuilder")}
+                className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
+                  activeProduct === "webbuilder" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+                }`}
+              >
+                Web Studio
+              </button>
+              <button
+                onClick={() => onProductChange("governance")}
+                className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
+                  activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+                }`}
+              >
+                Team & RBAC
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>
