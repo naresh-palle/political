@@ -116,19 +116,27 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
   // Determine Current User Clearance Level
   const isSuperAdmin =
+    currentProfile.email === "admin@leaderslens.ai" ||
     currentProfile.primaryRole === "SUPER_ADMIN" ||
     currentProfile.isPlatformAdmin ||
     currentProfile.roleId === "SUPER_ADMIN" ||
     currentProfile.role === "super_admin";
 
   const isPoliticalAdmin =
-    currentProfile.primaryRole === "POLITICAL_ADMIN" ||
-    currentProfile.isPoliticalAdmin ||
-    currentProfile.roleId === "ADMIN";
+    !isSuperAdmin &&
+    (currentProfile.primaryRole === "POLITICAL_ADMIN" ||
+      currentProfile.isPoliticalAdmin ||
+      currentProfile.roleId === "ADMIN" ||
+      currentProfile.role === "admin");
 
   const isDirector =
-    currentProfile.primaryRole === "DIRECTOR" ||
-    currentProfile.roleId === "CAMPAIGN_MANAGER";
+    !isSuperAdmin &&
+    !isPoliticalAdmin &&
+    (currentProfile.primaryRole === "DIRECTOR" ||
+      currentProfile.roleId === "CAMPAIGN_MANAGER" ||
+      currentProfile.role === "campaign_manager" ||
+      currentProfile.roleId === "PARTY_ADMIN" ||
+      currentProfile.role === "party_admin");
 
   useEffect(() => {
     loadUsers();
@@ -355,7 +363,9 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         const isDirectorUser =
           p.primaryRole === "DIRECTOR" ||
           p.roleId === "CAMPAIGN_MANAGER" ||
-          p.role === "campaign_manager";
+          p.role === "campaign_manager" ||
+          p.roleId === "PARTY_ADMIN" ||
+          p.role === "party_admin";
         const matchesParty =
           !p.partyId ||
           !currentProfile.partyId ||
@@ -382,11 +392,11 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           p.roleId === "VOLUNTEER" ||
           p.role === "volunteer";
         const matchesDirector =
+          !p.directorId ||
           p.directorId === currentProfile.id ||
-          p.directorName?.toLowerCase() === currentProfile.name.toLowerCase() ||
-          (p.assignedMandalId &&
-            currentProfile.assignedMandalIds?.includes(p.assignedMandalId)) ||
-          p.partyId === currentProfile.partyId;
+          (p.directorName && currentProfile.name && p.directorName.toLowerCase() === currentProfile.name.toLowerCase()) ||
+          (p.assignedMandalId && currentProfile.assignedMandalIds?.includes(p.assignedMandalId)) ||
+          (!p.partyId || !currentProfile.partyId || p.partyId === currentProfile.partyId);
         return isVolunteerUser && matchesDirector;
       });
     }
@@ -394,17 +404,17 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   }, [profiles, isSuperAdmin, isPoliticalAdmin, isDirector, currentProfile]);
 
   const filteredUsers = scopedProfiles.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-      p.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-      p.assignedConstituency.toLowerCase().includes(userSearch.toLowerCase()) ||
-      (p.department && p.department.toLowerCase().includes(userSearch.toLowerCase()));
+    const nameMatch = (p.name || "").toLowerCase().includes(userSearch.toLowerCase());
+    const emailMatch = (p.email || "").toLowerCase().includes(userSearch.toLowerCase());
+    const constMatch = (p.assignedConstituency || "").toLowerCase().includes(userSearch.toLowerCase());
+    const deptMatch = (p.department || "").toLowerCase().includes(userSearch.toLowerCase());
+    const matchesSearch = nameMatch || emailMatch || constMatch || deptMatch;
     
     if (userRoleFilter === "ALL") return matchesSearch;
     if (userRoleFilter === "SUPER_ADMIN") return matchesSearch && (p.primaryRole === "SUPER_ADMIN" || p.isPlatformAdmin);
     if (userRoleFilter === "POLITICAL_ADMIN") return matchesSearch && (p.primaryRole === "POLITICAL_ADMIN" || p.isPoliticalAdmin);
-    if (userRoleFilter === "DIRECTOR") return matchesSearch && p.primaryRole === "DIRECTOR";
-    if (userRoleFilter === "VOLUNTEER") return matchesSearch && p.primaryRole === "VOLUNTEER";
+    if (userRoleFilter === "DIRECTOR") return matchesSearch && (p.primaryRole === "DIRECTOR" || p.roleId === "CAMPAIGN_MANAGER" || p.role === "campaign_manager");
+    if (userRoleFilter === "VOLUNTEER") return matchesSearch && (p.primaryRole === "VOLUNTEER" || p.roleId === "VOLUNTEER" || p.role === "volunteer");
 
     return matchesSearch && (p.role === userRoleFilter || p.primaryRole === userRoleFilter);
   });
