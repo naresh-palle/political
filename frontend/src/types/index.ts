@@ -35,12 +35,15 @@ export type UserRole =
 
 export type UserAccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
 
+export type PrimaryRole = "ADMIN" | "DIRECTOR" | "VOLUNTEER";
+
 export interface UserProfile {
   _id?: string;
   id: string;
   name: string;
   email: string;
   phone?: string;
+  primaryRole?: PrimaryRole;
   role: UserRole;
   roleId?: AdminUserRole | string;
   roleTitle: string;
@@ -56,12 +59,19 @@ export interface UserProfile {
   partyAbbr?: string;
   partyColor?: string;
   partyEmoji?: string;
+  directorId?: string | null;
+  directorName?: string | null;
   stateId?: string | null;
   stateName?: string;
   parliamentConstituencyId?: string | null;
   parliamentConstituencyName?: string;
   assemblyConstituencyId?: string | null;
   assemblyConstituencyName?: string;
+  assignedMandalId?: string | null;
+  assignedMandalName?: string | null;
+  assignedMandalIds?: string[];
+  assignedVillageIds?: string[];
+  assignedVillageNames?: string[];
   status?: UserAccountStatus;
   lastLoginAt?: string;
   createdAt?: string;
@@ -418,3 +428,171 @@ export interface CampaignLandingConfig {
   contactEmail: string;
   socialLinks: { platform: string; url: string }[];
 }
+
+// ----------------- RBAC & FIELD OPERATIONS TYPES -----------------
+
+export type IssueCategory =
+  | "Road"
+  | "Water Supply"
+  | "Electricity"
+  | "Welfare"
+  | "Revenue"
+  | "Healthcare"
+  | "Sanitation"
+  | "Drainage"
+  | "Education"
+  | "Civic Issue"
+  | "Other";
+
+export type IssuePriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export type IssueStatus =
+  | "NEW"
+  | "ACKNOWLEDGED"
+  | "ASSIGNED"
+  | "IN_PROGRESS"
+  | "ON_HOLD"
+  | "RESOLVED"
+  | "COMPLETED"
+  | "REJECTED"
+  | "OVERDUE";
+
+export type IssueType = "COMPLAINT" | "REQUIREMENT" | "CIVIC_ISSUE";
+
+export interface MandalInfo {
+  id: string;
+  stateId: string;
+  assemblyConstituencyId: string;
+  name: string;
+  code: string;
+  totalVillages: number;
+  totalVoters?: number;
+  isActive?: boolean;
+}
+
+export interface VillageInfo {
+  id: string;
+  mandalId: string;
+  assemblyConstituencyId: string;
+  stateId: string;
+  name: string;
+  code: string;
+  totalVoters?: number;
+  assignedVolunteerId?: string;
+  assignedVolunteerName?: string;
+  isActive?: boolean;
+}
+
+export interface WorkUpdateRecord {
+  id: string;
+  issueId: string;
+  volunteerId: string;
+  volunteerName: string;
+  previousStatus: string;
+  newStatus: IssueStatus | string;
+  updateDate: string;
+  remarks: string;
+  attachments: string[];
+  proofLocation?: {
+    lat?: number;
+    lng?: number;
+    address?: string;
+  };
+  createdAt: string;
+}
+
+export interface FieldIssue {
+  id: string;
+  title: string;
+  description: string;
+  category: IssueCategory | string;
+  priority: IssuePriority | string;
+  status: IssueStatus | string;
+  issueType: IssueType | string;
+  stateId: string;
+  districtId?: string;
+  parliamentConstituencyId?: string;
+  assemblyConstituencyId: string;
+  mandalId: string;
+  mandalName: string;
+  villageId: string;
+  villageName: string;
+  placeName?: string;
+  reportedBy: string;
+  reporterPhone?: string;
+  reportedDate: string;
+  dueDate?: string;
+  assignedVolunteerId?: string;
+  assignedVolunteerName?: string;
+  directorId?: string;
+  directorName?: string;
+  initialRemarks?: string;
+  attachments: string[];
+  isImmutable?: boolean;
+  lastStatusUpdateAt?: string;
+  lastStatusRemarks?: string;
+  lastStatusProof?: string;
+  createdBy: string;
+  createdByRole: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NotificationType =
+  | "NEW_COMPLAINT"
+  | "WORK_ASSIGNED"
+  | "WORK_COMPLETED"
+  | "WORK_OVERDUE"
+  | "PROOF_UPLOADED"
+  | "INACTIVITY_WARNING";
+
+export interface FieldNotification {
+  id: string;
+  recipientUserId: string;
+  recipientRole: PrimaryRole | string;
+  type: NotificationType | string;
+  title: string;
+  message: string;
+  issueId?: string;
+  workId?: string;
+  volunteerId?: string;
+  priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface GeographicDrilldownNode {
+  mandalId: string;
+  mandalName: string;
+  code: string;
+  totalVillages: number;
+  totalVoters: number;
+  issueSummary: {
+    total: number;
+    pending: number;
+    inProgress: number;
+    completed: number;
+    overdue: number;
+  };
+  villages: {
+    villageId: string;
+    villageName: string;
+    code: string;
+    totalVoters: number;
+    volunteer?: {
+      id: string;
+      name: string;
+      phone?: string;
+      avatar?: string;
+    };
+    issueSummary: {
+      total: number;
+      pending: number;
+      inProgress: number;
+      completed: number;
+      overdue: number;
+    };
+    issues: FieldIssue[];
+  }[];
+}
+

@@ -142,7 +142,66 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 
           <div className="flex flex-wrap items-center gap-4 pt-2 text-[11px] text-[#B9AF95]">
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Role-based access</span>
-            <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" /> Verified ECI + Meta data</span>
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" /> Verified ECI Data Hierarchy</span>
+          </div>
+
+          {/* Quick Demo Credentials Selector */}
+          <div className="p-4 rounded-xl bg-[#0E2137]/90 border border-[#D4A24C]/30 space-y-2.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
+              Quick One-Click Persona Login:
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("admin@leaderslens.ai");
+                  setPassword("SuperAdmin@2026");
+                }}
+                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
+              >
+                <strong className="text-[#F5EFE0] block text-[12px]">ADMIN (MLA)</strong>
+                <span className="text-[#8A8E9B] text-[10px] block">admin@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[10px] font-mono">SuperAdmin@2026</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("tdp.campaign@leaderslens.ai");
+                  setPassword("Tdp@2026");
+                }}
+                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
+              >
+                <strong className="text-[#F5EFE0] block text-[12px]">DIRECTOR</strong>
+                <span className="text-[#8A8E9B] text-[10px] block">tdp.campaign@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[10px] font-mono">Tdp@2026</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("ramesh.vol1@leaderslens.ai");
+                  setPassword("Volunteer@2026");
+                }}
+                className="p-2 rounded-lg bg-[#071322] border border-[#22405E] hover:border-[#D4A24C] text-left transition-colors cursor-pointer"
+              >
+                <strong className="text-[#F5EFE0] block text-[12px]">VOLUNTEER</strong>
+                <span className="text-[#8A8E9B] text-[10px] block">ramesh.vol1@leaderslens.ai</span>
+                <span className="text-[#D4A24C] text-[10px] font-mono">Volunteer@2026</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-2 text-[11px] text-[#8E9CAE]">
+            Developed and Maintained by{" "}
+            <a
+              href="https://plaramai.in"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#D4A24C] hover:underline font-semibold"
+            >
+              plaramai.in
+            </a>
           </div>
         </div>
 

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "VIL-CCK",
+    "mandalId": "MDL-KDP-URB",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Chinna Chowk",
+    "code": "V-101",
+    "totalVoters": 28400,
+    "assignedVolunteerId": "usr-vol-ramesh",
+    "assignedVolunteerName": "Ramesh Babu",
+    "isActive": true
+  },
+  {
+    "id": "VIL-UTK",
+    "mandalId": "MDL-KDP-URB",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Utukur",
+    "code": "V-102",
+    "totalVoters": 22100,
+    "assignedVolunteerId": "usr-vol-ramesh",
+    "assignedVolunteerName": "Ramesh Babu",
+    "isActive": true
+  },
+  {
+    "id": "VIL-RMN",
+    "mandalId": "MDL-KDP-URB",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Ramanjaneya Nagar",
+    "code": "V-103",
+    "totalVoters": 19500,
+    "assignedVolunteerId": "usr-vol-srinivas",
+    "assignedVolunteerName": "K. Srinivas Reddy",
+    "isActive": true
+  },
+  {
+    "id": "VIL-AKP",
+    "mandalId": "MDL-KDP-URB",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Akkayapalli",
+    "code": "V-104",
+    "totalVoters": 31200,
+    "assignedVolunteerId": "usr-vol-srinivas",
+    "assignedVolunteerName": "K. Srinivas Reddy",
+    "isActive": true
+  },
+  {
+    "id": "VIL-CNR",
+    "mandalId": "MDL-KDP-CNR",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Chennur Village",
+    "code": "V-201",
+    "totalVoters": 16400,
+    "assignedVolunteerId": "usr-vol-lakshmi",
+    "assignedVolunteerName": "Lakshmi Devi",
+    "isActive": true
+  },
+  {
+    "id": "VIL-VLR",
+    "mandalId": "MDL-KDP-CNR",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Vallur Cross",
+    "code": "V-202",
+    "totalVoters": 14200,
+    "assignedVolunteerId": "usr-vol-lakshmi",
+    "assignedVolunteerName": "Lakshmi Devi",
+    "isActive": true
+  },
+  {
+    "id": "VIL-PDL",
+    "mandalId": "MDL-KDP-RUR",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Pendlimarri Road",
+    "code": "V-301",
+    "totalVoters": 18900,
+    "assignedVolunteerId": "usr-vol-suresh",
+    "assignedVolunteerName": "Suresh Kumar",
+    "isActive": true
+  },
+  {
+    "id": "VIL-KPN",
+    "mandalId": "MDL-KDP-RUR",
+    "assemblyConstituencyId": "KDP-AC",
+    "stateId": "AP",
+    "name": "Kopparthi Industrial Sector",
+    "code": "V-302",
+    "totalVoters": 15600,
+    "assignedVolunteerId": "usr-vol-suresh",
+    "assignedVolunteerName": "Suresh Kumar",
+    "isActive": true
+  }
+]

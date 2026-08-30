@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { UserProfile } from "../../types";
+import { UserProfile, FieldNotification } from "../../types";
 import { LeadersLogo } from "../common/LeadersLogo";
 import { usePartyTheme } from "../../context/PartyThemeContext";
+import { NotificationCenter } from "../fieldops/NotificationCenter";
+import { politicalApiService } from "../../services/api";
 import {
   Sparkles,
   Shield,
@@ -14,12 +16,15 @@ import {
   Lock,
   ChevronDown,
   LogOut,
-  UserCheck
+  UserCheck,
+  Bell,
+  MapPin,
+  ClipboardList
 } from "lucide-react";
 
 interface NavbarProps {
-  activeProduct: "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance";
-  onProductChange: (product: "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => void;
+  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance";
+  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => void;
   isAuditView?: boolean;
   onResetToSelect?: () => void;
   currentProfile: UserProfile;
@@ -30,7 +35,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  activeProduct = "pitch",
+  activeProduct = "fieldops",
   onProductChange,
   isAuditView = false,
   onResetToSelect,
@@ -41,19 +46,40 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSignOut
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [logoError, setLogoError] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
 
-  const isAdmin =
-    currentProfile.roleId === "SUPER_ADMIN" ||
-    currentProfile.roleId === "ADMIN" ||
-    currentProfile.role === "super_admin" ||
-    currentProfile.permissions?.canManageSystemUsers === true;
+  const primaryRole = currentProfile.primaryRole || (
+    currentProfile.roleId === "SUPER_ADMIN" || currentProfile.roleId === "ADMIN" || currentProfile.role === "super_admin" || currentProfile.role === "admin"
+      ? "ADMIN"
+      : currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer"
+      ? "VOLUNTEER"
+      : "DIRECTOR"
+  );
+
+  const isAdmin = primaryRole === "ADMIN";
+  const isDirector = primaryRole === "DIRECTOR";
+  const isVolunteer = primaryRole === "VOLUNTEER";
 
   useEffect(() => {
     setLogoError(false);
   }, [partyLogo]);
+
+  useEffect(() => {
+    loadUnreadNotifications();
+  }, [currentProfile.id, currentProfile.primaryRole]);
+
+  const loadUnreadNotifications = async () => {
+    try {
+      const notifs = await politicalApiService.getFieldNotifications(currentProfile.id, primaryRole);
+      setUnreadCount(notifs.filter((n: FieldNotification) => !n.isRead).length);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -82,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               data-testid="brand-home"
               className="flex items-center space-x-3 cursor-pointer group"
               onClick={() => {
-                onProductChange("pitch");
+                onProductChange("fieldops");
                 if (onResetToSelect) onResetToSelect();
               }}
               title="Constituency Intelligence Workspace"
@@ -120,8 +146,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Center Navigation Products (Role-Protected: Non-admins only see Grievances) */}
+          {/* Center Navigation Products (Role-Protected: Admin -> Full, Director/Volunteer -> Scoped) */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
+            {/* Primary Field Operations Tab */}
+            <button
+              onClick={() => onProductChange("fieldops")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeProduct === "fieldops"
+                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
+                  : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+              }`}
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              {isVolunteer ? "My Field Work" : isDirector ? "Field Operations" : "Field Operations"}
+            </button>
+
             {isAdmin && (
               <button
                 onClick={() => onProductChange("pitch")}
@@ -134,6 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Pitch / Audit
               </button>
             )}
+
             <button
               onClick={() => onProductChange("grievances")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
@@ -144,6 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               Grievances
             </button>
+
             {isAdmin && (
               <>
                 <button
@@ -180,15 +221,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </nav>
 
-          {/* Right Meta & User Persona */}
+          {/* Right Meta, Notifications & User Persona */}
           <div className="flex items-center space-x-3">
-            <div className="hidden xl:flex items-center space-x-2 text-xs border-r border-[#D4A24C]/20 pr-4">
-              <span className="inline-flex items-center">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
-                <span className="text-[11px] font-medium text-[#F5EFE0]">Live Feeds</span>
-              </span>
-              <span className="text-[11px] text-[#B9AF95]">· {currentProfile.assignedConstituency.split("(")[0]}</span>
-            </div>
+            {/* Notification Bell Button */}
+            <button
+              onClick={() => setIsNotifOpen(true)}
+              className="relative p-2 rounded-lg bg-[#142B45] border border-[#D4A24C]/25 text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
+              title="Operational Alerts"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
 
             {/* User Profile Pill & Dropdown */}
             <div className="relative" ref={userMenuRef}>
@@ -207,7 +254,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {currentProfile.name.split(" ")[0]}
                   </span>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--party-primary)] mt-0.5">
-                    {currentProfile.role.replace("_", " ")}
+                    {primaryRole}
                   </span>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#D4A24C] transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
@@ -257,6 +304,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   )}
 
+                  {/* Brand Attribution in Menu */}
+                  <div className="p-2 my-1 rounded bg-[#071322] text-[10px] text-[#8E9CAE] text-center">
+                    Developed and Maintained by{" "}
+                    <a
+                      href="https://plaramai.in"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[#D4A24C] hover:underline font-semibold block mt-0.5"
+                    >
+                      plaramai.in
+                    </a>
+                  </div>
+
                   {onSignOut && (
                     <button
                       onClick={() => {
@@ -277,6 +337,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Horizontal Navigation Tabs */}
         <div className="lg:hidden flex items-center space-x-2 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs">
+          <button
+            onClick={() => onProductChange("fieldops")}
+            className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
+              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+            }`}
+          >
+            {isVolunteer ? "My Work" : "Field Ops"}
+          </button>
           {isAdmin && (
             <button
               onClick={() => onProductChange("pitch")}
@@ -325,6 +393,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </div>
+
+      {/* Notification Center Modal */}
+      {isNotifOpen && (
+        <NotificationCenter
+          currentUser={currentProfile}
+          isOpen={isNotifOpen}
+          onClose={() => {
+            setIsNotifOpen(false);
+            loadUnreadNotifications();
+          }}
+        />
+      )}
     </header>
   );
 };

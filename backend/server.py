@@ -1248,6 +1248,417 @@ async def save_landing_config(payload: dict):
         logger.warning(f"MongoDB save config: {e}")
     return payload
 
+# ----------------- FIELD OPERATIONS & RBAC MANAGEMENT ENDPOINTS -----------------
+
+@api_router.get("/field-ops/mandals")
+async def get_mandals(assemblyConstituencyId: Optional[str] = None, stateId: Optional[str] = None):
+    try:
+        query = {"isActive": True}
+        if assemblyConstituencyId and assemblyConstituencyId != "ALL":
+            query["assemblyConstituencyId"] = assemblyConstituencyId
+        if stateId and stateId != "ALL":
+            query["stateId"] = stateId
+        mandals = await db.mandals.find(query, {"_id": 0}).to_list(200)
+        if mandals:
+            return mandals
+    except Exception as e:
+        logger.warning(f"MongoDB get mandals: {e}")
+    
+    fallback = load_json_fallback("mandals.json")
+    if assemblyConstituencyId and assemblyConstituencyId != "ALL":
+        fallback = [m for m in fallback if m.get("assemblyConstituencyId") == assemblyConstituencyId]
+    if stateId and stateId != "ALL":
+        fallback = [m for m in fallback if m.get("stateId") == stateId]
+    return fallback
+
+@api_router.get("/field-ops/villages")
+async def get_villages(mandalId: Optional[str] = None, assemblyConstituencyId: Optional[str] = None):
+    try:
+        query = {"isActive": True}
+        if mandalId and mandalId != "ALL":
+            query["mandalId"] = mandalId
+        if assemblyConstituencyId and assemblyConstituencyId != "ALL":
+            query["assemblyConstituencyId"] = assemblyConstituencyId
+        villages = await db.villages.find(query, {"_id": 0}).to_list(500)
+        if villages:
+            return villages
+    except Exception as e:
+        logger.warning(f"MongoDB get villages: {e}")
+    
+    fallback = load_json_fallback("villages.json")
+    if mandalId and mandalId != "ALL":
+        fallback = [v for v in fallback if v.get("mandalId") == mandalId]
+    if assemblyConstituencyId and assemblyConstituencyId != "ALL":
+        fallback = [v for v in fallback if v.get("assemblyConstituencyId") == assemblyConstituencyId]
+    return fallback
+
+@api_router.get("/field-ops/issues")
+async def get_field_issues(
+    userId: Optional[str] = None,
+    userRole: Optional[str] = None,
+    directorId: Optional[str] = None,
+    mandalId: Optional[str] = None,
+    villageId: Optional[str] = None,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    q: Optional[str] = None
+):
+    try:
+        query = {}
+        # Backend-enforced RBAC:
+        if userRole == "VOLUNTEER" and userId:
+            query["assignedVolunteerId"] = userId
+        elif userRole == "DIRECTOR" and (userId or directorId):
+            query["directorId"] = directorId or userId
+        
+        if mandalId and mandalId != "ALL":
+            query["mandalId"] = mandalId
+        if villageId and villageId != "ALL":
+            query["villageId"] = villageId
+        if status and status != "ALL":
+            query["status"] = status
+        if priority and priority != "ALL":
+            query["priority"] = priority
+            
+        issues = await db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(1000)
+        if issues:
+            return issues
+    except Exception as e:
+        logger.warning(f"MongoDB get field_issues: {e}")
+    
+    fallback = load_json_fallback("field_issues.json")
+    if userRole == "VOLUNTEER" and userId:
+        fallback = [i for i in fallback if i.get("assignedVolunteerId") == userId]
+    elif userRole == "DIRECTOR" and (userId or directorId):
+        target_dir = directorId or userId
+        fallback = [i for i in fallback if i.get("directorId") == target_dir]
+    
+    if mandalId and mandalId != "ALL":
+        fallback = [i for i in fallback if i.get("mandalId") == mandalId]
+    if villageId and villageId != "ALL":
+        fallback = [i for i in fallback if i.get("villageId") == villageId]
+    if status and status != "ALL":
+        fallback = [i for i in fallback if i.get("status") == status]
+    if priority and priority != "ALL":
+        fallback = [i for i in fallback if i.get("priority") == priority]
+    if q:
+        ql = q.lower()
+        fallback = [i for i in fallback if ql in i.get("title", "").lower() or ql in i.get("description", "").lower() or ql in i.get("reportedBy", "").lower()]
+    return fallback
+
+@api_router.post("/field-ops/issues")
+async def create_field_issue(payload: dict):
+    issue_id = f"iss-{uuid.uuid4().hex[:8]}"
+    now_iso = datetime.now(timezone.utc).isoformat()
+    
+    new_issue = {
+        "id": issue_id,
+        "title": payload.get("title", "Untitled Complaint"),
+        "description": payload.get("description", ""),
+        "category": payload.get("category", "Civic Issue"),
+        "priority": payload.get("priority", "MEDIUM"),
+        "status": payload.get("status", "NEW"),
+        "issueType": payload.get("issueType", "COMPLAINT"),
+        "stateId": payload.get("stateId", "AP"),
+        "assemblyConstituencyId": payload.get("assemblyConstituencyId", "KDP-AC"),
+        "mandalId": payload.get("mandalId", ""),
+        "mandalName": payload.get("mandalName", ""),
+        "villageId": payload.get("villageId", ""),
+        "villageName": payload.get("villageName", ""),
+        "placeName": payload.get("placeName", ""),
+        "reportedBy": payload.get("reportedBy", "Citizen"),
+        "reporterPhone": payload.get("reporterPhone", ""),
+        "reportedDate": payload.get("reportedDate", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
+        "dueDate": payload.get("dueDate"),
+        "assignedVolunteerId": payload.get("assignedVolunteerId"),
+        "assignedVolunteerName": payload.get("assignedVolunteerName"),
+        "directorId": payload.get("directorId"),
+        "directorName": payload.get("directorName"),
+        "initialRemarks": payload.get("initialRemarks", ""),
+        "attachments": payload.get("attachments", []),
+        "isImmutable": True,
+        "lastStatusUpdateAt": now_iso,
+        "lastStatusRemarks": payload.get("initialRemarks", "Original complaint submitted"),
+        "lastStatusProof": payload.get("attachments", [None])[0] if payload.get("attachments") else None,
+        "createdBy": payload.get("createdBy", "system"),
+        "createdByRole": payload.get("createdByRole", "VOLUNTEER"),
+        "createdAt": now_iso,
+        "updatedAt": now_iso
+    }
+    
+    # Store initial history record
+    initial_update = {
+        "id": f"upd-{uuid.uuid4().hex[:8]}",
+        "issueId": issue_id,
+        "volunteerId": new_issue["createdBy"],
+        "volunteerName": new_issue.get("assignedVolunteerName", "Volunteer"),
+        "previousStatus": "NONE",
+        "newStatus": new_issue["status"],
+        "updateDate": datetime.now(timezone.utc).strftime("%d %b %Y"),
+        "remarks": f"Original complaint submitted by {new_issue['reportedBy']}: {new_issue['title']}",
+        "attachments": new_issue["attachments"],
+        "createdAt": now_iso
+    }
+    
+    try:
+        await db.field_issues.insert_one(new_issue)
+        await db.work_updates.insert_one(initial_update)
+        
+        # Trigger notification to Director
+        if new_issue.get("directorId"):
+            notif = {
+                "id": f"notif-{uuid.uuid4().hex[:8]}",
+                "recipientUserId": new_issue["directorId"],
+                "recipientRole": "DIRECTOR",
+                "type": "NEW_COMPLAINT",
+                "title": f"New {new_issue['category']} Issue Submitted",
+                "message": f"{new_issue['assignedVolunteerName'] or 'Volunteer'} reported #{issue_id}: {new_issue['title']}",
+                "issueId": issue_id,
+                "volunteerId": new_issue["assignedVolunteerId"],
+                "priority": new_issue["priority"],
+                "isRead": False,
+                "createdAt": now_iso
+            }
+            await db.field_notifications.insert_one(notif)
+            
+        new_issue.pop("_id", None)
+    except Exception as e:
+        logger.warning(f"MongoDB save field_issue: {e}")
+        
+    return new_issue
+
+@api_router.get("/field-ops/issues/{issue_id}")
+async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
+    try:
+        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        if issue:
+            # RBAC verification
+            if userRole == "VOLUNTEER" and userId and issue.get("assignedVolunteerId") != userId:
+                raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+            if userRole == "DIRECTOR" and userId and issue.get("directorId") != userId:
+                raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
+            return issue
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"MongoDB get issue by id: {e}")
+        
+    fallback = load_json_fallback("field_issues.json")
+    found = next((i for i in fallback if i.get("id") == issue_id), None)
+    if found:
+        if userRole == "VOLUNTEER" and userId and found.get("assignedVolunteerId") != userId:
+            raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+        return found
+    raise HTTPException(status_code=404, detail="Issue not found")
+
+@api_router.put("/field-ops/issues/{issue_id}")
+async def update_field_issue(issue_id: str, payload: dict, userRole: Optional[str] = None):
+    # IMMUTABILITY ENFORCEMENT: Volunteer cannot edit original complaint
+    if userRole == "VOLUNTEER":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Volunteers cannot modify original complaint details. Please submit a work update instead."
+        )
+    
+    payload["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    try:
+        await db.field_issues.update_one({"id": issue_id}, {"$set": payload})
+        updated = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        if updated:
+            return updated
+    except Exception as e:
+        logger.warning(f"MongoDB update field_issue: {e}")
+    return payload
+
+@api_router.post("/field-ops/issues/{issue_id}/updates")
+async def add_work_update(issue_id: str, payload: dict):
+    now_iso = datetime.now(timezone.utc).isoformat()
+    update_id = f"upd-{uuid.uuid4().hex[:8]}"
+    
+    new_status = payload.get("newStatus", "IN_PROGRESS")
+    remarks = payload.get("remarks", "")
+    attachments = payload.get("attachments", [])
+    update_date = payload.get("updateDate", datetime.now(timezone.utc).strftime("%d %b %Y"))
+    volunteer_id = payload.get("volunteerId", "volunteer")
+    volunteer_name = payload.get("volunteerName", "Field Agent")
+    
+    # Fetch existing issue to get previous status
+    prev_status = "UNKNOWN"
+    director_id = None
+    issue_title = ""
+    try:
+        issue = await db.field_issues.find_one({"id": issue_id})
+        if issue:
+            prev_status = issue.get("status", "NEW")
+            director_id = issue.get("directorId")
+            issue_title = issue.get("title", "")
+    except Exception:
+        pass
+        
+    update_record = {
+        "id": update_id,
+        "issueId": issue_id,
+        "volunteerId": volunteer_id,
+        "volunteerName": volunteer_name,
+        "previousStatus": prev_status,
+        "newStatus": new_status,
+        "updateDate": update_date,
+        "remarks": remarks,
+        "attachments": attachments,
+        "proofLocation": payload.get("proofLocation"),
+        "createdAt": now_iso
+    }
+    
+    try:
+        await db.work_updates.insert_one(update_record)
+        # Update parent issue status and latest proof/remarks
+        update_fields = {
+            "status": new_status,
+            "lastStatusUpdateAt": now_iso,
+            "lastStatusRemarks": remarks,
+            "updatedAt": now_iso
+        }
+        if attachments and len(attachments) > 0:
+            update_fields["lastStatusProof"] = attachments[0]
+            
+        await db.field_issues.update_one({"id": issue_id}, {"$set": update_fields})
+        
+        # Trigger notification to Director & Admin
+        if director_id:
+            notif = {
+                "id": f"notif-{uuid.uuid4().hex[:8]}",
+                "recipientUserId": director_id,
+                "recipientRole": "DIRECTOR",
+                "type": "WORK_COMPLETED" if new_status in ["COMPLETED", "RESOLVED"] else "PROOF_UPLOADED",
+                "title": f"Status Update ({new_status}) for #{issue_id}",
+                "message": f"{volunteer_name} updated {issue_title}: \"{remarks[:80]}...\"",
+                "issueId": issue_id,
+                "volunteerId": volunteer_id,
+                "priority": "HIGH" if new_status in ["COMPLETED", "RESOLVED"] else "NORMAL",
+                "isRead": False,
+                "createdAt": now_iso
+            }
+            await db.field_notifications.insert_one(notif)
+            
+        update_record.pop("_id", None)
+    except Exception as e:
+        logger.warning(f"MongoDB save work_update: {e}")
+        
+    return update_record
+
+@api_router.get("/field-ops/issues/{issue_id}/history")
+async def get_issue_history(issue_id: str):
+    try:
+        history = await db.work_updates.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
+        if history:
+            return history
+    except Exception as e:
+        logger.warning(f"MongoDB get work_updates: {e}")
+    return [
+        {
+            "id": "upd-init",
+            "issueId": issue_id,
+            "volunteerId": "usr-vol-ramesh",
+            "volunteerName": "Ramesh Babu",
+            "previousStatus": "NONE",
+            "newStatus": "NEW",
+            "updateDate": "25 Aug 2026",
+            "remarks": "Original complaint intake registered and verified on ground.",
+            "attachments": [],
+            "createdAt": "2026-08-25T09:15:00Z"
+        }
+    ]
+
+@api_router.get("/field-ops/notifications")
+async def get_field_notifications(recipientUserId: Optional[str] = None, recipientRole: Optional[str] = None):
+    try:
+        query = {}
+        if recipientUserId:
+            query["recipientUserId"] = recipientUserId
+        elif recipientRole:
+            query["recipientRole"] = recipientRole
+        notifs = await db.field_notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
+        if notifs:
+            return notifs
+    except Exception as e:
+        logger.warning(f"MongoDB get field_notifications: {e}")
+    fallback = load_json_fallback("field_notifications.json")
+    if recipientUserId:
+        fallback = [n for n in fallback if n.get("recipientUserId") == recipientUserId]
+    elif recipientRole:
+        fallback = [n for n in fallback if n.get("recipientRole") == recipientRole]
+    return fallback
+
+@api_router.patch("/field-ops/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str):
+    try:
+        await db.field_notifications.update_one({"id": notification_id}, {"$set": {"isRead": True}})
+        return {"status": "success", "id": notification_id, "isRead": True}
+    except Exception as e:
+        logger.warning(f"MongoDB mark notif read: {e}")
+    return {"status": "success", "id": notification_id, "isRead": True}
+
+@api_router.get("/field-ops/drilldown")
+async def get_geographic_drilldown(assemblyConstituencyId: Optional[str] = "KDP-AC", stateId: Optional[str] = "AP"):
+    # Returns interactive MLA hierarchy: State -> AC -> Mandal -> Village -> Volunteer -> Issues / Live Status
+    mandals = await get_mandals(assemblyConstituencyId=assemblyConstituencyId, stateId=stateId)
+    villages = await get_villages(assemblyConstituencyId=assemblyConstituencyId)
+    issues = await get_field_issues()
+    users = await get_system_users()
+    
+    result = []
+    for m in mandals:
+        m_villages = [v for v in villages if v.get("mandalId") == m["id"]]
+        m_issues = [i for i in issues if i.get("mandalId") == m["id"]]
+        
+        village_nodes = []
+        for v in m_villages:
+            v_issues = [i for i in issues if i.get("villageId") == v["id"]]
+            assigned_vol = next((u for u in users if u.get("id") == v.get("assignedVolunteerId")), None)
+            
+            village_nodes.append({
+                "villageId": v["id"],
+                "villageName": v["name"],
+                "code": v["code"],
+                "totalVoters": v.get("totalVoters", 0),
+                "volunteer": {
+                    "id": assigned_vol["id"] if assigned_vol else v.get("assignedVolunteerId"),
+                    "name": assigned_vol["name"] if assigned_vol else v.get("assignedVolunteerName", "Unassigned"),
+                    "phone": assigned_vol.get("phone", "") if assigned_vol else "",
+                    "avatar": assigned_vol.get("avatar", "") if assigned_vol else ""
+                },
+                "issueSummary": {
+                    "total": len(v_issues),
+                    "pending": len([i for i in v_issues if i.get("status") in ["NEW", "ASSIGNED"]]),
+                    "inProgress": len([i for i in v_issues if i.get("status") == "IN_PROGRESS"]),
+                    "completed": len([i for i in v_issues if i.get("status") in ["COMPLETED", "RESOLVED"]]),
+                    "overdue": len([i for i in v_issues if i.get("status") == "OVERDUE"])
+                },
+                "issues": v_issues
+            })
+            
+        result.append({
+            "mandalId": m["id"],
+            "mandalName": m["name"],
+            "code": m["code"],
+            "totalVillages": len(m_villages),
+            "totalVoters": m.get("totalVoters", 0),
+            "issueSummary": {
+                "total": len(m_issues),
+                "pending": len([i for i in m_issues if i.get("status") in ["NEW", "ASSIGNED"]]),
+                "inProgress": len([i for i in m_issues if i.get("status") == "IN_PROGRESS"]),
+                "completed": len([i for i in m_issues if i.get("status") in ["COMPLETED", "RESOLVED"]]),
+                "overdue": len([i for i in m_issues if i.get("status") == "OVERDUE"])
+            },
+            "villages": village_nodes
+        })
+        
+    return {
+        "assemblyConstituencyId": assemblyConstituencyId,
+        "stateId": stateId,
+        "mandals": result
+    }
+
 # ----------------- SEED & IDEMPOTENT SYNC ENDPOINT -----------------
 
 @api_router.post("/geography/seed")
@@ -1260,12 +1671,19 @@ async def trigger_geography_seed():
     squads = load_json_fallback("volunteer_squads.json")
     tasks = load_json_fallback("volunteer_tasks.json")
     campaign_config = load_json_fallback("campaign_config.json")
+    mandals = load_json_fallback("mandals.json")
+    villages = load_json_fallback("villages.json")
+    field_issues = load_json_fallback("field_issues.json")
+    field_notifications = load_json_fallback("field_notifications.json")
 
     imported_states = 0
     imported_pcs = 0
     imported_acs = 0
     imported_users = 0
     imported_grievances = 0
+    imported_mandals = 0
+    imported_villages = 0
+    imported_issues = 0
 
     try:
         await db.countries.create_index("code", unique=True)
@@ -1275,6 +1693,8 @@ async def trigger_geography_seed():
         await db.assembly_constituencies.create_index([("parliamentConstituencyId", 1)])
         await db.users.create_index("email", unique=True)
         await db.grievances.create_index("ticketNumber", unique=True)
+        await db.field_issues.create_index("id", unique=True)
+        await db.work_updates.create_index("id", unique=True)
 
         await db.countries.update_one({"id": "IND"}, {"$set": {"id": "IND", "name": "India", "code": "IND"}}, upsert=True)
 
@@ -1298,6 +1718,21 @@ async def trigger_geography_seed():
             await db.grievances.update_one({"id": g["id"]}, {"$set": g}, upsert=True)
             imported_grievances += 1
 
+        for m in mandals:
+            await db.mandals.update_one({"id": m["id"]}, {"$set": m}, upsert=True)
+            imported_mandals += 1
+
+        for v in villages:
+            await db.villages.update_one({"id": v["id"]}, {"$set": v}, upsert=True)
+            imported_villages += 1
+
+        for iss in field_issues:
+            await db.field_issues.update_one({"id": iss["id"]}, {"$set": iss}, upsert=True)
+            imported_issues += 1
+
+        for notif in field_notifications:
+            await db.field_notifications.update_one({"id": notif["id"]}, {"$set": notif}, upsert=True)
+
         for sq in squads:
             await db.volunteer_squads.update_one({"id": sq["id"]}, {"$set": sq}, upsert=True)
 
@@ -1316,8 +1751,9 @@ async def trigger_geography_seed():
             "assemblyConstituenciesImported": imported_acs,
             "usersImported": imported_users,
             "grievancesImported": imported_grievances,
-            "duplicates": 0,
-            "invalidRelationships": 0
+            "mandalsImported": imported_mandals,
+            "villagesImported": imported_villages,
+            "fieldIssuesImported": imported_issues
         }
     except Exception as e:
         logger.error(f"Seed error: {e}")

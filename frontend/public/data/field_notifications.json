@@ -1,0 +1,54 @@
+[
+  {
+    "id": "notif-001",
+    "recipientUserId": "usr-tdp-ap",
+    "recipientRole": "DIRECTOR",
+    "type": "WORK_OVERDUE",
+    "title": "Overdue Alert: ZP School Drainage Issue",
+    "message": "Issue #iss-103 in Ramanjaneya Nagar (assigned to K. Srinivas Reddy) exceeded its due date without resolution.",
+    "issueId": "iss-103",
+    "volunteerId": "usr-vol-srinivas",
+    "priority": "URGENT",
+    "isRead": false,
+    "createdAt": "2026-08-27T08:00:00Z"
+  },
+  {
+    "id": "notif-002",
+    "recipientUserId": "usr-tdp-ap",
+    "recipientRole": "DIRECTOR",
+    "type": "WORK_COMPLETED",
+    "title": "Work Completed: High-Mast LED Lighting",
+    "message": "Volunteer Ramesh Babu uploaded completion photo proof for Utukur junction requirement #iss-102.",
+    "issueId": "iss-102",
+    "volunteerId": "usr-vol-ramesh",
+    "priority": "HIGH",
+    "isRead": false,
+    "createdAt": "2026-08-29T18:05:00Z"
+  },
+  {
+    "id": "notif-003",
+    "recipientUserId": "usr-dir-south",
+    "recipientRole": "DIRECTOR",
+    "type": "NEW_COMPLAINT",
+    "title": "New High-Priority Complaint in Chennur",
+    "message": "Lakshmi Devi submitted issue #iss-104: Primary Health Centre Doctor Absenteeism.",
+    "issueId": "iss-104",
+    "volunteerId": "usr-vol-lakshmi",
+    "priority": "HIGH",
+    "isRead": false,
+    "createdAt": "2026-08-30T07:46:00Z"
+  },
+  {
+    "id": "notif-004",
+    "recipientUserId": "usr-superadmin",
+    "recipientRole": "ADMIN",
+    "type": "NEW_COMPLAINT",
+    "title": "Constituency Issue Escalation",
+    "message": "Urgent drainage overflow at ZP School Ramanjaneya Nagar is currently OVERDUE.",
+    "issueId": "iss-103",
+    "volunteerId": "usr-vol-srinivas",
+    "priority": "URGENT",
+    "isRead": false,
+    "createdAt": "2026-08-27T08:15:00Z"
+  }
+]

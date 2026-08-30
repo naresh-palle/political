@@ -20,11 +20,12 @@ import { ScorecardSection } from "./components/audit/ScorecardSection";
 import { DataConfidenceSection } from "./components/audit/DataConfidenceSection";
 import { PresentationMode } from "./components/audit/PresentationMode";
 import { ExportModal } from "./components/audit/ExportModal";
+import { FieldOpsManager } from "./components/fieldops/FieldOpsManager";
 import { GrievanceManagement } from "./components/grievances/GrievanceManagement";
 import { VolunteerMonitoring } from "./components/volunteers/VolunteerMonitoring";
 import { CampaignWebsiteGenerator } from "./components/webbuilder/CampaignWebsiteGenerator";
 import { RoleManagement } from "./components/governance/RoleManagement";
-import { AuditReport, UserProfile, StateInfo, ParliamentInfo, AssemblyInfo, ElectedRepresentative, CandidateType } from "./types";
+import { AuditReport, UserProfile } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
 import { PartyThemeProvider, usePartyTheme } from "./context/PartyThemeContext";
 
@@ -53,18 +54,18 @@ function AppInner() {
   const [viewState, setViewState] = useState<"select" | "loading" | "audit">("select");
   
   const [activeProduct, setActiveProduct] = useState<
-    "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance"
+    "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance"
   >(() => {
     try {
       const savedProduct = localStorage.getItem(PRODUCT_STORAGE_KEY);
       if (
         savedProduct &&
-        ["pitch", "grievances", "volunteers", "webbuilder", "governance"].includes(savedProduct)
+        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance"].includes(savedProduct)
       ) {
         return savedProduct as any;
       }
     } catch {}
-    return "pitch";
+    return "fieldops";
   });
 
   const [currentProfile, setCurrentProfile] = useState<UserProfile>(() => {
@@ -83,46 +84,39 @@ function AppInner() {
     stateId: string;
     parliamentId: string;
     assemblyId: string;
-    stateName?: string;
-    parliamentName?: string;
     assemblyName?: string;
-    assemblyObj?: AssemblyInfo | null;
-    representative?: ElectedRepresentative | null;
-    clientType?: CandidateType;
   }>({
     stateId: "AP",
     parliamentId: "KDP-PC",
     assemblyId: "KDP-AC",
-    stateName: "Andhra Pradesh",
-    parliamentName: "Kadapa",
-    assemblyName: "Kadapa",
-    assemblyObj: null,
-    representative: null,
-    clientType: "CURRENT_MLA"
+    assemblyName: "Kadapa"
   });
 
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const isAdmin =
-    currentProfile?.roleId === "SUPER_ADMIN" ||
-    currentProfile?.roleId === "ADMIN" ||
-    currentProfile?.role === "super_admin" ||
-    currentProfile?.permissions?.canManageSystemUsers === true;
+  const primaryRole = currentProfile?.primaryRole || (
+    currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.roleId === "ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.role === "admin"
+      ? "ADMIN"
+      : currentProfile?.roleId === "VOLUNTEER" || currentProfile?.role === "volunteer"
+      ? "VOLUNTEER"
+      : "DIRECTOR"
+  );
 
-  // Enforce Grievances module for non-admin users
+  const isAdmin = primaryRole === "ADMIN";
+
+  // Role routing enforcement: non-admins can only access fieldops & grievances
   useEffect(() => {
-    if (!isAdmin && activeProduct !== "grievances") {
-      setActiveProduct("grievances");
+    if (!isAdmin && !["fieldops", "grievances"].includes(activeProduct)) {
+      setActiveProduct("fieldops");
       try {
-        localStorage.setItem(PRODUCT_STORAGE_KEY, "grievances");
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
     }
   }, [isAdmin, activeProduct]);
 
-  const handleProductChange = (product: "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => {
-    // Non-admin users are strictly restricted to Grievances
-    const targetProduct = !isAdmin ? "grievances" : product;
+  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => {
+    const targetProduct = !isAdmin && !["fieldops", "grievances"].includes(product) ? "fieldops" : product;
     setActiveProduct(targetProduct);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, targetProduct);
@@ -131,20 +125,10 @@ function AppInner() {
 
   const handleAuthenticated = (user: UserProfile) => {
     setCurrentProfile(user);
-    const userIsAdmin =
-      user.roleId === "SUPER_ADMIN" ||
-      user.roleId === "ADMIN" ||
-      user.role === "super_admin" ||
-      user.permissions?.canManageSystemUsers === true;
-
-    if (!userIsAdmin) {
-      setActiveProduct("grievances");
-      try {
-        localStorage.setItem(PRODUCT_STORAGE_KEY, "grievances");
-      } catch {}
-    }
-
+    const defaultProd = "fieldops";
+    setActiveProduct(defaultProd);
     try {
+      localStorage.setItem(PRODUCT_STORAGE_KEY, defaultProd);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     } catch {}
     setRoute("app");
@@ -162,16 +146,18 @@ function AppInner() {
 
   const handleSwitchProfile = (profile: UserProfile) => {
     setCurrentProfile(profile);
-    const userIsAdmin =
-      profile.roleId === "SUPER_ADMIN" ||
-      profile.roleId === "ADMIN" ||
-      profile.role === "super_admin" ||
-      profile.permissions?.canManageSystemUsers === true;
+    const userRole = profile.primaryRole || (
+      profile.roleId === "SUPER_ADMIN" || profile.roleId === "ADMIN" || profile.role === "super_admin" || profile.role === "admin"
+        ? "ADMIN"
+        : profile.roleId === "VOLUNTEER" || profile.role === "volunteer"
+        ? "VOLUNTEER"
+        : "DIRECTOR"
+    );
 
-    if (!userIsAdmin) {
-      setActiveProduct("grievances");
+    if (userRole !== "ADMIN" && !["fieldops", "grievances"].includes(activeProduct)) {
+      setActiveProduct("fieldops");
       try {
-        localStorage.setItem(PRODUCT_STORAGE_KEY, "grievances");
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
     }
 
@@ -184,78 +170,70 @@ function AppInner() {
     stateId: string,
     parliamentId: string,
     assemblyId: string,
-    stateObj?: StateInfo,
-    parliamentObj?: ParliamentInfo,
-    assemblyObj?: AssemblyInfo | null,
-    representative?: ElectedRepresentative | null,
-    clientType?: CandidateType
+    _stateObj?: any,
+    _parliamentObj?: any,
+    assemblyObj?: any
   ) => {
     setSelectedGeo({
       stateId,
       parliamentId,
       assemblyId,
-      stateName: stateObj?.name || stateId,
-      parliamentName: parliamentObj?.name || parliamentId,
-      assemblyName: assemblyObj?.name || assemblyId,
-      assemblyObj: assemblyObj || null,
-      representative: representative || null,
-      clientType: clientType || "CURRENT_MLA"
+      assemblyName: assemblyObj?.name || assemblyId
     });
+
     setViewState("loading");
   };
 
   const handleLoadingComplete = () => {
-    const report = buildCompleteAudit(
+    const freshAudit = buildCompleteAudit(
       selectedGeo.stateId,
       selectedGeo.parliamentId,
-      selectedGeo.assemblyId,
-      selectedGeo.assemblyObj,
-      selectedGeo.stateName,
-      selectedGeo.parliamentName,
-      selectedGeo.representative,
-      selectedGeo.clientType
+      selectedGeo.assemblyId
     );
-    setAuditData(report);
+    setAuditData(freshAudit);
     setViewState("audit");
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleResetToSelect = () => {
     setViewState("select");
+    setAuditData(null);
   };
 
-  const isPartyUser = Boolean(currentProfile?.partyId);
-
   return (
-    <PartyThemeProvider authenticatedUser={currentProfile}>
-      <AppCanvas isPartyUser={isPartyUser}>
-        {route === "home" ? (
+    <PartyThemeProvider>
+      <AppCanvas>
+        {route === "home" && (
           <HomePage onEnter={() => setRoute("auth")} />
-        ) : route === "auth" ? (
+        )}
+
+        {route === "auth" && (
           <AuthScreen
             onAuthenticated={handleAuthenticated}
             onBack={() => setRoute("home")}
           />
-        ) : (
-          <>
-            {/* Top Global App Shell */}
-            {!isPresentationMode && (
-              <Navbar
-                activeProduct={activeProduct}
-                onProductChange={handleProductChange}
-                isAuditView={viewState === "audit"}
-                onResetToSelect={handleResetToSelect}
-                currentProfile={currentProfile}
-                onSwitchProfile={handleSwitchProfile}
-                onGoHome={() => setRoute("home")}
-                onSignOut={handleSignOut}
-              />
-            )}
+        )}
 
-            {/* Main Platform Body */}
-            <main className="flex-1">
-              {/* Module 1: STRENGTH AUDIT */}
-              {activeProduct === "pitch" && (
+        {route === "app" && (
+          <>
+            <Navbar
+              activeProduct={activeProduct}
+              onProductChange={handleProductChange}
+              isAuditView={viewState === "audit"}
+              onResetToSelect={handleResetToSelect}
+              currentProfile={currentProfile}
+              onSwitchProfile={handleSwitchProfile}
+              onGoHome={() => setRoute("home")}
+              onSignOut={handleSignOut}
+            />
+
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              {/* Module 1: FIELD OPERATIONS & RBAC (ADMIN -> DIRECTOR -> VOLUNTEER) */}
+              {activeProduct === "fieldops" && (
+                <FieldOpsManager currentUser={currentProfile} />
+              )}
+
+              {/* Module 2: PITCH / CONSTITUENCY AUDIT (ADMIN ONLY) */}
+              {activeProduct === "pitch" && isAdmin && (
                 <>
                   {viewState === "select" && (
                     <LocationSelector onGenerateAudit={handleStartAuditGeneration} />
@@ -299,16 +277,16 @@ function AppInner() {
                 </>
               )}
 
-              {/* Module 2: GRIEVANCE MANAGEMENT CRM */}
+              {/* Module 3: GRIEVANCE MANAGEMENT CRM */}
               {activeProduct === "grievances" && <GrievanceManagement />}
 
-              {/* Module 3: SOCIAL MEDIA VOLUNTEER MONITORING */}
-              {activeProduct === "volunteers" && <VolunteerMonitoring />}
+              {/* Module 4: SOCIAL MEDIA VOLUNTEER MONITORING (ADMIN ONLY) */}
+              {activeProduct === "volunteers" && isAdmin && <VolunteerMonitoring />}
 
-              {/* Module 4: CAMPAIGN WEBSITE GENERATOR */}
-              {activeProduct === "webbuilder" && <CampaignWebsiteGenerator />}
+              {/* Module 5: CAMPAIGN WEBSITE GENERATOR (ADMIN ONLY) */}
+              {activeProduct === "webbuilder" && isAdmin && <CampaignWebsiteGenerator />}
 
-              {/* Module 5: ROLE-BASED ACCESS & GOVERNANCE (ADMIN ONLY) */}
+              {/* Module 6: ROLE-BASED ACCESS & GOVERNANCE (ADMIN ONLY) */}
               {activeProduct === "governance" && isAdmin && (
                 <RoleManagement
                   currentProfile={currentProfile}
@@ -344,10 +322,8 @@ function AppInner() {
 }
 
 function AppCanvas({
-  isPartyUser,
   children
 }: {
-  isPartyUser: boolean;
   children: React.ReactNode;
 }) {
   const { currentParty, isPartyThemeActive, partyBackground } = usePartyTheme();
@@ -372,7 +348,6 @@ function AppCanvas({
         color: isPartyThemeActive ? (currentParty?.textColor || "#0F172A") : "#F5EFE0"
       }}
     >
-      {/* Subtle translucent tint layer for party users or admin users to ensure high contrast */}
       <div
         className={`fixed inset-0 pointer-events-none z-0 ${
           isPartyThemeActive ? "bg-white/30 backdrop-blur-[0.5px]" : "bg-[#0B1A2C]/65 backdrop-blur-[0.5px]"

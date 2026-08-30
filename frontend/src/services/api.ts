@@ -895,5 +895,311 @@ export const politicalApiService = {
       // Fallback
     }
     return config;
+  },
+
+  // ----------------- RBAC & FIELD OPERATIONS API -----------------
+
+  async getMandals(assemblyConstituencyId?: string, stateId?: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (assemblyConstituencyId) params.append("assemblyConstituencyId", assemblyConstituencyId);
+      if (stateId) params.append("stateId", stateId);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/mandals?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    try {
+      const res = await fetch("./data/geography/mandals.json");
+      if (res.ok) {
+        let list = await res.json();
+        if (assemblyConstituencyId && assemblyConstituencyId !== "ALL") {
+          list = list.filter((m: any) => m.assemblyConstituencyId === assemblyConstituencyId);
+        }
+        if (stateId && stateId !== "ALL") {
+          list = list.filter((m: any) => m.stateId === stateId);
+        }
+        return list;
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  async getVillages(mandalId?: string, assemblyConstituencyId?: string): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (mandalId) params.append("mandalId", mandalId);
+      if (assemblyConstituencyId) params.append("assemblyConstituencyId", assemblyConstituencyId);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/villages?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    try {
+      const res = await fetch("./data/geography/villages.json");
+      if (res.ok) {
+        let list = await res.json();
+        if (mandalId && mandalId !== "ALL") {
+          list = list.filter((v: any) => v.mandalId === mandalId);
+        }
+        if (assemblyConstituencyId && assemblyConstituencyId !== "ALL") {
+          list = list.filter((v: any) => v.assemblyConstituencyId === assemblyConstituencyId);
+        }
+        return list;
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  async getFieldIssues(params?: {
+    userId?: string;
+    userRole?: string;
+    directorId?: string;
+    mandalId?: string;
+    villageId?: string;
+    status?: string;
+    priority?: string;
+    q?: string;
+  }): Promise<any[]> {
+    try {
+      const qp = new URLSearchParams();
+      if (params?.userId) qp.append("userId", params.userId);
+      if (params?.userRole) qp.append("userRole", params.userRole);
+      if (params?.directorId) qp.append("directorId", params.directorId);
+      if (params?.mandalId) qp.append("mandalId", params.mandalId);
+      if (params?.villageId) qp.append("villageId", params.villageId);
+      if (params?.status) qp.append("status", params.status);
+      if (params?.priority) qp.append("priority", params.priority);
+      if (params?.q) qp.append("q", params.q);
+
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues?${qp.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    try {
+      const res = await fetch("./data/field_issues.json");
+      if (res.ok) {
+        let list = await res.json();
+        if (params?.userRole === "VOLUNTEER" && params?.userId) {
+          list = list.filter((i: any) => i.assignedVolunteerId === params.userId);
+        } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
+          const dId = params.directorId || params.userId;
+          list = list.filter((i: any) => i.directorId === dId);
+        }
+        if (params?.mandalId && params.mandalId !== "ALL") {
+          list = list.filter((i: any) => i.mandalId === params.mandalId);
+        }
+        if (params?.villageId && params.villageId !== "ALL") {
+          list = list.filter((i: any) => i.villageId === params.villageId);
+        }
+        if (params?.status && params.status !== "ALL") {
+          list = list.filter((i: any) => i.status === params.status);
+        }
+        if (params?.priority && params.priority !== "ALL") {
+          list = list.filter((i: any) => i.priority === params.priority);
+        }
+        return list;
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  async createFieldIssue(payload: any): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    return {
+      ...payload,
+      id: `iss-${Date.now().toString(16)}`,
+      status: payload.status || "NEW",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isImmutable: true
+    };
+  },
+
+  async getFieldIssueById(issueId: string, userId?: string, userRole?: string): Promise<any> {
+    try {
+      const qp = new URLSearchParams();
+      if (userId) qp.append("userId", userId);
+      if (userRole) qp.append("userRole", userRole);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}?${qp.toString()}`);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    const issues = await this.getFieldIssues();
+    const found = issues.find((i: any) => i.id === issueId);
+    if (found) return found;
+    throw new Error("Issue not found");
+  },
+
+  async addWorkUpdate(issueId: string, payload: any): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/updates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    return {
+      ...payload,
+      id: `upd-${Date.now().toString(16)}`,
+      issueId,
+      createdAt: new Date().toISOString()
+    };
+  },
+
+  async getIssueHistory(issueId: string): Promise<any[]> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/history`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return [
+      {
+        id: `upd-hist-1`,
+        issueId,
+        volunteerId: "usr-vol-ramesh",
+        volunteerName: "Ramesh Babu",
+        previousStatus: "NONE",
+        newStatus: "NEW",
+        updateDate: "25 Aug 2026",
+        remarks: "Original complaint intake registered and verified on ground.",
+        attachments: [],
+        createdAt: "2026-08-25T09:15:00Z"
+      }
+    ];
+  },
+
+  async getFieldNotifications(recipientUserId?: string, recipientRole?: string): Promise<any[]> {
+    try {
+      const qp = new URLSearchParams();
+      if (recipientUserId) qp.append("recipientUserId", recipientUserId);
+      if (recipientRole) qp.append("recipientRole", recipientRole);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications?${qp.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) return data;
+      }
+    } catch (e) {
+      // Fallback
+    }
+    try {
+      const res = await fetch("./data/field_notifications.json");
+      if (res.ok) {
+        let list = await res.json();
+        if (recipientUserId) {
+          list = list.filter((n: any) => n.recipientUserId === recipientUserId);
+        } else if (recipientRole) {
+          list = list.filter((n: any) => n.recipientRole === recipientRole);
+        }
+        return list;
+      }
+    } catch (e) {}
+    return [];
+  },
+
+  async markNotificationRead(notificationId: string): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications/${encodeURIComponent(notificationId)}/read`, {
+        method: "PATCH"
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    return { status: "success", id: notificationId, isRead: true };
+  },
+
+  async getGeographicDrilldown(assemblyConstituencyId?: string, stateId?: string): Promise<any> {
+    try {
+      const qp = new URLSearchParams();
+      if (assemblyConstituencyId) qp.append("assemblyConstituencyId", assemblyConstituencyId);
+      if (stateId) qp.append("stateId", stateId);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/drilldown?${qp.toString()}`);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    const [mandals, villages, issues, users] = await Promise.all([
+      this.getMandals(assemblyConstituencyId, stateId),
+      this.getVillages(undefined, assemblyConstituencyId),
+      this.getFieldIssues(),
+      this.getUsers()
+    ]);
+    
+    const result = mandals.map((m: any) => {
+      const mVillages = villages.filter((v: any) => v.mandalId === m.id);
+      const mIssues = issues.filter((i: any) => i.mandalId === m.id);
+      return {
+        mandalId: m.id,
+        mandalName: m.name,
+        code: m.code,
+        totalVillages: mVillages.length,
+        totalVoters: m.totalVoters || 0,
+        issueSummary: {
+          total: mIssues.length,
+          pending: mIssues.filter((i: any) => ["NEW", "ASSIGNED"].includes(i.status)).length,
+          inProgress: mIssues.filter((i: any) => i.status === "IN_PROGRESS").length,
+          completed: mIssues.filter((i: any) => ["COMPLETED", "RESOLVED"].includes(i.status)).length,
+          overdue: mIssues.filter((i: any) => i.status === "OVERDUE").length
+        },
+        villages: mVillages.map((v: any) => {
+          const vIssues = issues.filter((i: any) => i.villageId === v.id);
+          const vol = users.find((u: any) => u.id === v.assignedVolunteerId);
+          return {
+            villageId: v.id,
+            villageName: v.name,
+            code: v.code,
+            totalVoters: v.totalVoters || 0,
+            volunteer: {
+              id: vol?.id || v.assignedVolunteerId,
+              name: vol?.name || v.assignedVolunteerName || "Unassigned",
+              phone: vol?.phone || "",
+              avatar: vol?.avatar || ""
+            },
+            issueSummary: {
+              total: vIssues.length,
+              pending: vIssues.filter((i: any) => ["NEW", "ASSIGNED"].includes(i.status)).length,
+              inProgress: vIssues.filter((i: any) => i.status === "IN_PROGRESS").length,
+              completed: vIssues.filter((i: any) => ["COMPLETED", "RESOLVED"].includes(i.status)).length,
+              overdue: vIssues.filter((i: any) => i.status === "OVERDUE").length
+            },
+            issues: vIssues
+          };
+        })
+      };
+    });
+
+    return {
+      assemblyConstituencyId: assemblyConstituencyId || "KDP-AC",
+      stateId: stateId || "AP",
+      mandals: result
+    };
   }
 };

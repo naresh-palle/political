@@ -43,12 +43,16 @@ export const Footer: React.FC = () => {
           <div>
             © {new Date().getFullYear()} Leader's Lens. All national constituency data sourced from official Election Commission of India Gazette.
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="hover:text-[#D4A24C] transition-colors cursor-pointer">Security Protocol</span>
-            <span>·</span>
-            <span className="hover:text-[#D4A24C] transition-colors cursor-pointer">ECI Data Integrity</span>
-            <span>·</span>
-            <span className="hover:text-[#D4A24C] transition-colors cursor-pointer">Confidential Briefing</span>
+          <div className="flex items-center space-x-2 text-[#D8CFB8]">
+            <span>Developed and Maintained by</span>
+            <a
+              href="https://plaramai.in"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#D4A24C] hover:underline font-semibold"
+            >
+              plaramai.in
+            </a>
           </div>
         </div>
       </div>
