@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
 
   const primaryRole = currentProfile.primaryRole || (
-    currentProfile.roleId === "SUPER_ADMIN" || currentProfile.role === "super_admin" || currentProfile.isPlatformAdmin
+    currentProfile.email === "admin@leaderslens.ai" || currentProfile.roleId === "SUPER_ADMIN" || currentProfile.role === "super_admin" || currentProfile.isPlatformAdmin
       ? "SUPER_ADMIN"
       : currentProfile.roleId === "ADMIN" || currentProfile.role === "admin" || currentProfile.isPoliticalAdmin
       ? "POLITICAL_ADMIN"
@@ -62,11 +62,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       : "DIRECTOR"
   );
 
-  const isPlatformAdmin = primaryRole === "SUPER_ADMIN";
-  const isPoliticalAdmin = primaryRole === "POLITICAL_ADMIN";
+  const isPlatformAdmin = currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin);
+  const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && primaryRole === "DIRECTOR";
+  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER");
   const isAdmin = isPlatformAdmin || isPoliticalAdmin;
-  const isDirector = primaryRole === "DIRECTOR";
-  const isVolunteer = primaryRole === "VOLUNTEER";
 
   useEffect(() => {
     setLogoError(false);

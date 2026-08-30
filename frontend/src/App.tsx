@@ -96,7 +96,7 @@ function AppInner() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const primaryRole = currentProfile?.primaryRole || (
-    currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.isPlatformAdmin
+    currentProfile?.email === "admin@leaderslens.ai" || currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.isPlatformAdmin
       ? "SUPER_ADMIN"
       : currentProfile?.roleId === "ADMIN" || currentProfile?.role === "admin" || currentProfile?.isPoliticalAdmin
       ? "POLITICAL_ADMIN"
@@ -105,16 +105,16 @@ function AppInner() {
       : "DIRECTOR"
   );
 
-  const isPlatformAdmin = primaryRole === "SUPER_ADMIN";
-  const isPoliticalAdmin = primaryRole === "POLITICAL_ADMIN";
-  const isDirector = primaryRole === "DIRECTOR";
-  const isVolunteer = primaryRole === "VOLUNTEER";
+  const isPlatformAdmin = currentProfile?.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && currentProfile?.isPlatformAdmin);
+  const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || currentProfile?.isPoliticalAdmin);
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && primaryRole === "DIRECTOR";
+  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile?.roleId === "VOLUNTEER");
   const isAdmin = isPlatformAdmin || isPoliticalAdmin;
 
   // Role routing enforcement:
+  // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance)
   // - Political Admin & Director: Field Operations, Grievances, User Management (governance) ONLY
   // - Volunteer: Field Operations, Grievances ONLY
-  // - Platform Super Admin: All products
   useEffect(() => {
     if (isVolunteer && !["fieldops", "grievances"].includes(activeProduct)) {
       setActiveProduct("fieldops");
@@ -135,6 +135,8 @@ function AppInner() {
       targetProduct = !["fieldops", "grievances"].includes(product) ? "fieldops" : product;
     } else if (isPoliticalAdmin || isDirector) {
       targetProduct = !["fieldops", "grievances", "governance"].includes(product) ? "fieldops" : product;
+    } else if (!isPlatformAdmin) {
+      targetProduct = "fieldops";
     }
     setActiveProduct(targetProduct);
     try {
