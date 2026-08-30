@@ -312,12 +312,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="p-2 my-1 rounded bg-[#071322] text-[10px] text-[#8E9CAE] text-center">
                     Developed and Maintained by{" "}
                     <a
-                      href="https://plaramai.in"
+                      href="https://palramai.in"
                       target="_blank"
                       rel="noreferrer"
                       className="text-[#D4A24C] hover:underline font-semibold block mt-0.5"
                     >
-                      plaramai.in
+                      palramai.in
                     </a>
                   </div>
 

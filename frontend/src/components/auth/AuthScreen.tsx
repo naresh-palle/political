@@ -208,12 +208,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
           <div className="pt-2 text-[11px] text-[#8E9CAE]">
             Developed and Maintained by{" "}
             <a
-              href="https://plaramai.in"
+              href="https://palramai.in"
               target="_blank"
               rel="noreferrer"
               className="text-[#D4A24C] hover:underline font-semibold"
             >
-              plaramai.in
+              palramai.in
             </a>
           </div>
         </div>

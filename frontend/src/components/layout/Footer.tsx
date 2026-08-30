@@ -46,12 +46,12 @@ export const Footer: React.FC = () => {
           <div className="flex items-center space-x-2 text-[#D8CFB8]">
             <span>Developed and Maintained by</span>
             <a
-              href="https://plaramai.in"
+              href="https://palramai.in"
               target="_blank"
               rel="noreferrer"
               className="text-[#D4A24C] hover:underline font-semibold"
             >
-              plaramai.in
+              palramai.in
             </a>
           </div>
         </div>
