@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { PoliticalParty, UserProfile } from "../types";
 import { politicalApiService } from "../services/api";
+import { MOCK_POLITICAL_PARTIES } from "../services/mockData";
 
 const NEUTRAL_THEME = {
   primary: "#D4A24C",
@@ -78,13 +79,19 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
     }
   }, []);
 
-  // Fetch single party with caching
+  // Fetch single party with caching & instant synchronous fallback
   const getPartyBranding = useCallback(
     async (partyId?: string | null): Promise<PoliticalParty | undefined> => {
       if (!partyId) return undefined;
       const cleanId = partyId.trim().toUpperCase();
       if (partyCache.has(cleanId)) {
         return partyCache.get(cleanId);
+      }
+      const staticMatch = MOCK_POLITICAL_PARTIES.find(
+        (p) => p.id.toUpperCase() === cleanId || p.abbreviation.toUpperCase() === cleanId
+      );
+      if (staticMatch) {
+        setPartyCache((prev) => new Map(prev).set(cleanId, staticMatch));
       }
       try {
         const party = await politicalApiService.getPoliticalPartyById(cleanId);
@@ -95,7 +102,7 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
       } catch (err) {
         console.warn(`[PartyTheme] Error fetching party branding for ID: ${cleanId}`, err);
       }
-      return undefined;
+      return staticMatch;
     },
     [partyCache]
   );
@@ -103,12 +110,13 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
   // Load and apply theme for the currently authenticated user's partyId
   const syncUserPartyTheme = useCallback(async () => {
     // Platform Super Admins always use Neutral dark theme
-    if (
+    const isPlatformOwner =
       !authenticatedUser ||
-      !authenticatedUser.partyId ||
+      authenticatedUser.email === "admin@leaderslens.ai" ||
       authenticatedUser.primaryRole === "SUPER_ADMIN" ||
-      authenticatedUser.isPlatformAdmin
-    ) {
+      (authenticatedUser.isPlatformAdmin && !authenticatedUser.isPoliticalAdmin);
+
+    if (isPlatformOwner || !authenticatedUser?.partyId) {
       setCurrentParty(null);
       applyThemeTokens(NEUTRAL_THEME);
       return;
@@ -136,7 +144,7 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
 
   useEffect(() => {
     syncUserPartyTheme();
-  }, [authenticatedUser?.id, authenticatedUser?.partyId, authenticatedUser?.primaryRole, syncUserPartyTheme]);
+  }, [authenticatedUser?.id, authenticatedUser?.email, authenticatedUser?.partyId, authenticatedUser?.primaryRole, syncUserPartyTheme]);
 
   const value = useMemo<PartyThemeContextValue>(() => {
     const isPartyThemeActive = !!currentParty;

@@ -64,9 +64,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const isPlatformAdmin = currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin);
   const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
-  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && primaryRole === "DIRECTOR";
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
   const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER");
-  const isAdmin = isPlatformAdmin || isPoliticalAdmin;
+  const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
 
   useEffect(() => {
     setLogoError(false);
@@ -298,7 +298,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
                     >
                       <UserCheck className="w-4 h-4 text-[#D4A24C]" />
-                      <span>Admin User Management</span>
+                      <span>{isPlatformAdmin ? "Admin User Governance" : isPoliticalAdmin ? "Directors User Management" : "Squad Volunteers Management"}</span>
                     </button>
                   )}
 
@@ -314,19 +314,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <span>View Public Marketing Page</span>
                     </button>
                   )}
-
-                  {/* Brand Attribution in Menu */}
-                  <div className="p-2 my-1 rounded bg-[#071322] text-[10px] text-[#8E9CAE] text-center">
-                    Developed and Maintained by{" "}
-                    <a
-                      href="https://palramai.in"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[#D4A24C] hover:underline font-semibold block mt-0.5"
-                    >
-                      palramai.in
-                    </a>
-                  </div>
 
                   {onSignOut && (
                     <button

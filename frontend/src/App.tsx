@@ -107,9 +107,9 @@ function AppInner() {
 
   const isPlatformAdmin = currentProfile?.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && currentProfile?.isPlatformAdmin);
   const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || currentProfile?.isPoliticalAdmin);
-  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && primaryRole === "DIRECTOR";
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && (primaryRole === "DIRECTOR" || currentProfile?.roleId === "CAMPAIGN_MANAGER" || currentProfile?.role === "campaign_manager" || currentProfile?.roleId === "PARTY_ADMIN");
   const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile?.roleId === "VOLUNTEER");
-  const isAdmin = isPlatformAdmin || isPoliticalAdmin;
+  const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
 
   // Role routing enforcement:
   // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance)
@@ -168,14 +168,21 @@ function AppInner() {
   const handleSwitchProfile = (profile: UserProfile) => {
     setCurrentProfile(profile);
     const userRole = profile.primaryRole || (
-      profile.roleId === "SUPER_ADMIN" || profile.roleId === "ADMIN" || profile.role === "super_admin" || profile.role === "admin"
-        ? "ADMIN"
+      profile.email === "admin@leaderslens.ai" || profile.roleId === "SUPER_ADMIN" || profile.role === "super_admin" || profile.isPlatformAdmin
+        ? "SUPER_ADMIN"
+        : profile.roleId === "ADMIN" || profile.role === "admin" || profile.isPoliticalAdmin
+        ? "POLITICAL_ADMIN"
         : profile.roleId === "VOLUNTEER" || profile.role === "volunteer"
         ? "VOLUNTEER"
         : "DIRECTOR"
     );
 
-    if (userRole !== "ADMIN" && !["fieldops", "grievances"].includes(activeProduct)) {
+    if (userRole === "VOLUNTEER" && !["fieldops", "grievances"].includes(activeProduct)) {
+      setActiveProduct("fieldops");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+      } catch {}
+    } else if ((userRole === "POLITICAL_ADMIN" || userRole === "DIRECTOR") && !["fieldops", "grievances", "governance"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
