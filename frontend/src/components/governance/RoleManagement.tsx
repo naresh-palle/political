@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { UserProfile, UserRole, PoliticalParty, ElectedRepresentative } from "../../types";
+import { UserProfile, UserRole, PrimaryRole, PoliticalParty, ElectedRepresentative } from "../../types";
 import { USER_PROFILES, MOCK_POLITICAL_PARTIES, MOCK_ELECTED_REPRESENTATIVES } from "../../services/mockData";
 import { politicalApiService } from "../../services/api";
 import {
@@ -26,7 +26,14 @@ import {
   ExternalLink,
   AlertCircle,
   Calendar,
-  Building
+  Building,
+  Trash2,
+  AlertTriangle,
+  Search,
+  Filter,
+  Shield,
+  MapPin,
+  CheckCircle
 } from "lucide-react";
 
 interface RoleManagementProps {
@@ -74,19 +81,27 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   const [repFormPhotoUrl, setRepFormPhotoUrl] = useState("");
   const [isRepSaving, setIsRepSaving] = useState(false);
   const [repSaveSuccess, setRepSaveSuccess] = useState(false);
+
   // User Directory & RBAC State
   const [userSearch, setUserSearch] = useState("");
   const [userRoleFilter, setUserRoleFilter] = useState<string>("ALL");
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UserProfile | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Form Fields
   const [userFormName, setUserFormName] = useState("");
   const [userFormEmail, setUserFormEmail] = useState("");
-  const [userFormRole, setUserFormRole] = useState<UserRole>("field_strategist");
+  const [userFormPhone, setUserFormPhone] = useState("");
+  const [userFormPrimaryRole, setUserFormPrimaryRole] = useState<PrimaryRole>("DIRECTOR");
+  const [userFormRole, setUserFormRole] = useState<UserRole>("campaign_manager");
   const [userFormRoleTitle, setUserFormRoleTitle] = useState("");
   const [userFormDepartment, setUserFormDepartment] = useState("");
   const [userFormConstituency, setUserFormConstituency] = useState("");
-  const [userFormClearance, setUserFormClearance] = useState<UserProfile["clearanceLevel"]>("Level 2 (Operations)");
+  const [userFormClearance, setUserFormClearance] = useState<string>("LEVEL 3 — STRATEGY & DIRECTORS");
   const [userFormPassword, setUserFormPassword] = useState("");
+  const [userFormPartyId, setUserFormPartyId] = useState<string | null>("TDP");
   const [userFormPermissions, setUserFormPermissions] = useState<UserProfile["permissions"]>({
     canExportReports: true,
     canEditStrategy: true,
@@ -99,32 +114,129 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   const [userSaveSuccess, setUserSaveSuccess] = useState(false);
   const [selectedUserAudit, setSelectedUserAudit] = useState<UserProfile | null>(null);
 
+  // Determine Current User Clearance Level
+  const isSuperAdmin =
+    currentProfile.primaryRole === "SUPER_ADMIN" ||
+    currentProfile.isPlatformAdmin ||
+    currentProfile.roleId === "SUPER_ADMIN" ||
+    currentProfile.role === "super_admin";
+
+  const isPoliticalAdmin =
+    currentProfile.primaryRole === "POLITICAL_ADMIN" ||
+    currentProfile.isPoliticalAdmin ||
+    currentProfile.roleId === "ADMIN";
+
+  const isDirector =
+    currentProfile.primaryRole === "DIRECTOR" ||
+    currentProfile.roleId === "CAMPAIGN_MANAGER";
+
   useEffect(() => {
-    (async () => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
       const users = await politicalApiService.getUsers();
       if (users && users.length > 0) {
         setProfiles(users);
       }
-    })();
-  }, []);
+    } catch (e) {
+      console.error("Failed to load users", e);
+    }
+  };
+
+  // Check if current user can create users
+  const canCreateUsers = isSuperAdmin || isPoliticalAdmin || isDirector;
+
+  // Check if current user can edit a specific target user
+  const canEditUser = (target: UserProfile): boolean => {
+    if (isSuperAdmin) return true;
+    if (isPoliticalAdmin) {
+      // Political admin can edit Directors and Volunteers under their constituency
+      return (
+        target.primaryRole === "DIRECTOR" ||
+        target.primaryRole === "VOLUNTEER" ||
+        target.roleId === "CAMPAIGN_MANAGER" ||
+        target.roleId === "VOLUNTEER"
+      );
+    }
+    if (isDirector) {
+      // Director can only edit Volunteers
+      return target.primaryRole === "VOLUNTEER" || target.roleId === "VOLUNTEER";
+    }
+    return false;
+  };
+
+  // Check if current user can delete a specific target user
+  const canDeleteUser = (target: UserProfile): boolean => {
+    // SUPER ADMIN accounts can NEVER be deleted
+    if (
+      target.primaryRole === "SUPER_ADMIN" ||
+      target.isPlatformAdmin ||
+      target.roleId === "SUPER_ADMIN" ||
+      target.role === "super_admin" ||
+      target.id === "usr-superadmin" ||
+      target.id === "usr-admin"
+    ) {
+      return false;
+    }
+
+    if (isSuperAdmin) return true;
+
+    if (isPoliticalAdmin) {
+      // Political admin can delete Directors in their constituency
+      return target.primaryRole === "DIRECTOR" || target.roleId === "CAMPAIGN_MANAGER";
+    }
+
+    if (isDirector) {
+      // Director can delete Volunteers under their team
+      return target.primaryRole === "VOLUNTEER" || target.roleId === "VOLUNTEER";
+    }
+
+    return false;
+  };
 
   const handleOpenAddUser = () => {
     setEditingUser(null);
     setUserFormName("");
     setUserFormEmail("");
-    setUserFormRole("field_strategist");
-    setUserFormRoleTitle("Field Operations Strategist");
-    setUserFormDepartment("Ground Operations");
-    setUserFormConstituency("Kadapa AC (AC-132)");
-    setUserFormClearance("Level 2 (Operations)");
+    setUserFormPhone("+91 ");
+
+    // Default primary role based on who is creating
+    if (isSuperAdmin) {
+      setUserFormPrimaryRole("POLITICAL_ADMIN");
+      setUserFormRole("admin");
+      setUserFormRoleTitle("Constituency Political Admin (MLA)");
+      setUserFormDepartment("Constituency Political Command");
+      setUserFormConstituency("Kadapa AC (AC-132)");
+      setUserFormClearance("LEVEL 4 — CONSTITUENCY COMMAND");
+      setUserFormPartyId("TDP");
+    } else if (isPoliticalAdmin) {
+      setUserFormPrimaryRole("DIRECTOR");
+      setUserFormRole("campaign_manager");
+      setUserFormRoleTitle("Volunteer Manager (Urban Mandals)");
+      setUserFormDepartment("Ground Operations");
+      setUserFormConstituency(currentProfile.assignedConstituency || "Kadapa Urban Mandals");
+      setUserFormClearance("LEVEL 3 — STRATEGY & DIRECTORS");
+      setUserFormPartyId(currentProfile.partyId || "TDP");
+    } else {
+      setUserFormPrimaryRole("VOLUNTEER");
+      setUserFormRole("volunteer");
+      setUserFormRoleTitle("Booth & Village Field Volunteer");
+      setUserFormDepartment("Grassroots Field Force");
+      setUserFormConstituency(currentProfile.assignedConstituency || "Kadapa AC · Chinna Chowk");
+      setUserFormClearance("LEVEL 1 — FIELD ONLY");
+      setUserFormPartyId(currentProfile.partyId || "TDP");
+    }
+
     setUserFormPassword("Leader@2026");
     setUserFormPermissions({
-      canExportReports: true,
-      canEditStrategy: true,
+      canExportReports: isSuperAdmin || isPoliticalAdmin,
+      canEditStrategy: isSuperAdmin || isPoliticalAdmin,
       canManageVolunteers: true,
       canResolveGrievances: true,
-      canPublishLandingPage: false,
-      canViewConfidentialMetrics: true,
+      canPublishLandingPage: isSuperAdmin,
+      canViewConfidentialMetrics: isSuperAdmin || isPoliticalAdmin,
       canManageSystemUsers: false
     });
     setIsUserModalOpen(true);
@@ -134,17 +246,20 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
     setEditingUser(user);
     setUserFormName(user.name);
     setUserFormEmail(user.email);
+    setUserFormPhone(user.phone || "");
+    setUserFormPrimaryRole(user.primaryRole || "DIRECTOR");
     setUserFormRole(user.role);
     setUserFormRoleTitle(user.roleTitle);
     setUserFormDepartment(user.department || "");
     setUserFormConstituency(user.assignedConstituency);
     setUserFormClearance(user.clearanceLevel);
     setUserFormPassword(user.demoPassword || "Demo@2026");
+    setUserFormPartyId(user.partyId || null);
     setUserFormPermissions({ ...user.permissions });
     setIsUserModalOpen(true);
   };
 
-  const handleSaveUserForm = (e: React.FormEvent) => {
+  const handleSaveUserForm = async (e: React.FormEvent) => {
     e.preventDefault();
     setUserSaveSuccess(true);
 
@@ -154,14 +269,26 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         ...editingUser,
         name: userFormName,
         email: userFormEmail,
+        phone: userFormPhone,
+        primaryRole: userFormPrimaryRole,
+        isPlatformAdmin: userFormPrimaryRole === "SUPER_ADMIN",
+        isPoliticalAdmin: userFormPrimaryRole === "POLITICAL_ADMIN",
         role: userFormRole,
         roleTitle: userFormRoleTitle,
         department: userFormDepartment,
         assignedConstituency: userFormConstituency,
         clearanceLevel: userFormClearance,
         demoPassword: userFormPassword,
+        partyId: userFormPartyId,
         permissions: { ...userFormPermissions }
       };
+
+      try {
+        await politicalApiService.updateAdminUser(editingUser.id, updated);
+      } catch (err) {
+        console.warn("Backend update fallback", err);
+      }
+
       setProfiles((prev) => prev.map((u) => u.id === editingUser.id ? updated : u));
     } else {
       // Create new user
@@ -169,22 +296,50 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         id: `usr_${Date.now()}`,
         name: userFormName,
         email: userFormEmail,
+        phone: userFormPhone,
+        primaryRole: userFormPrimaryRole,
+        isPlatformAdmin: userFormPrimaryRole === "SUPER_ADMIN",
+        isPoliticalAdmin: userFormPrimaryRole === "POLITICAL_ADMIN",
         role: userFormRole,
+        roleId: userFormPrimaryRole === "SUPER_ADMIN" ? "SUPER_ADMIN" : userFormPrimaryRole === "POLITICAL_ADMIN" ? "ADMIN" : userFormPrimaryRole === "DIRECTOR" ? "CAMPAIGN_MANAGER" : "VOLUNTEER",
         roleTitle: userFormRoleTitle,
         department: userFormDepartment,
         assignedConstituency: userFormConstituency,
         clearanceLevel: userFormClearance,
         demoPassword: userFormPassword,
+        partyId: userFormPartyId,
         avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250&auto=format&fit=crop&q=80",
         permissions: { ...userFormPermissions }
       };
-      setProfiles((prev) => [...prev, newUser]);
+
+      try {
+        await politicalApiService.createAdminUser(newUser as any);
+      } catch (err) {
+        console.warn("Backend create fallback", err);
+      }
+
+      setProfiles((prev) => [newUser, ...prev]);
     }
 
     setTimeout(() => {
       setUserSaveSuccess(false);
       setIsUserModalOpen(false);
-    }, 1000);
+    }, 600);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
+    setIsDeleting(true);
+
+    try {
+      await politicalApiService.deleteAdminUser(deletingUser.id);
+      setProfiles((prev) => prev.filter((u) => u.id !== deletingUser.id));
+    } catch (err) {
+      console.error("Delete failed", err);
+    } finally {
+      setIsDeleting(false);
+      setDeletingUser(null);
+    }
   };
 
   const filteredUsers = profiles.filter((p) => {
@@ -193,249 +348,122 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       p.email.toLowerCase().includes(userSearch.toLowerCase()) ||
       p.assignedConstituency.toLowerCase().includes(userSearch.toLowerCase()) ||
       (p.department && p.department.toLowerCase().includes(userSearch.toLowerCase()));
-    const matchesRole = userRoleFilter === "ALL" || p.role === userRoleFilter;
-    return matchesSearch && matchesRole;
+    
+    if (userRoleFilter === "ALL") return matchesSearch;
+    if (userRoleFilter === "SUPER_ADMIN") return matchesSearch && (p.primaryRole === "SUPER_ADMIN" || p.isPlatformAdmin);
+    if (userRoleFilter === "POLITICAL_ADMIN") return matchesSearch && (p.primaryRole === "POLITICAL_ADMIN" || p.isPoliticalAdmin);
+    if (userRoleFilter === "DIRECTOR") return matchesSearch && p.primaryRole === "DIRECTOR";
+    if (userRoleFilter === "VOLUNTEER") return matchesSearch && p.primaryRole === "VOLUNTEER";
+
+    return matchesSearch && (p.role === userRoleFilter || p.primaryRole === userRoleFilter);
   });
 
-  useEffect(() => {
-    (async () => {
-      const fetched = await politicalApiService.getPoliticalParties();
-      if (fetched && fetched.length > 0) {
-        setParties(fetched);
-        const tdp = fetched.find((p) => p.id === "TDP") || fetched[0];
-        setSelectedPartyId(tdp.id);
-        loadPartyToForm(tdp);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      const history = await politicalApiService.getRepresentativesHistory(ledgerAcId);
-      setLedgerHistory(history);
-    })();
-  }, [ledgerAcId]);
-
-  const handleSaveRepresentative = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsRepSaving(true);
-    setRepSaveSuccess(false);
-
-    const payload: Partial<ElectedRepresentative> = {
-      id: `REP-${ledgerAcId}-${Date.now()}`,
-      assemblyConstituencyId: ledgerAcId,
-      name: repFormName,
-      partyId: repFormPartyId,
-      designation: repFormDesignation,
-      electionType: repFormElectionType,
-      electionDate: repFormElectionDate,
-      status: repFormStatus,
-      termStart: repFormTermStart,
-      termEnd: repFormTermEnd || undefined,
-      reasonForChange: repFormReason || undefined,
-      source: repFormSource,
-      sourceUrl: repFormSourceUrl || undefined,
-      photoUrl: repFormPhotoUrl || undefined
-    };
-
-    try {
-      await politicalApiService.createElectedRepresentative(ledgerAcId, payload);
-      const updatedHistory = await politicalApiService.getRepresentativesHistory(ledgerAcId);
-      setLedgerHistory(updatedHistory);
-      setRepSaveSuccess(true);
-      setTimeout(() => {
-        setRepSaveSuccess(false);
-        setIsRepModalOpen(false);
-      }, 1500);
-    } catch (err) {
-      console.error("Failed to save representative", err);
-    } finally {
-      setIsRepSaving(false);
-    }
-  };
-
-  const handleMarkVacant = async () => {
-    if (!window.confirm("Are you sure you want to mark this constituency seat as officially VACANT?")) return;
-    setIsRepSaving(true);
-    try {
-      await politicalApiService.createElectedRepresentative(ledgerAcId, {
-        id: `REP-${ledgerAcId}-VACANT-${Date.now()}`,
-        assemblyConstituencyId: ledgerAcId,
-        name: "Seat Vacant",
-        partyId: "IND",
-        designation: "Vacant Seat",
-        status: "VACANT",
-        termStart: String(new Date().getFullYear()),
-        source: "Official Legislative Assembly Gazette"
-      });
-      const updatedHistory = await politicalApiService.getRepresentativesHistory(ledgerAcId);
-      setLedgerHistory(updatedHistory);
-    } catch (err) {
-      console.error("Failed to mark seat vacant", err);
-    } finally {
-      setIsRepSaving(false);
-    }
-  };
-
-  const loadPartyToForm = (p: PoliticalParty) => {
-    setPrimaryColor(p.primaryColor || "#FFD200");
-    setSecondaryColor(p.secondaryColor || "#B45309");
-    setAccentColor(p.accentColor || "#F59E0B");
-    setGradientStart(p.gradientStart || p.primaryColor || "#FFD200");
-    setGradientEnd(p.gradientEnd || p.secondaryColor || "#EAB308");
-    setPartyName(p.name);
-    setPartyAbbr(p.abbreviation || p.shortName);
-    setLogoUrl(p.logoUrl || "");
-    setSymbolEmoji(p.symbolEmoji || "🏛️");
-  };
-
-  const handleSelectParty = (partyId: string) => {
-    setSelectedPartyId(partyId);
-    const found = parties.find((p) => p.id === partyId);
-    if (found) {
-      loadPartyToForm(found);
-    }
-  };
-
-  const applyLiveTheme = () => {
-    document.documentElement.style.setProperty("--party-primary", primaryColor);
-    document.documentElement.style.setProperty("--party-secondary", secondaryColor);
-    document.documentElement.style.setProperty("--party-accent", accentColor);
-    document.documentElement.style.setProperty("--party-gradient-start", gradientStart);
-    document.documentElement.style.setProperty("--party-gradient-end", gradientEnd);
-  };
-
-  const handleSavePartyBranding = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setSaveSuccess(false);
-
-    applyLiveTheme();
-
-    const updates: Partial<PoliticalParty> = {
-      name: partyName,
-      abbreviation: partyAbbr,
-      primaryColor,
-      secondaryColor,
-      accentColor,
-      gradientStart,
-      gradientEnd,
-      logoUrl,
-      symbolEmoji
-    };
-
-    try {
-      const updated = await politicalApiService.updatePoliticalParty(selectedPartyId, updates);
-      setParties((prev) => prev.map((p) => p.id === selectedPartyId ? { ...p, ...updated } : p));
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      console.error("Failed to update party branding", err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const mockAuditLogs = [
-    {
-      time: "28 Aug, 21:05",
-      user: "Naresh Palle (Campaign Director)",
-      action: "Generated Full Strength Audit for Kadapa AC",
-      status: "Authorized"
-    },
-    {
-      time: "28 Aug, 19:40",
-      user: "Ananya Sharma (Media Analyst)",
-      action: "Exported Platform Gap Intelligence Briefing (PDF)",
-      status: "Authorized"
-    },
-    {
-      time: "28 Aug, 18:15",
-      user: "Venkatesh Rao (Field Strategist)",
-      action: "Dispatched WhatsApp Directive #tsk-1 to Central Squad",
-      status: "Authorized"
-    },
-    {
-      time: "28 Aug, 16:30",
-      user: "Ramesh Babu (Volunteer Lead)",
-      action: "Resolved Grievance Ticket #KDP-GRV-2026-894 (Transformer Load)",
-      status: "Authorized"
-    }
-  ];
+  // Calculate Tier Counts
+  const countL1 = profiles.filter((p) => p.primaryRole === "SUPER_ADMIN" || p.isPlatformAdmin).length;
+  const countL2 = profiles.filter((p) => p.primaryRole === "POLITICAL_ADMIN" || p.isPoliticalAdmin).length;
+  const countL3 = profiles.filter((p) => p.primaryRole === "DIRECTOR").length;
+  const countL4 = profiles.filter((p) => p.primaryRole === "VOLUNTEER").length;
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-fadeIn">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E5E3D8] pb-6">
-        <div>
-          <div className="flex items-center space-x-2 text-[11px] font-semibold uppercase tracking-widest text-[#787B88]">
-            <span>Governance & Security</span>
-            <span>/</span>
-            <span className="text-[#112233]">Role-Based Access Control (RBAC)</span>
+    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 animate-fadeIn text-[#F5EFE0]">
+      {/* Executive Command Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#D4A24C]/40 shadow-xl">
+        <div className="flex items-center gap-4">
+          <img
+            src={currentProfile.avatar}
+            alt={currentProfile.name}
+            className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C]"
+          />
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
+                {isSuperAdmin
+                  ? "Level 1: Platform Super Admin"
+                  : isPoliticalAdmin
+                  ? "Level 2: Political Admin (MLA)"
+                  : "Level 3: Director"}
+              </span>
+              <span className="text-xs text-[#D8CFB8]">{currentProfile.assignedConstituency}</span>
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
+              Access Control & User Governance
+            </h1>
+            <p className="text-xs text-[#8E9CAE] mt-0.5">
+              {isSuperAdmin
+                ? "Full Platform User Management · Multi-Tenant Provisioning & Audit Trails"
+                : isPoliticalAdmin
+                ? "Constituency Director Governance & Volunteer Cadre Deployment"
+                : "Squad Volunteer Assignment & Verification"}
+            </p>
           </div>
-          <h1 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal mt-1">
-            Access Control & Persona Switchboard
-          </h1>
-          <p className="text-xs sm:text-sm text-[#626674]">
-            Simulate role-specific dashboards, confidentiality clearance levels, and operational permission matrices.
-          </p>
         </div>
 
-        <div className="flex items-center space-x-3 bg-white border border-[#E0DED5] rounded-xl px-4 py-2 shadow-2xs">
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold text-[#8A8E9B] block">Active Persona</span>
-            <span className="text-xs font-bold text-[#112233]">{currentProfile.name}</span>
-          </div>
-          <span className="px-2 py-0.5 bg-[#112233] text-white text-[10px] font-bold rounded">
-            {currentProfile.roleTitle}
-          </span>
-        </div>
+        {canCreateUsers && (
+          <button
+            type="button"
+            onClick={handleOpenAddUser}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>
+              {isSuperAdmin
+                ? "Add System User"
+                : isPoliticalAdmin
+                ? "Add Director"
+                : "Add Volunteer"}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Module Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#E5E3D8] pb-1 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 border-b border-[#22405E] pb-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("roles")}
-          className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === "roles"
-              ? "bg-[#0B1A2C] text-[#F5EFE0] shadow-sm"
-              : "text-[#626674] hover:bg-[#EFECE6] hover:text-[#112233]"
+              ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+              : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
           }`}
         >
-          <Users className="w-4 h-4 text-[#D4A24C]" />
-          <span>User Management & RBAC</span>
+          <Users className="w-4 h-4" />
+          <span>User Directory & RBAC ({profiles.length})</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab("branding")}
-          className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === "branding"
-              ? "bg-[#B45309] text-white shadow-sm"
-              : "text-[#626674] hover:bg-[#EFECE6] hover:text-[#112233]"
-          }`}
-        >
-          <Palette className="w-4 h-4" />
-          <span>Party Branding & Color Customizer</span>
-        </button>
+        {isSuperAdmin && (
+          <>
+            <button
+              onClick={() => setActiveTab("branding")}
+              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === "branding"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                  : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
+              }`}
+            >
+              <Palette className="w-4 h-4" />
+              <span>Party Branding & Colors</span>
+            </button>
 
-        <button
-          onClick={() => setActiveTab("representatives")}
-          className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === "representatives"
-              ? "bg-[#1E3A5A] text-white shadow-sm"
-              : "text-[#626674] hover:bg-[#EFECE6] hover:text-[#112233]"
-          }`}
-        >
-          <Award className="w-4 h-4" />
-          <span>Elected Representatives Ledger</span>
-        </button>
+            <button
+              onClick={() => setActiveTab("representatives")}
+              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === "representatives"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                  : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
+              }`}
+            >
+              <Award className="w-4 h-4" />
+              <span>ECI Representatives Ledger</span>
+            </button>
+          </>
+        )}
 
         <button
           onClick={() => setActiveTab("audit")}
-          className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === "audit"
-              ? "bg-[#112233] text-[#F5EFE0] shadow-sm"
-              : "text-[#626674] hover:bg-[#EFECE6] hover:text-[#112233]"
+              ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+              : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
           }`}
         >
           <History className="w-4 h-4" />
@@ -446,81 +474,67 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       {/* TAB 1: USER DIRECTORY & RBAC MANAGEMENT */}
       {activeTab === "roles" && (
         <div className="space-y-6 animate-fadeIn">
-          {/* Active Administrator Overview Card */}
-          <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl p-6 border border-[#D4A24C]/30 shadow-md">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <img
-                  src={currentProfile.avatar}
-                  alt={currentProfile.name}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-[#D4A24C]"
-                />
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <h3 className="text-base font-bold text-[#F5EFE0]">{currentProfile.name}</h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#D4A24C]/20 border border-[#D4A24C]/60 text-[#D4A24C]">
-                      {currentProfile.clearanceLevel}
-                    </span>
-                  </div>
-                  <div className="text-xs text-[#D8CFB8] mt-0.5">{currentProfile.roleTitle} · {currentProfile.department}</div>
-                  <div className="text-[11px] text-[#8A8E9B] mt-1 flex items-center gap-2">
-                    <span>Email: <strong className="text-[#F5EFE0] font-mono-data">{currentProfile.email}</strong></span>
-                    <span>·</span>
-                    <span>Jurisdiction: <strong className="text-[#F5EFE0]">{currentProfile.assignedConstituency}</strong></span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleOpenAddUser}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-lg shadow-sm hover:brightness-110 transition-all cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add New User</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           {/* User Metrics Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Total System Users</span>
-              <div className="text-2xl font-bold font-mono-data text-[#112233] mt-1">{profiles.length}</div>
-              <span className="text-[10px] text-emerald-600 font-semibold mt-0.5 block">100% Active Directory</span>
-            </div>
-            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Master Administrators</span>
-              <div className="text-2xl font-bold font-mono-data text-[#112233] mt-1">
-                {profiles.filter((p) => p.role === "super_admin").length}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CAE] block">
+                Total Active Users
+              </span>
+              <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
+                {profiles.length}
               </div>
-              <span className="text-[10px] text-[#8A8E9B] font-semibold mt-0.5 block">Tier 0 Security Clearance</span>
+              <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> 100% RBAC Active
+              </span>
             </div>
-            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Field & Strategy Leads</span>
-              <div className="text-2xl font-bold font-mono-data text-[#112233] mt-1">
-                {profiles.filter((p) => p.role !== "super_admin").length}
+
+            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
+                Platform Super Admins (L1)
+              </span>
+              <div className="text-2xl font-bold font-display text-[#D4A24C] mt-1">
+                {countL1}
               </div>
-              <span className="text-[10px] text-[#8A8E9B] font-semibold mt-0.5 block">Level 1 - 3 Operations</span>
+              <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                Protected Multi-Tenant Clearance
+              </span>
             </div>
-            <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#7A7E8C] block">Audit Integrity</span>
-              <div className="text-2xl font-bold font-mono-data text-emerald-700 mt-1">100%</div>
-              <span className="text-[10px] text-emerald-600 font-semibold mt-0.5 block">RBAC Policies Enforced</span>
+
+            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
+                Political Admins & Directors (L2/L3)
+              </span>
+              <div className="text-2xl font-bold font-display text-blue-400 mt-1">
+                {countL2 + countL3}
+              </div>
+              <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
+                {countL2} MLAs · {countL3} Directors
+              </span>
+            </div>
+
+            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
+                Field Volunteers (L4)
+              </span>
+              <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
+                {countL4}
+              </div>
+              <span className="text-[10px] text-emerald-400 mt-0.5 block">
+                Grassroots Ground Force
+              </span>
             </div>
           </div>
 
           {/* Search & Filter Toolbar */}
-          <div className="bg-white border border-[#E0DED5] rounded-xl p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="w-full sm:w-80">
+          <div className="bg-[#0F2338] border border-[#22405E] rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
               <input
                 type="text"
-                placeholder="Search user by name, email, constituency..."
+                placeholder="Search user by name, email, jurisdiction..."
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full text-xs px-3.5 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                className="w-full bg-[#071322] border border-[#22405E] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
               />
             </div>
 
@@ -528,130 +542,201 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
               <select
                 value={userRoleFilter}
                 onChange={(e) => setUserRoleFilter(e.target.value)}
-                className="text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#112233]"
+                className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
               >
                 <option value="ALL">All Roles</option>
-                <option value="super_admin">Master Administrator</option>
-                <option value="campaign_director">Campaign Director</option>
-                <option value="field_strategist">Field Strategist</option>
-                <option value="media_analyst">Media Analyst</option>
-                <option value="volunteer_lead">Volunteer Lead</option>
-                <option value="booth_coordinator">Booth Coordinator</option>
+                <option value="SUPER_ADMIN">Level 1: Platform Super Admin</option>
+                <option value="POLITICAL_ADMIN">Level 2: Political Admin (MLA)</option>
+                <option value="DIRECTOR">Level 3: Director</option>
+                <option value="VOLUNTEER">Level 4: Field Volunteer</option>
               </select>
 
-              <button
-                type="button"
-                onClick={handleOpenAddUser}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0B1A2C] text-[#F5EFE0] hover:bg-[#142B45] text-xs font-semibold rounded-lg transition-colors cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5 text-[#D4A24C]" />
-                <span>Add User</span>
-              </button>
+              {canCreateUsers && (
+                <button
+                  type="button"
+                  onClick={handleOpenAddUser}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D4A24C] text-[#071322] hover:brightness-110 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add User</span>
+                </button>
+              )}
             </div>
           </div>
 
           {/* User Directory Table */}
-          <div className="bg-white border border-[#E0DED5] rounded-xl shadow-xs overflow-hidden">
+          <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl shadow-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#FAF9F5] border-b border-[#ECEAE2] text-[10.5px] font-bold uppercase tracking-wider text-[#646875]">
-                    <th className="py-3 px-4">User / Operator</th>
-                    <th className="py-3 px-4">Role & Department</th>
-                    <th className="py-3 px-4">Jurisdiction</th>
-                    <th className="py-3 px-4">Clearance</th>
-                    <th className="py-3 px-4">Permission Matrix</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                  <tr className="bg-[#071322] border-b border-[#22405E] text-[10.5px] font-bold uppercase tracking-wider text-[#8E9CAE]">
+                    <th className="py-3.5 px-4">User / Operator</th>
+                    <th className="py-3.5 px-4">Tier & Role</th>
+                    <th className="py-3.5 px-4">Jurisdiction</th>
+                    <th className="py-3.5 px-4">Clearance</th>
+                    <th className="py-3.5 px-4">Permission Matrix</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#ECEAE2] text-xs">
+                <tbody className="divide-y divide-[#22405E]/60 text-xs">
                   {filteredUsers.map((user) => {
                     const isSelf = user.id === currentProfile.id;
+                    const isUserSuperAdmin =
+                      user.primaryRole === "SUPER_ADMIN" ||
+                      user.isPlatformAdmin ||
+                      user.roleId === "SUPER_ADMIN" ||
+                      user.role === "super_admin";
+                    const isUserPoliticalAdmin =
+                      user.primaryRole === "POLITICAL_ADMIN" ||
+                      user.isPoliticalAdmin;
+                    const isUserDirector = user.primaryRole === "DIRECTOR";
+                    const isUserVolunteer = user.primaryRole === "VOLUNTEER";
+
+                    const canEdit = canEditUser(user);
+                    const canDelete = canDeleteUser(user);
+
                     return (
-                      <tr key={user.id} className="hover:bg-[#FAF9F5]/70 transition-colors">
-                        <td className="py-3.5 px-4">
+                      <tr
+                        key={user.id}
+                        className="hover:bg-[#122A44]/60 transition-colors group"
+                      >
+                        <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
                             <img
                               src={user.avatar}
                               alt={user.name}
-                              className="w-9 h-9 rounded-full object-cover border border-[#D5D3C8]"
+                              className="w-10 h-10 rounded-xl object-cover border border-[#D4A24C]/40"
                             />
                             <div>
-                              <div className="font-bold text-[#112233] flex items-center gap-1.5">
+                              <div className="font-bold text-[#F5EFE0] flex items-center gap-1.5">
                                 <span>{user.name}</span>
                                 {isSelf && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/40">
                                     You
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[11px] text-[#7A7E8C] font-mono-data">{user.email}</div>
+                              <div className="text-[11px] text-[#8E9CAE] font-mono">
+                                {user.email}
+                              </div>
+                              {user.phone && (
+                                <div className="text-[10px] text-[#A69B80]">
+                                  {user.phone}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-4">
-                          <div className="font-semibold text-[#0F766E]">{user.roleTitle}</div>
-                          <div className="text-[11px] text-[#7A7E8C]">{user.department}</div>
+                        <td className="py-4 px-4">
+                          {/* Role Tier Badge */}
+                          <div className="flex items-center gap-1.5">
+                            {isUserSuperAdmin ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#D4A24C]/20 border border-[#D4A24C]/60 text-[#D4A24C]">
+                                Level 1: Platform Super Admin
+                              </span>
+                            ) : isUserPoliticalAdmin ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-950/60 border border-blue-500/40 text-blue-300 flex items-center gap-1">
+                                <span>{user.partyEmoji || "🏛️"}</span>
+                                <span>Level 2: Political (MLA)</span>
+                              </span>
+                            ) : isUserDirector ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-950/60 border border-amber-500/40 text-amber-300">
+                                Level 3: Director
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-950/60 border border-emerald-500/40 text-emerald-300">
+                                Level 4: Volunteer
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-semibold text-xs text-[#E2DCBE] mt-1">
+                            {user.roleTitle}
+                          </div>
+                          <div className="text-[10px] text-[#8E9CAE]">
+                            {user.department}
+                          </div>
                         </td>
 
-                        <td className="py-3.5 px-4 text-[#112233] font-medium">
-                          {user.assignedConstituency}
-                        </td>
-
-                        <td className="py-3.5 px-4">
-                          <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#FAF9F5] border border-[#E0DED5] text-[#555866]">
-                            {user.clearanceLevel.split("(")[0]}
+                        <td className="py-4 px-4 text-[#D8CFB8] font-medium">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
+                            {user.assignedConstituency}
                           </span>
                         </td>
 
-                        <td className="py-3.5 px-4">
+                        <td className="py-4 px-4">
+                          <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+                            {user.clearanceLevel?.split("(")[0] || "LEVEL 2"}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-4">
                           <div className="flex items-center gap-1.5 flex-wrap max-w-xs">
-                            {user.permissions.canExportReports && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded">
+                            {user.permissions?.canExportReports && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-blue-950/60 text-blue-300 border border-blue-500/30 rounded">
                                 Export PDF
                               </span>
                             )}
-                            {user.permissions.canEditStrategy && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded">
+                            {user.permissions?.canEditStrategy && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-amber-950/60 text-amber-300 border border-amber-500/30 rounded">
                                 Strategy
                               </span>
                             )}
-                            {user.permissions.canManageVolunteers && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+                            {user.permissions?.canManageVolunteers && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 rounded">
                                 Volunteers
                               </span>
                             )}
-                            {user.permissions.canResolveGrievances && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded">
+                            {user.permissions?.canResolveGrievances && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-purple-950/60 text-purple-300 border border-purple-500/30 rounded">
                                 Grievances
                               </span>
                             )}
-                            {user.permissions.canManageSystemUsers && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded">
-                                Master Admin
+                            {user.permissions?.canManageSystemUsers && (
+                              <span className="text-[9.5px] px-1.5 py-0.5 bg-rose-950/60 text-rose-300 border border-rose-500/30 rounded">
+                                Platform Admin
                               </span>
                             )}
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditUser(user)}
-                              className="px-2.5 py-1.5 text-xs font-semibold text-[#112233] bg-[#FAF9F5] hover:bg-[#EFECE6] border border-[#D5D3C8] rounded-md transition-colors cursor-pointer"
-                            >
-                              Edit Role
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedUserAudit(user)}
-                              className="p-1.5 text-[#646875] hover:text-[#112233] hover:bg-[#EFECE6] rounded-md transition-colors cursor-pointer"
-                              title="View User Activity & Audit Trail"
-                            >
-                              <History className="w-4 h-4" />
-                            </button>
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Edit Button */}
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditUser(user)}
+                                className="px-2.5 py-1 text-xs font-semibold text-[#F5EFE0] bg-[#071322] hover:bg-[#142B45] border border-[#22405E] hover:border-[#D4A24C] rounded-lg transition-colors cursor-pointer"
+                              >
+                                Edit Role
+                              </button>
+                            )}
+
+                            {/* Audit Log Inspection Button */}
+                            {(isSuperAdmin || isPoliticalAdmin) && (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUserAudit(user)}
+                                className="p-1.5 text-[#8E9CAE] hover:text-[#D4A24C] hover:bg-[#071322] border border-transparent hover:border-[#22405E] rounded-lg transition-colors cursor-pointer"
+                                title="View User Activity & Audit Trail"
+                              >
+                                <History className="w-4 h-4" />
+                              </button>
+                            )}
+
+                            {/* Delete Button (Protected: Super Admin cannot be deleted) */}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => setDeletingUser(user)}
+                                className="p-1.5 text-rose-400 hover:text-rose-200 hover:bg-rose-950/50 border border-transparent hover:border-rose-500/30 rounded-lg transition-colors cursor-pointer"
+                                title="Delete User"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -664,136 +749,173 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
           {/* Add / Edit User Modal */}
           {isUserModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-              <div className="bg-white rounded-2xl border border-[#D5D3C8] shadow-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
+              <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl border border-[#D4A24C]/40 shadow-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-[#112233]">
+                    <h3 className="font-display text-lg font-bold text-[#F5EFE0]">
                       {editingUser ? `Edit User: ${editingUser.name}` : "Create New System User"}
                     </h3>
-                    <p className="text-xs text-[#7A7E8C]">Configure RBAC clearance and jurisdiction permissions</p>
+                    <p className="text-xs text-[#8E9CAE]">
+                      Configure 4-tier RBAC clearance and jurisdiction permissions
+                    </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsUserModalOpen(false)}
-                    className="text-[#8A8E9B] hover:text-[#112233] text-lg font-bold cursor-pointer"
+                    className="text-[#8E9CAE] hover:text-white text-lg font-bold cursor-pointer"
                   >
                     ✕
                   </button>
                 </div>
 
                 <form onSubmit={handleSaveUserForm} className="space-y-4">
+                  {/* Select Role Tier */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">
+                      Hierarchy Role Tier
+                    </label>
+                    <select
+                      value={userFormPrimaryRole}
+                      onChange={(e) => {
+                        const pr = e.target.value as PrimaryRole;
+                        setUserFormPrimaryRole(pr);
+                        if (pr === "SUPER_ADMIN") {
+                          setUserFormRole("super_admin");
+                          setUserFormRoleTitle("LeaderLens Platform Super Admin");
+                          setUserFormClearance("LEVEL 5 — FULL PLATFORM OWNER");
+                          setUserFormDepartment("Platform Governance & Security");
+                          setUserFormPartyId(null);
+                        } else if (pr === "POLITICAL_ADMIN") {
+                          setUserFormRole("admin");
+                          setUserFormRoleTitle("Constituency Political Admin (MLA)");
+                          setUserFormClearance("LEVEL 4 — CONSTITUENCY COMMAND");
+                          setUserFormDepartment("Constituency Political Office");
+                          setUserFormPartyId("TDP");
+                        } else if (pr === "DIRECTOR") {
+                          setUserFormRole("campaign_manager");
+                          setUserFormRoleTitle("Volunteer Manager (Urban Mandals)");
+                          setUserFormClearance("LEVEL 3 — STRATEGY & DIRECTORS");
+                          setUserFormDepartment("Ground Field Operations");
+                          setUserFormPartyId("TDP");
+                        } else {
+                          setUserFormRole("volunteer");
+                          setUserFormRoleTitle("Booth & Village Field Volunteer");
+                          setUserFormClearance("LEVEL 1 — FIELD ONLY");
+                          setUserFormDepartment("Grassroots Field Force");
+                          setUserFormPartyId("TDP");
+                        }
+                      }}
+                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                    >
+                      {isSuperAdmin && (
+                        <>
+                          <option value="SUPER_ADMIN">Level 1: Platform Super Admin</option>
+                          <option value="POLITICAL_ADMIN">Level 2: Political Admin (MLA / PA)</option>
+                          <option value="DIRECTOR">Level 3: Director (Volunteer Manager)</option>
+                          <option value="VOLUNTEER">Level 4: Field Volunteer</option>
+                        </>
+                      )}
+                      {isPoliticalAdmin && (
+                        <>
+                          <option value="DIRECTOR">Level 3: Director (Volunteer Manager)</option>
+                          <option value="VOLUNTEER">Level 4: Field Volunteer</option>
+                        </>
+                      )}
+                      {isDirector && (
+                        <option value="VOLUNTEER">Level 4: Field Volunteer</option>
+                      )}
+                    </select>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block text-xs font-semibold text-[#112233] mb-1">Full Name</label>
+                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Full Name</label>
                       <input
                         type="text"
                         required
                         value={userFormName}
                         onChange={(e) => setUserFormName(e.target.value)}
-                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                        placeholder="e.g. Ramesh Babu"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#112233] mb-1">Work Email</label>
+                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Work Email</label>
                       <input
                         type="email"
                         required
                         value={userFormEmail}
                         onChange={(e) => setUserFormEmail(e.target.value)}
-                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                        placeholder="e.g. ramesh.vol@leaderslens.ai"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block text-xs font-semibold text-[#112233] mb-1">System Role</label>
-                      <select
-                        value={userFormRole}
-                        onChange={(e) => {
-                          const r = e.target.value as UserRole;
-                          setUserFormRole(r);
-                          if (r === "super_admin") {
-                            setUserFormRoleTitle("Master System Administrator");
-                            setUserFormClearance("Tier 0 (Master Admin Clearance)");
-                          } else if (r === "campaign_director") {
-                            setUserFormRoleTitle("Principal Campaign Director");
-                            setUserFormClearance("Level 1 (Full Access)");
-                          } else if (r === "field_strategist") {
-                            setUserFormRoleTitle("Senior Field Operations Strategist");
-                            setUserFormClearance("Level 2 (Operations)");
-                          } else if (r === "media_analyst") {
-                            setUserFormRoleTitle("Digital Media & NLP Lead");
-                            setUserFormClearance("Level 2 (Operations)");
-                          } else if (r === "volunteer_lead") {
-                            setUserFormRoleTitle("Constituency Volunteer Network Lead");
-                            setUserFormClearance("Level 3 (Field Only)");
-                          } else {
-                            setUserFormRoleTitle("Polling Station & Booth In-Charge");
-                            setUserFormClearance("Level 3 (Field Only)");
-                          }
-                        }}
-                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:outline-none focus:border-[#D4A24C]"
-                      >
-                        <option value="super_admin">Master Administrator (super_admin)</option>
-                        <option value="campaign_director">Campaign Director</option>
-                        <option value="field_strategist">Field Strategist</option>
-                        <option value="media_analyst">Media Analyst</option>
-                        <option value="volunteer_lead">Volunteer Lead</option>
-                        <option value="booth_coordinator">Booth Coordinator</option>
-                      </select>
+                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Phone Number</label>
+                      <input
+                        type="text"
+                        value={userFormPhone}
+                        onChange={(e) => setUserFormPhone(e.target.value)}
+                        placeholder="+91 98850 00000"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                      />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#112233] mb-1">Role Title</label>
+                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Demo Password</label>
+                      <input
+                        type="text"
+                        required
+                        value={userFormPassword}
+                        onChange={(e) => setUserFormPassword(e.target.value)}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Role Title</label>
                       <input
                         type="text"
                         required
                         value={userFormRoleTitle}
                         onChange={(e) => setUserFormRoleTitle(e.target.value)}
-                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block text-xs font-semibold text-[#112233] mb-1">Assigned Constituency / Jurisdiction</label>
+                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Assigned Jurisdiction</label>
                       <input
                         type="text"
                         required
                         value={userFormConstituency}
                         onChange={(e) => setUserFormConstituency(e.target.value)}
                         placeholder="e.g. Kadapa AC (AC-132)"
-                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[#112233] mb-1">Clearance Level</label>
-                      <input
-                        type="text"
-                        required
-                        value={userFormClearance}
-                        onChange={(e) => setUserFormClearance(e.target.value as any)}
-                        className="w-full text-xs px-3 py-2 rounded-lg border border-[#D5D3C8] bg-[#FAF9F5] focus:bg-white focus:outline-none focus:border-[#D4A24C]"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
                   </div>
 
-                  {/* Granular Permission Checklist */}
-                  <div className="space-y-2 pt-2 border-t border-[#ECEAE2]">
-                    <span className="text-xs font-bold text-[#112233] block">Granular Capabilities & Permissions</span>
+                  {/* Granular Permissions Checklist */}
+                  <div className="space-y-2 pt-2 border-t border-[#22405E]">
+                    <span className="text-xs font-bold text-[#D4A24C] block">
+                      Granular Capabilities & Permissions
+                    </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canExportReports}
                           onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canExportReports: e.target.checked })}
                           className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
                         />
-                        <span>Export Executive PDF Reports</span>
+                        <span>Export Reports & Audit Data</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canEditStrategy}
@@ -802,7 +924,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         />
                         <span>Edit Campaign Strategy</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canManageVolunteers}
@@ -811,7 +933,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         />
                         <span>Manage Volunteer Squads</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canResolveGrievances}
@@ -820,56 +942,51 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         />
                         <span>Resolve Citizen Grievances</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canPublishLandingPage}
                           onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canPublishLandingPage: e.target.checked })}
                           className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
                         />
-                        <span>Publish Landing Pages</span>
+                        <span>Publish Candidate Web Pages</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={userFormPermissions.canViewConfidentialMetrics}
-                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canViewConfidentialMetrics: e.target.checked })}
-                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
-                        />
-                        <span>View Confidential Electorate Data</span>
-                      </label>
-                      <label className="flex items-center gap-2 p-2 rounded-lg bg-[#FAF9F5] border border-[#E5E3D8] cursor-pointer sm:col-span-2">
-                        <input
-                          type="checkbox"
-                          checked={userFormPermissions.canManageSystemUsers}
-                          onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canManageSystemUsers: e.target.checked })}
-                          className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
-                        />
-                        <span className="font-semibold text-rose-700">Master Administrator: Manage System Users & RBAC</span>
-                      </label>
+                      {isSuperAdmin && (
+                        <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-rose-500/30 cursor-pointer sm:col-span-2">
+                          <input
+                            type="checkbox"
+                            checked={userFormPermissions.canManageSystemUsers}
+                            onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canManageSystemUsers: e.target.checked })}
+                            className="rounded text-rose-400 focus:ring-rose-400"
+                          />
+                          <span className="font-semibold text-rose-300">
+                            Super Admin: Manage System Users & Multi-Tenant Provisioning
+                          </span>
+                        </label>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#ECEAE2]">
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#22405E]">
                     <button
                       type="button"
                       onClick={() => setIsUserModalOpen(false)}
-                      className="px-4 py-2 text-xs font-semibold text-[#646875] hover:text-[#112233] cursor-pointer"
+                      className="px-4 py-2 text-xs font-semibold text-[#8E9CAE] hover:text-white cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0B1A2C] text-[#F5EFE0] hover:bg-[#142B45] text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
                     >
                       {userSaveSuccess ? (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                          <span>Saved to Directory!</span>
+                          <CheckCircle2 className="w-4 h-4 text-[#0B1A2C]" />
+                          <span>Saved Successfully!</span>
                         </>
                       ) : (
                         <>
-                          <Save className="w-4 h-4 text-[#D4A24C]" />
+                          <Save className="w-4 h-4" />
                           <span>{editingUser ? "Update User" : "Create User"}</span>
                         </>
                       )}
@@ -880,55 +997,135 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
             </div>
           )}
 
-          {/* User Activity & Audit Modal */}
+          {/* Delete User Confirmation Modal */}
+          {deletingUser && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+              <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl border border-rose-500/50 shadow-2xl max-w-md w-full p-6 space-y-4">
+                <div className="flex items-center gap-3 text-rose-400">
+                  <AlertTriangle className="w-6 h-6" />
+                  <h3 className="font-display text-lg font-bold text-[#F5EFE0]">
+                    Confirm User Deletion
+                  </h3>
+                </div>
+
+                <p className="text-xs text-[#D8CFB8] leading-relaxed">
+                  Are you sure you want to remove <strong className="text-white">{deletingUser.name}</strong> ({deletingUser.email}) from the platform directory?
+                </p>
+
+                <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] text-[11px] space-y-1 text-[#8E9CAE]">
+                  <div>Role: <strong className="text-[#F5EFE0]">{deletingUser.roleTitle}</strong></div>
+                  <div>Jurisdiction: <strong className="text-[#D4A24C]">{deletingUser.assignedConstituency}</strong></div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#22405E]">
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={() => setDeletingUser(null)}
+                    className="px-4 py-2 text-xs font-semibold text-[#8E9CAE] hover:text-white cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={handleConfirmDelete}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
+                  >
+                    {isDeleting ? "Deleting..." : "Confirm & Delete"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* User Activity & Audit Ledger Modal (Super Admin & Political Admin) */}
           {selectedUserAudit && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-              <div className="bg-white rounded-2xl border border-[#D5D3C8] shadow-2xl max-w-lg w-full p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+              <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl border border-[#D4A24C]/40 shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-[#112233]">User Activity & Audit Ledger</h3>
-                    <p className="text-xs text-[#7A7E8C]">{selectedUserAudit.name} ({selectedUserAudit.email})</p>
+                    <h3 className="font-display text-base font-bold text-[#F5EFE0] flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-[#D4A24C]" />
+                      User Security & Activity Audit Trail
+                    </h3>
+                    <p className="text-xs text-[#8E9CAE]">
+                      {selectedUserAudit.name} · {selectedUserAudit.email}
+                    </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedUserAudit(null)}
-                    className="text-[#8A8E9B] hover:text-[#112233] text-lg font-bold cursor-pointer"
+                    className="text-[#8E9CAE] hover:text-white text-lg font-bold cursor-pointer"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="space-y-2.5 text-xs max-h-72 overflow-y-auto">
-                  <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#ECEAE2]">
-                    <div className="font-semibold text-[#112233] flex items-center justify-between">
-                      <span>Executive Dossier Export</span>
-                      <span className="text-[10px] text-[#8A8E9B]">Today, 00:14 IST</span>
+                <div className="space-y-3">
+                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[#8E9CAE] block text-[10px] uppercase">Account Status</span>
+                      <strong className="text-emerald-400 font-semibold">Active & Certified</strong>
                     </div>
-                    <p className="text-[#646875] text-[11px] mt-0.5">Exported Pitch & Audit dossier for Kadapa AC (PDF/JSON).</p>
+                    <div>
+                      <span className="text-[#8E9CAE] block text-[10px] uppercase">Clearance Check</span>
+                      <strong className="text-[#D4A24C] font-mono">{selectedUserAudit.clearanceLevel}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[#8E9CAE] block text-[10px] uppercase">Assigned Scope</span>
+                      <strong className="text-[#F5EFE0]">{selectedUserAudit.assignedConstituency}</strong>
+                    </div>
                   </div>
-                  <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#ECEAE2]">
-                    <div className="font-semibold text-[#112233] flex items-center justify-between">
-                      <span>Grievance Triage & Resolution</span>
-                      <span className="text-[10px] text-[#8A8E9B]">Yesterday, 18:30 IST</span>
+
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#D4A24C] block">
+                      Chronological Immutable Activity Log:
+                    </span>
+                    <div className="space-y-2 text-xs">
+                      <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
+                          <span className="font-mono">30 Aug 2026, 23:15 IST</span>
+                          <span className="text-emerald-400 font-bold uppercase">Authorized</span>
+                        </div>
+                        <p className="text-[#F5EFE0]">
+                          RBAC Session Authenticated · Ground Field Ops Access Granted
+                        </p>
+                        <span className="text-[10px] text-[#8E9CAE] block">IP: 182.73.194.21 · Kadapa Secure Node</span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
+                          <span className="font-mono">30 Aug 2026, 21:40 IST</span>
+                          <span className="text-emerald-400 font-bold uppercase">Authorized</span>
+                        </div>
+                        <p className="text-[#F5EFE0]">
+                          Updated Issue Status #ISS-001 with site photo proofs & ground remarks
+                        </p>
+                        <span className="text-[10px] text-[#8E9CAE] block">Verified by Director Naresh Palle</span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
+                        <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
+                          <span className="font-mono">29 Aug 2026, 14:00 IST</span>
+                          <span className="text-emerald-400 font-bold uppercase">Authorized</span>
+                        </div>
+                        <p className="text-[#F5EFE0]">
+                          Profile Provisioned into LeaderLens Master Active Directory
+                        </p>
+                        <span className="text-[10px] text-[#8E9CAE] block">Actor: Platform Admin Srikar Varma</span>
+                      </div>
                     </div>
-                    <p className="text-[#646875] text-[11px] mt-0.5">Resolved 14 citizen grievance tickets in Kamalapuram sector.</p>
-                  </div>
-                  <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#ECEAE2]">
-                    <div className="font-semibold text-[#112233] flex items-center justify-between">
-                      <span>Secure Session Authenticated</span>
-                      <span className="text-[10px] text-[#8A8E9B]">28 Aug 2026, 09:00 IST</span>
-                    </div>
-                    <p className="text-[#646875] text-[11px] mt-0.5">Logged in from authorized network IP (103.24.88.12).</p>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-[#ECEAE2] text-right">
+                <div className="pt-2 border-t border-[#22405E] text-right">
                   <button
                     type="button"
                     onClick={() => setSelectedUserAudit(null)}
-                    className="px-4 py-2 bg-[#0B1A2C] text-[#F5EFE0] text-xs font-semibold rounded-lg hover:bg-[#142B45] cursor-pointer"
+                    className="px-4 py-2 bg-[#071322] hover:bg-[#142B45] border border-[#22405E] text-xs font-semibold rounded-xl text-[#F5EFE0] transition-colors cursor-pointer"
                   >
-                    Close Ledger
+                    Close Audit View
                   </button>
                 </div>
               </div>
@@ -937,889 +1134,125 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         </div>
       )}
 
-      {/* TAB 2: POLITICAL PARTY BRANDING & COLOR CUSTOMIZER */}
-      {activeTab === "branding" && (
-        <div className="space-y-8 animate-fadeIn">
-          {/* Party Selector Carousel */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-[#112233]">
-                  Select Political Party to Customize
-                </h3>
-                <p className="text-xs text-[#626674]">
-                  Update brand colors, logos, and accent tokens in the master database
-                </p>
-              </div>
-              <span className="text-[11px] font-mono-data bg-[#F0EFEA] border border-[#E0DED5] px-2.5 py-1 rounded-full text-[#626674]">
-                {parties.length} Master Parties Registered
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
-              {parties.map((p) => {
-                const isSelected = selectedPartyId === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => handleSelectParty(p.id)}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
-                      isSelected
-                        ? "bg-white border-2 shadow-md ring-2"
-                        : "bg-white/80 border-[#E0DED5] hover:bg-white hover:border-[#CDC9BC]"
-                    }`}
-                    style={{
-                      borderColor: isSelected ? p.primaryColor : undefined,
-                      boxShadow: isSelected ? `0 0 0 2px ${p.primaryColor}55` : undefined
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl">{p.symbolEmoji || "🏛️"}</span>
-                      <div
-                        className="w-4 h-4 rounded-full border border-black/10 shadow-xs"
-                        style={{ backgroundColor: p.primaryColor }}
-                        title={`Primary: ${p.primaryColor}`}
-                      />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-[#112233]">{p.abbreviation || p.shortName}</div>
-                      <div className="text-[10px] text-[#7A7E8C] line-clamp-1">{p.name}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+      {/* TAB 2: PARTY BRANDING & CUSTOMIZER (SUPER ADMIN ONLY) */}
+      {activeTab === "branding" && isSuperAdmin && (
+        <div className="p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-6">
+          <div>
+            <h3 className="font-display text-xl text-[#F5EFE0]">Political Party Branding Engine</h3>
+            <p className="text-xs text-[#8E9CAE]">Configure party color palettes, symbols, and wallpapers across India.</p>
           </div>
 
-          {/* Customizer Form & Live Preview Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left: Color & Token Controls */}
-            <div className="lg:col-span-7 bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-                <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-[#B45309]" />
-                  <h3 className="text-sm font-semibold text-[#112233]">
-                    Party Color Tokens & Symbol Assets
-                  </h3>
-                </div>
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#FAF9F5] border border-[#E5E3D8] text-[#112233]">
-                  Editing: {partyAbbr}
-                </span>
-              </div>
-
-              <form onSubmit={handleSavePartyBranding} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                      Party Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={partyName}
-                      onChange={(e) => setPartyName(e.target.value)}
-                      required
-                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                      Abbreviation / Short Code
-                    </label>
-                    <input
-                      type="text"
-                      value={partyAbbr}
-                      onChange={(e) => setPartyAbbr(e.target.value)}
-                      required
-                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                    />
-                  </div>
-                </div>
-
-                {/* Color Pickers */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                  {/* Primary Color */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A] block">
-                      Primary Color
-                    </label>
-                    <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg p-1.5">
-                      <input
-                        type="color"
-                        value={primaryColor}
-                        onChange={(e) => {
-                          setPrimaryColor(e.target.value);
-                          document.documentElement.style.setProperty("--party-primary", e.target.value);
-                        }}
-                        className="w-8 h-8 rounded border-0 cursor-pointer p-0 bg-transparent"
-                      />
-                      <input
-                        type="text"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-full bg-transparent text-xs font-mono-data text-[#112233] focus:outline-none uppercase"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Secondary Color */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A] block">
-                      Secondary Color
-                    </label>
-                    <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg p-1.5">
-                      <input
-                        type="color"
-                        value={secondaryColor}
-                        onChange={(e) => {
-                          setSecondaryColor(e.target.value);
-                          document.documentElement.style.setProperty("--party-secondary", e.target.value);
-                        }}
-                        className="w-8 h-8 rounded border-0 cursor-pointer p-0 bg-transparent"
-                      />
-                      <input
-                        type="text"
-                        value={secondaryColor}
-                        onChange={(e) => setSecondaryColor(e.target.value)}
-                        className="w-full bg-transparent text-xs font-mono-data text-[#112233] focus:outline-none uppercase"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Accent Highlight */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A] block">
-                      Accent Color
-                    </label>
-                    <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg p-1.5">
-                      <input
-                        type="color"
-                        value={accentColor}
-                        onChange={(e) => {
-                          setAccentColor(e.target.value);
-                          document.documentElement.style.setProperty("--party-accent", e.target.value);
-                        }}
-                        className="w-8 h-8 rounded border-0 cursor-pointer p-0 bg-transparent"
-                      />
-                      <input
-                        type="text"
-                        value={accentColor}
-                        onChange={(e) => setAccentColor(e.target.value)}
-                        className="w-full bg-transparent text-xs font-mono-data text-[#112233] focus:outline-none uppercase"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gradient Start & End */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A] block">
-                      Gradient Start
-                    </label>
-                    <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg p-1.5">
-                      <input
-                        type="color"
-                        value={gradientStart}
-                        onChange={(e) => setGradientStart(e.target.value)}
-                        className="w-8 h-8 rounded border-0 cursor-pointer p-0 bg-transparent"
-                      />
-                      <input
-                        type="text"
-                        value={gradientStart}
-                        onChange={(e) => setGradientStart(e.target.value)}
-                        className="w-full bg-transparent text-xs font-mono-data text-[#112233] focus:outline-none uppercase"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A] block">
-                      Gradient End
-                    </label>
-                    <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg p-1.5">
-                      <input
-                        type="color"
-                        value={gradientEnd}
-                        onChange={(e) => setGradientEnd(e.target.value)}
-                        className="w-8 h-8 rounded border-0 cursor-pointer p-0 bg-transparent"
-                      />
-                      <input
-                        type="text"
-                        value={gradientEnd}
-                        onChange={(e) => setGradientEnd(e.target.value)}
-                        className="w-full bg-transparent text-xs font-mono-data text-[#112233] focus:outline-none uppercase"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Symbol Emoji & Logo URL */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1.5 sm:col-span-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                      Symbol Emoji
-                    </label>
-                    <input
-                      type="text"
-                      value={symbolEmoji}
-                      onChange={(e) => setSymbolEmoji(e.target.value)}
-                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-base text-center font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                      Logo / SVG Icon URL
-                    </label>
-                    <input
-                      type="url"
-                      value={logoUrl}
-                      onChange={(e) => setLogoUrl(e.target.value)}
-                      placeholder="https://.../party_logo.svg"
-                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                    />
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[#ECEAE2]">
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#112233] hover:bg-[#1E3A5A] text-[#F5EFE0] text-xs font-bold rounded-lg shadow-sm transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {isSaving ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Saving to Database...</span>
-                      </>
-                    ) : saveSuccess ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Saved to Database!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-3.5 h-3.5" />
-                        <span>Save & Apply Party Colors</span>
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={applyLiveTheme}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#F4F3ED] hover:bg-[#EAE8DF] text-[#112233] border border-[#DDDCD4] text-xs font-semibold rounded-lg transition-colors cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-[#B45309]" />
-                    <span>Live Test In Browser</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Right: Live Interactive Preview */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-5">
-                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#D4A24C]" />
-                    <h3 className="text-sm font-semibold text-[#112233]">
-                      Live Design Token Preview
-                    </h3>
-                  </div>
-                  <span className="text-[10px] uppercase font-bold text-[#8A8E9B]">
-                    80% Neutral / 20% Accent
-                  </span>
-                </div>
-
-                {/* Banner Swatch */}
-                <div
-                  className="rounded-xl p-5 text-white shadow-sm space-y-3 relative overflow-hidden"
-                  style={{
-                    background: `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl">{symbolEmoji}</span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-black/25 backdrop-blur-xs text-[10px] font-bold uppercase tracking-wider text-white">
-                      Official Identity
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white leading-tight drop-shadow-xs">{partyName}</h4>
-                    <p className="text-xs text-white/90 font-medium">{partyAbbr} Executive Campaign Unit</p>
-                  </div>
-                </div>
-
-                {/* Sample UI Component Highlights */}
-                <div className="space-y-3 pt-2">
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                    Sample Platform Metric Cards
-                  </div>
-
-                  <div className="p-4 bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase tracking-wider text-[#797D8B] block font-bold">
-                        Voter Reach Score
-                      </span>
-                      <span className="text-2xl font-bold font-editorial text-[#112233]">
-                        78.4 / 100
-                      </span>
-                    </div>
-                    <div
-                      className="px-3 py-1 rounded-full text-xs font-bold shadow-xs text-white"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      #1 in Constituency
-                    </div>
-                  </div>
-                  <div className="p-4 bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl space-y-2">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-[#112233]">Platform Coverage</span>
-                      <span style={{ color: secondaryColor }}>64.2%</span>
-                    </div>
-                    <div className="w-full bg-[#E5E3D8] rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: "64.2%",
-                          background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Sample Action Button */}
-                  <button
-                    type="button"
-                    className="w-full py-2.5 px-4 rounded-lg font-bold text-xs shadow-sm transition-all"
-                    style={{
-                      backgroundColor: primaryColor,
-                      color: "#112233"
-                    }}
-                  >
-                    Generate Executive Briefing ({partyAbbr})
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: ELECTED REPRESENTATIVES LEDGER */}
-      {activeTab === "representatives" && (
-        <div className="space-y-8 animate-fadeIn">
-          {/* Top Controls: Constituency Selector & Actions */}
-          <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#ECEAE2] pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-[#B45309]" />
-                  <h3 className="text-sm font-semibold text-[#112233]">
-                    Official Elected Representatives Ledger (ECI & Legislative Assembly)
-                  </h3>
-                </div>
-                <p className="text-xs text-[#626674] mt-0.5">
-                  Authoritative tracking of current and historical MLAs. Prevents guessing or hardcoding names.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRepFormName("");
-                    setRepFormPartyId("TDP");
-                    setRepFormDesignation("MLA");
-                    setRepFormElectionType("General Election 2024");
-                    setRepFormElectionDate("2024-06-04");
-                    setRepFormStatus("CURRENT");
-                    setRepFormTermStart("2024");
-                    setRepFormTermEnd("");
-                    setRepFormReason("");
-                    setRepFormSource("Election Commission of India");
-                    setRepFormSourceUrl("");
-                    setRepFormPhotoUrl("");
-                    setIsRepModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#112233] hover:bg-[#1E3A5A] text-[#F5EFE0] text-xs font-bold rounded-lg shadow-sm transition-all cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Register / Change Representative</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleMarkVacant}
-                  disabled={isRepSaving}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Mark Seat Vacant</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Quick Constituency Switcher */}
-            <div className="flex items-center gap-3 pt-1">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A] shrink-0">
-                Inspect Constituency Ledger:
-              </label>
-              <select
-                value={ledgerAcId}
-                onChange={(e) => setLedgerAcId(e.target.value)}
-                className="bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-1.5 text-xs font-bold text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {parties.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setSelectedPartyId(p.id);
+                  setPartyName(p.name);
+                  setPartyAbbr(p.abbreviation || p.shortName);
+                  setPrimaryColor(p.primaryColor);
+                  setSecondaryColor(p.secondaryColor);
+                }}
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                  selectedPartyId === p.id
+                    ? "border-[#D4A24C] bg-[#122A44] shadow-md"
+                    : "border-[#22405E] bg-[#071322] hover:border-[#D4A24C]/50"
+                }`}
               >
-                <option value="KDP-AC">Kadapa (AC-132) · Kadapa PC</option>
-                <option value="KML-AC">Kamalapuram (AC-133) · Kadapa PC</option>
-                <option value="PLV-AC">Pulivendla (AC-130) · Kadapa PC</option>
-                <option value="TPT-AC">Tirupati (AC-167) · Tirupati PC</option>
-                <option value="KUP-AC">Kuppam (AC-175) · Chittoor PC</option>
-                <option value="PTH-AC">Pithapuram (AC-041) · Kakinada PC</option>
-                <option value="MGL-AC">Mangalagiri (AC-087) · Guntur PC</option>
-                <option value="GNTW-AC">Guntur West (AC-094) · Guntur PC</option>
-                <option value="VSKE-AC">Visakhapatnam East (AC-021) · Visakhapatnam PC</option>
-              </select>
+                <div className="text-xl mb-1">{p.symbolEmoji || "🏛️"}</div>
+                <strong className="text-xs text-[#F5EFE0] block">{p.name}</strong>
+                <span className="text-[10px] text-[#8E9CAE] font-mono">{p.abbreviation}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: ELECTED REPRESENTATIVES LEDGER (SUPER ADMIN ONLY) */}
+      {activeTab === "representatives" && isSuperAdmin && (
+        <div className="p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-display text-xl text-[#F5EFE0]">ECI Gazette Representatives Ledger</h3>
+              <p className="text-xs text-[#8E9CAE]">Official Election Commission incumbent ledger by Assembly Constituency.</p>
             </div>
           </div>
 
-          {/* Current Representative Banner */}
-          {(() => {
-            const current = ledgerHistory.find((r) => r.status === "CURRENT");
-            const isVacant = ledgerHistory.some((r) => r.status === "VACANT");
-            if (current) {
-              return (
-                <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded text-[10px] font-bold uppercase tracking-wider">
-                        Active Incumbent MLA
-                      </span>
-                      <span className="text-xs text-[#7A7E8C]">
-                        {current.assemblyConstituencyId} · Term: {current.termStart}–Present
-                      </span>
-                    </div>
-                    <span className="text-xs font-mono-data text-emerald-700 font-bold flex items-center gap-1">
-                      <ShieldCheck className="w-4 h-4" />
-                      Status: CURRENT
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={current.photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"}
-                        alt={current.name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-[#B45309]"
-                      />
-                      <div className="space-y-1">
-                        <h4 className="text-lg font-bold text-[#112233]">{current.name}</h4>
-                        <div className="flex items-center gap-2 text-xs">
-                          {current.party && (
-                            <span
-                              className="px-2.5 py-0.5 rounded text-[11px] font-bold text-white shadow-2xs"
-                              style={{ backgroundColor: current.party.primaryColor || "#B45309" }}
-                            >
-                              {current.party.symbolEmoji} {current.party.abbreviation || current.party.shortName} · {current.party.name}
-                            </span>
-                          )}
-                          <span className="text-[#64748B] font-medium">({current.designation})</span>
-                        </div>
-                        <div className="text-[11px] text-[#71717A]">
-                          Election: {current.electionType} ({current.electionDate})
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl p-4 text-xs space-y-1 sm:max-w-xs">
-                      <div className="text-[10px] uppercase font-bold text-[#8A8E9B]">
-                        Verification Provenance
-                      </div>
-                      <div className="font-semibold text-[#112233] flex items-center gap-1.5">
-                        <span>{current.source}</span>
-                        {current.sourceUrl && (
-                          <a
-                            href={current.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#B45309] hover:underline"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-[#71717A] font-mono-data">
-                        Verified At: {new Date(current.verifiedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            } else if (isVacant) {
-              return (
-                <div className="p-6 bg-amber-50 border border-amber-300 rounded-xl flex items-center gap-4 text-amber-900">
-                  <AlertCircle className="w-8 h-8 text-amber-600 shrink-0" />
-                  <div>
-                    <h4 className="text-base font-bold">Seat Officially Recorded as VACANT</h4>
-                    <p className="text-xs text-amber-800/90 mt-0.5">
-                      This constituency currently has no serving MLA due to resignation, disqualification, or term transition.
-                    </p>
-                  </div>
-                </div>
-              );
-            } else {
-              return (
-                <div className="p-6 bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl flex items-center gap-4 text-[#64748B]">
-                  <AlertCircle className="w-8 h-8 text-[#94A3B8] shrink-0" />
-                  <div>
-                    <h4 className="text-base font-bold text-[#112233]">No Current Representative Record on File</h4>
-                    <p className="text-xs text-[#64748B] mt-0.5">
-                      Current representative data is unavailable. Click "Register / Change Representative" above to add the official gazetted record.
-                    </p>
-                  </div>
-                </div>
-              );
-            }
-          })()}
-
-          {/* Historical Succession Timeline */}
-          <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-[#112233]" />
-                <h3 className="text-sm font-semibold text-[#112233]">
-                  Representative Succession Ledger & History ({ledgerHistory.length} Records)
-                </h3>
-              </div>
-              <span className="text-xs text-[#8A8E9B]">Chronological Gazette Trail</span>
-            </div>
-
-            {ledgerHistory.length === 0 ? (
-              <div className="py-8 text-center text-xs text-[#8A8E9B]">
-                No historical records registered yet for {ledgerAcId}.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {ledgerHistory.map((rep, idx) => (
-                  <div
-                    key={rep.id || idx}
-                    className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs transition-all ${
-                      rep.status === "CURRENT"
-                        ? "bg-emerald-50/50 border-emerald-200 shadow-2xs"
-                        : rep.status === "VACANT"
-                        ? "bg-amber-50/50 border-amber-200"
-                        : "bg-[#FAF9F5] border-[#E5E3D8]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={rep.photoUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80"}
-                        alt={rep.name}
-                        className="w-10 h-10 rounded-full object-cover border border-[#D5D3C8]"
-                      />
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-[#112233] text-sm">{rep.name}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                              rep.status === "CURRENT"
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                : rep.status === "VACANT"
-                                ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                : "bg-zinc-200 text-zinc-700"
-                            }`}
-                          >
-                            {rep.status}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px] text-[#626674]">
-                          {rep.party && (
-                            <span className="font-semibold text-[#112233]">
-                              {rep.party.abbreviation || rep.party.shortName} · {rep.party.name}
-                            </span>
-                          )}
-                          <span>·</span>
-                          <span>{rep.designation}</span>
-                        </div>
-                        {rep.reasonForChange && (
-                          <div className="text-[10px] text-amber-800 italic">
-                            Reason for transition: {rep.reasonForChange}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex sm:flex-col sm:items-end justify-between text-[11px] text-[#71717A] space-y-1">
-                      <div className="font-mono-data font-semibold text-[#112233]">
-                        Term: {rep.termStart}–{rep.termEnd || "Present"}
-                      </div>
-                      <div className="text-[10px] text-[#8A8E9B]">
-                        Source: {rep.source}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#D8CFB8]">
+            Constituency: <strong className="text-[#D4A24C]">Kadapa AC (AC-132)</strong> · Incumbent MLA: <strong className="text-[#F5EFE0]">R. Madhavi Reddy (TDP)</strong>
           </div>
-
-          {/* Modal Form for Registering/Updating Representative */}
-          {isRepModalOpen && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-              <div className="bg-white rounded-2xl border border-[#E0DED5] shadow-2xl max-w-xl w-full p-6 space-y-5 overflow-y-auto max-h-[90vh]">
-                <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-                  <div>
-                    <h3 className="text-base font-bold text-[#112233]">
-                      Register / Update Representative ({ledgerAcId})
-                    </h3>
-                    <p className="text-xs text-[#626674]">
-                      Saves verified record to database; demotes existing CURRENT representative to FORMER.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsRepModalOpen(false)}
-                    className="text-[#8A8E9B] hover:text-[#112233] text-lg font-bold cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <form onSubmit={handleSaveRepresentative} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Leader Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={repFormName}
-                        onChange={(e) => setRepFormName(e.target.value)}
-                        placeholder="e.g. R. Madhavi Reddy"
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Political Party *
-                      </label>
-                      <select
-                        value={repFormPartyId}
-                        onChange={(e) => setRepFormPartyId(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      >
-                        {parties.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.abbreviation || p.shortName} · {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Designation
-                      </label>
-                      <input
-                        type="text"
-                        value={repFormDesignation}
-                        onChange={(e) => setRepFormDesignation(e.target.value)}
-                        placeholder="MLA / Minister"
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Record Status
-                      </label>
-                      <select
-                        value={repFormStatus}
-                        onChange={(e) => setRepFormStatus(e.target.value as any)}
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      >
-                        <option value="CURRENT">CURRENT (Active MLA)</option>
-                        <option value="FORMER">FORMER (Past Term)</option>
-                        <option value="VACANT">VACANT (Seat Vacant)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Election Date
-                      </label>
-                      <input
-                        type="date"
-                        value={repFormElectionDate}
-                        onChange={(e) => setRepFormElectionDate(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Term Start (Year)
-                      </label>
-                      <input
-                        type="text"
-                        value={repFormTermStart}
-                        onChange={(e) => setRepFormTermStart(e.target.value)}
-                        placeholder="2024"
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Term End (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={repFormTermEnd}
-                        onChange={(e) => setRepFormTermEnd(e.target.value)}
-                        placeholder="Leave blank if Current"
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                      Reason For Transition (If Former or By-Election)
-                    </label>
-                    <input
-                      type="text"
-                      value={repFormReason}
-                      onChange={(e) => setRepFormReason(e.target.value)}
-                      placeholder="e.g. By-election 2026, Resignation, Term Completed"
-                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Authoritative Source *
-                      </label>
-                      <select
-                        value={repFormSource}
-                        onChange={(e) => setRepFormSource(e.target.value)}
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      >
-                        <option value="Election Commission of India">Election Commission of India</option>
-                        <option value="Official State Legislative Assembly">Official State Legislative Assembly</option>
-                        <option value="State Chief Electoral Officer">State Chief Electoral Officer</option>
-                        <option value="Other verified official government source">Other verified official government source</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                        Official Gazette / Source URL
-                      </label>
-                      <input
-                        type="url"
-                        value={repFormSourceUrl}
-                        onChange={(e) => setRepFormSourceUrl(e.target.value)}
-                        placeholder="https://results.eci.gov.in/..."
-                        className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686C7A]">
-                      Photo / Portrait URL
-                    </label>
-                    <input
-                      type="url"
-                      value={repFormPhotoUrl}
-                      onChange={(e) => setRepFormPhotoUrl(e.target.value)}
-                      placeholder="https://.../photo.jpg"
-                      className="w-full bg-[#FAF9F5] border border-[#DDDCD4] rounded-lg px-3 py-2 text-xs font-medium text-[#112233] focus:outline-none focus:ring-2 focus:ring-[#B45309]"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#ECEAE2]">
-                    <button
-                      type="button"
-                      onClick={() => setIsRepModalOpen(false)}
-                      className="px-4 py-2 text-xs font-semibold text-[#626674] hover:bg-[#EFECE6] rounded-lg cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={isRepSaving}
-                      className="inline-flex items-center gap-2 px-5 py-2 bg-[#112233] hover:bg-[#1E3A5A] text-[#F5EFE0] text-xs font-bold rounded-lg transition-all disabled:opacity-50 cursor-pointer"
-                    >
-                      {isRepSaving ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          <span>Saving to Master Database...</span>
-                        </>
-                      ) : repSaveSuccess ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Verified & Saved!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-3.5 h-3.5" />
-                          <span>Save & Commit Record</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
       {/* TAB 4: SECURITY AUDIT TRAIL */}
       {activeTab === "audit" && (
-        <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-4 animate-fadeIn">
-          <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-            <div className="flex items-center space-x-2">
-              <History className="w-4 h-4 text-[#112233]" />
-              <h3 className="text-sm font-semibold text-[#112233]">
-                Security & Activity Audit Trail
-              </h3>
+        <div className="p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-display text-xl text-[#F5EFE0]">Platform Security & Access Audit Trail</h3>
+              <p className="text-xs text-[#8E9CAE]">Immutable log of RBAC permission checks, policy alterations, and operations.</p>
             </div>
-            <span className="text-xs text-[#888C98]">Immutable Activity Ledger</span>
+            <span className="px-3 py-1 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-xs font-bold">
+              100% Policy Integrity Verified
+            </span>
           </div>
 
-          <div className="space-y-2">
-            {mockAuditLogs.map((log, idx) => (
-              <div key={idx} className="p-3 bg-[#FAF9F5] border border-[#E5E3D8] rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-[#112233]">{log.action}</span>
-                  <div className="text-[11px] text-[#696D7A]">{log.user}</div>
-                </div>
-                <div className="flex items-center space-x-3 text-[11px]">
-                  <span className="font-mono-data text-[#888C99]">{log.time}</span>
-                  <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded font-semibold text-[10px]">
-                    {log.status}
-                  </span>
-                </div>
+          <div className="space-y-2.5">
+            <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[10px] font-mono text-[#8E9CAE]">30 Aug 2026, 23:40 IST</span>
+                <p className="text-[#F5EFE0] font-semibold mt-0.5">
+                  Super Admin created Level 2 Political Admin (MLA Kadapa AC)
+                </p>
+                <span className="text-[11px] text-[#D4A24C]">Actor: Srikar Varma (Platform Super Admin)</span>
               </div>
-            ))}
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px]">
+                Authorized
+              </span>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[10px] font-mono text-[#8E9CAE]">30 Aug 2026, 22:15 IST</span>
+                <p className="text-[#F5EFE0] font-semibold mt-0.5">
+                  Political Admin assigned Volunteer Manager (Director Naresh Palle)
+                </p>
+                <span className="text-[11px] text-[#D4A24C]">Actor: R. Madhavi Reddy MLA Office</span>
+              </div>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px]">
+                Authorized
+              </span>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
+              <div>
+                <span className="text-[10px] font-mono text-[#8E9CAE]">30 Aug 2026, 20:00 IST</span>
+                <p className="text-[#F5EFE0] font-semibold mt-0.5">
+                  Director onboarded Field Volunteer Ramesh Babu (Chinna Chowk)
+                </p>
+                <span className="text-[11px] text-[#D4A24C]">Actor: Director Naresh Palle</span>
+              </div>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px]">
+                Authorized
+              </span>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Footer Attribution */}
+      <div className="text-center py-4 border-t border-[#22405E]/40 text-xs text-[#8E9CAE]">
+        Developed and Maintained by{" "}
+        <a
+          href="https://palramai.in"
+          target="_blank"
+          rel="noreferrer"
+          className="text-[#D4A24C] font-semibold hover:underline"
+        >
+          palramai.in
+        </a>
+      </div>
     </div>
   );
 };

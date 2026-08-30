@@ -107,20 +107,35 @@ function AppInner() {
 
   const isPlatformAdmin = primaryRole === "SUPER_ADMIN";
   const isPoliticalAdmin = primaryRole === "POLITICAL_ADMIN";
+  const isDirector = primaryRole === "DIRECTOR";
+  const isVolunteer = primaryRole === "VOLUNTEER";
   const isAdmin = isPlatformAdmin || isPoliticalAdmin;
 
-  // Role routing enforcement: non-admins can only access fieldops & grievances
+  // Role routing enforcement:
+  // - Political Admin & Director: Field Operations, Grievances, User Management (governance) ONLY
+  // - Volunteer: Field Operations, Grievances ONLY
+  // - Platform Super Admin: All products
   useEffect(() => {
-    if (!isAdmin && !["fieldops", "grievances"].includes(activeProduct)) {
+    if (isVolunteer && !["fieldops", "grievances"].includes(activeProduct)) {
+      setActiveProduct("fieldops");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+      } catch {}
+    } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "grievances", "governance"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
     }
-  }, [isAdmin, activeProduct]);
+  }, [isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
   const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => {
-    const targetProduct = !isAdmin && !["fieldops", "grievances"].includes(product) ? "fieldops" : product;
+    let targetProduct = product;
+    if (isVolunteer) {
+      targetProduct = !["fieldops", "grievances"].includes(product) ? "fieldops" : product;
+    } else if (isPoliticalAdmin || isDirector) {
+      targetProduct = !["fieldops", "grievances", "governance"].includes(product) ? "fieldops" : product;
+    }
     setActiveProduct(targetProduct);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, targetProduct);

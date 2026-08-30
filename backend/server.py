@@ -975,6 +975,18 @@ async def delete_admin_user(user_id: str):
         if not existing:
             raise HTTPException(status_code=404, detail="User not found")
 
+        # Super Administrator accounts are strictly protected from deletion
+        if (
+            existing.get("primaryRole") == "SUPER_ADMIN"
+            or existing.get("roleId") == "SUPER_ADMIN"
+            or existing.get("role") == "super_admin"
+            or existing.get("isPlatformAdmin")
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Super Administrator accounts are protected and cannot be deleted."
+            )
+
         await db.users.delete_one({"id": user_id})
         await record_audit_log(
             actor_user_id="user-admin",

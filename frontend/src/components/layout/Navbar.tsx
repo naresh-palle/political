@@ -150,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Center Navigation Products (Role-Protected: Admin -> Full, Director/Volunteer -> Scoped) */}
+          {/* Center Navigation Products */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
             {/* Primary Field Operations Tab */}
             <button
@@ -165,7 +165,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               {isVolunteer ? "My Field Work" : isDirector ? "Field Operations" : "Field Operations"}
             </button>
 
-            {isAdmin && (
+            {/* Pitch / Audit (Platform Super Admin ONLY) */}
+            {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("pitch")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
@@ -178,6 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
+            {/* Grievances Tab (Available for all roles) */}
             <button
               onClick={() => onProductChange("grievances")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
@@ -189,7 +191,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               Grievances
             </button>
 
-            {isAdmin && (
+            {/* Volunteers & Web Studio (Platform Super Admin ONLY) */}
+            {isPlatformAdmin && (
               <>
                 <button
                   onClick={() => onProductChange("volunteers")}
@@ -211,17 +214,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   Web Studio
                 </button>
-                <button
-                  onClick={() => onProductChange("governance")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                    activeProduct === "governance"
-                      ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                      : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-                  }`}
-                >
-                  Admin & Users
-                </button>
               </>
+            )}
+
+            {/* User Management / Governance (Platform Admin, Political Admin, and Director) */}
+            {(isPlatformAdmin || isPoliticalAdmin || isDirector) && (
+              <button
+                onClick={() => onProductChange("governance")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                  activeProduct === "governance"
+                    ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
+                    : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                }`}
+              >
+                {isPlatformAdmin ? "Admin & Users" : "User Management"}
+              </button>
             )}
           </nav>
 
@@ -349,7 +356,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             {isVolunteer ? "My Work" : "Field Ops"}
           </button>
-          {isAdmin && (
+
+          {isPlatformAdmin && (
             <button
               onClick={() => onProductChange("pitch")}
               className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
@@ -359,6 +367,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               Audit
             </button>
           )}
+
           <button
             onClick={() => onProductChange("grievances")}
             className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
@@ -367,7 +376,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Grievances
           </button>
-          {isAdmin && (
+
+          {isPlatformAdmin && (
             <>
               <button
                 onClick={() => onProductChange("volunteers")}
@@ -385,15 +395,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 Web Studio
               </button>
-              <button
-                onClick={() => onProductChange("governance")}
-                className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-                  activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
-                }`}
-              >
-                Team & RBAC
-              </button>
             </>
+          )}
+
+          {(isPlatformAdmin || isPoliticalAdmin || isDirector) && (
+            <button
+              onClick={() => onProductChange("governance")}
+              className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
+                activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+              }`}
+            >
+              {isPlatformAdmin ? "Admin & Users" : "User Management"}
+            </button>
           )}
         </div>
       </div>
