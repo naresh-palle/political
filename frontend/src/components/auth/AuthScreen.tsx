@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
+import { USER_PROFILES } from "../../services/mockData";
 import { LeadersLogo } from "../common/LeadersLogo";
 import { ArrowRight, Sparkles, ShieldCheck, Mail, KeyRound, Lock } from "lucide-react";
 
@@ -20,7 +21,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
     setIsLoading(true);
     
     try {
-      // Check if user exists in database / dynamic roster
+      // 1. Instant check in core USER_PROFILES
+      const staticMatch = USER_PROFILES.find((p) => p.email.toLowerCase() === cleanEmail);
+      if (staticMatch) {
+        onAuthenticated(staticMatch);
+        return;
+      }
+
+      // 2. Check if user exists in database / dynamic roster
       const users = await politicalApiService.getUsers();
       const existing = users.find((p) => p.email.toLowerCase() === cleanEmail);
       if (existing) {
@@ -28,36 +36,74 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         return;
       }
 
-      // Dynamic resolution for new / custom credentials
+      // 3. Dynamic resolution for custom credentials with proper role deduction
+      const isVolunteerEmail = cleanEmail.startsWith("volunteer.") || cleanEmail.includes(".vol");
+      const isDirectorEmail = cleanEmail.startsWith("director.") || cleanEmail.includes(".dir");
+      const isMlaEmail = cleanEmail.startsWith("mla.") || cleanEmail.includes(".mla");
+      const isSuperAdminEmail = cleanEmail === "admin@leaderslens.ai" || cleanEmail === "support@leaderslens.ai";
+
       const displayName =
         cleanEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ||
-        "Campaign Director";
+        "Executive Officer";
 
       const newProfile: UserProfile = {
         id: `usr_${Date.now()}`,
         name: displayName,
         email: cleanEmail || "admin@leaderslens.ai",
         demoPassword: password || "Secure@2026",
-        role: "super_admin",
-        roleId: "SUPER_ADMIN",
-        roleTitle: "Master System Administrator",
-        department: "Platform Governance & Core Security",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
-        assignedConstituency: "National Command Center",
-        clearanceLevel: "LEVEL 5 — FULL SYSTEM",
-        partyId: null,
-        partyName: undefined,
-        partyAbbr: undefined,
-        partyColor: "#D4A24C",
-        partyEmoji: "🏛️",
+        primaryRole: isVolunteerEmail
+          ? "VOLUNTEER"
+          : isDirectorEmail
+          ? "DIRECTOR"
+          : isMlaEmail
+          ? "POLITICAL_ADMIN"
+          : isSuperAdminEmail
+          ? "SUPER_ADMIN"
+          : "DIRECTOR",
+        isPlatformAdmin: isSuperAdminEmail,
+        isPoliticalAdmin: isMlaEmail,
+        role: isVolunteerEmail ? "volunteer" : isDirectorEmail ? "campaign_manager" : isMlaEmail ? "admin" : "super_admin",
+        roleId: isVolunteerEmail ? "VOLUNTEER" : isDirectorEmail ? "CAMPAIGN_MANAGER" : isMlaEmail ? "ADMIN" : "SUPER_ADMIN",
+        roleTitle: isVolunteerEmail
+          ? "Booth & Village Field Volunteer"
+          : isDirectorEmail
+          ? "Constituency Campaign Director"
+          : isMlaEmail
+          ? "Constituency Political Admin (MLA)"
+          : "Master System Administrator",
+        department: isVolunteerEmail
+          ? "Grassroots Field Force"
+          : isDirectorEmail
+          ? "Ground Field Operations"
+          : isMlaEmail
+          ? "Constituency Political Office"
+          : "Platform Governance & Core Security",
+        avatar: isVolunteerEmail
+          ? "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80"
+          : isDirectorEmail
+          ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80"
+          : "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80",
+        assignedConstituency: isSuperAdminEmail ? "LeaderLens National Command Center" : "Kadapa AC (AC-132)",
+        clearanceLevel: isVolunteerEmail
+          ? "LEVEL 1 — FIELD ONLY"
+          : isDirectorEmail
+          ? "LEVEL 3 — STRATEGY"
+          : isMlaEmail
+          ? "LEVEL 4 — CONSTITUENCY COMMAND"
+          : "LEVEL 5 — FULL SYSTEM",
+        partyId: isSuperAdminEmail ? null : "TDP",
+        partyName: isSuperAdminEmail ? undefined : "Telugu Desam Party",
+        partyAbbr: isSuperAdminEmail ? undefined : "TDP",
+        partyColor: isSuperAdminEmail ? "#D4A24C" : "#FFD200",
+        partyEmoji: isSuperAdminEmail ? "🏛️" : "🚲",
         permissions: {
-          canExportReports: true,
-          canEditStrategy: true,
-          canManageVolunteers: true,
+          canExportReports: !isVolunteerEmail,
+          canEditStrategy: !isVolunteerEmail,
+          canManageVolunteers: !isVolunteerEmail,
           canResolveGrievances: true,
-          canPublishLandingPage: true,
-          canViewConfidentialMetrics: true,
-          canManageSystemUsers: true
+          canPublishLandingPage: isSuperAdminEmail || isMlaEmail,
+          canViewConfidentialMetrics: !isVolunteerEmail,
+          canManageSystemUsers: isSuperAdminEmail
         }
       };
       onAuthenticated(newProfile);
