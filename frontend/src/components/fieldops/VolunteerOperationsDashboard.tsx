@@ -43,8 +43,8 @@ interface VolunteerDashboardProps {
 }
 
 const CATEGORIES = [
-  "Water Supply",
   "Roads & Buildings",
+  "Water Supply",
   "Electricity",
   "Sanitation & Garbage",
   "Drainage & Sewage",
@@ -56,6 +56,21 @@ const CATEGORIES = [
   "Law & Order",
   "Other"
 ];
+
+const CATEGORY_TO_DEPARTMENT: Record<string, string> = {
+  "Roads & Buildings": "Roads & Buildings (R&B)",
+  "Water Supply": "Panchayat Raj & Rural Water Supply (RWS)",
+  "Electricity": "APCPDCL Electricity Board",
+  "Sanitation & Garbage": "Municipal Administration & Urban Development",
+  "Drainage & Sewage": "Municipal Administration & Urban Development",
+  "Healthcare": "Health & Family Welfare (PHC / Hospital)",
+  "Agriculture & Irrigation": "Irrigation & Water Resources",
+  "Education": "School Education & Anganwadi",
+  "Revenue & Land Issues": "Revenue & Land Administration",
+  "Welfare Schemes": "Social & Tribal Welfare",
+  "Law & Order": "Police & Law Enforcement",
+  "Other": "Other Department"
+};
 
 const DEPARTMENTS = [
   "Roads & Buildings (R&B)",
@@ -821,14 +836,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Drinking Water Pipeline Burst at Main Bazar or Need R&B Road Repair"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none placeholder-[#5F6875]"
+                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                   />
                 </div>
 
-                {/* 2 & 3. Category & Department */}
+                {/* 2 & 3. Category & Department (Department auto-fetched from Category) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
@@ -836,8 +850,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </label>
                     <select
                       value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                      onChange={(e) => {
+                        const cat = e.target.value;
+                        setNewCategory(cat);
+                        if (CATEGORY_TO_DEPARTMENT[cat]) {
+                          setNewDepartment(CATEGORY_TO_DEPARTMENT[cat]);
+                        }
+                      }}
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
                     >
                       {CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -854,7 +874,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <select
                       value={newDepartment}
                       onChange={(e) => setNewDepartment(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
                     >
                       {DEPARTMENTS.map((dept) => (
                         <option key={dept} value={dept}>
@@ -874,7 +894,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <select
                       value={newPriority}
                       onChange={(e) => setNewPriority(e.target.value as any)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none cursor-pointer"
                     >
                       <option value="LOW">LOW — Minor maintenance</option>
                       <option value="MEDIUM">MEDIUM — Normal community matter</option>
@@ -890,7 +910,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <select
                       value={newIssueType}
                       onChange={(e) => setNewIssueType(e.target.value as any)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none cursor-pointer"
                     >
                       <option value="COMPLAINT">COMPLAINT (Grievance / Broken Civic Asset)</option>
                       <option value="REQUIREMENT">REQUIREMENT (New Need / Community Proposal)</option>
@@ -898,15 +918,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   </div>
                 </div>
 
-                {/* 5, 6, 7 & 8. Geographic Scope */}
+                {/* 5, 6, 7 & 8. Location */}
                 <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
                   <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5" />
-                      Constituency Geographic Hierarchy
-                    </span>
-                    <span className="text-[10px] text-[#8E9CAE] font-mono">
-                      Assembly: Banaganapalle (AC-140)
+                      Location
                     </span>
                   </div>
 
@@ -914,12 +931,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     {/* Fixed Mandal / Town Selector */}
                     <div>
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Mandal / Town (Fixed Options) *
+                        Mandal / Town *
                       </label>
                       <select
                         value={selectedMandalId}
                         onChange={(e) => setSelectedMandalId(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-semibold"
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-semibold cursor-pointer"
                       >
                         {FIXED_MANDALS_TOWNS.map((m) => (
                           <option key={m.id} value={m.id}>
@@ -932,12 +949,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     {/* Village / Ward (Option to write/edit) */}
                     <div>
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Village / Ward (Type or Custom Write) *
+                        Village / Ward *
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Ward 4 or Yaganti Sector or Cheruvupalli"
                         value={villageWardText}
                         onChange={(e) => setVillageWardText(e.target.value)}
                         className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
@@ -951,7 +967,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Near Ramalayam Temple, Beside Yaganti Main Road Circle"
                         value={newPlaceName}
                         onChange={(e) => setNewPlaceName(e.target.value)}
                         className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
@@ -960,27 +975,32 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   </div>
                 </div>
 
-                {/* Detailed Description */}
+                {/* Detailed Description (Supports 300 characters with counter) */}
                 <div>
-                  <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                    Detailed Description *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold">
+                      Detailed Description *
+                    </label>
+                    <span className="text-[10px] text-[#8E9CAE] font-mono">
+                      {newDescription.length}/300
+                    </span>
+                  </div>
                   <textarea
                     rows={3}
                     required
-                    placeholder="Describe the ground situation, how many households or commuters are affected, and severity..."
+                    maxLength={300}
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed placeholder-[#5F6875]"
+                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed"
                   />
                 </div>
 
-                {/* 9 & 10. Reported by (Citizen / Cadre / Leader) */}
+                {/* 9 & 10. Person Details (Citizen / Cadre / Leader) */}
                 <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
                   <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" />
-                      Reported By Details
+                      Person Details
                     </span>
                     <span className="text-[10.5px] text-[#8E9CAE]">Citizen / Cadre / Leader</span>
                   </div>
@@ -1023,14 +1043,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       <input
                         type="text"
                         required
-                        placeholder={
-                          reporterType === "LEADER"
-                            ? "e.g. Mandal President, Ward In-charge, Sarpanch, ZPTC, MPTC"
-                            : "e.g. Booth Convener, Village Youth Secretary, Ward Activist"
-                        }
                         value={reporterDesignation}
                         onChange={(e) => setReporterDesignation(e.target.value)}
-                        className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                        className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
                       />
                     </div>
                   )}
@@ -1038,15 +1053,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Reporter Full Name *
+                        Full Name *
                       </label>
                       <input
                         type="text"
                         required
-                        placeholder="e.g. K. Subba Rayudu"
                         value={newReportedBy}
                         onChange={(e) => setNewReportedBy(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
                       />
                     </div>
 
@@ -1054,13 +1068,19 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
                         Contact Number / Mobile *
                       </label>
-                      <input
-                        type="tel"
-                        placeholder="+91 98480 33441"
-                        value={newReporterPhone}
-                        onChange={(e) => setNewReporterPhone(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
-                      />
+                      <div className="flex items-center">
+                        <span className="px-3 py-2 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          required
+                          maxLength={10}
+                          value={newReporterPhone}
+                          onChange={(e) => setNewReporterPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1097,10 +1117,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <div className="flex-1 flex gap-2">
                       <input
                         type="url"
-                        placeholder="Or paste direct image URL link..."
                         value={newAttachmentUrl}
                         onChange={(e) => setNewAttachmentUrl(e.target.value)}
-                        className="flex-1 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                        className="flex-1 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs text-[#F5EFE0] outline-none"
                       />
                       {newAttachmentUrl.trim() && (
                         <button
@@ -1161,7 +1180,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         required
                         value={assignedPersonName}
                         onChange={(e) => setAssignedPersonName(e.target.value)}
-                        placeholder="e.g. Demo Volunteer"
                         className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
                       />
                     </div>
@@ -1170,14 +1188,19 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
                         Assigned Person Contact: Number *
                       </label>
-                      <input
-                        type="tel"
-                        required
-                        value={assignedPersonPhone}
-                        onChange={(e) => setAssignedPersonPhone(e.target.value)}
-                        placeholder="+91 98850 44003"
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
-                      />
+                      <div className="flex items-center">
+                        <span className="px-3 py-2 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          required
+                          maxLength={10}
+                          value={assignedPersonPhone}
+                          onChange={(e) => setAssignedPersonPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

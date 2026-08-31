@@ -115,104 +115,137 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 
   return (
     <div
-      className="hero-dark min-h-screen flex flex-col items-center justify-center px-4 py-8 relative"
+      className="hero-dark min-h-screen flex items-center justify-center relative overflow-x-hidden"
       style={{
-        backgroundImage: "url(./images/party-backgrounds/admin-bg.jpg)",
+        backgroundImage: "url(./images/telugu_assembly_bg.jpg)",
         backgroundSize: "cover",
-        backgroundPosition: "center top",
+        backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed"
       }}
     >
-      <div className="fixed inset-0 pointer-events-none z-0 bg-[#0B1A2C]/75 backdrop-blur-sm" aria-hidden="true" />
-      
-      <div className="relative z-10 w-full max-w-md mx-auto my-auto animate-rise">
-        {/* Single Company Logo and Name */}
-        <div className="flex flex-col items-center justify-center mb-6 text-center">
-          <div className="p-3 rounded-2xl bg-[#0E2137]/80 border border-[#D4A24C]/40 shadow-xl mb-3">
-            <LeadersLogo size={44} />
+      {/* Directional gradient overlay: keeps the grand Telugu Assembly building clear on left/center, high contrast on right */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-r from-black/20 via-[#071322]/50 to-[#071322]/95 backdrop-blur-[1px]" 
+        aria-hidden="true" 
+      />
+
+      <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-12 py-8 min-h-screen flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+        {/* Left Side: Brand & Legislative Context (allows the Telugu Assembly architecture to shine) */}
+        <div className="w-full lg:max-w-xl text-left hidden sm:flex flex-col space-y-4 animate-fadeIn">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#071322]/70 border border-[#D4A24C]/40 backdrop-blur-md w-fit">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-bold tracking-wider text-[#F5EFE0] uppercase font-mono">
+              Andhra Pradesh Legislative Portal
+            </span>
           </div>
-          <h1 className="font-display text-3xl cream-text leading-none tracking-tight">
-            Leader's <span className="italic gold-text">Lens</span>
-          </h1>
-          <p className="text-[11px] text-[#D4A24C] font-mono uppercase tracking-widest mt-1.5 font-semibold">
-            Political Intelligence Platform
+
+          <div className="flex items-center space-x-3.5">
+            <div className="p-2.5 rounded-2xl bg-[#0E2137]/80 border border-[#D4A24C]/50 shadow-2xl backdrop-blur-md">
+              <LeadersLogo size={38} />
+            </div>
+            <div>
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl text-[#F5EFE0] leading-none tracking-tight">
+                Leader's <span className="italic gold-text">Lens</span>
+              </h1>
+              <p className="text-[11px] text-[#D4A24C] font-mono uppercase tracking-[0.2em] font-bold mt-1">
+                Political Intelligence System
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs sm:text-sm text-[#D8CFB8] leading-relaxed max-w-lg bg-[#071322]/60 p-4 rounded-xl border border-[#22405E]/60 backdrop-blur-md">
+            Constituency-wide political intelligence, real-time ground grievance dispatch, cadre mobilization and executive decision support.
           </p>
         </div>
 
-        {/* Clean Sign In Card */}
-        <div
-          data-testid="auth-card"
-          className="bg-[#0E2137]/90 backdrop-blur-md border border-[#D4A24C]/30 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] overflow-hidden"
-        >
-          {/* Card Header */}
-          <div className="p-5 border-b border-[#22405E] bg-[#071322]/70 flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center">
-              <Lock className="w-4 h-4" />
+        {/* Right Side: Sign In Card */}
+        <div className="w-full max-w-md lg:ml-auto animate-rise">
+          {/* Mobile Logo Only */}
+          <div className="flex flex-col items-center justify-center mb-5 text-center sm:hidden">
+            <div className="p-2.5 rounded-2xl bg-[#0E2137]/90 border border-[#D4A24C]/40 shadow-xl mb-2 backdrop-blur-md">
+              <LeadersLogo size={36} />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-[#F5EFE0] tracking-wide">Sign In</h2>
-              <p className="text-[11.5px] text-[#8A8E9B]">Enter your credentials to continue</p>
-            </div>
+            <h1 className="font-display text-2xl cream-text leading-none tracking-tight">
+              Leader's <span className="italic gold-text">Lens</span>
+            </h1>
+            <p className="text-[10px] text-[#D4A24C] font-mono uppercase tracking-widest mt-1 font-semibold">
+              Political Intelligence Platform
+            </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5">
-            <Field label="Work email" icon={<Mail className="w-3.5 h-3.5" />}>
-              <input
-                data-testid="email-input"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@leaderslens.ai"
-                className={darkInput}
-                autoComplete="email"
-              />
-            </Field>
-
-            <Field label="Password" icon={<KeyRound className="w-3.5 h-3.5" />}>
-              <div className="relative">
-                <input
-                  data-testid="password-input"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  minLength={4}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className={`${darkInput} pr-10`}
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8E9B] hover:text-[#D4A24C] transition-colors p-1"
-                  title={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
+          {/* Clean Sign In Card */}
+          <div
+            data-testid="auth-card"
+            className="bg-[#0E2137]/92 backdrop-blur-xl border border-[#D4A24C]/40 rounded-2xl shadow-[0_25px_70px_-15px_rgba(0,0,0,0.85)] overflow-hidden ring-1 ring-[#D4A24C]/20"
+          >
+            {/* Card Header */}
+            <div className="p-5 border-b border-[#22405E] bg-[#071322]/80 flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center shadow-inner">
+                <Lock className="w-4 h-4" />
               </div>
-            </Field>
+              <div>
+                <h2 className="text-base font-bold text-[#F5EFE0] tracking-wide">Sign In</h2>
+                <p className="text-[11px] text-[#8E9CAE]">Enter your verified credentials to continue</p>
+              </div>
+            </div>
 
-            <button
-              type="submit"
-              data-testid="auth-submit-btn"
-              disabled={isLoading}
-              className="group w-full inline-flex items-center justify-center px-5 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-sm font-bold rounded-xl transition-all shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)] cursor-pointer disabled:opacity-50"
-            >
-              <span>{isLoading ? "Signing in..." : "Sign In"}</span>
-              <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-            </button>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-5">
+              <Field label="Work email" icon={<Mail className="w-3.5 h-3.5" />}>
+                <input
+                  data-testid="email-input"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={darkInput}
+                  autoComplete="email"
+                />
+              </Field>
 
-            <p className="text-[11px] text-center text-[#8A8E9B] pt-1">
-              Protected by Leader's Lens Security Framework
-            </p>
-          </form>
+              <Field label="Password" icon={<KeyRound className="w-3.5 h-3.5" />}>
+                <div className="relative">
+                  <input
+                    data-testid="password-input"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={4}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${darkInput} pr-10`}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8E9B] hover:text-[#D4A24C] transition-colors p-1 cursor-pointer"
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </Field>
+
+              <button
+                type="submit"
+                data-testid="auth-submit-btn"
+                disabled={isLoading}
+                className="group w-full inline-flex items-center justify-center px-5 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-sm font-bold rounded-xl transition-all shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)] cursor-pointer disabled:opacity-50"
+              >
+                <span>{isLoading ? "Signing in..." : "Sign In"}</span>
+                <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+              </button>
+
+              <p className="text-[11px] text-center text-[#8A8E9B] pt-1">
+                Protected by Leader's Lens Security Framework
+              </p>
+            </form>
+          </div>
         </div>
       </div>
     </div>
