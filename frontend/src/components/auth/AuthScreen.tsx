@@ -216,9 +216,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         </div>
 
         {/* Bottom Footer */}
-        <div className="text-center pt-4 border-t border-[#D4A24C]/20">
-          <p className="text-[11px] text-[#D8CFB8] font-medium">
-            Protected by Leader's Lens Security Framework
+        <div className="text-center pt-4 border-t border-[#D4A24C]/20 space-y-1.5">
+          <p className="text-[11px] text-[#D8CFB8] font-medium flex items-center justify-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" />
+            AI-Powered Intelligence Platform
+          </p>
+          <p className="text-[11px] text-[#8E9CAE]">
+            Developed and Maintained by{" "}
+            <a
+              href="https://palramai.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#D4A24C] font-semibold hover:underline"
+            >
+              palramai.in
+            </a>
           </p>
         </div>
       </div>
