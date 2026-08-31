@@ -387,11 +387,7 @@ function AppCanvas({
       }}
     >
       <div
-        className={`fixed inset-0 pointer-events-none z-0 ${
-          isPartyThemeActive
-            ? "bg-[#071322]/80 backdrop-blur-[1.5px]"
-            : "bg-gradient-to-b from-[#071322]/88 via-[#0B1A2C]/90 to-[#071322]/92 backdrop-blur-[1.5px]"
-        }`}
+        className="fixed inset-0 pointer-events-none z-0 bg-black/35 backdrop-blur-[0.5px]"
         aria-hidden="true"
       />
       <div className="relative z-10 flex-1 flex flex-col">
