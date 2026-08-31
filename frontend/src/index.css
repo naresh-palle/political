@@ -19,28 +19,28 @@
     --ll-rule: #E5E3D8;
     --ll-rule-strong: #D5D3C8;
 
-    --ll-ink: #0B1A2C;         /* deeper, richer near-black navy */
-    --ll-ink-2: #142B45;       /* one step up for gradients */
-    --ll-ink-soft: #2E313A;
-    --ll-muted: #6C707D;
-    --ll-muted-soft: #8A8E9B;
+    --ll-ink: #071322;         /* deep, executive prestige navy */
+    --ll-ink-2: #0E2137;       /* dark panel surface */
+    --ll-ink-soft: #1E3A5A;
+    --ll-muted: #94A3B8;       /* high-contrast slate text */
+    --ll-muted-soft: #CBD5E1;  /* crisp readable subtitle text */
 
-    --ll-gold: #D4A24C;        /* warm brass accent */
-    --ll-saffron: #E07A1F;     /* dominant saffron */
+    --ll-gold: #F1CA74;        /* high-luminance radiant gold */
+    --ll-saffron: #E07A1F;     /* dominant energetic saffron */
     --ll-saffron-soft: #FBE7CE;
-    --ll-crimson: #B0203C;     /* editorial crimson */
-    --ll-emerald: #0F766E;
+    --ll-crimson: #E11D48;     /* vibrant crisp crimson */
+    --ll-emerald: #059669;
     --ll-emerald-bright: #10B981;
-    --ll-teal: #0E7C86;
-    --ll-critical: #B91C1C;
+    --ll-teal: #0D9488;
+    --ll-critical: #DC2626;
 
     /* Dynamic Party Design Tokens (Default Neutral Fallbacks) */
     --party-primary: #D4A24C;
     --party-secondary: #B45309;
     --party-accent: #E07A1F;
     --party-light-bg: #FAF9F5;
-    --party-dark-bg: #0B1A2C;
-    --party-text: #1E293B;
+    --party-dark-bg: #071322;
+    --party-text: #0F172A;
     --party-muted: #64748B;
     --party-gradient-start: #D4A24C;
     --party-gradient-end: #E07A1F;
@@ -121,8 +121,8 @@
 }
 .hero-dark > * { position: relative; z-index: 1; }
 
-.gold-text { color: var(--party-primary, #E9C77A); }
-.cream-text { color: #F5EFE0; }
+.gold-text { color: var(--party-primary, #F1CA74); text-shadow: 0 0 16px rgba(241, 202, 116, 0.2); }
+.cream-text { color: #F8FAFC; }
 
 /* Bright metric chips */
 .chip-saffron { background: #FFF4E2; color: #7A3A08; border: 1px solid #F1CB98; }

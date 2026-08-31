@@ -7,10 +7,10 @@ const NEUTRAL_THEME = {
   primary: "#D4A24C",
   secondary: "#B45309",
   accent: "#E07A1F",
-  lightBg: "#0B1A2C",
-  darkBg: "#0B1A2C",
-  text: "#F5EFE0",
-  muted: "#B9AF95",
+  lightBg: "#071322",
+  darkBg: "#071322",
+  text: "#F8FAFC",
+  muted: "#CBD5E1",
   gradientStart: "#D4A24C",
   gradientEnd: "#E07A1F"
 };

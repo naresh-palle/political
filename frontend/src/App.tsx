@@ -374,7 +374,7 @@ function AppCanvas({
       className={`min-h-screen flex flex-col font-sans transition-all duration-500 relative overflow-x-hidden ${
         isPartyThemeActive
           ? "text-slate-900 selection:bg-black selection:text-white"
-          : "bg-[#0B1A2C] text-[#F5EFE0] selection:bg-[#D4A24C] selection:text-black"
+          : "bg-[#071322] text-[#F8FAFC] selection:bg-[#D4A24C] selection:text-[#071322]"
       }`}
       style={{
         backgroundImage: `url(${bgImg})`,
@@ -382,13 +382,15 @@ function AppCanvas({
         backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
-        backgroundColor: "#0B1A2C",
-        color: isPartyThemeActive ? (currentParty?.textColor || "#0F172A") : "#F5EFE0"
+        backgroundColor: "#071322",
+        color: isPartyThemeActive ? (currentParty?.textColor || "#0F172A") : "#F8FAFC"
       }}
     >
       <div
         className={`fixed inset-0 pointer-events-none z-0 ${
-          isPartyThemeActive ? "bg-white/40 backdrop-blur-[0.5px]" : "bg-[#0B1A2C]/75 backdrop-blur-[0.5px]"
+          isPartyThemeActive
+            ? "bg-[#071322]/80 backdrop-blur-[1.5px]"
+            : "bg-gradient-to-b from-[#071322]/88 via-[#0B1A2C]/90 to-[#071322]/92 backdrop-blur-[1.5px]"
         }`}
         aria-hidden="true"
       />
