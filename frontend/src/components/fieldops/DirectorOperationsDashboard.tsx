@@ -9,7 +9,7 @@ import {
   WorkUpdateRecord
 } from "../../types";
 import { politicalApiService } from "../../services/api";
-import { IssueDetailModal } from "./IssueDetailModal";
+import { IssueDetailView } from "./IssueDetailView";
 import {
   Users,
   AlertTriangle,
@@ -23,6 +23,9 @@ import {
   Camera,
   Layers,
   ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
   ShieldCheck,
   Phone,
   UserCheck,
@@ -52,18 +55,42 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
   const [operationsStream, setOperationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("ALL");
 
-  // Selected Issue for Modal
+  // Selected Issue for Full-Page Detail View
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
 
-  // Filters
+  // Filters & Sorting State
   const [activeTab, setActiveTab] = useState<"ALL" | "OVERDUE" | "PENDING" | "IN_PROGRESS" | "COMPLETED">("ALL");
+  const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [filterPriority, setFilterPriority] = useState<string>("ALL");
+  const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
   const [filterVolunteerId, setFilterVolunteerId] = useState<string>("ALL");
   const [filterMandalId, setFilterMandalId] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"NEWEST" | "OLDEST" | "DUE_DATE" | "PRIORITY" | "STATUS" | "TITLE">("NEWEST");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   useEffect(() => {
     loadDirectorData();
   }, [currentUser.id]);
+
+  // Reset pagination to Page 1 when any filter or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    activeTab,
+    filterCategory,
+    filterPriority,
+    filterReporterType,
+    filterVolunteerId,
+    filterMandalId,
+    searchQuery,
+    sortBy,
+    pageSize,
+    operationsStream
+  ]);
 
   const loadDirectorData = async () => {
     setLoading(true);
@@ -150,6 +177,15 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     return [...issues, ...normalizedGrievances];
   }, [issues, normalizedGrievances, operationsStream]);
 
+  // Unique Categories Available in Stream
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    allOperationsList.forEach((item) => {
+      if (item.category) set.add(item.category);
+    });
+    return Array.from(set).sort();
+  }, [allOperationsList]);
+
   // Metrics
   const totalOperationsCount = allOperationsList.length;
   const pendingCount = allOperationsList.filter((i) => ["NEW", "ASSIGNED"].includes(i.status)).length;
@@ -177,31 +213,112 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     return warnings;
   }, [volunteers, issues]);
 
-  // Filtered Operations
-  const filteredOperations = useMemo(() => {
-    return allOperationsList.filter((item) => {
+  // Filtered & Sorted Operations
+  const sortedAndFilteredOperations = useMemo(() => {
+    let list = allOperationsList.filter((item) => {
       if (activeTab === "OVERDUE" && item.status !== "OVERDUE") return false;
       if (activeTab === "PENDING" && !["NEW", "ASSIGNED"].includes(item.status)) return false;
       if (activeTab === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
       if (activeTab === "COMPLETED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
 
+      if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
+      if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
+      if (filterReporterType !== "ALL" && item.reporterType !== filterReporterType) return false;
       if (filterVolunteerId !== "ALL" && item.assignedVolunteerId !== filterVolunteerId) return false;
       if (filterMandalId !== "ALL" && item.mandalId !== filterMandalId) return false;
 
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
+          item.id.toLowerCase().includes(q) ||
           item.title.toLowerCase().includes(q) ||
           item.description.toLowerCase().includes(q) ||
           (item.villageName || "").toLowerCase().includes(q) ||
           (item.mandalName || "").toLowerCase().includes(q) ||
           (item.assignedVolunteerName || "").toLowerCase().includes(q) ||
-          item.reportedBy.toLowerCase().includes(q)
+          item.reportedBy.toLowerCase().includes(q) ||
+          (item.reporterPhone || "").includes(q)
         );
       }
       return true;
     });
-  }, [allOperationsList, activeTab, filterVolunteerId, filterMandalId, searchQuery]);
+
+    // Apply Sort
+    return list.sort((a, b) => {
+      if (sortBy === "NEWEST") {
+        return new Date(b.createdAt || b.reportedDate).getTime() - new Date(a.createdAt || a.reportedDate).getTime();
+      }
+      if (sortBy === "OLDEST") {
+        return new Date(a.createdAt || a.reportedDate).getTime() - new Date(b.createdAt || b.reportedDate).getTime();
+      }
+      if (sortBy === "DUE_DATE") {
+        return new Date(a.dueDate || "9999-12-31").getTime() - new Date(b.dueDate || "9999-12-31").getTime();
+      }
+      if (sortBy === "PRIORITY") {
+        const weights: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+        return (weights[b.priority] || 0) - (weights[a.priority] || 0);
+      }
+      if (sortBy === "TITLE") {
+        return a.title.localeCompare(b.title);
+      }
+      if (sortBy === "STATUS") {
+        return a.status.localeCompare(b.status);
+      }
+      return 0;
+    });
+  }, [
+    allOperationsList,
+    activeTab,
+    filterCategory,
+    filterPriority,
+    filterReporterType,
+    filterVolunteerId,
+    filterMandalId,
+    searchQuery,
+    sortBy
+  ]);
+
+  // Paginated Slicing
+  const totalPages = Math.ceil(sortedAndFilteredOperations.length / pageSize) || 1;
+  const paginatedOperations = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedAndFilteredOperations.slice(start, start + pageSize);
+  }, [sortedAndFilteredOperations, currentPage, pageSize]);
+
+  const hasActiveFilters =
+    activeTab !== "ALL" ||
+    filterCategory !== "ALL" ||
+    filterPriority !== "ALL" ||
+    filterReporterType !== "ALL" ||
+    filterVolunteerId !== "ALL" ||
+    filterMandalId !== "ALL" ||
+    searchQuery.trim().length > 0 ||
+    sortBy !== "NEWEST";
+
+  const clearAllFilters = () => {
+    setActiveTab("ALL");
+    setFilterCategory("ALL");
+    setFilterPriority("ALL");
+    setFilterReporterType("ALL");
+    setFilterVolunteerId("ALL");
+    setFilterMandalId("ALL");
+    setSearchQuery("");
+    setSortBy("NEWEST");
+  };
+
+  // If an issue is selected, display the full-page dedicated IssueDetailView
+  if (selectedIssue) {
+    return (
+      <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6">
+        <IssueDetailView
+          issue={selectedIssue}
+          currentUser={currentUser}
+          onBack={() => setSelectedIssue(null)}
+          onIssueUpdated={loadDirectorData}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
@@ -315,7 +432,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
 
         <div className="text-xs text-[#CBD5E1] font-mono">
-          Showing <strong className="text-[#D4A24C]">{filteredOperations.length}</strong> active grievance records
+          Showing <strong className="text-[#D4A24C]">{sortedAndFilteredOperations.length}</strong> active grievance records
         </div>
       </div>
 
@@ -535,107 +652,258 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         )}
       </div>
 
-      {/* Filter & Search Strip */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
+      {/* Filter & Sort Master Command Strip */}
+      <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+        {/* Row 1: Search, Sort & View Mode */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+          <div className="relative w-full lg:w-96">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
             <input
               type="text"
-              placeholder="Search issues, grievances, citizen names..."
+              placeholder="Search by ID, title, village, citizen, phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl pl-9 pr-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+              className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
             />
-          </div>
-
-          <select
-            value={filterVolunteerId}
-            onChange={(e) => setFilterVolunteerId(e.target.value)}
-            className="bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-          >
-            <option value="ALL">All Assignees / Volunteers</option>
-            {volunteers.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={filterMandalId}
-            onChange={(e) => setFilterMandalId(e.target.value)}
-            className="bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-          >
-            <option value="ALL">All Mandals / Sectors</option>
-            {mandals.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          {/* Grid vs Table View Mode Switcher */}
-          <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
-            <button
-              onClick={() => setViewMode("GRID")}
-              title="Grid Cards View"
-              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "GRID"
-                  ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                  : "text-[#CBD5E1] hover:text-white"
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              <span className="text-[11px] hidden sm:inline">Grid</span>
-            </button>
-            <button
-              onClick={() => setViewMode("TABLE")}
-              title="Data Table View"
-              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "TABLE"
-                  ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                  : "text-[#CBD5E1] hover:text-white"
-              }`}
-            >
-              <List className="w-4 h-4" />
-              <span className="text-[11px] hidden sm:inline">Table</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1">
-            {(["ALL", "OVERDUE", "PENDING", "IN_PROGRESS", "COMPLETED"] as const).map((tab) => (
+            {searchQuery && (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wider transition-all cursor-pointer shrink-0 ${
-                  activeTab === tab
-                    ? "bg-[#D4A24C] text-[#0B131E] font-bold"
-                    : "bg-[#0B131E]/80 text-[#CBD5E1] hover:text-white border border-[#223348]"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 w-full lg:w-auto">
+            {/* Sort Options Dropdown */}
+            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
+              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
+              >
+                <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
+                <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
+                <option value="DUE_DATE" className="bg-[#0B131E]">Earliest Due (Urgent SLA)</option>
+                <option value="PRIORITY" className="bg-[#0B131E]">Highest Priority (Urgent → Low)</option>
+                <option value="STATUS" className="bg-[#0B131E]">By Lifecycle Status</option>
+                <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
+              </select>
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
+              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-transparent text-[#D4A24C] font-bold text-xs focus:outline-none cursor-pointer"
+              >
+                <option value={10} className="bg-[#0B131E]">10 / page</option>
+                <option value={25} className="bg-[#0B131E]">25 / page</option>
+                <option value={50} className="bg-[#0B131E]">50 / page</option>
+                <option value={100} className="bg-[#0B131E]">100 / page</option>
+              </select>
+            </div>
+
+            {/* Grid vs Table View Toggle */}
+            <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
+              <button
+                onClick={() => setViewMode("GRID")}
+                title="Grid Cards View"
+                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "GRID"
+                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                    : "text-[#CBD5E1] hover:text-white"
                 }`}
               >
-                {tab}
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden sm:inline">Grid</span>
               </button>
-            ))}
+              <button
+                onClick={() => setViewMode("TABLE")}
+                title="Data Table View"
+                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "TABLE"
+                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                    : "text-[#CBD5E1] hover:text-white"
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden sm:inline">Table</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Row 2: Granular Filter Dropdowns */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1 text-xs">
+          {/* Status Tabs / Filter */}
+          <div>
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as any)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Status: All</option>
+              <option value="OVERDUE">Status: 🔴 Overdue</option>
+              <option value="PENDING">Status: 🟡 Pending Intake</option>
+              <option value="IN_PROGRESS">Status: 🔵 In Progress</option>
+              <option value="COMPLETED">Status: 🟢 Resolved</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Category: All</option>
+              {availableCategories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Priority Filter */}
+          <div>
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Priority: All</option>
+              <option value="URGENT">🔴 Urgent</option>
+              <option value="HIGH">🟠 High</option>
+              <option value="MEDIUM">🟡 Medium</option>
+              <option value="LOW">🟢 Low</option>
+            </select>
+          </div>
+
+          {/* Reporter Type Filter */}
+          <div>
+            <select
+              value={filterReporterType}
+              onChange={(e) => setFilterReporterType(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Reporter: All</option>
+              <option value="CITIZEN">👤 Citizen</option>
+              <option value="LEADER">⭐ Party Leader</option>
+              <option value="CADRE">🛡️ Party Cadre</option>
+            </select>
+          </div>
+
+          {/* Mandal Filter */}
+          <div>
+            <select
+              value={filterMandalId}
+              onChange={(e) => setFilterMandalId(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Mandal: All</option>
+              {mandals.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Assignee Filter */}
+          <div>
+            <select
+              value={filterVolunteerId}
+              onChange={(e) => setFilterVolunteerId(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Assignee: All</option>
+              {volunteers.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Row 3: Active Filter Chips & Clear All */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#223348]/70 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] uppercase font-semibold text-[#8E9CAE]">Active Filters:</span>
+              {activeTab !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Status: {activeTab}
+                </span>
+              )}
+              {filterCategory !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Category: {filterCategory}
+                </span>
+              )}
+              {filterPriority !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Priority: {filterPriority}
+                </span>
+              )}
+              {filterReporterType !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Reporter: {filterReporterType}
+                </span>
+              )}
+              {filterMandalId !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Mandal Filtered
+                </span>
+              )}
+              {filterVolunteerId !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Volunteer Filtered
+                </span>
+              )}
+              {searchQuery && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Query: &quot;{searchQuery}&quot;
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={clearAllFilters}
+              className="text-[#D4A24C] hover:underline font-semibold text-[11px] cursor-pointer"
+            >
+              Reset / Clear All Filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Issues Master Table / Cards */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {loading ? (
           <div className="p-12 text-center text-sm text-[#8E9CAE]">Loading operational grid...</div>
-        ) : filteredOperations.length === 0 ? (
-          <div className="p-12 rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 text-center space-y-2">
-            <h3 className="text-sm font-semibold text-[#F5EFE0]">No operational items match criteria</h3>
-            <p className="text-xs text-[#8E9CAE]">Try clearing active filters or selecting another operations stream.</p>
+        ) : sortedAndFilteredOperations.length === 0 ? (
+          <div className="p-12 rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 text-center space-y-3">
+            <h3 className="text-base font-semibold text-[#F5EFE0]">No operational records match selected filters</h3>
+            <p className="text-xs text-[#8E9CAE]">Try adjusting your search keyword, category, or status criteria.</p>
+            <button
+              onClick={clearAllFilters}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs cursor-pointer shadow-md"
+            >
+              Reset All Filters
+            </button>
           </div>
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredOperations.map((issue) => (
+            {paginatedOperations.map((issue) => (
               <div
                 key={issue.id}
                 onClick={() => setSelectedIssue(issue)}
@@ -741,7 +1009,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#223348]/50">
-                  {filteredOperations.map((issue) => (
+                  {paginatedOperations.map((issue) => (
                     <tr
                       key={issue.id}
                       onClick={() => setSelectedIssue(issue)}
@@ -819,7 +1087,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                             e.stopPropagation();
                             setSelectedIssue(issue);
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           View
@@ -832,18 +1100,96 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             </div>
           </div>
         )}
-      </div>
 
-      {/* Selected Issue Detail Modal */}
-      {selectedIssue && (
-        <IssueDetailModal
-          issue={selectedIssue}
-          currentUser={currentUser}
-          isOpen={!!selectedIssue}
-          onClose={() => setSelectedIssue(null)}
-          onIssueUpdated={loadDirectorData}
-        />
-      )}
+        {/* Global Pagination Bar */}
+        {sortedAndFilteredOperations.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:px-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] text-xs">
+            <div className="text-[#8E9CAE] font-mono text-center sm:text-left">
+              Showing{" "}
+              <strong className="text-[#F5EFE0]">
+                {(currentPage - 1) * pageSize + 1}
+              </strong>{" "}
+              to{" "}
+              <strong className="text-[#F5EFE0]">
+                {Math.min(currentPage * pageSize, sortedAndFilteredOperations.length)}
+              </strong>{" "}
+              of{" "}
+              <strong className="text-[#D4A24C]">
+                {sortedAndFilteredOperations.length}
+              </strong>{" "}
+              records
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {/* First Page */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                title="First Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Prev Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                title="Previous Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Page Number Pills */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => {
+                    const prev = arr[idx - 1];
+                    return (
+                      <React.Fragment key={p}>
+                        {prev && p - prev > 1 && (
+                          <span className="px-1 text-[#8E9CAE]">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-7 h-7 rounded-lg font-mono font-bold text-xs transition-all cursor-pointer ${
+                            currentPage === p
+                              ? "bg-[#D4A24C] text-[#0B131E] shadow-sm"
+                              : "bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+              </div>
+
+              {/* Next Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                title="Next Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Last Page */}
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                title="Last Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

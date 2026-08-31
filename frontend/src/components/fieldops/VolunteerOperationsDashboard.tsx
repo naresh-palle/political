@@ -8,7 +8,7 @@ import {
   MandalInfo
 } from "../../types";
 import { politicalApiService } from "../../services/api";
-import { IssueDetailModal } from "./IssueDetailModal";
+import { IssueDetailView } from "./IssueDetailView";
 import {
   Plus,
   MapPin,
@@ -35,7 +35,11 @@ import {
   Check,
   LayoutGrid,
   List,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 
 interface VolunteerDashboardProps {
@@ -103,17 +107,26 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [issues, setIssues] = useState<FieldIssue[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Selected Issue for Detail Modal
+  // Selected Issue for Full-Page Detail View
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
 
   // View Mode: GRID vs TABLE
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
-  // Date Filter & Search
+  // Filters & Sorting State
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [filterPriority, setFilterPriority] = useState<string>("ALL");
+  const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
   const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "7DAYS" | "THIS_MONTH" | "CUSTOM">("ALL");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"NEWEST" | "OLDEST" | "DUE_DATE" | "PRIORITY" | "STATUS" | "TITLE">("NEWEST");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   // Create Complaint Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -359,14 +372,45 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     }
   };
 
-  // Filter issues by date & search query
-  const filteredIssues = useMemo(() => {
+  // Reset pagination to Page 1 when any filter or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    filterStatus,
+    filterCategory,
+    filterPriority,
+    filterReporterType,
+    dateFilter,
+    startDate,
+    endDate,
+    searchQuery,
+    sortBy,
+    pageSize
+  ]);
+
+  // Filter & Sort issues
+  const sortedAndFilteredIssues = useMemo(() => {
     const todayStr = new Date().toISOString().split("T")[0];
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thisMonthPrefix = todayStr.slice(0, 7); // "YYYY-MM"
 
-    return issues.filter((item) => {
+    let list = issues.filter((item) => {
+      // Status filter
+      if (filterStatus === "OVERDUE" && item.status !== "OVERDUE") return false;
+      if (filterStatus === "NEW" && item.status !== "NEW") return false;
+      if (filterStatus === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
+      if (filterStatus === "RESOLVED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
+
+      // Category filter
+      if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
+
+      // Priority filter
+      if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
+
+      // Reporter type filter
+      if (filterReporterType !== "ALL" && item.reporterType !== filterReporterType) return false;
+
       // Date filter
       const itemDate = item.reportedDate || (item.createdAt ? item.createdAt.split("T")[0] : "");
 
@@ -385,21 +429,102 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       // Search filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchTitle = item.title.toLowerCase().includes(q);
-        const matchDesc = item.description?.toLowerCase().includes(q);
-        const matchLoc = (item.villageName || "").toLowerCase().includes(q) || (item.placeName || "").toLowerCase().includes(q);
-        const matchMandal = (item.mandalName || "").toLowerCase().includes(q);
-        const matchRep = (item.reportedBy || "").toLowerCase().includes(q);
-        const matchDept = (item.department || "").toLowerCase().includes(q);
-        return matchTitle || matchDesc || matchLoc || matchMandal || matchRep || matchDept;
+        return (
+          item.id.toLowerCase().includes(q) ||
+          item.title.toLowerCase().includes(q) ||
+          (item.description || "").toLowerCase().includes(q) ||
+          (item.villageName || "").toLowerCase().includes(q) ||
+          (item.placeName || "").toLowerCase().includes(q) ||
+          (item.mandalName || "").toLowerCase().includes(q) ||
+          item.reportedBy.toLowerCase().includes(q) ||
+          (item.reporterPhone || "").includes(q) ||
+          (item.department || "").toLowerCase().includes(q)
+        );
       }
 
       return true;
     });
-  }, [issues, dateFilter, startDate, endDate, searchQuery]);
+
+    // Apply Sorting
+    return list.sort((a, b) => {
+      if (sortBy === "NEWEST") {
+        return new Date(b.createdAt || b.reportedDate).getTime() - new Date(a.createdAt || a.reportedDate).getTime();
+      }
+      if (sortBy === "OLDEST") {
+        return new Date(a.createdAt || a.reportedDate).getTime() - new Date(b.createdAt || b.reportedDate).getTime();
+      }
+      if (sortBy === "DUE_DATE") {
+        return new Date(a.dueDate || "9999-12-31").getTime() - new Date(b.dueDate || "9999-12-31").getTime();
+      }
+      if (sortBy === "PRIORITY") {
+        const weights: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+        return (weights[b.priority] || 0) - (weights[a.priority] || 0);
+      }
+      if (sortBy === "TITLE") {
+        return a.title.localeCompare(b.title);
+      }
+      if (sortBy === "STATUS") {
+        return a.status.localeCompare(b.status);
+      }
+      return 0;
+    });
+  }, [
+    issues,
+    filterStatus,
+    filterCategory,
+    filterPriority,
+    filterReporterType,
+    dateFilter,
+    startDate,
+    endDate,
+    searchQuery,
+    sortBy
+  ]);
+
+  // Paginated Slicing
+  const totalPages = Math.ceil(sortedAndFilteredIssues.length / pageSize) || 1;
+  const paginatedIssues = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedAndFilteredIssues.slice(start, start + pageSize);
+  }, [sortedAndFilteredIssues, currentPage, pageSize]);
+
+  const hasActiveFilters =
+    filterStatus !== "ALL" ||
+    filterCategory !== "ALL" ||
+    filterPriority !== "ALL" ||
+    filterReporterType !== "ALL" ||
+    dateFilter !== "ALL" ||
+    searchQuery.trim().length > 0 ||
+    sortBy !== "NEWEST";
+
+  const clearAllFilters = () => {
+    setFilterStatus("ALL");
+    setFilterCategory("ALL");
+    setFilterPriority("ALL");
+    setFilterReporterType("ALL");
+    setDateFilter("ALL");
+    setStartDate("");
+    setEndDate("");
+    setSearchQuery("");
+    setSortBy("NEWEST");
+  };
+
+  // If an issue is selected, display the full-page dedicated IssueDetailView
+  if (selectedIssue) {
+    return (
+      <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6">
+        <IssueDetailView
+          issue={selectedIssue}
+          currentUser={currentUser}
+          onBack={() => setSelectedIssue(null)}
+          onIssueUpdated={loadVolunteerData}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
       {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
       <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
@@ -429,7 +554,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <button
             onClick={() => setIsAddModalOpen(true)}
             data-testid="add-complaint-btn"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start lg:self-center"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start lg:self-center"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>Add Complaint / Requirement</span>
@@ -460,334 +585,534 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         </div>
       </div>
 
-      {/* 2. Streamlined KPI Strip: ONLY "Total Issues Submitted" with Date Filter & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
-        {/* Total Issues Submitted Counter */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
-            <FileText className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="text-[11px] uppercase tracking-wider text-[#8E9CAE] font-semibold block">
-              Total Issues Submitted
-            </span>
-            <div className="font-display text-2xl sm:text-3xl font-bold text-[#F5EFE0] leading-none mt-0.5">
-              {issues.length}
-            </div>
-          </div>
-        </div>
-
-        {/* Date Filter, View Mode & Search Bar */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Grid vs Table View Mode Switcher */}
-          <div className="flex items-center p-1 rounded-xl bg-[#071322] border border-[#22405E] text-xs">
-            <button
-              onClick={() => setViewMode("GRID")}
-              title="Grid Cards View"
-              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "GRID"
-                  ? "bg-[#D4A24C] text-[#071322] font-bold shadow-sm"
-                  : "text-[#B9AF95] hover:text-white"
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              <span className="text-[11px] hidden sm:inline">Grid</span>
-            </button>
-            <button
-              onClick={() => setViewMode("TABLE")}
-              title="Data Table View"
-              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "TABLE"
-                  ? "bg-[#D4A24C] text-[#071322] font-bold shadow-sm"
-                  : "text-[#B9AF95] hover:text-white"
-              }`}
-            >
-              <List className="w-4 h-4" />
-              <span className="text-[11px] hidden sm:inline">Table</span>
-            </button>
-          </div>
-
-          {/* Date Filter Buttons */}
-          <div className="flex flex-wrap items-center p-1 rounded-xl bg-[#071322] border border-[#22405E] text-xs gap-1">
-            <span className="px-2 text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden md:inline">
-              Date:
-            </span>
-            {(
-              [
-                { id: "ALL", label: "All Time" },
-                { id: "TODAY", label: "Today" },
-                { id: "7DAYS", label: "Past 7 Days" },
-                { id: "THIS_MONTH", label: "This Month" },
-                { id: "CUSTOM", label: "Custom Range" }
-              ] as const
-            ).map((df) => (
-              <button
-                key={df.id}
-                onClick={() => setDateFilter(df.id)}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                  dateFilter === df.id
-                    ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
-                    : "text-[#B9AF95] hover:text-white"
-                }`}
-              >
-                {df.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Custom Date Range Picker when CUSTOM is active */}
-          {dateFilter === "CUSTOM" && (
-            <div className="flex items-center gap-1.5 p-1 px-2.5 rounded-xl bg-[#071322] border border-[#D4A24C]/40 text-xs animate-fadeIn">
-              <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">From:</span>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] text-[#F5EFE0] px-2 py-1 rounded-lg text-xs outline-none"
-              />
-              <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">To:</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] text-[#F5EFE0] px-2 py-1 rounded-lg text-xs outline-none"
-              />
-              {(startDate || endDate) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStartDate("");
-                    setEndDate("");
-                  }}
-                  className="text-rose-400 hover:text-rose-200 text-[10px] font-semibold underline ml-1"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Quick Search */}
-          <div className="relative min-w-[200px] flex-1 sm:flex-initial">
-            <Search className="w-3.5 h-3.5 text-[#8E9CAE] absolute left-3 top-1/2 -translate-y-1/2" />
+      {/* 2. Filter & Sort Master Toolbar */}
+      <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+        {/* Row 1: Search, Sort & View Mode */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+          <div className="relative w-full lg:w-96">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
             <input
               type="text"
-              placeholder="Search issues, citizens, villages..."
+              placeholder="Search by ID, title, citizen, village..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 w-full lg:w-auto">
+            {/* Sort Options Dropdown */}
+            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
+              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
+              >
+                <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
+                <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
+                <option value="DUE_DATE" className="bg-[#0B131E]">Earliest Due (Urgent SLA)</option>
+                <option value="PRIORITY" className="bg-[#0B131E]">Highest Priority (Urgent → Low)</option>
+                <option value="STATUS" className="bg-[#0B131E]">By Lifecycle Status</option>
+                <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
+              </select>
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
+              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-transparent text-[#D4A24C] font-bold text-xs focus:outline-none cursor-pointer"
+              >
+                <option value={10} className="bg-[#0B131E]">10 / page</option>
+                <option value={25} className="bg-[#0B131E]">25 / page</option>
+                <option value={50} className="bg-[#0B131E]">50 / page</option>
+                <option value={100} className="bg-[#0B131E]">100 / page</option>
+              </select>
+            </div>
+
+            {/* Grid vs Table View Mode Switcher */}
+            <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
+              <button
+                onClick={() => setViewMode("GRID")}
+                title="Grid Cards View"
+                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "GRID"
+                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                    : "text-[#CBD5E1] hover:text-white"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden sm:inline">Grid</span>
+              </button>
+              <button
+                onClick={() => setViewMode("TABLE")}
+                title="Data Table View"
+                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "TABLE"
+                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                    : "text-[#CBD5E1] hover:text-white"
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden sm:inline">Table</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Row 2: Granular Filter Dropdowns */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+          {/* Status Filter */}
+          <div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Status: All</option>
+              <option value="NEW">Status: 🟡 New</option>
+              <option value="IN_PROGRESS">Status: 🔵 In Progress</option>
+              <option value="RESOLVED">Status: 🟢 Resolved</option>
+              <option value="OVERDUE">Status: 🔴 Overdue</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Category: All</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Priority Filter */}
+          <div>
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Priority: All</option>
+              <option value="URGENT">🔴 Urgent</option>
+              <option value="HIGH">🟠 High</option>
+              <option value="MEDIUM">🟡 Medium</option>
+              <option value="LOW">🟢 Low</option>
+            </select>
+          </div>
+
+          {/* Date Filter */}
+          <div>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as any)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Date: All Time</option>
+              <option value="TODAY">Date: Today</option>
+              <option value="7DAYS">Date: Past 7 Days</option>
+              <option value="THIS_MONTH">Date: This Month</option>
+              <option value="CUSTOM">Date: Custom Range</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Custom Date Range Picker when CUSTOM is active */}
+        {dateFilter === "CUSTOM" && (
+          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[#0B131E] border border-[#D4A24C]/40 text-xs animate-fadeIn">
+            <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">From:</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="bg-[#070D15] border border-[#223348] focus:border-[#D4A24C] text-[#F5EFE0] px-2.5 py-1.5 rounded-lg text-xs outline-none"
+            />
+            <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">To:</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="bg-[#070D15] border border-[#223348] focus:border-[#D4A24C] text-[#F5EFE0] px-2.5 py-1.5 rounded-lg text-xs outline-none"
+            />
+            {(startDate || endDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                className="text-rose-400 hover:text-rose-200 text-xs font-semibold underline ml-1"
+              >
+                Clear Dates
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Row 3: Active Filter Chips & Clear All */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#223348]/70 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] uppercase font-semibold text-[#8E9CAE]">Active Filters:</span>
+              {filterStatus !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Status: {filterStatus}
+                </span>
+              )}
+              {filterCategory !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Category: {filterCategory}
+                </span>
+              )}
+              {filterPriority !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Priority: {filterPriority}
+                </span>
+              )}
+              {dateFilter !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Date: {dateFilter}
+                </span>
+              )}
+              {searchQuery && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Query: &quot;{searchQuery}&quot;
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={clearAllFilters}
+              className="text-[#D4A24C] hover:underline font-semibold text-[11px] cursor-pointer"
+            >
+              Reset / Clear All Filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 3. Submitted Issues Feed: Grid or Table View */}
-      {loading ? (
-        <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0B1A2C] rounded-2xl border border-[#22405E]">
-          Loading submitted complaints...
-        </div>
-      ) : filteredIssues.length === 0 ? (
-        <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0B1A2C] rounded-2xl border border-[#22405E] space-y-3">
-          <div className="w-12 h-12 rounded-full bg-[#142B45] text-[#D4A24C] flex items-center justify-center mx-auto">
-            <FileText className="w-6 h-6" />
+      <div className="space-y-4">
+        {loading ? (
+          <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0E1724]/75 rounded-2xl border border-[#223348]">
+            Loading submitted complaints...
           </div>
-          <p className="text-base text-[#F5EFE0] font-semibold">No complaints found for the selected filter</p>
-          <p className="text-xs text-[#8E9CAE]">
-            Click "+ Add Complaint / Requirement" to log a new issue from your assigned area.
-          </p>
-        </div>
-      ) : viewMode === "GRID" ? (
-        /* GRID VIEW */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredIssues.map((issue) => (
-            <div
-              key={issue.id}
-              onClick={() => setSelectedIssue(issue)}
-              className="p-5 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80 hover:border-[#D4A24C]/60 hover:bg-[#071322]/65 transition-all space-y-3.5 cursor-pointer shadow-lg group"
-            >
-              {/* Card Header */}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-mono text-[#D4A24C] font-semibold">
-                  #{issue.id}
-                </span>
-
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/25">
-                    {issue.category}
-                  </span>
-                  {issue.department && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#071322] text-[#8E9CAE] border border-[#22405E]">
-                      {issue.department.split("(")[0]}
-                    </span>
-                  )}
-                  <span
-                    className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                      issue.priority === "URGENT" || issue.priority === "HIGH"
-                        ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
-                        : "bg-[#071322] text-[#B9AF95] border border-[#22405E]"
-                    }`}
-                  >
-                    {issue.priority}
-                  </span>
-                </div>
-              </div>
-
-              {/* Title & Description */}
-              <div>
-                <h3 className="font-display text-base font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
-                  {issue.title}
-                </h3>
-                <p className="text-xs text-[#A69B80] line-clamp-2 mt-1 leading-relaxed">
-                  {issue.description}
-                </p>
-              </div>
-
-              {/* Location & Reporter Details */}
-              <div className="pt-2.5 border-t border-[#22405E]/60 space-y-1 text-xs">
-                <div className="flex items-center justify-between text-[#8E9CAE]">
-                  <span className="flex items-center gap-1.5 text-[#F5EFE0] truncate">
-                    <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                    <strong>{issue.mandalName}</strong> · {issue.villageName}
-                  </span>
-                  <span className="text-[11px] text-[#B9AF95] font-mono shrink-0">
-                    {issue.reportedDate}
-                  </span>
-                </div>
-
-                {issue.placeName && (
-                  <p className="text-[11px] text-[#8E9CAE] pl-5 truncate">
-                    📍 Landmark: {issue.placeName}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between text-[11px] text-[#CBD5E1] pt-1 border-t border-[#22405E]/40">
-                  <span>
-                    Created: <strong className="font-mono text-[#F5EFE0]">{issue.reportedDate}</strong>
-                  </span>
-                  <span>
-                    Complete:{" "}
-                    <strong className="font-mono text-emerald-400">
-                      {issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}
-                    </strong>
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] pt-1">
-                  <span>
-                    Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
-                    {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
-                  </span>
-                  {issue.attachments && issue.attachments.length > 0 && (
-                    <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono">
-                      <Paperclip className="w-3 h-3" />
-                      {issue.attachments.length} {issue.attachments.length === 1 ? "Proof" : "Proofs"}
-                    </span>
-                  )}
-                </div>
-              </div>
+        ) : sortedAndFilteredIssues.length === 0 ? (
+          <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0E1724]/75 rounded-2xl border border-[#223348] space-y-3">
+            <div className="w-12 h-12 rounded-full bg-[#131E2D] text-[#D4A24C] flex items-center justify-center mx-auto">
+              <FileText className="w-6 h-6" />
             </div>
-          ))}
-        </div>
-      ) : (
-        /* TABLE VIEW */
-        <div className="rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80 overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-[#071322] border-b border-[#22405E] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
-                  <th className="py-3.5 px-4 font-mono">ID</th>
-                  <th className="py-3.5 px-4">Issue Title & Scope</th>
-                  <th className="py-3.5 px-4">Category / Dept</th>
-                  <th className="py-3.5 px-4">Mandal / Town</th>
-                  <th className="py-3.5 px-4">Village / Ward</th>
-                  <th className="py-3.5 px-4">Reported By</th>
-                  <th className="py-3.5 px-4">Created Date</th>
-                  <th className="py-3.5 px-4">Complete Date</th>
-                  <th className="py-3.5 px-4 text-center">Proofs</th>
-                  <th className="py-3.5 px-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#22405E]/50">
-                {filteredIssues.map((issue) => (
-                  <tr
-                    key={issue.id}
-                    onClick={() => setSelectedIssue(issue)}
-                    className="hover:bg-[#122A44]/70 transition-colors cursor-pointer group"
-                  >
-                    <td className="py-3 px-4 font-mono font-bold text-[#D4A24C] whitespace-nowrap">
-                      #{issue.id}
-                    </td>
-                    <td className="py-3 px-4 max-w-[240px]">
-                      <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
-                        {issue.title}
-                      </div>
-                      <div className="text-[11px] text-[#8E9CAE] truncate mt-0.5">
-                        {issue.description}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
-                      {issue.department && (
-                        <div className="text-[10.5px] text-[#8E9CAE]">{issue.department.split("(")[0]}</div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-[#F5EFE0]">
-                      {issue.mandalName}
-                    </td>
-                    <td className="py-3 px-4 max-w-[160px]">
-                      <div className="text-[#F5EFE0] truncate font-medium">{issue.villageName}</div>
-                      {issue.placeName && (
-                        <div className="text-[10.5px] text-[#8E9CAE] truncate">📍 {issue.placeName}</div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
-                      <div className="text-[10.5px] text-[#D4A24C]">
-                        {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
-                        {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[#CBD5E1] whitespace-nowrap">
-                      {issue.reportedDate}
-                    </td>
-                    <td className="py-3 px-4 font-mono whitespace-nowrap">
-                      {issue.completedDate ? (
-                        <span className="text-emerald-400 font-semibold">{issue.completedDate}</span>
-                      ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
-                        <span className="text-emerald-400 font-semibold">{issue.updatedDate || issue.reportedDate}</span>
-                      ) : (
-                        <span className="text-amber-400/90 text-[11px] font-sans">In Progress</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {issue.attachments && issue.attachments.length > 0 ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30 text-[10.5px] font-mono">
-                          <Paperclip className="w-3 h-3" />
-                          {issue.attachments.length}
-                        </span>
-                      ) : (
-                        <span className="text-[#5F6875]">—</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedIssue(issue);
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p className="text-base text-[#F5EFE0] font-semibold">No complaints found matching current filters</p>
+            <p className="text-xs text-[#8E9CAE]">
+              Try clearing filters or click &quot;+ Add Complaint / Requirement&quot; to log a new issue.
+            </p>
+            <button
+              onClick={clearAllFilters}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs cursor-pointer shadow-md"
+            >
+              Reset Filters
+            </button>
           </div>
-        </div>
-      )}
+        ) : viewMode === "GRID" ? (
+          /* GRID VIEW */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {paginatedIssues.map((issue) => (
+              <div
+                key={issue.id}
+                onClick={() => setSelectedIssue(issue)}
+                className="p-5 rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 hover:border-[#D4A24C]/60 hover:bg-[#131E2D]/85 transition-all space-y-3.5 cursor-pointer shadow-lg group"
+              >
+                {/* Card Header */}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-mono text-[#D4A24C] font-semibold">
+                    #{issue.id}
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
+                      {issue.category}
+                    </span>
+                    {issue.department && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#0B131E] text-[#8E9CAE] border border-[#223348]">
+                        {issue.department.split("(")[0]}
+                      </span>
+                    )}
+                    <span
+                      className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                        issue.priority === "URGENT" || issue.priority === "HIGH"
+                          ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
+                          : "bg-[#0B131E] text-[#B9AF95] border border-[#223348]"
+                      }`}
+                    >
+                      {issue.priority}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Title & Description */}
+                <div>
+                  <h3 className="font-display text-base font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
+                    {issue.title}
+                  </h3>
+                  <p className="text-xs text-[#A69B80] line-clamp-2 mt-1 leading-relaxed">
+                    {issue.description}
+                  </p>
+                </div>
+
+                {/* Location & Reporter Details */}
+                <div className="pt-2.5 border-t border-[#223348]/60 space-y-1 text-xs">
+                  <div className="flex items-center justify-between text-[#8E9CAE]">
+                    <span className="flex items-center gap-1.5 text-[#F5EFE0] truncate">
+                      <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+                      <strong>{issue.mandalName}</strong> · {issue.villageName}
+                    </span>
+                    <span className="text-[11px] text-[#B9AF95] font-mono shrink-0">
+                      {issue.reportedDate}
+                    </span>
+                  </div>
+
+                  {issue.placeName && (
+                    <p className="text-[11px] text-[#8E9CAE] pl-5 truncate">
+                      📍 Landmark: {issue.placeName}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] text-[#CBD5E1] pt-1 border-t border-[#223348]/40">
+                    <span>
+                      Created: <strong className="font-mono text-[#F5EFE0]">{issue.reportedDate}</strong>
+                    </span>
+                    <span>
+                      Complete:{" "}
+                      <strong className="font-mono text-emerald-400">
+                        {issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}
+                      </strong>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] pt-1">
+                    <span>
+                      Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
+                      {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
+                    </span>
+                    {issue.attachments && issue.attachments.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono">
+                        <Paperclip className="w-3 h-3" />
+                        {issue.attachments.length} {issue.attachments.length === 1 ? "Proof" : "Proofs"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* TABLE VIEW */
+          <div className="rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
+                    <th className="py-3.5 px-4 font-mono">ID</th>
+                    <th className="py-3.5 px-4">Issue Title & Scope</th>
+                    <th className="py-3.5 px-4">Category / Dept</th>
+                    <th className="py-3.5 px-4">Mandal / Town</th>
+                    <th className="py-3.5 px-4">Village / Ward</th>
+                    <th className="py-3.5 px-4">Reported By</th>
+                    <th className="py-3.5 px-4">Created Date</th>
+                    <th className="py-3.5 px-4">Complete Date</th>
+                    <th className="py-3.5 px-4 text-center">Proofs</th>
+                    <th className="py-3.5 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#223348]/50">
+                  {paginatedIssues.map((issue) => (
+                    <tr
+                      key={issue.id}
+                      onClick={() => setSelectedIssue(issue)}
+                      className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
+                    >
+                      <td className="py-3 px-4 font-mono font-bold text-[#D4A24C] whitespace-nowrap">
+                        #{issue.id}
+                      </td>
+                      <td className="py-3 px-4 max-w-[240px]">
+                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
+                          {issue.title}
+                        </div>
+                        <div className="text-[11px] text-[#8E9CAE] truncate mt-0.5">
+                          {issue.description}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
+                        {issue.department && (
+                          <div className="text-[10.5px] text-[#8E9CAE]">{issue.department.split("(")[0]}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap text-[#F5EFE0]">
+                        {issue.mandalName}
+                      </td>
+                      <td className="py-3 px-4 max-w-[160px]">
+                        <div className="text-[#F5EFE0] truncate font-medium">{issue.villageName}</div>
+                        {issue.placeName && (
+                          <div className="text-[10.5px] text-[#8E9CAE] truncate">📍 {issue.placeName}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
+                        <div className="text-[10.5px] text-[#D4A24C]">
+                          {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                          {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-mono text-[#CBD5E1] whitespace-nowrap">
+                        {issue.reportedDate}
+                      </td>
+                      <td className="py-3 px-4 font-mono whitespace-nowrap">
+                        {issue.completedDate ? (
+                          <span className="text-emerald-400 font-semibold">{issue.completedDate}</span>
+                        ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
+                          <span className="text-emerald-400 font-semibold">{issue.updatedDate || issue.reportedDate}</span>
+                        ) : (
+                          <span className="text-amber-400/90 text-[11px] font-sans">In Progress</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        {issue.attachments && issue.attachments.length > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[10.5px] font-mono">
+                            <Paperclip className="w-3 h-3" />
+                            {issue.attachments.length}
+                          </span>
+                        ) : (
+                          <span className="text-[#5F6875]">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedIssue(issue);
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Global Pagination Bar */}
+        {sortedAndFilteredIssues.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:px-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] text-xs">
+            <div className="text-[#8E9CAE] font-mono text-center sm:text-left">
+              Showing{" "}
+              <strong className="text-[#F5EFE0]">
+                {(currentPage - 1) * pageSize + 1}
+              </strong>{" "}
+              to{" "}
+              <strong className="text-[#F5EFE0]">
+                {Math.min(currentPage * pageSize, sortedAndFilteredIssues.length)}
+              </strong>{" "}
+              of{" "}
+              <strong className="text-[#D4A24C]">
+                {sortedAndFilteredIssues.length}
+              </strong>{" "}
+              records
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {/* First Page */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                title="First Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Prev Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                title="Previous Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Page Number Pills */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => {
+                    const prev = arr[idx - 1];
+                    return (
+                      <React.Fragment key={p}>
+                        {prev && p - prev > 1 && (
+                          <span className="px-1 text-[#8E9CAE]">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-7 h-7 rounded-lg font-mono font-bold text-xs transition-all cursor-pointer ${
+                            currentPage === p
+                              ? "bg-[#D4A24C] text-[#0B131E] shadow-sm"
+                              : "bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+              </div>
+
+              {/* Next Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                title="Next Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Last Page */}
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                title="Last Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
       {isAddModalOpen && (
@@ -1289,17 +1614,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </form>
           </div>
         </div>
-      )}
-
-      {/* Selected Issue Detail & Update Modal */}
-      {selectedIssue && (
-        <IssueDetailModal
-          issue={selectedIssue}
-          currentUser={currentUser}
-          isOpen={!!selectedIssue}
-          onClose={() => setSelectedIssue(null)}
-          onIssueUpdated={loadVolunteerData}
-        />
       )}
     </div>
   );
