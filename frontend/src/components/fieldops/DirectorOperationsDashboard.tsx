@@ -61,7 +61,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
   // Filters & Sorting State
   const [activeTab, setActiveTab] = useState<"ALL" | "OVERDUE" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANT_BE_DONE">("ALL");
-  const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
   const [filterVolunteerId, setFilterVolunteerId] = useState<string>("ALL");
@@ -70,6 +70,21 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"NEWEST" | "OLDEST" | "DUE_DATE" | "PRIORITY" | "STATUS" | "TITLE">("NEWEST");
+
+  // Multi-select Category Handlers
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
+
+  const selectAllCategories = () => {
+    setSelectedCategories([...availableCategories]);
+  };
+
+  const clearCategories = () => {
+    setSelectedCategories([]);
+  };
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -84,7 +99,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     setCurrentPage(1);
   }, [
     activeTab,
-    filterCategory,
+    selectedCategories,
     filterPriority,
     filterReporterType,
     filterVolunteerId,
@@ -340,8 +355,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       if (activeTab === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
       if (activeTab === "COMPLETED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
 
-      // Dropdown Filters
-      if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
+      // Dropdown / Multi-Select Category Filter
+      if (selectedCategories.length > 0 && !selectedCategories.includes(item.category)) return false;
       if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
       if (filterReporterType !== "ALL" && item.reporterType !== filterReporterType) return false;
       if (filterVolunteerId !== "ALL" && item.assignedVolunteerId !== filterVolunteerId) return false;
@@ -405,7 +420,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   }, [
     allOperationsList,
     activeTab,
-    filterCategory,
+    selectedCategories,
     filterPriority,
     filterReporterType,
     filterVolunteerId,
@@ -425,7 +440,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
   const hasActiveFilters =
     activeTab !== "ALL" ||
-    filterCategory !== "ALL" ||
+    selectedCategories.length > 0 ||
     filterPriority !== "ALL" ||
     filterReporterType !== "ALL" ||
     filterVolunteerId !== "ALL" ||
@@ -437,7 +452,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
   const clearAllFilters = () => {
     setActiveTab("ALL");
-    setFilterCategory("ALL");
+    setSelectedCategories([]);
     setFilterPriority("ALL");
     setFilterReporterType("ALL");
     setFilterVolunteerId("ALL");
@@ -845,35 +860,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             </div>
           </div>
         </div>
-
-        {/* 3. Dept / Category Bottom Strip (From User Sketch) */}
-        <div className="pt-2 border-t border-[#223348]/70 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
-              Dept / Category Breakdown
-            </span>
-            <span className="text-[10.5px] text-[#8E9CAE]">Click any category to filter grievances</span>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-            {analyticsMatrix.categoryCounts.map((c) => (
-              <button
-                key={c.category}
-                onClick={() => setFilterCategory(filterCategory === c.category ? "ALL" : c.category)}
-                className={`p-2 px-3 rounded-xl border transition-all cursor-pointer shrink-0 flex items-center gap-2 ${
-                  filterCategory === c.category
-                    ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40 shadow-sm"
-                    : "bg-[#0B131E] border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/50 hover:bg-[#131E2D]/60"
-                }`}
-              >
-                <span className="text-[11px] font-medium truncate max-w-[140px]">{c.category}</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] font-mono font-bold text-[10.5px] border border-[#D4A24C]/30">
-                  {c.count}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Volunteer Force Management Strip */}
@@ -1024,6 +1010,84 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         )}
       </div>
 
+      {/* 3. Dedicated Dept / Category Breakdown Section (Directly Below Volunteers - 5 to 6 in a row with wrap & multiselect) */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#223348]/70 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase font-bold text-[#D4A24C] tracking-wider flex items-center gap-1.5">
+              <Layers className="w-4 h-4 text-[#D4A24C]" />
+              Dept / Category Breakdown
+            </span>
+            {selectedCategories.length > 0 ? (
+              <span className="px-2.5 py-0.5 rounded-full bg-[#D4A24C] text-[#0B131E] text-[11px] font-bold shadow-sm">
+                {selectedCategories.length} Selected
+              </span>
+            ) : (
+              <span className="text-[11px] text-[#8E9CAE]">
+                All {analyticsMatrix.categoryCounts.length} departments active
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="text-[#8E9CAE] text-[11px] hidden sm:inline">Multi-select enabled:</span>
+            {selectedCategories.length > 0 ? (
+              <button
+                onClick={clearCategories}
+                className="px-2.5 py-1 rounded-lg bg-[#D4A24C]/20 hover:bg-[#D4A24C]/30 text-[#D4A24C] font-semibold text-[11px] transition-colors cursor-pointer"
+              >
+                Clear Category Filters ({selectedCategories.length})
+              </button>
+            ) : (
+              <button
+                onClick={selectAllCategories}
+                className="px-2.5 py-1 rounded-lg bg-[#0B131E] border border-[#223348] hover:border-[#D4A24C]/50 text-[#CBD5E1] hover:text-[#D4A24C] text-[11px] transition-colors cursor-pointer"
+              >
+                Select All
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 5-6 items per row responsive grid with multi-select pill cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
+          {analyticsMatrix.categoryCounts.map((c) => {
+            const isSelected = selectedCategories.includes(c.category);
+            return (
+              <button
+                key={c.category}
+                onClick={() => toggleCategory(c.category)}
+                className={`p-2.5 px-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-1.5 min-w-0 ${
+                  isSelected
+                    ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-2 ring-[#D4A24C]/60 shadow-md"
+                    : "bg-[#0B131E] border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/50 hover:bg-[#131E2D]/60"
+                }`}
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                      isSelected ? "bg-[#D4A24C] ring-2 ring-[#D4A24C]/40" : "bg-[#223348]"
+                    }`}
+                  />
+                  <span className="text-[11.5px] font-medium truncate" title={c.category}>
+                    {c.category}
+                  </span>
+                </div>
+                <span
+                  className={`px-1.5 py-0.5 rounded-md font-mono font-bold text-[11px] shrink-0 ${
+                    isSelected
+                      ? "bg-[#D4A24C] text-[#0B131E]"
+                      : "bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30"
+                  }`}
+                >
+                  {c.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Filter & Sort Master Command Strip */}
       <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
         {/* Row 1: Search, Sort & View Mode */}
@@ -1110,8 +1174,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
 
-        {/* Row 2: Granular Filter Dropdowns (Status, Category, Priority, Gender, Age, Mandal, Assignee) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 pt-1 text-xs">
+        {/* Row 2: Granular Filter Dropdowns (Status, Priority, Gender, Age, Mandal, Assignee) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1 text-xs">
           {/* Status Filter */}
           <div>
             <select
@@ -1125,22 +1189,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <option value="COMPLETED">Status: 🟢 Resolved</option>
               <option value="CANT_BE_DONE">Status: 🔴 Can't be done</option>
               <option value="OVERDUE">Status: ⚠️ Overdue</option>
-            </select>
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Category: All</option>
-              {availableCategories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
             </select>
           </div>
 
@@ -1230,9 +1278,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   Status: {activeTab}
                 </span>
               )}
-              {filterCategory !== "ALL" && (
+              {selectedCategories.length > 0 && (
                 <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Category: {filterCategory}
+                  Category: {selectedCategories.length === 1 ? selectedCategories[0] : `${selectedCategories.length} Selected`}
                 </span>
               )}
               {filterPriority !== "ALL" && (
