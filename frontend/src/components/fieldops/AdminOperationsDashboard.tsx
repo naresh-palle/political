@@ -153,7 +153,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       {/* Executive Command Header */}
       {isPlatformSuperAdmin ? (
         /* LEVEL 1: SUPER ADMIN MASTER BANNER */
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#D4A24C]/40 shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
           <div className="flex items-center gap-4">
             <div
               className="relative group cursor-pointer flex-shrink-0"
@@ -163,7 +163,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               <img
                 src={currentUser.avatar}
                 alt={currentUser.name}
-                className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] group-hover:brightness-90 transition-all"
+                className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg group-hover:brightness-90 transition-all"
               />
               <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-semibold transition-opacity">
                 <Camera className="w-3.5 h-3.5 text-[#D4A24C]" />
@@ -171,7 +171,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                   Level 1: Platform Super Admin
                 </span>
                 <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "National Command Center"}</span>
@@ -191,7 +191,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               <p className="text-xs text-[#8E9CAE] mt-0.5 flex flex-wrap items-center gap-x-3">
                 <span>✉️ {currentUser.email}</span>
                 <span>📞 {currentUser.phone || "+91 98850 12340"}</span>
-                <span>· {directors.length} Directors · {volunteers.length} Field Volunteers</span>
+                <span>· {directors.length} Managers · {volunteers.length} Field Volunteers</span>
               </p>
             </div>
           </div>
@@ -202,8 +202,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("POLITICAL_ADMINS")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "POLITICAL_ADMINS"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
               }`}
             >
               Constituency Admins (MLAs)
@@ -212,8 +212,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("DRILLDOWN")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "DRILLDOWN"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
               }`}
             >
               Geographic Tree
@@ -222,8 +222,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("ALL_ISSUES")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "ALL_ISSUES"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
               }`}
             >
               Master Issues ({totalIssues})
@@ -232,18 +232,18 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("DIRECTORS")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "DIRECTORS"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
               }`}
             >
-              Directors ({directors.length})
+              Managers ({directors.length})
             </button>
             <button
               onClick={() => setViewMode("VOLUNTEERS")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "VOLUNTEERS"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md"
-                  : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
+                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
               }`}
             >
               Volunteers ({volunteers.length})
@@ -251,8 +251,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       ) : (
-        /* LEVEL 2: FULL MLA CONSTITUENCY COMMAND PROFILE CARD */
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#10243C] to-[#0A1728] border border-[#D4A24C]/40 shadow-2xl space-y-5">
+        /* LEVEL 2: POLITICAL ADMIN (MLA) MASTER BANNER */
+        <div className="p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
               <div
@@ -280,45 +280,42 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     LEVEL 2: POLITICAL ADMIN (MLA)
                   </span>
                   {currentUser.partyName && (
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1.5">
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1.5">
                       <span>{currentUser.partyEmoji}</span>
                       <span>{currentUser.partyName} ({currentUser.partyAbbr})</span>
                     </span>
                   )}
-                  <span className="text-xs font-medium text-[#8E9CAE] bg-[#071322] px-2.5 py-0.5 rounded-full border border-[#22405E]">
+                  <span className="text-xs font-medium text-[#8E9CAE] bg-[#071322]/70 px-2.5 py-0.5 rounded-full border border-[#22405E]">
                     {currentUser.assignedConstituency || "Banaganapalle AC (AC-140)"}
                   </span>
                   <button
                     type="button"
                     onClick={() => setIsEditProfileOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] hover:text-[#F5EFE0] border border-[#D4A24C]/40 text-xs font-semibold transition-all cursor-pointer shadow-sm"
-                    title="Edit Profile Details (Photo, Email, Mobile Hotline)"
+                    className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-xs font-semibold transition-all cursor-pointer"
+                    title="Edit Profile Details"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>Edit Profile</span>
                   </button>
                 </div>
 
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#F5EFE0] tracking-tight">
+                <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal">
                   {currentUser.name}
                 </h1>
 
-                <p className="text-xs text-[#D8CFB8] flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span>🏛️ <strong>Designation:</strong> {currentUser.designation || "Minister for Roads & Buildings and Infrastructure | MLA Banaganapalle"}</span>
-                  <span>✉️ <strong>Official Email:</strong> {currentUser.email}</span>
-                  <span>📞 <strong>Office Hotline:</strong> {currentUser.phone || "+91 98850 44001"}</span>
-                  <span>📍 <strong>Camp Office:</strong> MLA Camp Office, RTC Bus Stand Road, Banaganapalle Town, AP</span>
+                <p className="text-xs sm:text-sm text-[#D8CFB8] leading-relaxed">
+                  {currentUser.designation || "Minister for Roads & Buildings and Infrastructure & Investments | MLA Banaganapalle"}
                 </p>
 
-                {/* Key Ministerial / MLA Focus Portfolios */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold mr-1">
-                    Ministerial & Constituency Portfolios:
+                {/* Portfolios Strip */}
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <span className="text-[10.5px] text-[#8E9CAE] font-semibold uppercase tracking-wider">
+                    Portfolios:
                   </span>
-                  {["Roads & Buildings Infrastructure (R&B)", "Drinking Water & Rural Water Supply", "Yaganti & Owk Tourism & Irrigation", "5 Mandals & 2 Towns Ground Governance"].map((dept) => (
+                  {["Roads & Buildings", "Infrastructure & Investments", "AP State Assembly"].map((dept) => (
                     <span
                       key={dept}
-                      className="text-[10.5px] px-2.5 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/20 font-medium"
+                      className="text-[10.5px] px-2.5 py-0.5 rounded-full bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/20 font-medium"
                     >
                       {dept}
                     </span>
@@ -334,7 +331,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                   viewMode === "DRILLDOWN"
                     ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
                 }`}
               >
                 Constituency Tree
@@ -344,7 +341,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                   viewMode === "ALL_ISSUES"
                     ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
                 }`}
               >
                 Constituency Issues ({totalIssues})
@@ -354,17 +351,17 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                   viewMode === "DIRECTORS"
                     ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
                 }`}
               >
-                My Directors ({directors.length})
+                My Managers ({directors.length})
               </button>
               <button
                 onClick={() => setViewMode("VOLUNTEERS")}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                   viewMode === "VOLUNTEERS"
                     ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
                 }`}
               >
                 Squad Volunteers ({volunteers.length})
@@ -376,32 +373,32 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* KPI Overview Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-4 rounded-xl bg-[#0B1A2C] border border-[#22405E]">
-          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block">Total Issues</span>
+        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Issues</span>
           <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-1">{totalIssues}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">{mandals.length} Mandals covered</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0B1A2C] border border-[#22405E]">
-          <span className="text-[10px] uppercase tracking-wider text-blue-300 block">Pending Intake</span>
+        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+          <span className="text-[10px] uppercase tracking-wider text-blue-300 block font-semibold">Pending Intake</span>
           <div className="font-display text-2xl font-bold text-blue-400 mt-1">{pendingCount}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Awaiting action</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0B1A2C] border border-[#22405E]">
-          <span className="text-[10px] uppercase tracking-wider text-amber-300 block">In Progress</span>
+        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+          <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">In Progress</span>
           <div className="font-display text-2xl font-bold text-amber-400 mt-1">{inProgressCount}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Field work active</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#0B1A2C] border border-[#22405E]">
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block">Verified Resolved</span>
+        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Verified Resolved</span>
           <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{completedCount}</div>
           <span className="text-[10px] text-emerald-400 mt-0.5 block">With proof photos</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 col-span-2 sm:col-span-1">
-          <span className="text-[10px] uppercase tracking-wider text-rose-400 block flex items-center gap-1">
+        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40 col-span-2 sm:col-span-1">
+          <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" /> Overdue Work
           </span>
           <div className="font-display text-2xl font-bold text-rose-400 mt-1">{overdueCount}</div>

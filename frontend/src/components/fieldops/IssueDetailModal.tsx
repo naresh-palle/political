@@ -302,12 +302,22 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 )}
 
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block">
-                    Reported Date
+                  <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">
+                    Created Date
                   </span>
-                  <span className="text-[12px] text-[#E2DCBE] flex items-center gap-1.5 mt-0.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#8E9CAE]" />
+                  <span className="text-[12px] text-[#E2DCBE] flex items-center gap-1.5 mt-0.5 font-mono">
+                    <Calendar className="w-3.5 h-3.5 text-[#D4A24C]" />
                     {issue.reportedDate}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">
+                    Complete Date
+                  </span>
+                  <span className="text-[12px] text-emerald-400 flex items-center gap-1.5 mt-0.5 font-mono">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    {issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}
                   </span>
                 </div>
               </div>

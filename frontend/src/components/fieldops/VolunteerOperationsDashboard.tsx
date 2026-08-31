@@ -454,8 +454,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
             <User className="w-3.5 h-3.5 text-[#D4A24C]" />
-            <span>Supervising Director:</span>
-            <strong className="text-[#D4A24C]">{currentUser.directorName || "Demo Director"}</strong>
+            <span>Supervising Manager:</span>
+            <strong className="text-[#D4A24C]">{currentUser.directorName?.replace("Director", "Manager") || "Demo Manager"}</strong>
           </div>
         </div>
       </div>
@@ -660,6 +660,18 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   </p>
                 )}
 
+                <div className="flex items-center justify-between text-[11px] text-[#CBD5E1] pt-1 border-t border-[#22405E]/40">
+                  <span>
+                    Created: <strong className="font-mono text-[#F5EFE0]">{issue.reportedDate}</strong>
+                  </span>
+                  <span>
+                    Complete:{" "}
+                    <strong className="font-mono text-emerald-400">
+                      {issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}
+                    </strong>
+                  </span>
+                </div>
+
                 <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] pt-1">
                   <span>
                     Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
@@ -689,7 +701,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   <th className="py-3.5 px-4">Mandal / Town</th>
                   <th className="py-3.5 px-4">Village / Ward</th>
                   <th className="py-3.5 px-4">Reported By</th>
-                  <th className="py-3.5 px-4">Date</th>
+                  <th className="py-3.5 px-4">Created Date</th>
+                  <th className="py-3.5 px-4">Complete Date</th>
                   <th className="py-3.5 px-4 text-center">Proofs</th>
                   <th className="py-3.5 px-4 text-right">Action</th>
                 </tr>
@@ -734,8 +747,17 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
                       </div>
                     </td>
-                    <td className="py-3 px-4 font-mono text-[#B9AF95] whitespace-nowrap">
+                    <td className="py-3 px-4 font-mono text-[#CBD5E1] whitespace-nowrap">
                       {issue.reportedDate}
+                    </td>
+                    <td className="py-3 px-4 font-mono whitespace-nowrap">
+                      {issue.completedDate ? (
+                        <span className="text-emerald-400 font-semibold">{issue.completedDate}</span>
+                      ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
+                        <span className="text-emerald-400 font-semibold">{issue.updatedDate || issue.reportedDate}</span>
+                      ) : (
+                        <span className="text-amber-400/90 text-[11px] font-sans">In Progress</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
                       {issue.attachments && issue.attachments.length > 0 ? (

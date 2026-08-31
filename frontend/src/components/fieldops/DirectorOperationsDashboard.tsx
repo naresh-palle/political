@@ -26,7 +26,11 @@ import {
   Phone,
   UserCheck,
   Flame,
-  FileCheck
+  FileCheck,
+  LayoutGrid,
+  List,
+  Eye,
+  Paperclip
 } from "lucide-react";
 
 interface DirectorDashboardProps {
@@ -41,6 +45,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [mandals, setMandals] = useState<MandalInfo[]>([]);
   const [villages, setVillages] = useState<VillageInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
   // Selected Issue for Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
@@ -146,20 +151,20 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
-      {/* Director Command Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0F2338] via-[#122A44] to-[#0B1A2C] border border-[#D4A24C]/40 shadow-xl">
+      {/* Manager Command Strip */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
         <div className="flex items-center gap-4">
           <img
             src={currentUser.avatar}
             alt={currentUser.name}
-            className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C]"
+            className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg"
           />
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
-                Volunteer Director
+              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                Campaign Manager
               </span>
-              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency}</span>
+              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "Constituency Field Command"}</span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
               {currentUser.name}
@@ -170,11 +175,17 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 rounded-xl bg-[#071322] border border-[#22405E] text-right">
-            <span className="text-[10px] uppercase text-[#8E9CAE] block">Cadre Strength</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="px-4 py-2 rounded-xl bg-[#071322]/60 border border-[#22405E] text-right">
+            <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Cadre Strength</span>
             <span className="font-display text-lg font-bold text-[#D4A24C]">
               {volunteers.length} Active Agents
+            </span>
+          </div>
+          <div className="px-4 py-2 rounded-xl bg-[#071322]/60 border border-[#22405E] text-right">
+            <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Resolution Rate</span>
+            <span className="font-display text-lg font-bold text-emerald-400">
+              {totalIssues > 0 ? Math.round((completedIssues / totalIssues) * 100) : 0}%
             </span>
           </div>
         </div>
@@ -182,10 +193,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
       {/* "No Work Done" Inactivity Alert Banner */}
       {inactiveVolunteerWarnings.length > 0 && (
-        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/50 space-y-2">
+        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-md border border-rose-500/50 space-y-2">
           <div className="flex items-center gap-2 text-rose-400 font-semibold text-xs uppercase tracking-wider">
             <AlertTriangle className="w-4 h-4 text-rose-400 animate-pulse" />
-            <span>Field Work Alert: Overdue Issues Require Director Intervention</span>
+            <span>Field Work Alert: Overdue Issues Require Manager Intervention</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
             {inactiveVolunteerWarnings.map((w, idx) => (
@@ -213,61 +224,61 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div
           onClick={() => setActiveTab("ALL")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+          className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
             activeTab === "ALL"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
+              ? "bg-[#122A44]/80 border-[#D4A24C] shadow-md"
+              : "bg-[#071322]/45 border-[#22405E]/80 hover:border-[#D4A24C]/40"
           }`}
         >
-          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block">Total Issues</span>
+          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Issues</span>
           <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-1">{totalIssues}</div>
         </div>
 
         <div
           onClick={() => setActiveTab("PENDING")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+          className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
             activeTab === "PENDING"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
+              ? "bg-[#122A44]/80 border-[#D4A24C] shadow-md"
+              : "bg-[#071322]/45 border-[#22405E]/80 hover:border-[#D4A24C]/40"
           }`}
         >
-          <span className="text-[10px] uppercase tracking-wider text-blue-300 block">Pending Intake</span>
+          <span className="text-[10px] uppercase tracking-wider text-blue-300 block font-semibold">Pending Intake</span>
           <div className="font-display text-2xl font-bold text-blue-400 mt-1">{pendingIssues}</div>
         </div>
 
         <div
           onClick={() => setActiveTab("IN_PROGRESS")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+          className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
             activeTab === "IN_PROGRESS"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
+              ? "bg-[#122A44]/80 border-[#D4A24C] shadow-md"
+              : "bg-[#071322]/45 border-[#22405E]/80 hover:border-[#D4A24C]/40"
           }`}
         >
-          <span className="text-[10px] uppercase tracking-wider text-amber-300 block">In Progress</span>
+          <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">In Progress</span>
           <div className="font-display text-2xl font-bold text-amber-400 mt-1">{inProgressIssues}</div>
         </div>
 
         <div
           onClick={() => setActiveTab("COMPLETED")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+          className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
             activeTab === "COMPLETED"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
+              ? "bg-[#122A44]/80 border-[#D4A24C] shadow-md"
+              : "bg-[#071322]/45 border-[#22405E]/80 hover:border-[#D4A24C]/40"
           }`}
         >
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block">Verified Completed</span>
+          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Verified Completed</span>
           <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{completedIssues}</div>
         </div>
 
         <div
           onClick={() => setActiveTab("OVERDUE")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer col-span-2 sm:col-span-1 ${
+          className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer col-span-2 sm:col-span-1 ${
             activeTab === "OVERDUE"
               ? "bg-rose-950/70 border-rose-500 shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-rose-500/40"
+              : "bg-[#071322]/45 border-[#22405E]/80 hover:border-rose-500/40"
           }`}
         >
-          <span className="text-[10px] uppercase tracking-wider text-rose-400 block flex items-center gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" /> Overdue Work
           </span>
           <div className="font-display text-2xl font-bold text-rose-400 mt-1">{overdueIssues}</div>
@@ -296,17 +307,17 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <div
                 key={vol.id}
                 onClick={() => setFilterVolunteerId(filterVolunteerId === vol.id ? "ALL" : vol.id)}
-                className={`p-4 rounded-xl border transition-all cursor-pointer space-y-3 ${
+                className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer space-y-3 ${
                   filterVolunteerId === vol.id
-                    ? "bg-[#122A44] border-[#D4A24C] ring-2 ring-[#D4A24C]/40"
-                    : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/50"
+                    ? "bg-[#122A44]/80 border-[#D4A24C] ring-2 ring-[#D4A24C]/40"
+                    : "bg-[#071322]/45 border-[#22405E]/80 hover:border-[#D4A24C]/50 hover:bg-[#071322]/65"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <img
                     src={vol.avatar}
                     alt={vol.name}
-                    className="w-10 h-10 rounded-xl object-cover border border-[#D4A24C]/40"
+                    className="w-10 h-10 rounded-xl object-cover border border-[#D4A24C]/40 shadow-sm"
                   />
                   <div className="min-w-0">
                     <h4 className="font-semibold text-[13px] text-[#F5EFE0] truncate">
@@ -318,17 +329,17 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#22405E] text-center text-[10px]">
-                  <div className="p-1 rounded bg-[#071322]">
-                    <span className="text-[#8E9CAE] block">Total</span>
+                <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#22405E]/60 text-center text-[10px]">
+                  <div className="p-1 rounded bg-[#071322]/60">
+                    <span className="text-[#8E9CAE] block font-semibold">Total</span>
                     <strong className="text-[#F5EFE0]">{volIssues.length}</strong>
                   </div>
-                  <div className="p-1 rounded bg-[#071322]">
-                    <span className="text-emerald-300 block">Done</span>
+                  <div className="p-1 rounded bg-[#071322]/60">
+                    <span className="text-emerald-300 block font-semibold">Done</span>
                     <strong className="text-emerald-400">{volCompleted}</strong>
                   </div>
-                  <div className="p-1 rounded bg-[#071322]">
-                    <span className="text-rose-300 block">Overdue</span>
+                  <div className="p-1 rounded bg-[#071322]/60">
+                    <span className="text-rose-300 block font-semibold">Overdue</span>
                     <strong className={volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}>
                       {volOverdue}
                     </strong>
@@ -340,8 +351,29 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
       </div>
 
+      {/* Integrated Grievance & Field Force Strip */}
+      <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/30 text-xs gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30 flex items-center justify-center font-bold shrink-0">
+            <FileCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="font-bold text-[#F5EFE0] text-sm block">Integrated Grievance & Ground Field Intake</span>
+            <span className="text-[11px] text-[#CBD5E1]">Cross-verifying all citizen grievances and ground volunteer resolutions across Banaganapalle AC</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1.5 rounded-lg bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30 font-bold text-xs">
+            {totalIssues} Field Issues
+          </span>
+          <span className="px-3 py-1.5 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-bold text-xs">
+            {completedIssues} Resolved
+          </span>
+        </div>
+      </div>
+
       {/* Filter & Search Strip */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
@@ -350,14 +382,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               placeholder="Search issues, volunteers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0F2338] border border-[#22405E] rounded-xl pl-9 pr-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+              className="w-full bg-[#071322]/70 border border-[#22405E] rounded-xl pl-9 pr-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
             />
           </div>
 
           <select
             value={filterVolunteerId}
             onChange={(e) => setFilterVolunteerId(e.target.value)}
-            className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+            className="bg-[#071322]/70 border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
           >
             <option value="ALL">All Volunteers</option>
             {volunteers.map((v) => (
@@ -370,7 +402,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           <select
             value={filterMandalId}
             onChange={(e) => setFilterMandalId(e.target.value)}
-            className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+            className="bg-[#071322]/70 border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
           >
             <option value="ALL">All Mandals</option>
             {mandals.map((m) => (
@@ -381,20 +413,50 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </select>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1">
-          {(["ALL", "OVERDUE", "PENDING", "IN_PROGRESS", "COMPLETED"] as const).map((tab) => (
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {/* Grid vs Table View Mode Switcher */}
+          <div className="flex items-center p-1 rounded-xl bg-[#071322]/70 border border-[#22405E] text-xs">
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wider transition-all cursor-pointer shrink-0 ${
-                activeTab === tab
-                  ? "bg-[#D4A24C] text-[#071322]"
-                  : "bg-[#0F2338] text-[#D8CFB8] hover:text-white border border-[#22405E]"
+              onClick={() => setViewMode("GRID")}
+              title="Grid Cards View"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "GRID"
+                  ? "bg-[#D4A24C] text-[#071322] font-bold shadow-sm"
+                  : "text-[#B9AF95] hover:text-white"
               }`}
             >
-              {tab}
+              <LayoutGrid className="w-4 h-4" />
+              <span className="text-[11px] hidden sm:inline">Grid</span>
             </button>
-          ))}
+            <button
+              onClick={() => setViewMode("TABLE")}
+              title="Data Table View"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "TABLE"
+                  ? "bg-[#D4A24C] text-[#071322] font-bold shadow-sm"
+                  : "text-[#B9AF95] hover:text-white"
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span className="text-[11px] hidden sm:inline">Table</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1">
+            {(["ALL", "OVERDUE", "PENDING", "IN_PROGRESS", "COMPLETED"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wider transition-all cursor-pointer shrink-0 ${
+                  activeTab === tab
+                    ? "bg-[#D4A24C] text-[#071322] font-bold"
+                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -403,17 +465,18 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         {loading ? (
           <div className="p-12 text-center text-sm text-[#8E9CAE]">Loading operational grid...</div>
         ) : filteredIssues.length === 0 ? (
-          <div className="p-12 rounded-2xl bg-[#0B1A2C] border border-[#22405E] text-center space-y-2">
+          <div className="p-12 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80 text-center space-y-2">
             <h3 className="text-sm font-semibold text-[#F5EFE0]">No field issues match criteria</h3>
             <p className="text-xs text-[#8E9CAE]">Try clearing active filters or searching for another term.</p>
           </div>
-        ) : (
+        ) : viewMode === "GRID" ? (
+          /* GRID VIEW */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredIssues.map((issue) => (
               <div
                 key={issue.id}
                 onClick={() => setSelectedIssue(issue)}
-                className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
+                className="p-5 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80 hover:border-[#D4A24C]/60 hover:bg-[#071322]/65 transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
@@ -459,16 +522,21 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
                 <div className="space-y-2 pt-3 border-t border-[#22405E]/60 text-[11px]">
                   <div className="flex items-center justify-between text-[#D8CFB8]">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 truncate">
                       <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
-                      {issue.villageName}
+                      <strong>{issue.mandalName}</strong> · {issue.villageName}
                     </span>
-                    <span className="text-[#8E9CAE]">AC-132</span>
+                    <span className="text-[#8E9CAE] font-mono text-[10px] shrink-0">AC-140</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[#CBD5E1]">
+                    <span>Created: <strong className="font-mono text-[#F5EFE0]">{issue.reportedDate}</strong></span>
+                    <span>Complete: <strong className="font-mono text-emerald-400">{issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}</strong></span>
                   </div>
 
                   <div className="flex items-center justify-between text-[#8E9CAE]">
                     <span>Agent: <strong className="text-[#F5EFE0]">{issue.assignedVolunteerName || "Unassigned"}</strong></span>
-                    <span>Due: {issue.dueDate || "Not set"}</span>
+                    <span>Due: {issue.dueDate || "Standard (3D)"}</span>
                   </div>
 
                   {issue.lastStatusRemarks && (
@@ -479,6 +547,105 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          /* TABLE VIEW */
+          <div className="rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80 overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#071322] border-b border-[#22405E] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
+                    <th className="py-3.5 px-4 font-mono">ID</th>
+                    <th className="py-3.5 px-4">Issue Title & Scope</th>
+                    <th className="py-3.5 px-4">Category / Dept</th>
+                    <th className="py-3.5 px-4">Mandal / Town</th>
+                    <th className="py-3.5 px-4">Village / Ward</th>
+                    <th className="py-3.5 px-4">Reported By</th>
+                    <th className="py-3.5 px-4">Created Date</th>
+                    <th className="py-3.5 px-4">Complete Date</th>
+                    <th className="py-3.5 px-4 text-center">Proofs</th>
+                    <th className="py-3.5 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#22405E]/50">
+                  {filteredIssues.map((issue) => (
+                    <tr
+                      key={issue.id}
+                      onClick={() => setSelectedIssue(issue)}
+                      className="hover:bg-[#122A44]/70 transition-colors cursor-pointer group"
+                    >
+                      <td className="py-3 px-4 font-mono font-bold text-[#D4A24C] whitespace-nowrap">
+                        #{issue.id}
+                      </td>
+                      <td className="py-3 px-4 max-w-[240px]">
+                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
+                          {issue.title}
+                        </div>
+                        <div className="text-[11px] text-[#8E9CAE] truncate mt-0.5">
+                          {issue.description}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
+                        {issue.department && (
+                          <div className="text-[10.5px] text-[#8E9CAE]">{issue.department.split("(")[0]}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap text-[#F5EFE0]">
+                        {issue.mandalName}
+                      </td>
+                      <td className="py-3 px-4 max-w-[160px]">
+                        <div className="text-[#F5EFE0] truncate font-medium">{issue.villageName}</div>
+                        {issue.placeName && (
+                          <div className="text-[10.5px] text-[#8E9CAE] truncate">📍 {issue.placeName}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
+                        <div className="text-[10.5px] text-[#D4A24C]">
+                          {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                          {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-mono text-[#CBD5E1] whitespace-nowrap">
+                        {issue.reportedDate}
+                      </td>
+                      <td className="py-3 px-4 font-mono whitespace-nowrap">
+                        {issue.completedDate ? (
+                          <span className="text-emerald-400 font-semibold">{issue.completedDate}</span>
+                        ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
+                          <span className="text-emerald-400 font-semibold">{issue.updatedDate || issue.reportedDate}</span>
+                        ) : (
+                          <span className="text-amber-400/90 text-[11px] font-sans">In Progress</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        {issue.attachments && issue.attachments.length > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30 text-[10.5px] font-mono">
+                            <Paperclip className="w-3 h-3" />
+                            {issue.attachments.length}
+                          </span>
+                        ) : (
+                          <span className="text-[#5F6875]">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedIssue(issue);
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

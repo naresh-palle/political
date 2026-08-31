@@ -39,7 +39,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 
       // 3. Dynamic resolution for custom credentials with proper role deduction
       const isVolunteerEmail = cleanEmail.startsWith("volunteer.") || cleanEmail.includes(".vol");
-      const isDirectorEmail = cleanEmail.startsWith("director.") || cleanEmail.includes(".dir");
+      const isDirectorEmail = cleanEmail.startsWith("director.") || cleanEmail.includes(".dir") || cleanEmail.startsWith("manager.") || cleanEmail.includes(".man") || cleanEmail.includes("demo.manager") || cleanEmail.includes("demo.director");
       const isMlaEmail = cleanEmail.startsWith("mla.") || cleanEmail.includes(".mla");
       const isSuperAdminEmail = cleanEmail === "admin@leaderslens.ai" || cleanEmail === "support@leaderslens.ai";
 
@@ -68,7 +68,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         roleTitle: isVolunteerEmail
           ? "Booth & Village Field Volunteer"
           : isDirectorEmail
-          ? "Constituency Campaign Director"
+          ? "Constituency Campaign Manager"
           : isMlaEmail
           ? "Constituency Political Admin (MLA)"
           : "Master System Administrator",

@@ -224,8 +224,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
 
-            {/* User Management / Governance (Platform Admin, Political Admin, and Director) */}
-            {(isPlatformAdmin || isPoliticalAdmin || isDirector) && (
+            {/* User Management / Governance (Platform Admin & Political Admin ONLY) */}
+            {(isPlatformAdmin || isPoliticalAdmin) && (
               <button
                 onClick={() => onProductChange("governance")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
@@ -259,20 +259,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="relative" ref={userMenuRef}>
               <div
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-2.5 p-1 sm:px-2.5 sm:py-1.5 bg-[#142B45] border border-[#D4A24C]/25 rounded-lg hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
-                title="User profile menu"
+                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer shadow-sm"
               >
                 <img
                   src={currentProfile.avatar}
                   alt={currentProfile.name}
-                  className="w-6 h-6 rounded-full object-cover border border-[#D4A24C]/40"
+                  className="w-7 h-7 rounded-lg object-cover border border-[#D4A24C]/50"
                 />
                 <div className="hidden sm:flex flex-col text-left">
                   <span className="text-xs font-bold text-[#F5EFE0] leading-none">
                     {currentProfile.name.split(" ")[0]}
                   </span>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--party-primary)] mt-0.5">
-                    {primaryRole}
+                    {primaryRole === "DIRECTOR" ? "MANAGER" : primaryRole}
                   </span>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#D4A24C] transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
@@ -395,7 +394,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
           )}
 
-          {(isPlatformAdmin || isPoliticalAdmin || isDirector) && (
+          {(isPlatformAdmin || isPoliticalAdmin) && (
             <button
               onClick={() => onProductChange("governance")}
               className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${

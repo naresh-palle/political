@@ -366,16 +366,11 @@ function AppCanvas({
 }: {
   children: React.ReactNode;
 }) {
-  const { currentParty, isPartyThemeActive, partyBackground } = usePartyTheme();
-  const bgImg = (isPartyThemeActive && partyBackground) ? partyBackground : "./images/india_parliament_bg.jpg";
+  const bgImg = "./images/india_parliament_bg.jpg";
 
   return (
     <div
-      className={`min-h-screen flex flex-col font-sans transition-all duration-500 relative overflow-x-hidden ${
-        isPartyThemeActive
-          ? "text-slate-900 selection:bg-black selection:text-white"
-          : "bg-[#071322] text-[#F8FAFC] selection:bg-[#D4A24C] selection:text-[#071322]"
-      }`}
+      className="min-h-screen flex flex-col font-sans transition-all duration-500 relative overflow-x-hidden bg-[#071322] text-[#F8FAFC] selection:bg-[#D4A24C] selection:text-[#071322]"
       style={{
         backgroundImage: `url(${bgImg})`,
         backgroundSize: "cover",
@@ -383,7 +378,7 @@ function AppCanvas({
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
         backgroundColor: "#071322",
-        color: isPartyThemeActive ? (currentParty?.textColor || "#0F172A") : "#F8FAFC"
+        color: "#F8FAFC"
       }}
     >
       <div
