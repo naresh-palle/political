@@ -117,7 +117,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
     <div
       className="hero-dark min-h-screen w-full flex flex-col lg:flex-row items-stretch relative overflow-x-hidden bg-[#071322]"
       style={{
-        backgroundImage: "url(./images/india_parliament_bg.jpg)",
+        backgroundImage: "url(./images/telugu_assembly_bg.jpg)",
         backgroundSize: "cover",
         backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
@@ -126,7 +126,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
     >
       {/* Light subtle gradient overlay only on the background */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0 bg-black/25" 
+        className="fixed inset-0 pointer-events-none z-0 bg-black/40" 
         aria-hidden="true" 
       />
 
