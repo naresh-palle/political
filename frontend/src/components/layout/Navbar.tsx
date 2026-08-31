@@ -157,17 +157,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Products */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
-            {/* Primary Field Operations / Ground Intake Tab */}
+            {/* Primary Field Operations & Grievances Tab */}
             <button
               onClick={() => onProductChange("fieldops")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeProduct === "fieldops"
-                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                  : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                  ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
+                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
               }`}
             >
               <ClipboardList className="w-3.5 h-3.5" />
-              {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Field Operations" : "Field Operations"}
+              {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Field Operations & Grievances" : "Field Operations"}
             </button>
 
             {/* Pitch / Audit (Platform Super Admin ONLY) */}
@@ -176,22 +176,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => onProductChange("pitch")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   activeProduct === "pitch"
-                    ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                    : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                    ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
+                    : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
                 }`}
               >
                 Pitch / Audit
               </button>
             )}
 
-            {/* Grievances Tab (Hidden for Volunteer) */}
-            {!isVolunteer && (
+            {/* Grievances Tab (Visible for Political Admin & Super Admin; merged inside Field Operations for Manager) */}
+            {!isVolunteer && !isDirector && (
               <button
                 onClick={() => onProductChange("grievances")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   activeProduct === "grievances"
-                    ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                    : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                    ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
+                    : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
                 }`}
               >
                 Grievances

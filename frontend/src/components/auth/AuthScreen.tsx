@@ -207,7 +207,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
               type="submit"
               data-testid="auth-submit-btn"
               disabled={isLoading}
-              className="group w-full inline-flex items-center justify-center px-5 py-3.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-sm font-bold rounded-xl transition-all shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)] cursor-pointer disabled:opacity-50 mt-2"
+              className="group w-full inline-flex items-center justify-center px-5 py-3.5 bg-gradient-to-r from-[#D97724] to-[#C99738] hover:brightness-110 text-[#0B131E] text-sm font-bold rounded-xl transition-all shadow-[0_4px_25px_-5px_rgba(217,119,36,0.6)] cursor-pointer disabled:opacity-50 mt-2"
             >
               <span>{isLoading ? "Signing in..." : "Sign In"}</span>
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
@@ -239,11 +239,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 };
 
 const darkInput =
-  "w-full bg-[#071322]/60 backdrop-blur-md border border-[#22405E] hover:border-[#D4A24C]/60 focus:border-[#D4A24C] focus:ring-2 focus:ring-[#D4A24C]/40 rounded-lg px-3 py-2.5 text-[13.5px] text-[#F5EFE0] placeholder:text-[#8E9CAE] outline-none transition-all";
+  "w-full bg-[#0B131E] border border-[#223348] hover:border-[#D4A24C]/60 focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]/50 rounded-xl px-3.5 py-3 text-sm text-[#F5EFE0] placeholder:text-[#8E9CAE] outline-none transition-all";
 
 const Field: React.FC<{ label: string; icon?: React.ReactNode; children: React.ReactNode }> = ({ label, icon, children }) => (
   <div className="space-y-1.5">
-    <label className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#B9AF95]">
+    <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#BCA37F]">
       {icon}
       {label}
     </label>
