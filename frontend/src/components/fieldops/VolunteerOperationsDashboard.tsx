@@ -32,7 +32,10 @@ import {
   Shield,
   Briefcase,
   Paperclip,
-  Check
+  Check,
+  LayoutGrid,
+  List,
+  Eye
 } from "lucide-react";
 
 interface VolunteerDashboardProps {
@@ -88,8 +91,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   // Selected Issue for Detail Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
 
+  // View Mode: GRID vs TABLE
+  const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
+
   // Date Filter & Search
-  const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "7DAYS" | "THIS_MONTH">("ALL");
+  const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "7DAYS" | "THIS_MONTH" | "CUSTOM">("ALL");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Create Complaint Modal State
@@ -128,6 +136,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [dispatchedNotifs, setDispatchedNotifs] = useState<string[]>([]);
 
   useEffect(() => {
     loadVolunteerData();
@@ -253,11 +262,53 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
       const created = await politicalApiService.createFieldIssue(payload);
       setIssues([created, ...issues]);
+
+      // 3. Automated Notification Dispatch: Director, MLA, and Relevant Department Person
+      const notifTasks = [
+        // 1. To Campaign Director
+        politicalApiService.createNotification({
+          recipientUserId: currentUser.directorId || "usr-demo-director",
+          recipientRole: "DIRECTOR",
+          type: "NEW_COMPLAINT",
+          title: `New Ground ${newIssueType === "COMPLAINT" ? "Complaint" : "Requirement"} Logged`,
+          message: `Volunteer ${currentUser.name} logged [${newPriority}] issue: "${newTitle.trim()}" in ${mandalObj.name} (${villageWardText.trim()}). Assigned to ${assignedPersonName}.`,
+          issueId: created.id,
+          priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
+        }),
+        // 2. To Political Admin / MLA
+        politicalApiService.createNotification({
+          recipientUserId: "usr-demo-admin",
+          recipientRole: "POLITICAL_ADMIN",
+          type: "NEW_COMPLAINT",
+          title: `Constituency Alert: ${newDepartment} (${newPriority})`,
+          message: `[${newPriority}] ${newIssueType} recorded in ${mandalObj.name}, ${villageWardText.trim()}. Department: ${newDepartment}. Reporter: ${newReportedBy.trim()} (${reporterType}).`,
+          issueId: created.id,
+          priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
+        }),
+        // 3. To Relevant Department Person / Authority
+        politicalApiService.createNotification({
+          recipientUserId: `dept-officer-${newDepartment.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+          recipientRole: "DEPARTMENT_OFFICER",
+          type: "NEW_COMPLAINT",
+          title: `Department Forwarding: ${newDepartment}`,
+          message: `Official grievance ticket #${created.id} forwarded to ${newDepartment} for ground resolution in ${mandalObj.name}. Contact: ${newReporterPhone || assignedPersonPhone}.`,
+          issueId: created.id,
+          priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
+        })
+      ];
+
+      await Promise.allSettled(notifTasks);
+      setDispatchedNotifs([
+        `Campaign Director (${currentUser.directorName || "Demo Director"})`,
+        "Political Admin / MLA Office (B. C. Janardhan Reddy)",
+        `Department Authority (${newDepartment})`
+      ]);
       setSubmissionSuccess(true);
 
       setTimeout(() => {
         setSubmissionSuccess(false);
         setIsAddModalOpen(false);
+        setDispatchedNotifs([]);
         // Reset form
         setNewTitle("");
         setNewDescription("");
@@ -268,7 +319,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         setReporterType("CITIZEN");
         setProofFiles([]);
         setNewAttachmentUrl("");
-      }, 1200);
+      }, 2000);
     } catch (err: any) {
       setFormError(err?.message || "Failed to submit complaint.");
     } finally {
@@ -285,17 +336,18 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
     return issues.filter((item) => {
       // Date filter
+      const itemDate = item.reportedDate || (item.createdAt ? item.createdAt.split("T")[0] : "");
+
       if (dateFilter === "TODAY") {
-        if (item.reportedDate !== todayStr && !item.createdAt?.startsWith(todayStr)) {
-          return false;
-        }
+        if (itemDate !== todayStr) return false;
       } else if (dateFilter === "7DAYS") {
-        const itemDate = new Date(item.reportedDate || item.createdAt);
-        if (itemDate < sevenDaysAgo) return false;
+        const d = new Date(itemDate || item.createdAt);
+        if (d < sevenDaysAgo) return false;
       } else if (dateFilter === "THIS_MONTH") {
-        if (!item.reportedDate?.startsWith(thisMonthPrefix) && !item.createdAt?.startsWith(thisMonthPrefix)) {
-          return false;
-        }
+        if (!itemDate.startsWith(thisMonthPrefix)) return false;
+      } else if (dateFilter === "CUSTOM") {
+        if (startDate && itemDate < startDate) return false;
+        if (endDate && itemDate > endDate) return false;
       }
 
       // Search filter
@@ -312,7 +364,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
       return true;
     });
-  }, [issues, dateFilter, searchQuery]);
+  }, [issues, dateFilter, startDate, endDate, searchQuery]);
 
   return (
     <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
@@ -393,10 +445,38 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         </div>
 
-        {/* Date Filter & Search Bar */}
+        {/* Date Filter, View Mode & Search Bar */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Date Filter Buttons */}
+          {/* Grid vs Table View Mode Switcher */}
           <div className="flex items-center p-1 rounded-xl bg-[#071322] border border-[#22405E] text-xs">
+            <button
+              onClick={() => setViewMode("GRID")}
+              title="Grid Cards View"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "GRID"
+                  ? "bg-[#D4A24C] text-[#071322] font-bold shadow-sm"
+                  : "text-[#B9AF95] hover:text-white"
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="text-[11px] hidden sm:inline">Grid</span>
+            </button>
+            <button
+              onClick={() => setViewMode("TABLE")}
+              title="Data Table View"
+              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "TABLE"
+                  ? "bg-[#D4A24C] text-[#071322] font-bold shadow-sm"
+                  : "text-[#B9AF95] hover:text-white"
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span className="text-[11px] hidden sm:inline">Table</span>
+            </button>
+          </div>
+
+          {/* Date Filter Buttons */}
+          <div className="flex flex-wrap items-center p-1 rounded-xl bg-[#071322] border border-[#22405E] text-xs gap-1">
             <span className="px-2 text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden md:inline">
               Date:
             </span>
@@ -405,7 +485,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 { id: "ALL", label: "All Time" },
                 { id: "TODAY", label: "Today" },
                 { id: "7DAYS", label: "Past 7 Days" },
-                { id: "THIS_MONTH", label: "This Month" }
+                { id: "THIS_MONTH", label: "This Month" },
+                { id: "CUSTOM", label: "Custom Range" }
               ] as const
             ).map((df) => (
               <button
@@ -422,6 +503,38 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             ))}
           </div>
 
+          {/* Custom Date Range Picker when CUSTOM is active */}
+          {dateFilter === "CUSTOM" && (
+            <div className="flex items-center gap-1.5 p-1 px-2.5 rounded-xl bg-[#071322] border border-[#D4A24C]/40 text-xs animate-fadeIn">
+              <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">From:</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] text-[#F5EFE0] px-2 py-1 rounded-lg text-xs outline-none"
+              />
+              <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">To:</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] text-[#F5EFE0] px-2 py-1 rounded-lg text-xs outline-none"
+              />
+              {(startDate || endDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                  className="text-rose-400 hover:text-rose-200 text-[10px] font-semibold underline ml-1"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Quick Search */}
           <div className="relative min-w-[200px] flex-1 sm:flex-initial">
             <Search className="w-3.5 h-3.5 text-[#8E9CAE] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -436,7 +549,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         </div>
       </div>
 
-      {/* 3. Submitted Issues Grid */}
+      {/* 3. Submitted Issues Feed: Grid or Table View */}
       {loading ? (
         <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0B1A2C] rounded-2xl border border-[#22405E]">
           Loading submitted complaints...
@@ -451,7 +564,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             Click "+ Add Complaint / Requirement" to log a new issue from your assigned area.
           </p>
         </div>
-      ) : (
+      ) : viewMode === "GRID" ? (
+        /* GRID VIEW */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredIssues.map((issue) => (
             <div
@@ -530,6 +644,95 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
           ))}
         </div>
+      ) : (
+        /* TABLE VIEW */
+        <div className="rounded-2xl bg-[#0B1A2C] border border-[#22405E] overflow-hidden shadow-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#071322] border-b border-[#22405E] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
+                  <th className="py-3.5 px-4 font-mono">ID</th>
+                  <th className="py-3.5 px-4">Issue Title & Scope</th>
+                  <th className="py-3.5 px-4">Category / Dept</th>
+                  <th className="py-3.5 px-4">Mandal / Town</th>
+                  <th className="py-3.5 px-4">Village / Ward</th>
+                  <th className="py-3.5 px-4">Reported By</th>
+                  <th className="py-3.5 px-4">Date</th>
+                  <th className="py-3.5 px-4 text-center">Proofs</th>
+                  <th className="py-3.5 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#22405E]/50">
+                {filteredIssues.map((issue) => (
+                  <tr
+                    key={issue.id}
+                    onClick={() => setSelectedIssue(issue)}
+                    className="hover:bg-[#122A44]/70 transition-colors cursor-pointer group"
+                  >
+                    <td className="py-3 px-4 font-mono font-bold text-[#D4A24C] whitespace-nowrap">
+                      #{issue.id}
+                    </td>
+                    <td className="py-3 px-4 max-w-[240px]">
+                      <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
+                        {issue.title}
+                      </div>
+                      <div className="text-[11px] text-[#8E9CAE] truncate mt-0.5">
+                        {issue.description}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
+                      {issue.department && (
+                        <div className="text-[10.5px] text-[#8E9CAE]">{issue.department.split("(")[0]}</div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap text-[#F5EFE0]">
+                      {issue.mandalName}
+                    </td>
+                    <td className="py-3 px-4 max-w-[160px]">
+                      <div className="text-[#F5EFE0] truncate font-medium">{issue.villageName}</div>
+                      {issue.placeName && (
+                        <div className="text-[10.5px] text-[#8E9CAE] truncate">📍 {issue.placeName}</div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
+                      <div className="text-[10.5px] text-[#D4A24C]">
+                        {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                        {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 font-mono text-[#B9AF95] whitespace-nowrap">
+                      {issue.reportedDate}
+                    </td>
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      {issue.attachments && issue.attachments.length > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30 text-[10.5px] font-mono">
+                          <Paperclip className="w-3 h-3" />
+                          {issue.attachments.length}
+                        </span>
+                      ) : (
+                        <span className="text-[#5F6875]">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedIssue(issue);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
@@ -582,8 +785,17 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               )}
 
               {submissionSuccess && (
-                <div className="p-3 rounded-lg bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Complaint recorded and locked successfully!
+                <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs space-y-1 animate-fadeIn">
+                  <div className="flex items-center gap-2 font-bold text-emerald-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    Complaint Recorded & Locked Successfully!
+                  </div>
+                  <div className="text-[11px] text-emerald-300/90 pl-6 space-y-0.5">
+                    <p className="font-semibold text-[#D4A24C]">🔔 Instant Notifications Dispatched To:</p>
+                    <p>• Campaign Director ({currentUser.directorName || "Demo Director"})</p>
+                    <p>• MLA & Political Admin (B. C. Janardhan Reddy)</p>
+                    <p>• Relevant Department Authority ({newDepartment})</p>
+                  </div>
                 </div>
               )}
 

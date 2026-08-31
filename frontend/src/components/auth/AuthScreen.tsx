@@ -3,7 +3,7 @@ import { UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { USER_PROFILES } from "../../services/mockData";
 import { LeadersLogo } from "../common/LeadersLogo";
-import { ArrowRight, Sparkles, ShieldCheck, Mail, KeyRound, Lock } from "lucide-react";
+import { ArrowRight, Sparkles, ShieldCheck, Mail, KeyRound, Lock, Eye, EyeOff } from "lucide-react";
 
 interface AuthScreenProps {
   onAuthenticated: (profile: UserProfile) => void;
@@ -13,6 +13,7 @@ interface AuthScreenProps {
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack }) => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,17 +172,31 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
             </Field>
 
             <Field label="Password" icon={<KeyRound className="w-3.5 h-3.5" />}>
-              <input
-                data-testid="password-input"
-                type="password"
-                required
-                minLength={4}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className={darkInput}
-                autoComplete="current-password"
-              />
+              <div className="relative">
+                <input
+                  data-testid="password-input"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={4}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={`${darkInput} pr-10`}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8E9B] hover:text-[#D4A24C] transition-colors p-1"
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </Field>
 
             <button

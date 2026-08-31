@@ -7,7 +7,8 @@ import {
   PlatformAudienceDetail,
   PoliticalParty,
   ElectedRepresentative,
-  UserProfile
+  UserProfile,
+  FieldNotification
 } from "../types";
 import {
   buildCompleteAudit,
@@ -1096,7 +1097,52 @@ export const politicalApiService = {
     ];
   },
 
+  async createNotification(notification: Partial<FieldNotification>): Promise<FieldNotification> {
+    const newNotif: FieldNotification = {
+      id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      recipientUserId: notification.recipientUserId || "usr-demo-director",
+      recipientRole: notification.recipientRole || "DIRECTOR",
+      type: (notification.type as any) || "NEW_COMPLAINT",
+      title: notification.title || "Operational Alert",
+      message: notification.message || "",
+      issueId: notification.issueId,
+      priority: (notification.priority as any) || "HIGH",
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      const stored = localStorage.getItem("leaders_lens_field_notifications");
+      const list: FieldNotification[] = stored ? JSON.parse(stored) : [];
+      list.unshift(newNotif);
+      localStorage.setItem("leaders_lens_field_notifications", JSON.stringify(list.slice(0, 100)));
+    } catch (e) {
+      console.error(e);
+    }
+
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newNotif)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+
+    return newNotif;
+  },
+
   async getFieldNotifications(recipientUserId?: string, recipientRole?: string): Promise<any[]> {
+    let localList: any[] = [];
+    try {
+      const stored = localStorage.getItem("leaders_lens_field_notifications");
+      if (stored) {
+        localList = JSON.parse(stored);
+      }
+    } catch (e) {}
+
     try {
       const qp = new URLSearchParams();
       if (recipientUserId) qp.append("recipientUserId", recipientUserId);
@@ -1104,27 +1150,45 @@ export const politicalApiService = {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications?${qp.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) return data;
+        if (Array.isArray(data)) {
+          const combined = [...localList, ...data];
+          return Array.from(new Map(combined.map((n) => [n.id, n])).values());
+        }
       }
     } catch (e) {
       // Fallback
     }
+
+    let list: any[] = localList;
     try {
       const res = await fetch("./data/field_notifications.json");
       if (res.ok) {
-        let list = await res.json();
-        if (recipientUserId) {
-          list = list.filter((n: any) => n.recipientUserId === recipientUserId);
-        } else if (recipientRole) {
-          list = list.filter((n: any) => n.recipientRole === recipientRole);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const combined = [...localList, ...data];
+          list = Array.from(new Map(combined.map((n) => [n.id, n])).values());
         }
-        return list;
       }
     } catch (e) {}
-    return [];
+
+    if (recipientUserId) {
+      list = list.filter((n: any) => n.recipientUserId === recipientUserId || (recipientRole && n.recipientRole === recipientRole));
+    } else if (recipientRole) {
+      list = list.filter((n: any) => n.recipientRole === recipientRole);
+    }
+    return list;
   },
 
   async markNotificationRead(notificationId: string): Promise<any> {
+    try {
+      const stored = localStorage.getItem("leaders_lens_field_notifications");
+      if (stored) {
+        const list = JSON.parse(stored);
+        const updated = list.map((n: any) => n.id === notificationId ? { ...n, isRead: true } : n);
+        localStorage.setItem("leaders_lens_field_notifications", JSON.stringify(updated));
+      }
+    } catch (e) {}
+
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications/${encodeURIComponent(notificationId)}/read`, {
         method: "PATCH"

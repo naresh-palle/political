@@ -157,7 +157,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Products */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
-            {/* Primary Field Operations Tab */}
+            {/* Primary Field Operations / Ground Intake Tab */}
             <button
               onClick={() => onProductChange("fieldops")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -167,7 +167,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <ClipboardList className="w-3.5 h-3.5" />
-              {isVolunteer ? "My Field Work" : isDirector ? "Field Operations" : "Field Operations"}
+              {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Field Operations" : "Field Operations"}
             </button>
 
             {/* Pitch / Audit (Platform Super Admin ONLY) */}
@@ -184,17 +184,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Grievances Tab (Available for all roles) */}
-            <button
-              onClick={() => onProductChange("grievances")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                activeProduct === "grievances"
-                  ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                  : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-              }`}
-            >
-              Grievances
-            </button>
+            {/* Grievances Tab (Hidden for Volunteer) */}
+            {!isVolunteer && (
+              <button
+                onClick={() => onProductChange("grievances")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                  activeProduct === "grievances"
+                    ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
+                    : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
+                }`}
+              >
+                Grievances
+              </button>
+            )}
 
             {/* Volunteers & Web Studio (Platform Super Admin ONLY) */}
             {isPlatformAdmin && (
@@ -294,17 +296,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
 
-                  {/* Edit Profile Action */}
-                  <button
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      setIsEditProfileOpen(true);
-                    }}
-                    className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
-                  >
-                    <Edit3 className="w-4 h-4 text-[#D4A24C]" />
-                    <span>Edit Profile (Photo, Email, Phone)</span>
-                  </button>
+                  {/* Edit Profile Action - ONLY for Political Admin and Super Admin */}
+                  {(isPoliticalAdmin || isPlatformAdmin) && (
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        setIsEditProfileOpen(true);
+                      }}
+                      className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
+                    >
+                      <Edit3 className="w-4 h-4 text-[#D4A24C]" />
+                      <span>Edit Profile (Photo, Email, Phone)</span>
+                    </button>
+                  )}
 
                   {isAdmin && (
                     <button
@@ -345,7 +349,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
             }`}
           >
-            {isVolunteer ? "My Work" : "Field Ops"}
+            {isVolunteer ? "Ground Intake & Issues" : "Field Ops"}
           </button>
 
           {isPlatformAdmin && (
@@ -359,14 +363,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          <button
-            onClick={() => onProductChange("grievances")}
-            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-              activeProduct === "grievances" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            Grievances
-          </button>
+          {!isVolunteer && (
+            <button
+              onClick={() => onProductChange("grievances")}
+              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                activeProduct === "grievances" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
+              }`}
+            >
+              Grievances
+            </button>
+          )}
 
           {isPlatformAdmin && (
             <>

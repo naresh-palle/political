@@ -62,6 +62,24 @@ export interface MlaMinisterialInfo {
 }
 
 export const MLA_MINISTERIAL_REGISTRY: Record<string, MlaMinisterialInfo> = {
+  "BNG_BANAGANAPALLE": {
+    name: "B. C. Janardhan Reddy",
+    constituency: "Banaganapalle Assembly Constituency",
+    constituencyCode: "AC-140",
+    partyId: "TDP",
+    partyName: "Telugu Desam Party",
+    partyEmoji: "🏛️",
+    partyColor: "#D4A24C",
+    role: "Minister for Roads & Buildings and Infrastructure | MLA Banaganapalle",
+    isMinister: true,
+    ministerialDepartments: [
+      "Roads & Buildings Infrastructure (R&B)",
+      "Rural Water Supply & Sanitation",
+      "Yaganti & Owk Irrigation & Tourism"
+    ],
+    photoUrl: "./images/mla/bc_janardhan_reddy.jpg",
+    contactOffice: "MLA Camp Office, RTC Bus Stand Road, Banaganapalle Town, AP"
+  },
   "TDP_KADAPA": {
     name: "R. Madhavi Reddy",
     constituency: "Kadapa Assembly Constituency",
@@ -215,12 +233,13 @@ export const DEPARTMENT_CATEGORIES: Record<string, string[]> = {
 };
 
 const MANDALS_LIST = [
-  "Kadapa Urban",
-  "Kadapa Rural",
-  "Chinthakommadinne",
-  "Pendlimarri",
-  "Kamalapuram",
-  "Vallur"
+  "Banaganapalle Town",
+  "Koilakuntla Town",
+  "Banaganapalle Mandal",
+  "Koilakuntla Mandal",
+  "Owk Mandal",
+  "Sanjamala Mandal",
+  "Kolimigundla Mandal"
 ];
 
 interface GrievanceManagementProps {
@@ -246,8 +265,19 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
       if (currentProfile.assignedConstituency?.toLowerCase().includes("kuppam")) {
         return MLA_MINISTERIAL_REGISTRY["TDP_KUPPAM"];
       }
+      if (currentProfile.assignedConstituency?.toLowerCase().includes("kadapa") && !currentProfile.assignedConstituency?.toLowerCase().includes("banaganapalle")) {
+        return MLA_MINISTERIAL_REGISTRY["TDP_KADAPA"];
+      }
+      // If currentProfile has custom or political admin details, overlay them
+      const base = MLA_MINISTERIAL_REGISTRY["BNG_BANAGANAPALLE"];
+      return {
+        ...base,
+        name: currentProfile.primaryRole === "POLITICAL_ADMIN" ? currentProfile.name : base.name,
+        photoUrl: (currentProfile.primaryRole === "POLITICAL_ADMIN" && currentProfile.avatar) ? currentProfile.avatar : base.photoUrl,
+        contactOffice: currentProfile.primaryRole === "POLITICAL_ADMIN" ? `MLA Camp Office, RTC Bus Stand Road, ${currentProfile.assignedConstituency || "Banaganapalle"}, AP` : base.contactOffice
+      };
     }
-    return MLA_MINISTERIAL_REGISTRY["TDP_KADAPA"];
+    return MLA_MINISTERIAL_REGISTRY["BNG_BANAGANAPALLE"];
   }, [currentProfile]);
 
   // Master Data State
