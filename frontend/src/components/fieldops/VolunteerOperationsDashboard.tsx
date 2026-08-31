@@ -82,10 +82,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         }),
         politicalApiService.getVillages(
           currentUser.assignedMandalId || undefined,
-          currentUser.assemblyConstituencyId || "KDP-AC"
+          currentUser.assemblyConstituencyId || "PDT-AC"
         ),
         politicalApiService.getMandals(
-          currentUser.assemblyConstituencyId || "KDP-AC",
+          currentUser.assemblyConstituencyId || "PDT-AC",
           currentUser.stateId || "AP"
         )
       ]);
@@ -126,19 +126,19 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         issueType: newIssueType,
         status: "NEW",
         stateId: currentUser.stateId || "AP",
-        assemblyConstituencyId: currentUser.assemblyConstituencyId || "KDP-AC",
-        mandalId: selectedMandal?.id || currentUser.assignedMandalId || "MDL-KDP-URB",
-        mandalName: selectedMandal?.name || currentUser.assignedMandalName || "Kadapa Urban",
-        villageId: selectedVillage?.id || "VIL-CCK",
-        villageName: selectedVillage?.name || "Chinna Chowk",
+        assemblyConstituencyId: currentUser.assemblyConstituencyId || "PDT-AC",
+        mandalId: selectedMandal?.id || currentUser.assignedMandalId || "MDL-PDT-MAIN",
+        mandalName: selectedMandal?.name || currentUser.assignedMandalName || "Poddutur Mandal",
+        villageId: selectedVillage?.id || "VIL-PDT-01",
+        villageName: selectedVillage?.name || "Poddutur Village",
         placeName: newPlaceName.trim(),
         reportedBy: newReportedBy.trim(),
         reporterPhone: newReporterPhone.trim(),
         reportedDate: new Date().toISOString().split("T")[0],
         assignedVolunteerId: currentUser.id,
         assignedVolunteerName: currentUser.name,
-        directorId: currentUser.directorId || "usr-tdp-ap",
-        directorName: currentUser.directorName || "Constituency Director",
+        directorId: currentUser.directorId || "usr-demo-director",
+        directorName: currentUser.directorName || "Demo Director",
         initialRemarks: newInitialRemarks.trim(),
         attachments: newAttachmentUrl ? [newAttachmentUrl] : [],
         createdBy: currentUser.id,
@@ -193,7 +193,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   }, [issues, activeTab, searchQuery]);
 
   return (
-    <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 animate-fadeIn text-[#F5EFE0]">
+    <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
       {/* Volunteer Header Strip */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#0F2338] via-[#122A44] to-[#0B1A2C] border border-[#D4A24C]/30 shadow-xl">
         <div className="flex items-center gap-3.5">

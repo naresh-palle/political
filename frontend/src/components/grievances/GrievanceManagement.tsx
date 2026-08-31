@@ -782,7 +782,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-fadeIn">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-6 sm:space-y-8 animate-fadeIn overflow-x-hidden">
       {/* Executive MLA & Ministerial Leadership Banner */}
       <div className="bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] text-[#F5EFE0] p-5 sm:p-6 rounded-2xl border border-[#D4A24C]/40 shadow-xl space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">

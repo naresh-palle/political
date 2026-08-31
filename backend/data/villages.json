@@ -94,5 +94,41 @@
     "assignedVolunteerId": "usr-vol-suresh",
     "assignedVolunteerName": "Suresh Kumar",
     "isActive": true
+  },
+  {
+    "id": "VIL-PDT-01",
+    "mandalId": "MDL-PDT-MAIN",
+    "assemblyConstituencyId": "PDT-AC",
+    "stateId": "AP",
+    "name": "Poddutur Village",
+    "code": "V-101",
+    "totalVoters": 34500,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Demo Volunteer",
+    "isActive": true
+  },
+  {
+    "id": "VIL-PDT-02",
+    "mandalId": "MDL-PDT-MAIN",
+    "assemblyConstituencyId": "PDT-AC",
+    "stateId": "AP",
+    "name": "Gondiparla",
+    "code": "V-102",
+    "totalVoters": 26800,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Demo Volunteer",
+    "isActive": true
+  },
+  {
+    "id": "VIL-PDT-03",
+    "mandalId": "MDL-PDT-EAST",
+    "assemblyConstituencyId": "PDT-AC",
+    "stateId": "AP",
+    "name": "Midthur Sector",
+    "code": "V-103",
+    "totalVoters": 18900,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Demo Volunteer",
+    "isActive": true
   }
 ]

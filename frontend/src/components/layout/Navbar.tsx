@@ -107,10 +107,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[64px]">
           {/* Left Brand */}
-          <div className="flex items-center space-x-5">
+          <div className="flex items-center space-x-5 min-w-0">
             <div
               data-testid="brand-home"
-              className="flex items-center space-x-3 cursor-pointer group"
+              className="flex items-center space-x-3 cursor-pointer group min-w-0"
               onClick={() => {
                 onProductChange("fieldops");
                 if (onResetToSelect) onResetToSelect();
@@ -118,18 +118,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Constituency Intelligence Workspace"
             >
               {/* Permanent Leader's Lens Official Company Logo */}
-              <div className="relative w-9 h-9 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[#D4A24C]/40 shadow-sm">
+              <div className="relative w-9 h-9 flex-shrink-0 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[#D4A24C]/40 shadow-sm">
                 <LeadersLogo size={36} />
               </div>
-              <div className="flex flex-col">
-                <span className="font-display text-[22px] tracking-[-0.01em] text-[#F5EFE0] leading-none">
+              <div className="flex flex-col min-w-0">
+                <span className="font-display text-[18px] sm:text-[22px] tracking-[-0.01em] text-[#F5EFE0] leading-none truncate">
                   Leader's<span className="italic gold-text"> Lens</span>
                 </span>
-                <span className="text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[var(--party-primary)] mt-1 flex items-center gap-1.5">
+                <span className="text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[var(--party-primary)] mt-1 flex items-center gap-1.5 truncate">
                   {isPartyThemeActive && partyName ? (
                     <>
                       <span>{partySymbolEmoji || "🏛️"} {partyName}</span>
-                      <span className="text-[#8A8E9B]">· Command Portal</span>
+                      <span className="text-[#8A8E9B] hidden sm:inline">· Command Portal</span>
                     </>
                   ) : (
                     "Political Intelligence"
@@ -142,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isAuditView && onResetToSelect && activeProduct === "pitch" && (
               <button
                 onClick={onResetToSelect}
-                className="hidden sm:inline-flex items-center text-xs font-medium text-[#D4A24C] hover:text-[#F5EFE0] py-1 px-2.5 rounded bg-[#0F2338] border border-[#D4A24C]/30 hover:border-[#D4A24C]/80 transition-colors"
+                className="hidden sm:inline-flex items-center text-xs font-medium text-[#D4A24C] hover:text-[#F5EFE0] py-1 px-2.5 rounded bg-[#0F2338] border border-[#D4A24C]/30 hover:border-[#D4A24C]/80 transition-colors flex-shrink-0"
               >
                 <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
                 Change Constituency
@@ -321,11 +321,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Horizontal Navigation Tabs */}
-        <div className="lg:hidden flex items-center space-x-2 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs">
+        <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
           <button
             onClick={() => onProductChange("fieldops")}
-            className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
             }`}
           >
             {isVolunteer ? "My Work" : "Field Ops"}
@@ -334,8 +334,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           {isPlatformAdmin && (
             <button
               onClick={() => onProductChange("pitch")}
-              className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-                activeProduct === "pitch" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                activeProduct === "pitch" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
               }`}
             >
               Audit
@@ -344,8 +344,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => onProductChange("grievances")}
-            className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-              activeProduct === "grievances" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              activeProduct === "grievances" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
             }`}
           >
             Grievances
@@ -355,16 +355,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <>
               <button
                 onClick={() => onProductChange("volunteers")}
-                className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-                  activeProduct === "volunteers" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+                className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                  activeProduct === "volunteers" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
                 }`}
               >
                 Volunteers
               </button>
               <button
                 onClick={() => onProductChange("webbuilder")}
-                className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-                  activeProduct === "webbuilder" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+                className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                  activeProduct === "webbuilder" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
                 }`}
               >
                 Web Studio
@@ -375,8 +375,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           {(isPlatformAdmin || isPoliticalAdmin || isDirector) && (
             <button
               onClick={() => onProductChange("governance")}
-              className={`whitespace-nowrap px-2.5 py-1 rounded font-semibold ${
-                activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95]"
+              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
               }`}
             >
               {isPlatformAdmin ? "Admin & Users" : "User Management"}

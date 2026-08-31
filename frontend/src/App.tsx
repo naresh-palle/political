@@ -247,7 +247,7 @@ function AppInner() {
               onSignOut={handleSignOut}
             />
 
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <main className="flex-1 w-full overflow-x-hidden">
               {/* Module 1: FIELD OPERATIONS & RBAC (ADMIN -> DIRECTOR -> VOLUNTEER) */}
               {activeProduct === "fieldops" && (
                 <FieldOpsManager currentUser={currentProfile} />
@@ -257,18 +257,22 @@ function AppInner() {
               {activeProduct === "pitch" && isAdmin && (
                 <>
                   {viewState === "select" && (
-                    <LocationSelector onGenerateAudit={handleStartAuditGeneration} />
+                    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+                      <LocationSelector onGenerateAudit={handleStartAuditGeneration} />
+                    </div>
                   )}
 
                   {viewState === "loading" && (
-                    <AuditLoadingExperience
-                      assemblyName={selectedGeo.assemblyName || "Constituency"}
-                      onComplete={handleLoadingComplete}
-                    />
+                    <div className="w-full px-3 sm:px-4">
+                      <AuditLoadingExperience
+                        assemblyName={selectedGeo.assemblyName || "Constituency"}
+                        onComplete={handleLoadingComplete}
+                      />
+                    </div>
                   )}
 
                   {viewState === "audit" && auditData && (
-                    <div className="animate-fadeIn">
+                    <div className="animate-fadeIn w-full">
                       <AuditHeader
                         audit={auditData}
                         onEnterPresentationMode={() => setIsPresentationMode(true)}
@@ -277,7 +281,7 @@ function AppInner() {
 
                       <AuditNav />
 
-                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
+                      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 space-y-2 py-4">
                         <OverviewSection audit={auditData} />
                         <CandidateSection candidates={auditData.candidates} />
                         <SocialFootprintSection client={auditData.client} />
@@ -356,7 +360,7 @@ function AppCanvas({
 
   return (
     <div
-      className={`min-h-screen flex flex-col font-sans transition-all duration-500 relative ${
+      className={`min-h-screen flex flex-col font-sans transition-all duration-500 relative overflow-x-hidden ${
         isPartyThemeActive
           ? "text-slate-900 selection:bg-black selection:text-white"
           : "bg-[#0B1A2C] text-[#F5EFE0] selection:bg-[#D4A24C] selection:text-black"

@@ -50,7 +50,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     currentUser.email === "support@leaderslens.ai" ||
     (currentUser.primaryRole === "SUPER_ADMIN" && !!currentUser.isPlatformAdmin && !currentUser.partyId);
   const [selectedConstituencyId, setSelectedConstituencyId] = useState<string>(
-    currentUser.assemblyConstituencyId || "KDP-AC"
+    currentUser.assemblyConstituencyId || "PDT-AC"
   );
 
   // Selected Issue for Modal
@@ -58,10 +58,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
   // Expanded Nodes in Geographic Tree
   const [expandedMandals, setExpandedMandals] = useState<Record<string, boolean>>({
-    "MDL-KDP-URB": true
+    "MDL-PDT-MAIN": true
   });
   const [expandedVillages, setExpandedVillages] = useState<Record<string, boolean>>({
-    "VIL-CCK": true
+    "VIL-PDT-01": true
   });
 
   // View Mode: Geographic Tree vs Master Table vs Director Command vs Political Admins
@@ -82,16 +82,16 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     try {
       const [drilldown, issueList, userList, mandalList, villageList] = await Promise.all([
         politicalApiService.getGeographicDrilldown(
-          currentUser.assemblyConstituencyId || "KDP-AC",
+          currentUser.assemblyConstituencyId || "PDT-AC",
           currentUser.stateId || "AP"
         ),
         politicalApiService.getFieldIssues(),
         politicalApiService.getUsers(),
         politicalApiService.getMandals(
-          currentUser.assemblyConstituencyId || "KDP-AC",
+          currentUser.assemblyConstituencyId || "PDT-AC",
           currentUser.stateId || "AP"
         ),
-        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "KDP-AC")
+        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "PDT-AC")
       ]);
 
       setDrilldownData(drilldown);
@@ -144,7 +144,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   }, [issues, filterStatus, filterPriority, filterMandal, searchQuery]);
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6 animate-fadeIn text-[#F5EFE0]">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
       {/* Executive Command Header */}
       {isPlatformSuperAdmin ? (
         /* LEVEL 1: SUPER ADMIN MASTER BANNER */

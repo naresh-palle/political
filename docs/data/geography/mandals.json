@@ -88,5 +88,45 @@
     "totalVillages": 6,
     "totalVoters": 142000,
     "isActive": true
+  },
+  {
+    "id": "MDL-PDT-MAIN",
+    "stateId": "AP",
+    "assemblyConstituencyId": "PDT-AC",
+    "name": "Poddutur Mandal",
+    "code": "M-01",
+    "totalVillages": 12,
+    "totalVoters": 142000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-PDT-EAST",
+    "stateId": "AP",
+    "assemblyConstituencyId": "PDT-AC",
+    "name": "Poddutur East / Rural",
+    "code": "M-02",
+    "totalVillages": 10,
+    "totalVoters": 98000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-PDT-MAIN",
+    "stateId": "AP",
+    "assemblyConstituencyId": "PRD-AC",
+    "name": "Poddutur Mandal",
+    "code": "M-01",
+    "totalVillages": 12,
+    "totalVoters": 142000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-PDT-EAST",
+    "stateId": "AP",
+    "assemblyConstituencyId": "PRD-AC",
+    "name": "Poddutur East / Rural",
+    "code": "M-02",
+    "totalVillages": 10,
+    "totalVoters": 98000,
+    "isActive": true
   }
 ]

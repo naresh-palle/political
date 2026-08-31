@@ -46,7 +46,8 @@
     --party-gradient-end: #E07A1F;
   }
 
-  html { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+  html { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
 
   body {
     font-family: var(--font-sans);
@@ -55,6 +56,7 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    overflow-x: hidden;
     transition: background-color 300ms ease, color 300ms ease;
     font-feature-settings: "cv02","cv03","cv04","cv11";
   }
