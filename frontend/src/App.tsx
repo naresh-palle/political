@@ -367,7 +367,7 @@ function AppCanvas({
   children: React.ReactNode;
 }) {
   const { partyBackground } = usePartyTheme();
-  const bgImg = partyBackground || "./images/telugu_assembly_bg.jpg";
+  const bgImg = partyBackground || "./images/india_parliament_bg.jpg";
 
   return (
     <div

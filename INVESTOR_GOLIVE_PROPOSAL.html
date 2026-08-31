@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leader's Lens - Enterprise Go-Live & Capital Allocation Proposal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+    @page {
+      size: A4;
+      margin: 14mm 15mm 14mm 15mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1E293B;
+      background: #FFFFFF;
+      line-height: 1.45;
+      font-size: 9.5pt;
+    }
+
+    .print-bar {
+      background: #0B131E;
+      color: #F5EFE0;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .print-btn {
+      background: #D4A24C;
+      color: #0B131E;
+      border: none;
+      padding: 8px 20px;
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(212, 162, 76, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .print-btn:hover {
+      background: #E5B45F;
+      transform: translateY(-1px);
+    }
+
+    @media print {
+      .print-bar {
+        display: none !important;
+      }
+      body {
+        background: white;
+        color: #0F172A;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      .no-break {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 10px 15px;
+    }
+
+    /* Cover / Header Section */
+    .header-card {
+      border: 2px solid #D4A24C;
+      border-radius: 10px;
+      padding: 18px 22px;
+      background: linear-gradient(135deg, #0B131E 0%, #162438 100%);
+      color: #F5EFE0;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+
+    .header-tag {
+      display: inline-block;
+      background: rgba(212, 162, 76, 0.2);
+      border: 1px solid #D4A24C;
+      color: #D4A24C;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 8px;
+      border-radius: 5px;
+      margin-bottom: 8px;
+    }
+
+    .doc-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 19pt;
+      font-weight: 800;
+      color: #F8FAFC;
+      line-height: 1.15;
+      margin-bottom: 4px;
+    }
+
+    .doc-subtitle {
+      font-size: 10pt;
+      color: #94A3B8;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      border-top: 1px solid rgba(212, 162, 76, 0.3);
+      padding-top: 10px;
+      font-size: 8pt;
+      color: #CBD5E1;
+    }
+
+    .meta-item strong {
+      color: #D4A24C;
+      display: block;
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Typography & Sections */
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 12.5pt;
+      color: #0F172A;
+      border-bottom: 2px solid #D4A24C;
+      padding-bottom: 3px;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 10pt;
+      color: #1E293B;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      font-weight: 700;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin-bottom: 8px;
+      color: #334155;
+      font-size: 9pt;
+      line-height: 1.45;
+    }
+
+    ul, ol {
+      margin-left: 18px;
+      margin-bottom: 10px;
+      font-size: 9pt;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 3px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px 0;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    th {
+      background: #0B131E;
+      color: #F5EFE0;
+      font-weight: 700;
+      text-align: left;
+      padding: 6px 8px;
+      font-size: 8pt;
+      border: 1px solid #1E293B;
+    }
+
+    td {
+      padding: 5px 8px;
+      border: 1px solid #CBD5E1;
+      color: #1E293B;
+    }
+
+    tr:nth-child(even) {
+      background: #F8FAFC;
+    }
+
+    .highlight-cell {
+      font-weight: 700;
+      color: #0F172A;
+    }
+
+    .amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #047857;
+      text-align: right;
+    }
+
+    /* Architecture / Code Box */
+    .arch-box {
+      background: #0B131E;
+      color: #E2E8F0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7pt;
+      line-height: 1.35;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #D4A24C;
+      margin: 8px 0 10px 0;
+      white-space: pre;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .callout {
+      border-left: 4px solid #D4A24C;
+      background: #FEF9EF;
+      padding: 8px 12px;
+      border-radius: 0 6px 6px 0;
+      margin: 8px 0;
+      font-size: 8.5pt;
+      color: #78350F;
+      page-break-inside: avoid;
+    }
+
+    /* Sign-off Table */
+    .sign-table {
+      margin-top: 14px;
+      border: 1px solid #94A3B8;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .sign-table th {
+      background: #1E293B;
+    }
+
+    .sign-table td {
+      padding: 12px 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-bar">
+    <div>
+      <strong>🏛️ Leader's Lens Executive Proposal</strong> &bull; Production Go-Live & Investment Plan
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </div>
+
+  <div class="container">
+    
+    <!-- Cover Card -->
+    <div class="header-card">
+      <span class="header-tag">Strategic Investment & Go-Live Document</span>
+      <h1 class="doc-title">LEADER'S LENS</h1>
+      <div class="doc-subtitle">AI-Driven Political Intelligence, Citizen Grievance & Field Force Governance Platform</div>
+      
+      <div class="meta-grid">
+        <div class="meta-item">
+          <strong>Document Target</strong>
+          Executive Board & Investors
+        </div>
+        <div class="meta-item">
+          <strong>Deployment Target</strong>
+          100% High-Availability AWS (Mumbai)
+        </div>
+        <div class="meta-item">
+          <strong>Release Version</strong>
+          v1.0 Production Readiness
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. Executive Summary -->
+    <h2>1. Executive Summary & Market Value Proposition</h2>
+    <p>In contemporary Indian electoral governance, elected representatives (MLAs, MPs, Ministers, and Constituency Leaders) face critical operational bottlenecks: disconnected village cadres, lost paper-based grievance registers, and an absence of real-time demographic intelligence.</p>
+    
+    <p><strong>Leader’s Lens</strong> solves this through a unified, high-performance command center:</p>
+    <ul>
+      <li><strong>SLA Grievance Engine</strong>: Real-time tracking from citizen filing to photo-verified resolution with instant SMS/WhatsApp feedback.</li>
+      <li><strong>Field Volunteer Force Management</strong>: Real-time booth, village, and mandal-level assignment, productivity tracking, and squad KPIs.</li>
+      <li><strong>Spatial & Demographic Intelligence</strong>: Granular distribution analysis by gender, age groups, mandals, and government departments.</li>
+      <li><strong>Frictionless WhatsApp Authentication</strong>: Seamless mobile number login with 6-digit WhatsApp OTP verification via Meta Cloud API.</li>
+    </ul>
+
+    <!-- 2. Cloud Architecture -->
+    <h2>2. Enterprise Cloud Architecture (100% AWS High Availability)</h2>
+    <p>To ensure <strong>99.99% uptime</strong> and eliminate bottlenecks during election campaigns, all infrastructure is consolidated within a secure Multi-AZ Virtual Private Cloud (VPC) in <strong>AWS Mumbai (ap-south-1)</strong>.</p>
+
+    <div class="arch-box">                     [ Custom Domain (e.g. leaderslens.in) ]
+                                    │
+                  [ AWS Route 53 DNS + ACM Automated SSL ]
+                                    │
+          [ AWS CloudFront CDN (Edge Edge Caching Across India) ]
+               │                                      │
+     (React Web Bundle)                      (API Calls /api/*)
+               │                                      │
+     [ AWS S3 Web Hosting ]               [ AWS Application Load Balancer (ALB) ]
+                                            (Multi-AZ Continuous Health Checks)
+                                                      │
+                                          ┌───────────┴───────────┐
+                                          ▼                       ▼
+                                   [ ECS Fargate A ]       [ ECS Fargate B ]
+                                   (AZ: ap-south-1a)       (AZ: ap-south-1b)
+                                          │                       │
+                                          └───────────┬───────────┘
+                                                      │
+                          ┌───────────────────────────┼───────────────────────────┐
+                          ▼                           ▼                           ▼
+                [ AWS DocumentDB ]           [ AWS ElastiCache ]           [ AWS S3 Media ]
+             (MongoDB 5.0 HA Cluster)        (Redis OTP & Cache)        (Grievance Evidence)</div>
+
+    <div class="callout">
+      <strong>Zero Bottleneck Assurance:</strong> Multi-AZ ALB performs 15-second health checks. If any container experiences failure, traffic automatically fails over with 0 dropped sessions while ECS auto-launches healthy replacement tasks.
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- 3. WhatsApp Auth -->
+    <h2>3. Meta WhatsApp API & Security Integration</h2>
+    <p>Leader’s Lens replaces insecure password systems with an authenticated WhatsApp-first mobile security workflow:</p>
+    <ul>
+      <li><strong>Super Admin</strong>: Master Email + Enterprise Multi-Factor Authentication (MFA).</li>
+      <li><strong>Leaders, Directors, Volunteers & Citizens</strong>: 10-Digit Mobile Number + 6-Digit WhatsApp OTP.</li>
+      <li><strong>Automated Notifications</strong>: Instant WhatsApp confirmation messages with Ticket ID tracking links and resolution alerts.</li>
+    </ul>
+
+    <!-- 4. Geographic Dataset -->
+    <h2>4. Pan-India Geographic & Political Master Dataset</h2>
+    <p>The platform comes pre-architected to handle constituency data at any scale across India:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Geographic Tier</th>
+          <th>Coverage Count</th>
+          <th>Data Scope & Attributes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="highlight-cell">National / States</td>
+          <td>28 States + 8 UTs</td>
+          <td>State codes, regional capital boundaries, nodal officers</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Parliamentary (Lok Sabha)</td>
+          <td>543 Constituencies</td>
+          <td>GIS shapefiles, MP demographics, voter population baselines</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Assembly (Vidhan Sabha)</td>
+          <td>4,120+ Constituencies</td>
+          <td>MLA jurisdiction, historical booth margins, local issues taxonomy</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Mandals / Tehsils / Blocks</td>
+          <td>6,000+ Administrative Blocks</td>
+          <td>Mandal revenue officers, Discom engineers, police stations</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Villages, Wards & Booths</td>
+          <td>1,000,000+ Polling Booths</td>
+          <td>Assigned volunteer squad heads, street-level GPS mapping</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 5. Budget -->
+    <h2>5. Capital Requirements & Operational Budget</h2>
+    
+    <h3>5.1 One-Time Setup Capital (CapEx)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Item / Milestone</th>
+          <th>Deliverable Description</th>
+          <th style="text-align:right">Cost (INR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="highlight-cell">Domain & Brand Asset Shield</td>
+          <td>Multi-year enterprise domain registration with WHOIS privacy protection</td>
+          <td class="amount">₹3,500</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Meta WhatsApp Verified Business Setup</td>
+          <td>Meta Business Verification, green tick application & message template approval</td>
+          <td class="amount">₹10,000</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">AWS Multi-AZ VPC Architecture Setup</td>
+          <td>Multi-AZ VPC, NAT Gateways, Route 53, ACM SSL & ALB target groups</td>
+          <td class="amount">₹15,000</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Pan-India Geographic GIS Dataset</td>
+          <td>Licensed boundary shapefiles, mandals, and booth hierarchy dataset</td>
+          <td class="amount">₹25,000</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Security Audit & Load Testing</td>
+          <td>OWASP Top 10 penetration testing & 5,000 req/sec stress test validation</td>
+          <td class="amount">₹35,000</td>
+        </tr>
+        <tr style="background:#FEF9EF;">
+          <td class="highlight-cell" colspan="2"><strong>TOTAL INITIAL CAPITAL (CapEx)</strong></td>
+          <td class="amount" style="font-size:10.5pt; color:#B45309;">₹88,500</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>5.2 Recurring Monthly Operational Expenditure (OpEx)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Infrastructure Component</th>
+          <th>Provider & Specifications</th>
+          <th style="text-align:right">Monthly (INR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="highlight-cell">AWS Application Load Balancer (ALB)</td>
+          <td>Multi-AZ health monitoring & traffic distribution</td>
+          <td class="amount">₹1,800</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">AWS ECS Fargate Backend Cluster</td>
+          <td>2 to 4 Tasks (0.5 vCPU, 1 GB RAM) with auto-scaling</td>
+          <td class="amount">₹1,600</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">AWS DocumentDB (MongoDB 5.0 HA)</td>
+          <td>db.t3.medium Multi-AZ cluster with automated daily snapshots</td>
+          <td class="amount">₹6,200</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">AWS ElastiCache for Redis</td>
+          <td>Multi-AZ cache for sub-millisecond OTP validation</td>
+          <td class="amount">₹1,500</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">AWS CloudFront CDN & S3 Storage</td>
+          <td>Edge static delivery + S3 grievance evidence photos</td>
+          <td class="amount">₹1,100</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">AWS WAF & Secrets Manager</td>
+          <td>Web Application Firewall protection & credentials vault</td>
+          <td class="amount">₹600</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Meta WhatsApp Authentication OTPs</td>
+          <td>~15,000 OTP logins + 10,000 push alerts (@ ₹0.14/msg)</td>
+          <td class="amount">₹3,500</td>
+        </tr>
+        <tr style="background:#ECFDF5;">
+          <td class="highlight-cell" colspan="2"><strong>TOTAL MONTHLY OPERATIONAL RUN-RATE (OpEx)</strong></td>
+          <td class="amount" style="font-size:10.5pt; color:#047857;">₹16,300 / mo</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 6. Strategic ROI -->
+    <h2>6. Strategic Commercial Multipliers</h2>
+    <ul>
+      <li><strong>High Gross Margin</strong>: Typical political consulting retainer per constituency is <strong>₹50,000 – ₹1,50,000/month</strong>, against infrastructure cost of <strong>&lt; ₹5,000/month</strong> (<strong>&gt; 85% gross margin</strong>).</li>
+      <li><strong>Zero-Re-architecture Scale</strong>: Multi-tenant architecture allows instantly onboarding 10 to 100 constituencies with single database seeds.</li>
+    </ul>
+
+    <!-- Sign-off Block -->
+    <table class="sign-table">
+      <thead>
+        <tr>
+          <th>Authorized Role</th>
+          <th>Designation & Organization</th>
+          <th>Signature & Authorization</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="highlight-cell">Technical Director & Founder</td>
+          <td>Srinidhi Allakonda &bull; palramai.in Core Team</td>
+          <td>_____________________________</td>
+        </tr>
+        <tr>
+          <td class="highlight-cell">Managing Partner / Investor</td>
+          <td>Niranjan Reddy &bull; Executive Investment Committee</td>
+          <td>_____________________________</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+</body>
+</html>

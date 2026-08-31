@@ -117,7 +117,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
     <div
       className="hero-dark min-h-screen w-full flex flex-col lg:flex-row items-stretch relative overflow-x-hidden bg-[#071322]"
       style={{
-        backgroundImage: "url(./images/telugu_assembly_bg.jpg)",
+        backgroundImage: "url(./images/india_parliament_bg.jpg)",
         backgroundSize: "cover",
         backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
