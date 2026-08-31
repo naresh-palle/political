@@ -413,6 +413,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <NotificationCenter
           currentUser={currentProfile}
           isOpen={isNotifOpen}
+          onUnreadCountChange={(count) => setUnreadCount(count)}
           onClose={() => {
             setIsNotifOpen(false);
             loadUnreadNotifications();

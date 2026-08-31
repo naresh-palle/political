@@ -1136,13 +1136,19 @@ export const politicalApiService = {
 
   async getFieldNotifications(recipientUserId?: string, recipientRole?: string): Promise<any[]> {
     let localList: any[] = [];
+    let readIds: Set<string> = new Set();
     try {
+      const storedRead = localStorage.getItem("leaders_lens_read_notif_ids");
+      if (storedRead) {
+        readIds = new Set(JSON.parse(storedRead));
+      }
       const stored = localStorage.getItem("leaders_lens_field_notifications");
       if (stored) {
         localList = JSON.parse(stored);
       }
     } catch (e) {}
 
+    let fetchedData: any[] = [];
     try {
       const qp = new URLSearchParams();
       if (recipientUserId) qp.append("recipientUserId", recipientUserId);
@@ -1151,25 +1157,36 @@ export const politicalApiService = {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          const combined = [...localList, ...data];
-          return Array.from(new Map(combined.map((n) => [n.id, n])).values());
+          fetchedData = data;
         }
       }
     } catch (e) {
       // Fallback
     }
 
-    let list: any[] = localList;
-    try {
-      const res = await fetch("./data/field_notifications.json");
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          const combined = [...localList, ...data];
-          list = Array.from(new Map(combined.map((n) => [n.id, n])).values());
+    if (fetchedData.length === 0) {
+      try {
+        const res = await fetch("./data/field_notifications.json");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            fetchedData = data;
+          }
         }
+      } catch (e) {}
+    }
+
+    // Merge: Remote/static items FIRST, then local items override
+    const map = new Map<string, any>();
+    fetchedData.forEach((n) => map.set(n.id, n));
+    localList.forEach((n) => map.set(n.id, n));
+
+    let list = Array.from(map.values()).map((n) => {
+      if (readIds.has(n.id)) {
+        return { ...n, isRead: true };
       }
-    } catch (e) {}
+      return n;
+    });
 
     if (recipientUserId) {
       list = list.filter((n: any) => n.recipientUserId === recipientUserId || (recipientRole && n.recipientRole === recipientRole));
@@ -1181,12 +1198,22 @@ export const politicalApiService = {
 
   async markNotificationRead(notificationId: string): Promise<any> {
     try {
+      // 1. Save to read notification IDs set
+      const storedRead = localStorage.getItem("leaders_lens_read_notif_ids");
+      const readIds = storedRead ? new Set(JSON.parse(storedRead)) : new Set<string>();
+      readIds.add(notificationId);
+      localStorage.setItem("leaders_lens_read_notif_ids", JSON.stringify(Array.from(readIds)));
+
+      // 2. Update field notifications list in localStorage
       const stored = localStorage.getItem("leaders_lens_field_notifications");
-      if (stored) {
-        const list = JSON.parse(stored);
-        const updated = list.map((n: any) => n.id === notificationId ? { ...n, isRead: true } : n);
-        localStorage.setItem("leaders_lens_field_notifications", JSON.stringify(updated));
+      let list = stored ? JSON.parse(stored) : [];
+      const idx = list.findIndex((n: any) => n.id === notificationId);
+      if (idx !== -1) {
+        list[idx].isRead = true;
+      } else {
+        list.push({ id: notificationId, isRead: true });
       }
+      localStorage.setItem("leaders_lens_field_notifications", JSON.stringify(list));
     } catch (e) {}
 
     try {

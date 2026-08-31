@@ -25,13 +25,15 @@ interface NotificationCenterProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectIssue?: (issueId: string) => void;
+  onUnreadCountChange?: (count: number) => void;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   currentUser,
   isOpen,
   onClose,
-  onSelectIssue
+  onSelectIssue,
+  onUnreadCountChange
 }) => {
   const [notifications, setNotifications] = useState<FieldNotification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       loadNotifications();
     }
   }, [isOpen, currentUser.id, currentUser.primaryRole]);
+
+  useEffect(() => {
+    if (notifications.length > 0 && onUnreadCountChange) {
+      const count = notifications.filter((n) => !n.isRead).length;
+      onUnreadCountChange(count);
+    }
+  }, [notifications, onUnreadCountChange]);
 
   // Global Escape key listener for dismissing modals
   useEffect(() => {
@@ -72,6 +81,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         currentUser.primaryRole
       );
       setNotifications(list);
+      if (onUnreadCountChange) {
+        onUnreadCountChange(list.filter((n: FieldNotification) => !n.isRead).length);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -83,9 +95,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     if (e) e.stopPropagation();
     try {
       await politicalApiService.markNotificationRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
+      setNotifications((prev) => {
+        const next = prev.map((n) => (n.id === id ? { ...n, isRead: true } : n));
+        if (onUnreadCountChange) {
+          onUnreadCountChange(next.filter((x) => !x.isRead).length);
+        }
+        return next;
+      });
       if (selectedNotification && selectedNotification.id === id) {
         setSelectedNotification((prev) => prev ? { ...prev, isRead: true } : null);
       }
@@ -130,7 +146,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       for (const n of notifications.filter((x) => !x.isRead)) {
         await politicalApiService.markNotificationRead(n.id);
       }
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications((prev) => {
+        const next = prev.map((n) => ({ ...n, isRead: true }));
+        if (onUnreadCountChange) {
+          onUnreadCountChange(0);
+        }
+        return next;
+      });
     } catch (e) {
       console.error(e);
     }
