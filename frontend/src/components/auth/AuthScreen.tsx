@@ -117,7 +117,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
     <div
       className="hero-dark min-h-screen w-full flex flex-col lg:flex-row items-stretch relative overflow-x-hidden bg-[#071322]"
       style={{
-        backgroundImage: "url(./images/telugu_assembly_bg.jpg)",
+        backgroundImage: "url(./images/india_parliament_bg.jpg)",
         backgroundSize: "cover",
         backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
@@ -141,17 +141,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         </div>
       </div>
 
-      {/* Right Side Dedicated Sign In Panel (Completely separate, zero overlap) */}
-      <div className="w-full lg:w-[420px] xl:w-[460px] min-h-screen bg-[#071322]/95 backdrop-blur-2xl border-l border-[#D4A24C]/30 flex flex-col justify-between p-6 sm:p-10 z-20 shadow-[-25px_0_60px_rgba(0,0,0,0.85)] shrink-0 animate-fadeIn">
+      {/* Right Side Dedicated Sign In Panel (Transparent Glassmorphic with Parliament visible through) */}
+      <div className="w-full lg:w-[420px] xl:w-[460px] min-h-screen bg-[#071322]/45 backdrop-blur-xl border-l border-[#D4A24C]/30 flex flex-col justify-between p-6 sm:p-10 z-20 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] shrink-0 animate-fadeIn">
         {/* Top Official Branding */}
         <div className="flex flex-col items-center text-center pt-2 sm:pt-4">
-          <div className="p-2 rounded-2xl bg-[#0B131E] border border-[#D4A24C]/40 shadow-xl mb-2.5">
+          <div className="p-2 rounded-2xl bg-[#071322]/60 backdrop-blur-md border border-[#D4A24C]/40 shadow-xl mb-2.5">
             <LeadersLogo size={46} />
           </div>
-          <h1 className="font-display text-2xl tracking-[0.14em] text-[#F5EFE0] uppercase font-bold">
+          <h1 className="font-display text-2xl tracking-[0.14em] text-[#F5EFE0] uppercase font-bold drop-shadow-md">
             LEADERS<span className="gold-text">LENS</span>
           </h1>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4A24C] font-semibold mt-1 font-mono">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4A24C] font-semibold mt-1 font-mono drop-shadow">
             CONSULTING
           </p>
         </div>
@@ -159,8 +159,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         {/* Center Sign In Form */}
         <div className="my-auto py-6">
           <div className="mb-6 text-left">
-            <h2 className="text-xl font-bold text-[#F5EFE0] tracking-wide">Sign In</h2>
-            <p className="text-xs text-[#8E9CAE] mt-1">Enter your verified credentials to continue</p>
+            <h2 className="text-xl font-bold text-[#F5EFE0] tracking-wide drop-shadow-md">Sign In</h2>
+            <p className="text-xs text-[#D8CFB8] mt-1 font-medium">Enter your verified credentials to continue</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -191,7 +191,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8E9B] hover:text-[#D4A24C] transition-colors p-1 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D4A24C] hover:text-white transition-colors p-1 cursor-pointer"
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -216,8 +216,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         </div>
 
         {/* Bottom Footer */}
-        <div className="text-center pt-4 border-t border-[#22405E]/40">
-          <p className="text-[11px] text-[#8E9CAE]">
+        <div className="text-center pt-4 border-t border-[#D4A24C]/20">
+          <p className="text-[11px] text-[#D8CFB8] font-medium">
             Protected by Leader's Lens Security Framework
           </p>
         </div>
@@ -227,7 +227,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 };
 
 const darkInput =
-  "w-full bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 focus:border-[#D4A24C] focus:ring-2 focus:ring-[#D4A24C]/40 rounded-md px-3 py-2.5 text-[13.5px] text-[#F5EFE0] placeholder:text-[#5F6875] outline-none transition-colors";
+  "w-full bg-[#071322]/60 backdrop-blur-md border border-[#22405E] hover:border-[#D4A24C]/60 focus:border-[#D4A24C] focus:ring-2 focus:ring-[#D4A24C]/40 rounded-lg px-3 py-2.5 text-[13.5px] text-[#F5EFE0] placeholder:text-[#8E9CAE] outline-none transition-all";
 
 const Field: React.FC<{ label: string; icon?: React.ReactNode; children: React.ReactNode }> = ({ label, icon, children }) => (
   <div className="space-y-1.5">
