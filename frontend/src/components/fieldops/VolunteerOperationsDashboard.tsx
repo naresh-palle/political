@@ -138,6 +138,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [reporterDesignation, setReporterDesignation] = useState("");
   const [newReportedBy, setNewReportedBy] = useState("");
   const [newReporterPhone, setNewReporterPhone] = useState("");
+  const [citizenAge, setCitizenAge] = useState("");
+  const [citizenGender, setCitizenGender] = useState("Male");
 
   // Assigned Ticket Person Details (Dynamic from current logged in user)
   const [assignedPersonName, setAssignedPersonName] = useState(currentUser.name || "");
@@ -282,7 +284,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         assignedVolunteerPhone: assignedPersonPhone.trim() ? `+91 ${assignedPersonPhone.trim()}` : (currentUser.phone || ""),
         directorId: currentUser.directorId || "usr-demo-director",
         directorName: currentUser.directorName || "Demo Director",
-        initialRemarks: `Reported by ${reporterType} ${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${assignedPersonName}.`,
+        initialRemarks: `Reported by ${reporterType} ${reporterType === "CITIZEN" && citizenAge ? `(Age: ${citizenAge}, Gender: ${citizenGender}) ` : ""}${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${assignedPersonName}.`,
         attachments: allAttachments,
         createdBy: currentUser.id,
         createdByRole: "VOLUNTEER"
@@ -345,6 +347,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         setNewReporterPhone("");
         setReporterDesignation("");
         setReporterType("CITIZEN");
+        setCitizenAge("");
+        setCitizenGender("Male");
         setProofFiles([]);
         setNewAttachmentUrl("");
       }, 2000);
@@ -997,12 +1001,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   />
                 </div>
 
-                {/* 9 & 10. Person Details (Citizen / Cadre / Leader) */}
+                {/* 9 & 10. Personal Details (Citizen / Cadre / Leader) */}
                 <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
                   <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" />
-                      Person Details
+                      Personal Details
                     </span>
                     <span className="text-[10.5px] text-[#8E9CAE]">Citizen / Cadre / Leader</span>
                   </div>
@@ -1017,7 +1021,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         [
                           { id: "CITIZEN", label: "Citizen" },
                           { id: "CADRE", label: "Party Cadre" },
-                          { id: "LEADER", label: "Party Leader / Rep" }
+                          { id: "LEADER", label: "Party Leader" }
                         ] as const
                       ).map((item) => (
                         <button
@@ -1085,6 +1089,40 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       </div>
                     </div>
                   </div>
+
+                  {/* Age and Gender (for Citizen) */}
+                  {reporterType === "CITIZEN" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 animate-fadeIn">
+                      <div>
+                        <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                          Age
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={120}
+                          value={citizenAge}
+                          onChange={(e) => setCitizenAge(e.target.value)}
+                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                          Gender
+                        </label>
+                        <select
+                          value={citizenGender}
+                          onChange={(e) => setCitizenGender(e.target.value)}
+                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none cursor-pointer"
+                        >
+                          <option value="Male" className="bg-[#0B1A2C] text-[#F5EFE0]">Male</option>
+                          <option value="Female" className="bg-[#0B1A2C] text-[#F5EFE0]">Female</option>
+                          <option value="Other" className="bg-[#0B1A2C] text-[#F5EFE0]">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 11. Multi-Proof (Photos & Documents) Upload (Not Mandatory) */}
