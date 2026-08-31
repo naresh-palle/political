@@ -366,8 +366,8 @@ function AppCanvas({
 }: {
   children: React.ReactNode;
 }) {
-  const { currentParty, isPartyThemeActive } = usePartyTheme();
-  const bgImg = "./images/india_parliament_bg.jpg";
+  const { currentParty, isPartyThemeActive, partyBackground } = usePartyTheme();
+  const bgImg = (isPartyThemeActive && partyBackground) ? partyBackground : "./images/india_parliament_bg.jpg";
 
   return (
     <div
@@ -387,7 +387,7 @@ function AppCanvas({
       }}
     >
       <div
-        className="fixed inset-0 pointer-events-none z-0 bg-black/35 backdrop-blur-[0.5px]"
+        className="fixed inset-0 pointer-events-none z-0 bg-black/25 backdrop-blur-[0.5px]"
         aria-hidden="true"
       />
       <div className="relative z-10 flex-1 flex flex-col">

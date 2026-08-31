@@ -401,7 +401,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   return (
     <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
       {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#0F2338] via-[#122A44] to-[#0B1A2C] border border-[#D4A24C]/40 shadow-2xl space-y-4">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           {/* Volunteer Avatar & Main Name */}
           <div className="flex items-start sm:items-center gap-4">
@@ -412,10 +412,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             />
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                   FIELD VOLUNTEER
                 </span>
-                <span className="text-xs font-semibold text-[#D4A24C] bg-[#142B45] px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
+                <span className="text-xs font-semibold text-[#D4A24C] bg-[#142B45]/70 px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
                   Banaganapalle AC (AC-140) · Nandyala PC
                 </span>
               </div>
@@ -438,13 +438,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
         {/* Assigned Details integrated directly at the top */}
         <div className="pt-3 border-t border-[#22405E]/60 flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
             <Building2 className="w-3.5 h-3.5 text-[#D4A24C]" />
             <span>Mandal / Town:</span>
             <strong className="text-[#F5EFE0]">{currentUser.assignedMandalName || "Banaganapalle Town"}</strong>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
             <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
             <span>Assigned Wards / Villages:</span>
             <strong className="text-[#F5EFE0]">
@@ -452,7 +452,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </strong>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
             <User className="w-3.5 h-3.5 text-[#D4A24C]" />
             <span>Supervising Director:</span>
             <strong className="text-[#D4A24C]">{currentUser.directorName || "Demo Director"}</strong>
@@ -461,7 +461,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       </div>
 
       {/* 2. Streamlined KPI Strip: ONLY "Total Issues Submitted" with Date Filter & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#0B1A2C] border border-[#22405E]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
         {/* Total Issues Submitted Counter */}
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
@@ -603,7 +603,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             <div
               key={issue.id}
               onClick={() => setSelectedIssue(issue)}
-              className="p-5 rounded-2xl bg-gradient-to-b from-[#0F2338] to-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all space-y-3.5 cursor-pointer shadow-lg group"
+              className="p-5 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80 hover:border-[#D4A24C]/60 hover:bg-[#071322]/65 transition-all space-y-3.5 cursor-pointer shadow-lg group"
             >
               {/* Card Header */}
               <div className="flex items-center justify-between gap-2">
@@ -678,7 +678,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         </div>
       ) : (
         /* TABLE VIEW */
-        <div className="rounded-2xl bg-[#0B1A2C] border border-[#22405E] overflow-hidden shadow-xl">
+        <div className="rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80 overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
