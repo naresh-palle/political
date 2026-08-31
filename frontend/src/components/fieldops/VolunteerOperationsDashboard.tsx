@@ -128,7 +128,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     currentUser.assignedMandalId || "MDL-BNG-TWN"
   );
   const [villageWardText, setVillageWardText] = useState(
-    currentUser.assignedVillageNames?.[0] || "Banaganapalle Town Wards 1-10"
+    currentUser.assignedVillageNames?.[0] || ""
   );
   const [newPlaceName, setNewPlaceName] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -139,9 +139,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [newReportedBy, setNewReportedBy] = useState("");
   const [newReporterPhone, setNewReporterPhone] = useState("");
 
-  // Assigned Ticket Person Details
-  const [assignedPersonName, setAssignedPersonName] = useState(currentUser.name || "Demo Volunteer");
-  const [assignedPersonPhone, setAssignedPersonPhone] = useState(currentUser.phone || "+91 98850 44003");
+  // Assigned Ticket Person Details (Dynamic from current logged in user)
+  const [assignedPersonName, setAssignedPersonName] = useState(currentUser.name || "");
+  const [assignedPersonPhone, setAssignedPersonPhone] = useState(
+    currentUser.phone ? currentUser.phone.replace(/^\+91\s*/, "") : ""
+  );
 
   // Multi-Proof attachments (Photos & Documents)
   const [proofFiles, setProofFiles] = useState<{ name: string; url: string; type: "image" | "document" }[]>([]);
@@ -277,7 +279,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         reportedDate: new Date().toISOString().split("T")[0],
         assignedVolunteerId: currentUser.id,
         assignedVolunteerName: assignedPersonName.trim() || currentUser.name,
-        assignedVolunteerPhone: assignedPersonPhone.trim() || currentUser.phone || "+91 98850 44003",
+        assignedVolunteerPhone: assignedPersonPhone.trim() ? `+91 ${assignedPersonPhone.trim()}` : (currentUser.phone || ""),
         directorId: currentUser.directorId || "usr-demo-director",
         directorName: currentUser.directorName || "Demo Director",
         initialRemarks: `Reported by ${reporterType} ${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${assignedPersonName}.`,
@@ -779,7 +781,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 </div>
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] font-mono block">
-                    GROUND FIELD INTAKE · BANAGANAPALLE AC
+                    GROUND FIELD INTAKE · {currentUser.assignedConstituency || "CONSTITUENCY FIELD FORCE"}
                   </span>
                   <h3 className="font-display text-base sm:text-xl text-[#F5EFE0] leading-tight">
                     Log New Citizen Complaint / Requirement

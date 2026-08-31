@@ -366,10 +366,8 @@ function AppCanvas({
 }: {
   children: React.ReactNode;
 }) {
-  const { currentParty, isPartyThemeActive, partyBackground } = usePartyTheme();
-  const bgImg = isPartyThemeActive
-    ? (partyBackground || "./images/party-backgrounds/tdp-bg.jpg")
-    : "./images/party-backgrounds/admin-bg.jpg";
+  const { currentParty, isPartyThemeActive } = usePartyTheme();
+  const bgImg = "./images/india_parliament_bg.jpg";
 
   return (
     <div
@@ -381,16 +379,16 @@ function AppCanvas({
       style={{
         backgroundImage: `url(${bgImg})`,
         backgroundSize: "cover",
-        backgroundPosition: "center top",
+        backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
-        backgroundColor: isPartyThemeActive ? (currentParty?.lightBackground || "#FFFBEB") : "#0B1A2C",
+        backgroundColor: "#0B1A2C",
         color: isPartyThemeActive ? (currentParty?.textColor || "#0F172A") : "#F5EFE0"
       }}
     >
       <div
         className={`fixed inset-0 pointer-events-none z-0 ${
-          isPartyThemeActive ? "bg-white/30 backdrop-blur-[0.5px]" : "bg-[#0B1A2C]/65 backdrop-blur-[0.5px]"
+          isPartyThemeActive ? "bg-white/40 backdrop-blur-[0.5px]" : "bg-[#0B1A2C]/75 backdrop-blur-[0.5px]"
         }`}
         aria-hidden="true"
       />

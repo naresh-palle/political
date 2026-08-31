@@ -72,9 +72,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
     <div
       className="hero-dark min-h-screen flex flex-col relative bg-[#071322] text-[#F5EFE0]"
       style={{
-        backgroundImage: "url(./images/party-backgrounds/admin-bg.jpg)",
+        backgroundImage: "url(./images/india_parliament_bg.jpg)",
         backgroundSize: "cover",
-        backgroundPosition: "center top",
+        backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed"
       }}
