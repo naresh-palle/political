@@ -153,7 +153,7 @@ export const USER_PROFILES: UserProfile[] = [
     partyColor: "#D4A24C",
     partyEmoji: "🏛️",
     directorId: "usr-demo-director",
-    directorName: "Demo Director",
+    directorName: "Demo Manager",
     stateId: "AP",
     stateName: "Andhra Pradesh",
     parliamentConstituencyId: "NDL-PC",

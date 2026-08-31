@@ -218,13 +218,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                 Campaign Manager
               </span>
-              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "Constituency Field Command"}</span>
+              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "Constituency Grievance Command"}</span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
               {currentUser.name}
             </h1>
             <p className="text-xs text-[#8E9CAE] mt-0.5">
-              Managing {volunteers.length} Field Volunteers across {mandals.length} Mandals
+              Supervising Ground Grievance Intake & Resolutions across {mandals.length} Mandals
             </p>
           </div>
         </div>
@@ -233,7 +233,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           <div className="px-4 py-2 rounded-xl bg-[#0B131E]/80 border border-[#223348] text-right">
             <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Cadre Strength</span>
             <span className="font-display text-lg font-bold text-[#D4A24C]">
-              {volunteers.length} Active Agents
+              {volunteers.length} Active Field Agents
             </span>
           </div>
           <div className="px-4 py-2 rounded-xl bg-[#0B131E]/80 border border-[#223348] text-right">
@@ -250,7 +250,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-md border border-rose-500/50 space-y-2">
           <div className="flex items-center gap-2 text-rose-400 font-semibold text-xs uppercase tracking-wider">
             <AlertTriangle className="w-4 h-4 text-rose-400 animate-pulse" />
-            <span>Field Work Alert: Overdue Issues Require Manager Intervention</span>
+            <span>Grievance Alert: Overdue Issues Require Manager Intervention</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
             {inactiveVolunteerWarnings.map((w, idx) => (
@@ -286,7 +286,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>All Operations ({issues.length + normalizedGrievances.length})</span>
+            <span>All Grievances ({issues.length + normalizedGrievances.length})</span>
           </button>
 
           <button
@@ -298,7 +298,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             }`}
           >
             <ClipboardList className="w-3.5 h-3.5" />
-            <span>Field Complaints ({issues.length})</span>
+            <span>Field Grievances ({issues.length})</span>
           </button>
 
           <button
@@ -310,12 +310,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             }`}
           >
             <Inbox className="w-3.5 h-3.5" />
-            <span>Citizen Grievance Desk ({normalizedGrievances.length})</span>
+            <span>Citizen Petitions ({normalizedGrievances.length})</span>
           </button>
         </div>
 
         <div className="text-xs text-[#CBD5E1] font-mono">
-          Showing <strong className="text-[#D4A24C]">{filteredOperations.length}</strong> active stream items
+          Showing <strong className="text-[#D4A24C]">{filteredOperations.length}</strong> active grievance records
         </div>
       </div>
 
@@ -329,7 +329,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               : "bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/40"
           }`}
         >
-          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Operations</span>
+          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Grievances</span>
           <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-1">{totalOperationsCount}</div>
         </div>
 
@@ -391,63 +391,148 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <Users className="w-5 h-5 text-[#D4A24C]" />
             Assigned Volunteer Squads & Field Force
           </h2>
-          <span className="text-xs text-[#8E9CAE]">
-            {volunteers.length} field agents reporting to you
-          </span>
+          <div className="flex items-center gap-2">
+            {filterVolunteerId !== "ALL" && (
+              <button
+                onClick={() => setFilterVolunteerId("ALL")}
+                className="px-2.5 py-1 rounded-lg bg-[#D4A24C]/20 hover:bg-[#D4A24C]/30 text-[#D4A24C] text-[11px] font-semibold transition-colors cursor-pointer"
+              >
+                Clear Filter (Show All)
+              </button>
+            )}
+            <span className="text-xs text-[#CBD5E1]">
+              {volunteers.length} field agents reporting to you
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {volunteers.map((vol) => {
-            const volIssues = issues.filter((i) => i.assignedVolunteerId === vol.id);
-            const volCompleted = volIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-            const volOverdue = volIssues.filter((i) => i.status === "OVERDUE").length;
-
-            return (
-              <div
-                key={vol.id}
-                onClick={() => setFilterVolunteerId(filterVolunteerId === vol.id ? "ALL" : vol.id)}
-                className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer space-y-3 ${
-                  filterVolunteerId === vol.id
-                    ? "bg-[#131E2D] border-[#D4A24C] ring-2 ring-[#D4A24C]/40"
-                    : "bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/50 hover:bg-[#131E2D]/85"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={vol.avatar}
-                    alt={vol.name}
-                    className="w-10 h-10 rounded-xl object-cover border border-[#D4A24C]/40 shadow-sm"
-                  />
-                  <div className="min-w-0">
-                    <h4 className="font-semibold text-[13px] text-[#F5EFE0] truncate">
-                      {vol.name}
-                    </h4>
-                    <span className="text-[10px] text-[#8E9CAE] block truncate">
-                      {vol.assignedConstituency || "Village Agent"}
+        {volunteers.length === 1 ? (
+          /* Single Volunteer Full-Width Command Card (Zero Blank Squeeze) */
+          <div
+            onClick={() => setFilterVolunteerId(filterVolunteerId === volunteers[0].id ? "ALL" : volunteers[0].id)}
+            className={`p-5 rounded-2xl border backdrop-blur-xl transition-all cursor-pointer shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-5 ${
+              filterVolunteerId === volunteers[0].id
+                ? "bg-[#131E2D] border-[#D4A24C] ring-2 ring-[#D4A24C]/40"
+                : "bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/60 hover:bg-[#131E2D]/85"
+            }`}
+          >
+            {/* Left: Volunteer Info */}
+            <div className="flex items-center gap-4 min-w-0">
+              <img
+                src={volunteers[0].avatar}
+                alt={volunteers[0].name}
+                className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-md shrink-0"
+              />
+              <div className="space-y-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-display text-lg text-[#F5EFE0] font-semibold">
+                    {volunteers[0].name}
+                  </h3>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
+                    Active On Field
+                  </span>
+                  {filterVolunteerId === volunteers[0].id && (
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#D4A24C] text-[#0B131E]">
+                      Filtered
                     </span>
-                  </div>
+                  )}
                 </div>
-
-                <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
-                  <div className="p-1 rounded bg-[#0B131E]/80">
-                    <span className="text-[#8E9CAE] block font-semibold">Total</span>
-                    <strong className="text-[#F5EFE0]">{volIssues.length}</strong>
-                  </div>
-                  <div className="p-1 rounded bg-[#0B131E]/80">
-                    <span className="text-emerald-300 block font-semibold">Done</span>
-                    <strong className="text-emerald-400">{volCompleted}</strong>
-                  </div>
-                  <div className="p-1 rounded bg-[#0B131E]/80">
-                    <span className="text-rose-300 block font-semibold">Overdue</span>
-                    <strong className={volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}>
-                      {volOverdue}
-                    </strong>
-                  </div>
+                <p className="text-xs text-[#CBD5E1]">
+                  {volunteers[0].designation || volunteers[0].roleTitle || "Booth & Village Field Volunteer"}
+                </p>
+                <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8E9CAE] pt-0.5">
+                  <span className="flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-[#D4A24C]" />
+                    {volunteers[0].phone || "+91 98850 44003"}
+                  </span>
+                  <span className="hidden sm:inline">·</span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-[#D4A24C]" />
+                    {volunteers[0].assignedConstituency || "Banaganapalle AC · Banaganapalle Town & Yaganti"}
+                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+
+            {/* Right: Operational Metrics Strip */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full md:w-auto shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[#223348]/60">
+              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px]">
+                <span className="text-[10px] text-[#8E9CAE] uppercase block font-semibold">Total Intake</span>
+                <strong className="font-display text-base text-[#F5EFE0]">{allOperationsList.length}</strong>
+              </div>
+              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px]">
+                <span className="text-[10px] text-emerald-300 uppercase block font-semibold">Resolved</span>
+                <strong className="font-display text-base text-emerald-400">{completedCount}</strong>
+              </div>
+              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px]">
+                <span className="text-[10px] text-rose-300 uppercase block font-semibold">Overdue</span>
+                <strong className={`font-display text-base ${overdueCount > 0 ? "text-rose-400" : "text-[#8E9CAE]"}`}>
+                  {overdueCount}
+                </strong>
+              </div>
+              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px] hidden sm:block">
+                <span className="text-[10px] text-[#D4A24C] uppercase block font-semibold">Efficiency</span>
+                <strong className="font-display text-base text-[#D4A24C]">
+                  {allOperationsList.length > 0 ? Math.round((completedCount / allOperationsList.length) * 100) : 100}%
+                </strong>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Multi-volunteer grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {volunteers.map((vol) => {
+              const volIssues = allOperationsList.filter((i) => i.assignedVolunteerName === vol.name || i.assignedVolunteerId === vol.id);
+              const volCompleted = volIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
+              const volOverdue = volIssues.filter((i) => i.status === "OVERDUE").length;
+
+              return (
+                <div
+                  key={vol.id}
+                  onClick={() => setFilterVolunteerId(filterVolunteerId === vol.id ? "ALL" : vol.id)}
+                  className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                    filterVolunteerId === vol.id
+                      ? "bg-[#131E2D] border-[#D4A24C] ring-2 ring-[#D4A24C]/40"
+                      : "bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/50 hover:bg-[#131E2D]/85"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={vol.avatar}
+                      alt={vol.name}
+                      className="w-10 h-10 rounded-xl object-cover border border-[#D4A24C]/40 shadow-sm shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-[13px] text-[#F5EFE0] truncate">
+                        {vol.name}
+                      </h4>
+                      <span className="text-[10px] text-[#CBD5E1] block truncate">
+                        {vol.assignedConstituency || "Village Agent"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
+                    <div className="p-1 rounded bg-[#0B131E]/80">
+                      <span className="text-[#8E9CAE] block font-semibold">Total</span>
+                      <strong className="text-[#F5EFE0]">{volIssues.length}</strong>
+                    </div>
+                    <div className="p-1 rounded bg-[#0B131E]/80">
+                      <span className="text-emerald-300 block font-semibold">Done</span>
+                      <strong className="text-emerald-400">{volCompleted}</strong>
+                    </div>
+                    <div className="p-1 rounded bg-[#0B131E]/80">
+                      <span className="text-rose-300 block font-semibold">Overdue</span>
+                      <strong className={volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}>
+                        {volOverdue}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Filter & Search Strip */}

@@ -157,7 +157,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Products */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
-            {/* Primary Field Operations & Grievances Tab */}
+            {/* Primary Grievances / Ground Intake Tab */}
             <button
               onClick={() => onProductChange("fieldops")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -167,7 +167,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <ClipboardList className="w-3.5 h-3.5" />
-              {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Field Operations & Grievances" : "Field Operations"}
+              {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Grievances" : "Field Operations"}
             </button>
 
             {/* Pitch / Audit (Platform Super Admin ONLY) */}
@@ -345,28 +345,28 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => onProductChange("fieldops")}
             className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
+              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
             }`}
           >
-            {isVolunteer ? "Ground Intake & Issues" : "Field Ops"}
+            {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Grievances" : "Field Ops"}
           </button>
 
           {isPlatformAdmin && (
             <button
               onClick={() => onProductChange("pitch")}
               className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                activeProduct === "pitch" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
+                activeProduct === "pitch" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
               }`}
             >
               Audit
             </button>
           )}
 
-          {!isVolunteer && (
+          {!isVolunteer && !isDirector && (
             <button
               onClick={() => onProductChange("grievances")}
               className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                activeProduct === "grievances" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
+                activeProduct === "grievances" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
               }`}
             >
               Grievances
