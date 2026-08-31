@@ -1,6 +1,8 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Query
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
+from starlette.responses import FileResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import json
@@ -1773,6 +1775,29 @@ async def trigger_geography_seed():
 
 # Include router
 app.include_router(api_router)
+
+# Mount static frontend build if present (serves updated UI on Render)
+frontend_dist = ROOT_DIR.parent / "frontend" / "dist"
+if not frontend_dist.exists() or not (frontend_dist / "index.html").exists():
+    frontend_dist = ROOT_DIR.parent / "docs"
+
+if frontend_dist.exists() and (frontend_dist / "index.html").exists():
+    assets_dir = frontend_dist / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+    images_dir = frontend_dist / "images"
+    if images_dir.exists():
+        app.mount("/images", StaticFiles(directory=str(images_dir)), name="images")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa_frontend(full_path: str):
+        target_file = frontend_dist / full_path
+        if full_path and target_file.exists() and target_file.is_file():
+            return FileResponse(target_file)
+        index_file = frontend_dist / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        raise HTTPException(status_code=404, detail="Page Not Found")
 
 app.add_middleware(
     CORSMiddleware,
