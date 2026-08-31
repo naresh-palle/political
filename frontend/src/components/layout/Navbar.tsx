@@ -3,6 +3,7 @@ import { UserProfile, FieldNotification } from "../../types";
 import { LeadersLogo } from "../common/LeadersLogo";
 import { usePartyTheme } from "../../context/PartyThemeContext";
 import { NotificationCenter } from "../fieldops/NotificationCenter";
+import { EditProfileModal } from "../common/EditProfileModal";
 import { politicalApiService } from "../../services/api";
 import {
   Sparkles,
@@ -19,7 +20,8 @@ import {
   UserCheck,
   Bell,
   MapPin,
-  ClipboardList
+  ClipboardList,
+  Edit3
 } from "lucide-react";
 
 interface NavbarProps {
@@ -29,6 +31,7 @@ interface NavbarProps {
   onResetToSelect?: () => void;
   currentProfile: UserProfile;
   onSwitchProfile?: (profile: UserProfile) => void;
+  onUpdateProfile?: (updatedProfile: UserProfile) => void;
   onOpenRoleModal?: () => void;
   onGoHome?: () => void;
   onSignOut?: () => void;
@@ -41,12 +44,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   onResetToSelect,
   currentProfile,
   onSwitchProfile,
+  onUpdateProfile,
   onOpenRoleModal,
   onGoHome,
   onSignOut
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [logoError, setLogoError] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -289,6 +294,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
 
+                  {/* Edit Profile Action */}
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsEditProfileOpen(true);
+                    }}
+                    className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
+                  >
+                    <Edit3 className="w-4 h-4 text-[#D4A24C]" />
+                    <span>Edit Profile (Photo, Email, Phone)</span>
+                  </button>
+
                   {isAdmin && (
                     <button
                       onClick={() => {
@@ -393,6 +410,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClose={() => {
             setIsNotifOpen(false);
             loadUnreadNotifications();
+          }}
+        />
+      )}
+
+      {/* Edit Profile Modal */}
+      {isEditProfileOpen && (
+        <EditProfileModal
+          currentUser={currentProfile}
+          isOpen={isEditProfileOpen}
+          onClose={() => setIsEditProfileOpen(false)}
+          onSave={(updated) => {
+            if (onUpdateProfile) {
+              onUpdateProfile(updated);
+            }
           }}
         />
       )}

@@ -193,6 +193,18 @@ function AppInner() {
     } catch {}
   };
 
+  const handleUpdateProfile = (updated: UserProfile) => {
+    setCurrentProfile(updated);
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+    } catch {}
+    // Update USER_PROFILES in memory
+    const idx = USER_PROFILES.findIndex((u) => u.id === updated.id);
+    if (idx !== -1) {
+      USER_PROFILES[idx] = { ...USER_PROFILES[idx], ...updated };
+    }
+  };
+
   const handleStartAuditGeneration = (
     stateId: string,
     parliamentId: string,
@@ -244,13 +256,14 @@ function AppInner() {
               onResetToSelect={handleResetToSelect}
               currentProfile={currentProfile}
               onSwitchProfile={handleSwitchProfile}
+              onUpdateProfile={handleUpdateProfile}
               onSignOut={handleSignOut}
             />
 
             <main className="flex-1 w-full overflow-x-hidden">
               {/* Module 1: FIELD OPERATIONS & RBAC (ADMIN -> DIRECTOR -> VOLUNTEER) */}
               {activeProduct === "fieldops" && (
-                <FieldOpsManager currentUser={currentProfile} />
+                <FieldOpsManager currentUser={currentProfile} onUpdateProfile={handleUpdateProfile} />
               )}
 
               {/* Module 2: PITCH / CONSTITUENCY AUDIT (ADMIN ONLY) */}

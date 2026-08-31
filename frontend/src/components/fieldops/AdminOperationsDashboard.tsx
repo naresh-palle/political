@@ -8,6 +8,7 @@ import {
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { IssueDetailModal } from "./IssueDetailModal";
+import { EditProfileModal } from "../common/EditProfileModal";
 import {
   ShieldCheck,
   Users,
@@ -28,15 +29,18 @@ import {
   Flame,
   FileText,
   Phone,
-  Calendar
+  Calendar,
+  Edit3
 } from "lucide-react";
 
 interface AdminDashboardProps {
   currentUser: UserProfile;
+  onUpdateProfile?: (updated: UserProfile) => void;
 }
 
 export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
-  currentUser
+  currentUser,
+  onUpdateProfile
 }) => {
   const [drilldownData, setDrilldownData] = useState<any>(null);
   const [issues, setIssues] = useState<FieldIssue[]>([]);
@@ -44,6 +48,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const [mandals, setMandals] = useState<MandalInfo[]>([]);
   const [villages, setVillages] = useState<VillageInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const isPlatformSuperAdmin =
     currentUser.email === "admin@leaderslens.ai" ||
@@ -150,23 +155,43 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         /* LEVEL 1: SUPER ADMIN MASTER BANNER */
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#D4A24C]/40 shadow-xl">
           <div className="flex items-center gap-4">
-            <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C]"
-            />
+            <div
+              className="relative group cursor-pointer flex-shrink-0"
+              onClick={() => setIsEditProfileOpen(true)}
+              title="Click to edit profile"
+            >
+              <img
+                src={currentUser.avatar}
+                alt={currentUser.name}
+                className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] group-hover:brightness-90 transition-all"
+              />
+              <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[9px] font-semibold transition-opacity">
+                <Camera className="w-3.5 h-3.5 text-[#D4A24C]" />
+              </div>
+            </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
                   Level 1: Platform Super Admin
                 </span>
                 <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "National Command Center"}</span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditProfileOpen(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10.5px] font-semibold transition-all cursor-pointer"
+                  title="Edit Profile"
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>Edit Profile</span>
+                </button>
               </div>
               <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
                 {currentUser.name}
               </h1>
-              <p className="text-xs text-[#8E9CAE] mt-0.5">
-                Platform Master Oversight · {directors.length} Directors · {volunteers.length} Field Volunteers across all states
+              <p className="text-xs text-[#8E9CAE] mt-0.5 flex flex-wrap items-center gap-x-3">
+                <span>✉️ {currentUser.email}</span>
+                <span>📞 {currentUser.phone || "+91 98850 12340"}</span>
+                <span>· {directors.length} Directors · {volunteers.length} Field Volunteers</span>
               </p>
             </div>
           </div>
@@ -230,12 +255,20 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         <div className="p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#10243C] to-[#0A1728] border border-[#D4A24C]/40 shadow-2xl space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="relative">
+              <div
+                className="relative group cursor-pointer flex-shrink-0"
+                onClick={() => setIsEditProfileOpen(true)}
+                title="Click to change profile picture"
+              >
                 <img
                   src={currentUser.avatar}
                   alt={currentUser.name}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg group-hover:brightness-90 transition-all"
                 />
+                <div className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity">
+                  <Camera className="w-4 h-4 mb-0.5 text-[#D4A24C]" />
+                  <span>Edit Photo</span>
+                </div>
                 <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-[#071322] border border-[#D4A24C] text-xs font-mono">
                   {currentUser.partyEmoji || "🏛️"}
                 </span>
@@ -253,8 +286,17 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     </span>
                   )}
                   <span className="text-xs font-medium text-[#8E9CAE] bg-[#071322] px-2.5 py-0.5 rounded-full border border-[#22405E]">
-                    {currentUser.assignedConstituency || "Kadapa AC (AC-132)"}
+                    {currentUser.assignedConstituency || "Poddutur AC (AC-139)"}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditProfileOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] hover:text-[#F5EFE0] border border-[#D4A24C]/40 text-xs font-semibold transition-all cursor-pointer shadow-sm"
+                    title="Edit Profile Details (Photo, Email, Mobile Hotline)"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit Profile</span>
+                  </button>
                 </div>
 
                 <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#F5EFE0] tracking-tight">
@@ -262,9 +304,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 </h1>
 
                 <p className="text-xs text-[#D8CFB8] flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span>🏛️ <strong>Role:</strong> Member of the Legislative Assembly (MLA)</span>
-                  <span>📍 <strong>Camp Office:</strong> MLA Camp Office, 7-Roads Junction, Kadapa, AP</span>
-                  <span>📞 <strong>Office Hotline:</strong> {currentUser.phone || "+91 98850 22331"}</span>
+                  <span>🏛️ <strong>Role:</strong> {currentUser.designation || currentUser.roleTitle || "Constituency Political Admin (MLA Office)"}</span>
+                  <span>✉️ <strong>Email:</strong> {currentUser.email}</span>
+                  <span>📞 <strong>Office Hotline:</strong> {currentUser.phone || "+91 98850 44001"}</span>
+                  <span>📍 <strong>Camp Office:</strong> {currentUser.assignedConstituency?.includes("Poddutur") ? "MLA Camp Office, Main Road, Poddutur, AP" : "MLA Camp Office, 7-Roads Junction, Kadapa, AP"}</span>
                 </p>
 
                 {/* Key Ministerial / MLA Focus Portfolios */}
@@ -911,6 +954,20 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           isOpen={!!selectedIssue}
           onClose={() => setSelectedIssue(null)}
           onIssueUpdated={loadAdminData}
+        />
+      )}
+
+      {/* Edit Profile Modal */}
+      {isEditProfileOpen && (
+        <EditProfileModal
+          currentUser={currentUser}
+          isOpen={isEditProfileOpen}
+          onClose={() => setIsEditProfileOpen(false)}
+          onSave={(updated) => {
+            if (onUpdateProfile) {
+              onUpdateProfile(updated);
+            }
+          }}
         />
       )}
 
