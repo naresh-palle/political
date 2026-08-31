@@ -134,18 +134,15 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "NEW":
-        return "bg-blue-900/40 text-blue-300 border-blue-600/40";
+        return "bg-amber-500/20 text-amber-400 border-amber-500/40";
       case "ASSIGNED":
-        return "bg-indigo-900/40 text-indigo-300 border-indigo-600/40";
+        return "bg-blue-500/20 text-blue-400 border-blue-500/40";
       case "IN_PROGRESS":
-        return "bg-amber-900/40 text-amber-300 border-amber-600/40";
-      case "COMPLETED":
+        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/40";
       case "RESOLVED":
-        return "bg-emerald-900/40 text-emerald-300 border-emerald-600/40";
-      case "OVERDUE":
-        return "bg-rose-900/50 text-rose-300 border-rose-600/50 animate-pulse";
-      case "ON_HOLD":
-        return "bg-zinc-800 text-zinc-300 border-zinc-600/40";
+        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/40";
+      case "ESCALATED":
+        return "bg-red-500/20 text-red-400 border-red-500/40";
       default:
         return "bg-zinc-800 text-zinc-300 border-zinc-600/40";
     }
@@ -165,10 +162,16 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-      <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-[#F5EFE0] animate-fadeIn">
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-fadeIn"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#0B1A2C] border border-[#D4A24C]/50 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
-        <div className="p-6 border-b border-[#22405E] bg-gradient-to-r from-[#0F2338] to-[#0B1A2C] flex items-start justify-between gap-4">
+        <div className="p-4 sm:p-6 border-b border-[#22405E] bg-gradient-to-r from-[#0F2338] to-[#0B1A2C] flex items-start justify-between gap-4 shrink-0">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-[#122A44] text-[#D4A24C] border border-[#D4A24C]/30">
@@ -201,8 +204,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="text-[#9BA3AF] hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full bg-[#142B45] hover:bg-rose-950/80 border border-[#22405E] hover:border-rose-500 text-[#D8CFB8] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0 ml-2"
+            title="Close Modal (Esc)"
           >
             <X className="w-5 h-5" />
           </button>

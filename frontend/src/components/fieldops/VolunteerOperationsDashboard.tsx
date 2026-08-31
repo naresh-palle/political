@@ -142,6 +142,17 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     loadVolunteerData();
   }, [currentUser.id]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isAddModalOpen) setIsAddModalOpen(false);
+        if (selectedIssue) setSelectedIssue(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAddModalOpen, selectedIssue]);
+
   const loadVolunteerData = async () => {
     setLoading(true);
     try {
@@ -367,7 +378,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   }, [issues, dateFilter, startDate, endDate, searchQuery]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
+    <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
       {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
       <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#0F2338] via-[#122A44] to-[#0B1A2C] border border-[#D4A24C]/40 shadow-2xl space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
@@ -738,68 +749,70 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
       {isAddModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-fadeIn"
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="relative bg-gradient-to-b from-[#0F2338] to-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-[0_25px_70px_rgba(0,0,0,0.85)] text-[#F5EFE0] overflow-hidden"
+            className="relative bg-[#0B1A2C] border border-[#D4A24C]/50 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] text-[#F5EFE0] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="p-5 border-b border-[#22405E] bg-[#071322]/70 flex items-center justify-between">
+            {/* Sticky Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-[#22405E] bg-[#0F2338] flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
+                <div className="w-10 h-10 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C] shrink-0">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] font-mono">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] font-mono block">
                     GROUND FIELD INTAKE · BANAGANAPALLE AC
                   </span>
-                  <h3 className="font-display text-lg sm:text-xl text-[#F5EFE0]">
+                  <h3 className="font-display text-base sm:text-xl text-[#F5EFE0] leading-tight">
                     Log New Citizen Complaint / Requirement
                   </h3>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-[#8E9CAE] hover:text-white p-1.5 rounded-lg hover:bg-[#142B45] transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-full bg-[#142B45] hover:bg-rose-950/80 border border-[#22405E] hover:border-rose-500 text-[#D8CFB8] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0 ml-2"
+                title="Close (Esc)"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs no-scrollbar">
-              {/* Immutability Notice */}
-              <div className="p-3 rounded-xl bg-[#071322] border border-[#D4A24C]/30 flex items-center gap-2.5 text-[11.5px] text-[#D8CFB8]">
-                <Lock className="w-4 h-4 text-[#D4A24C] shrink-0" />
-                <span>
-                  <strong>Important:</strong> Once submitted, the original complaint details become permanently locked to maintain audit integrity.
-                </span>
-              </div>
-
-              {formError && (
-                <div className="p-3 rounded-lg bg-red-950/70 border border-red-500/40 text-red-300 text-xs">
-                  {formError}
+            {/* Modal Form with Scrollable Body & Sticky Footer */}
+            <form onSubmit={handleCreateComplaint} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                {/* Immutability Notice */}
+                <div className="p-3 rounded-xl bg-[#071322] border border-[#D4A24C]/30 flex items-center gap-2.5 text-[11.5px] text-[#D8CFB8]">
+                  <Lock className="w-4 h-4 text-[#D4A24C] shrink-0" />
+                  <span>
+                    <strong>Important:</strong> Once submitted, the original complaint details become permanently locked to maintain audit integrity.
+                  </span>
                 </div>
-              )}
 
-              {submissionSuccess && (
-                <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs space-y-1 animate-fadeIn">
-                  <div className="flex items-center gap-2 font-bold text-emerald-300">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    Complaint Recorded & Locked Successfully!
+                {formError && (
+                  <div className="p-3 rounded-lg bg-red-950/70 border border-red-500/40 text-red-300 text-xs">
+                    {formError}
                   </div>
-                  <div className="text-[11px] text-emerald-300/90 pl-6 space-y-0.5">
-                    <p className="font-semibold text-[#D4A24C]">🔔 Instant Notifications Dispatched To:</p>
-                    <p>• Campaign Director ({currentUser.directorName || "Demo Director"})</p>
-                    <p>• MLA & Political Admin (B. C. Janardhan Reddy)</p>
-                    <p>• Relevant Department Authority ({newDepartment})</p>
-                  </div>
-                </div>
-              )}
+                )}
 
-              <form onSubmit={handleCreateComplaint} className="space-y-4">
+                {submissionSuccess && (
+                  <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs space-y-1 animate-fadeIn">
+                    <div className="flex items-center gap-2 font-bold text-emerald-300">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      Complaint Recorded & Locked Successfully!
+                    </div>
+                    <div className="text-[11px] text-emerald-300/90 pl-6 space-y-0.5">
+                      <p className="font-semibold text-[#D4A24C]">🔔 Instant Notifications Dispatched To:</p>
+                      <p>• Campaign Director ({currentUser.directorName || "Demo Director"})</p>
+                      <p>• MLA & Political Admin (B. C. Janardhan Reddy)</p>
+                      <p>• Relevant Department Authority ({newDepartment})</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* 1. Issue Title */}
                 <div>
                   <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
@@ -1168,27 +1181,27 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Form Buttons */}
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#22405E]">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-xs font-semibold cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-xs sm:text-sm font-bold hover:brightness-110 flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
-                  >
-                    <Send className="w-4 h-4" />
-                    {submitting ? "Submitting & Locking..." : "Submit Complaint (Locked)"}
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* Sticky Modal Footer with Cancel & Submit Buttons */}
+              <div className="p-3.5 sm:p-4 border-t border-[#22405E] bg-[#071322] flex items-center justify-between gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  Cancel / Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-xs sm:text-sm font-bold hover:brightness-110 flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all"
+                >
+                  <Send className="w-4 h-4" />
+                  {submitting ? "Submitting & Locking..." : "Submit Complaint (Locked)"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
