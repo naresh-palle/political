@@ -264,7 +264,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               </div>
 
               {/* Reporter Info */}
-              <div className="p-4 bg-[#0F2338] rounded-xl border border-[#22405E] flex flex-wrap items-center justify-between gap-4">
+              <div className="p-4 bg-[#0F2338] rounded-xl border border-[#22405E] grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block">
                     Reported By
@@ -273,11 +273,18 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     <User className="w-3.5 h-3.5 text-[#D4A24C]" />
                     {issue.reportedBy}
                   </span>
+                  {issue.reporterType && (
+                    <span className="inline-block text-[10px] text-[#D4A24C] font-semibold mt-0.5">
+                      {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
+                      {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+                    </span>
+                  )}
                 </div>
+
                 {issue.reporterPhone && (
                   <div>
                     <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block">
-                      Citizen Contact
+                      Reporter Contact
                     </span>
                     <a
                       href={`tel:${issue.reporterPhone}`}
@@ -288,6 +295,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     </a>
                   </div>
                 )}
+
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block">
                     Reported Date
@@ -299,11 +307,12 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Initial Photos if any */}
+              {/* Initial Photos / Proofs if any */}
               {issue.attachments && issue.attachments.length > 0 && (
                 <div>
-                  <h4 className="text-[11px] uppercase tracking-widest text-[#D4A24C] font-semibold mb-2">
-                    Original Citizen Attachments
+                  <h4 className="text-[11px] uppercase tracking-widest text-[#D4A24C] font-semibold mb-2 flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5" />
+                    Uploaded Proof Documents & Photos ({issue.attachments.length})
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {issue.attachments.map((url, idx) => (
@@ -320,7 +329,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[11px] font-medium text-white transition-opacity">
-                          View Full Image
+                          View Proof
                         </div>
                       </a>
                     ))}
@@ -333,16 +342,28 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             <div className="space-y-5">
               <div className="p-4 bg-[#0F2338] rounded-xl border border-[#22405E] space-y-4">
                 <h4 className="text-[11px] uppercase tracking-widest text-[#D4A24C] font-semibold">
-                  Field Responsibility
+                  Field Responsibility & Assigned Ticket
                 </h4>
 
                 <div>
                   <span className="text-[10px] uppercase text-[#8E9CAE] block">
-                    Responsible Volunteer
+                    Assigned Ticket: Person Name
                   </span>
                   <span className="font-semibold text-[13px] text-[#F5EFE0] block mt-0.5">
-                    {issue.assignedVolunteerName || "Unassigned"}
+                    {issue.assignedVolunteerName || "Demo Volunteer"}
                   </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase text-[#8E9CAE] block">
+                    Assigned Person Contact: Number
+                  </span>
+                  <a
+                    href={`tel:${issue.assignedVolunteerPhone || "+91 98850 44003"}`}
+                    className="font-mono text-[12px] text-[#D4A24C] hover:underline block mt-0.5"
+                  >
+                    {issue.assignedVolunteerPhone || "+91 98850 44003"}
+                  </a>
                 </div>
 
                 <div>
@@ -350,7 +371,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     Supervising Director
                   </span>
                   <span className="text-[12px] text-[#D8CFB8] block mt-0.5">
-                    {issue.directorName || "Constituency Director"}
+                    {issue.directorName || "Demo Director"}
                   </span>
                 </div>
 

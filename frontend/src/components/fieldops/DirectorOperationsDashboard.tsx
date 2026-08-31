@@ -65,10 +65,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           userRole: "DIRECTOR"
         }),
         politicalApiService.getMandals(
-          currentUser.assemblyConstituencyId || "PDT-AC",
+          currentUser.assemblyConstituencyId || "BNG-AC",
           currentUser.stateId || "AP"
         ),
-        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "PDT-AC")
+        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "BNG-AC")
       ]);
 
       // Filter volunteers assigned to this director

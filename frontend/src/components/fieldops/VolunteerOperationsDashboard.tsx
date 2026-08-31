@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   FieldIssue,
   UserProfile,
   IssueCategory,
   IssuePriority,
-  IssueStatus,
   VillageInfo,
   MandalInfo
 } from "../../types";
@@ -16,54 +15,116 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  AlertCircle,
   Camera,
   Send,
   Lock,
   Search,
-  Filter,
-  User,
-  Phone,
-  FileText,
   Calendar,
   Layers,
   Sparkles,
-  ChevronRight,
-  Shield
+  User,
+  Phone,
+  Building2,
+  FileText,
+  Upload,
+  X,
+  Tag,
+  Shield,
+  Briefcase,
+  Paperclip,
+  Check
 } from "lucide-react";
 
 interface VolunteerDashboardProps {
   currentUser: UserProfile;
 }
 
+const CATEGORIES = [
+  "Water Supply",
+  "Roads & Buildings",
+  "Electricity",
+  "Sanitation & Garbage",
+  "Drainage & Sewage",
+  "Healthcare",
+  "Agriculture & Irrigation",
+  "Education",
+  "Revenue & Land Issues",
+  "Welfare Schemes",
+  "Law & Order",
+  "Other"
+];
+
+const DEPARTMENTS = [
+  "Roads & Buildings (R&B)",
+  "Panchayat Raj & Rural Water Supply (RWS)",
+  "APCPDCL Electricity Board",
+  "Municipal Administration & Urban Development",
+  "Health & Family Welfare (PHC / Hospital)",
+  "Irrigation & Water Resources",
+  "Agriculture & Horticulture",
+  "School Education & Anganwadi",
+  "Revenue & Land Administration",
+  "Police & Law Enforcement",
+  "Social & Tribal Welfare",
+  "Other Department"
+];
+
+const FIXED_MANDALS_TOWNS = [
+  { id: "MDL-BNG-TWN", name: "Banaganapalle Town (Town)", type: "TOWN" },
+  { id: "MDL-KKL-TWN", name: "Koilakuntla Town (Town)", type: "TOWN" },
+  { id: "MDL-BNG-RUR", name: "Banaganapalle Mandal (Rural)", type: "MANDAL" },
+  { id: "MDL-KKL-RUR", name: "Koilakuntla Mandal (Rural)", type: "MANDAL" },
+  { id: "MDL-OWK-RUR", name: "Owk Mandal (Rural)", type: "MANDAL" },
+  { id: "MDL-SJM-RUR", name: "Sanjamala Mandal (Rural)", type: "MANDAL" },
+  { id: "MDL-KLM-RUR", name: "Kolimigundla Mandal (Rural)", type: "MANDAL" }
+];
+
 export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = ({
   currentUser
 }) => {
   const [issues, setIssues] = useState<FieldIssue[]>([]);
-  const [villages, setVillages] = useState<VillageInfo[]>([]);
-  const [mandals, setMandals] = useState<MandalInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Selected Issue for Detail Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
 
-  // Filters & Tabs
-  const [activeTab, setActiveTab] = useState<"ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE">("ALL");
+  // Date Filter & Search
+  const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "7DAYS" | "THIS_MONTH">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Create Complaint Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [newCategory, setNewCategory] = useState<IssueCategory>("Water Supply");
-  const [newPriority, setNewPriority] = useState<IssuePriority>("MEDIUM");
+  const [newCategory, setNewCategory] = useState<string>("Roads & Buildings");
+  const [newDepartment, setNewDepartment] = useState<string>("Roads & Buildings (R&B)");
+  const [newPriority, setNewPriority] = useState<IssuePriority>("HIGH");
   const [newIssueType, setNewIssueType] = useState<"COMPLAINT" | "REQUIREMENT">("COMPLAINT");
-  const [newVillageId, setNewVillageId] = useState("");
+  
+  // Geography fields
+  const [selectedMandalId, setSelectedMandalId] = useState<string>(
+    currentUser.assignedMandalId || "MDL-BNG-TWN"
+  );
+  const [villageWardText, setVillageWardText] = useState(
+    currentUser.assignedVillageNames?.[0] || "Banaganapalle Town Wards 1-10"
+  );
   const [newPlaceName, setNewPlaceName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+
+  // Reporter & Cadre fields
+  const [reporterType, setReporterType] = useState<"CITIZEN" | "CADRE" | "LEADER">("CITIZEN");
+  const [reporterDesignation, setReporterDesignation] = useState("");
   const [newReportedBy, setNewReportedBy] = useState("");
   const [newReporterPhone, setNewReporterPhone] = useState("");
-  const [newInitialRemarks, setNewInitialRemarks] = useState("");
+
+  // Assigned Ticket Person Details
+  const [assignedPersonName, setAssignedPersonName] = useState(currentUser.name || "Demo Volunteer");
+  const [assignedPersonPhone, setAssignedPersonPhone] = useState(currentUser.phone || "+91 98850 44003");
+
+  // Multi-Proof attachments (Photos & Documents)
+  const [proofFiles, setProofFiles] = useState<{ name: string; url: string; type: "image" | "document" }[]>([]);
   const [newAttachmentUrl, setNewAttachmentUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -75,28 +136,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const loadVolunteerData = async () => {
     setLoading(true);
     try {
-      const [issueList, villageList, mandalList] = await Promise.all([
-        politicalApiService.getFieldIssues({
-          userId: currentUser.id,
-          userRole: "VOLUNTEER"
-        }),
-        politicalApiService.getVillages(
-          currentUser.assignedMandalId || undefined,
-          currentUser.assemblyConstituencyId || "PDT-AC"
-        ),
-        politicalApiService.getMandals(
-          currentUser.assemblyConstituencyId || "PDT-AC",
-          currentUser.stateId || "AP"
-        )
-      ]);
-
+      const issueList = await politicalApiService.getFieldIssues({
+        userId: currentUser.id,
+        userRole: "VOLUNTEER"
+      });
       setIssues(issueList);
-      setVillages(villageList);
-      setMandals(mandalList);
-
-      if (villageList.length > 0 && !newVillageId) {
-        setNewVillageId(villageList[0].id);
-      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -104,43 +148,105 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is larger than 10MB.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const isImg = file.type.startsWith("image/");
+          setProofFiles((prev) => [
+            ...prev,
+            {
+              name: file.name,
+              url: event.target?.result as string,
+              type: isImg ? "image" : "document"
+            }
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleAddUrlAttachment = () => {
+    if (!newAttachmentUrl.trim()) return;
+    setProofFiles((prev) => [
+      ...prev,
+      {
+        name: `Web Link (${new URL(newAttachmentUrl).hostname || "Photo"})`,
+        url: newAttachmentUrl.trim(),
+        type: "image"
+      }
+    ]);
+    setNewAttachmentUrl("");
+  };
+
+  const handleRemoveProof = (index: number) => {
+    setProofFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreateComplaint = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newDescription.trim() || !newReportedBy.trim()) {
-      setFormError("Please fill out Title, Description, and Reporter Name.");
+    if (!newTitle.trim() || !newDescription.trim() || !newReportedBy.trim() || !villageWardText.trim()) {
+      setFormError("Please fill out Title, Description, Mandal/Town, Village/Ward, and Reporter Name.");
+      return;
+    }
+
+    if ((reporterType === "CADRE" || reporterType === "LEADER") && !reporterDesignation.trim()) {
+      setFormError("Please specify the Leader or Cadre position/designation.");
       return;
     }
 
     setSubmitting(true);
     setFormError("");
 
-    const selectedVillage = villages.find((v) => v.id === newVillageId) || villages[0];
-    const selectedMandal = mandals.find((m) => m.id === (selectedVillage?.mandalId || currentUser.assignedMandalId));
+    const mandalObj = FIXED_MANDALS_TOWNS.find((m) => m.id === selectedMandalId) || FIXED_MANDALS_TOWNS[0];
+    const allAttachments = proofFiles.map((p) => p.url);
+    if (newAttachmentUrl.trim() && !allAttachments.includes(newAttachmentUrl.trim())) {
+      allAttachments.push(newAttachmentUrl.trim());
+    }
 
     try {
       const payload: Partial<FieldIssue> = {
         title: newTitle.trim(),
         description: newDescription.trim(),
         category: newCategory,
+        department: newDepartment,
         priority: newPriority,
         issueType: newIssueType,
         status: "NEW",
         stateId: currentUser.stateId || "AP",
-        assemblyConstituencyId: currentUser.assemblyConstituencyId || "PDT-AC",
-        mandalId: selectedMandal?.id || currentUser.assignedMandalId || "MDL-PDT-MAIN",
-        mandalName: selectedMandal?.name || currentUser.assignedMandalName || "Poddutur Mandal",
-        villageId: selectedVillage?.id || "VIL-PDT-01",
-        villageName: selectedVillage?.name || "Poddutur Village",
+        assemblyConstituencyId: currentUser.assemblyConstituencyId || "BNG-AC",
+        assemblyConstituencyName: "Banaganapalle Assembly (AC-140)",
+        mandalId: mandalObj.id,
+        mandalName: mandalObj.name,
+        villageId: `VIL-${mandalObj.id.replace("MDL-", "")}-${Date.now().toString().slice(-3)}`,
+        villageName: villageWardText.trim(),
         placeName: newPlaceName.trim(),
         reportedBy: newReportedBy.trim(),
+        reporterType: reporterType,
+        reporterDesignation: reporterDesignation.trim(),
         reporterPhone: newReporterPhone.trim(),
         reportedDate: new Date().toISOString().split("T")[0],
         assignedVolunteerId: currentUser.id,
-        assignedVolunteerName: currentUser.name,
+        assignedVolunteerName: assignedPersonName.trim() || currentUser.name,
+        assignedVolunteerPhone: assignedPersonPhone.trim() || currentUser.phone || "+91 98850 44003",
         directorId: currentUser.directorId || "usr-demo-director",
         directorName: currentUser.directorName || "Demo Director",
-        initialRemarks: newInitialRemarks.trim(),
-        attachments: newAttachmentUrl ? [newAttachmentUrl] : [],
+        initialRemarks: `Reported by ${reporterType} ${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${assignedPersonName}.`,
+        attachments: allAttachments,
         createdBy: currentUser.id,
         createdByRole: "VOLUNTEER"
       };
@@ -148,17 +254,21 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       const created = await politicalApiService.createFieldIssue(payload);
       setIssues([created, ...issues]);
       setSubmissionSuccess(true);
+
       setTimeout(() => {
         setSubmissionSuccess(false);
         setIsAddModalOpen(false);
+        // Reset form
         setNewTitle("");
         setNewDescription("");
         setNewPlaceName("");
         setNewReportedBy("");
         setNewReporterPhone("");
-        setNewInitialRemarks("");
+        setReporterDesignation("");
+        setReporterType("CITIZEN");
+        setProofFiles([]);
         setNewAttachmentUrl("");
-      }, 1500);
+      }, 1200);
     } catch (err: any) {
       setFormError(err?.message || "Failed to submit complaint.");
     } finally {
@@ -166,191 +276,179 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     }
   };
 
-  // Metrics
-  const totalCount = issues.length;
-  const pendingCount = issues.filter((i) => ["NEW", "ASSIGNED"].includes(i.status)).length;
-  const inProgressCount = issues.filter((i) => i.status === "IN_PROGRESS").length;
-  const completedCount = issues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-  const overdueCount = issues.filter((i) => i.status === "OVERDUE").length;
-
+  // Filter issues by date & search query
   const filteredIssues = useMemo(() => {
-    return issues.filter((item) => {
-      if (activeTab === "PENDING" && !["NEW", "ASSIGNED"].includes(item.status)) return false;
-      if (activeTab === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
-      if (activeTab === "COMPLETED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
-      if (activeTab === "OVERDUE" && item.status !== "OVERDUE") return false;
+    const todayStr = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thisMonthPrefix = todayStr.slice(0, 7); // "YYYY-MM"
 
-      if (searchQuery) {
+    return issues.filter((item) => {
+      // Date filter
+      if (dateFilter === "TODAY") {
+        if (item.reportedDate !== todayStr && !item.createdAt?.startsWith(todayStr)) {
+          return false;
+        }
+      } else if (dateFilter === "7DAYS") {
+        const itemDate = new Date(item.reportedDate || item.createdAt);
+        if (itemDate < sevenDaysAgo) return false;
+      } else if (dateFilter === "THIS_MONTH") {
+        if (!item.reportedDate?.startsWith(thisMonthPrefix) && !item.createdAt?.startsWith(thisMonthPrefix)) {
+          return false;
+        }
+      }
+
+      // Search filter
+      if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchTitle = item.title.toLowerCase().includes(q);
-        const matchDesc = item.description.toLowerCase().includes(q);
+        const matchDesc = item.description?.toLowerCase().includes(q);
         const matchLoc = (item.villageName || "").toLowerCase().includes(q) || (item.placeName || "").toLowerCase().includes(q);
-        const matchRep = item.reportedBy.toLowerCase().includes(q);
-        return matchTitle || matchDesc || matchLoc || matchRep;
+        const matchMandal = (item.mandalName || "").toLowerCase().includes(q);
+        const matchRep = (item.reportedBy || "").toLowerCase().includes(q);
+        const matchDept = (item.department || "").toLowerCase().includes(q);
+        return matchTitle || matchDesc || matchLoc || matchMandal || matchRep || matchDept;
       }
+
       return true;
     });
-  }, [issues, activeTab, searchQuery]);
+  }, [issues, dateFilter, searchQuery]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
-      {/* Volunteer Header Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#0F2338] via-[#122A44] to-[#0B1A2C] border border-[#D4A24C]/30 shadow-xl">
-        <div className="flex items-center gap-3.5">
-          <img
-            src={currentUser.avatar}
-            alt={currentUser.name}
-            className="w-12 h-12 rounded-xl object-cover border-2 border-[#D4A24C]"
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
-                Field Volunteer
-              </span>
-              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency}</span>
+    <div className="w-full max-w-6xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
+      {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#0F2338] via-[#122A44] to-[#0B1A2C] border border-[#D4A24C]/40 shadow-2xl space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          {/* Volunteer Avatar & Main Name */}
+          <div className="flex items-start sm:items-center gap-4">
+            <img
+              src={currentUser.avatar}
+              alt={currentUser.name}
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg flex-shrink-0"
+            />
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                  FIELD VOLUNTEER
+                </span>
+                <span className="text-xs font-semibold text-[#D4A24C] bg-[#142B45] px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
+                  Banaganapalle AC (AC-140) · Nandyala PC
+                </span>
+              </div>
+              <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal leading-tight">
+                {currentUser.name}
+              </h1>
             </div>
-            <h1 className="font-display text-xl sm:text-2xl text-[#F5EFE0] font-normal mt-0.5">
-              {currentUser.name}
-            </h1>
+          </div>
+
+          {/* "+ Add Complaint / Requirement" Primary Action Button */}
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            data-testid="add-complaint-btn"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start lg:self-center"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>Add Complaint / Requirement</span>
+          </button>
+        </div>
+
+        {/* Assigned Details integrated directly at the top */}
+        <div className="pt-3 border-t border-[#22405E]/60 flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+            <Building2 className="w-3.5 h-3.5 text-[#D4A24C]" />
+            <span>Mandal / Town:</span>
+            <strong className="text-[#F5EFE0]">{currentUser.assignedMandalName || "Banaganapalle Town"}</strong>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+            <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
+            <span>Assigned Wards / Villages:</span>
+            <strong className="text-[#F5EFE0]">
+              {currentUser.assignedVillageNames?.join(", ") || "Banaganapalle Town Wards 1-10, Yaganti Sector"}
+            </strong>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+            <User className="w-3.5 h-3.5 text-[#D4A24C]" />
+            <span>Supervising Director:</span>
+            <strong className="text-[#D4A24C]">{currentUser.directorName || "Demo Director"}</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Streamlined KPI Strip: ONLY "Total Issues Submitted" with Date Filter & Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#0B1A2C] border border-[#22405E]">
+        {/* Total Issues Submitted Counter */}
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-[11px] uppercase tracking-wider text-[#8E9CAE] font-semibold block">
+              Total Issues Submitted
+            </span>
+            <div className="font-display text-2xl sm:text-3xl font-bold text-[#F5EFE0] leading-none mt-0.5">
+              {issues.length}
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4A24C] to-[#B38332] text-[#071322] font-semibold text-xs sm:text-sm hover:brightness-110 transition-all shadow-md cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Add Complaint / Requirement
-        </button>
-      </div>
+        {/* Date Filter & Search Bar */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Date Filter Buttons */}
+          <div className="flex items-center p-1 rounded-xl bg-[#071322] border border-[#22405E] text-xs">
+            <span className="px-2 text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden md:inline">
+              Date:
+            </span>
+            {(
+              [
+                { id: "ALL", label: "All Time" },
+                { id: "TODAY", label: "Today" },
+                { id: "7DAYS", label: "Past 7 Days" },
+                { id: "THIS_MONTH", label: "This Month" }
+              ] as const
+            ).map((df) => (
+              <button
+                key={df.id}
+                onClick={() => setDateFilter(df.id)}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                  dateFilter === df.id
+                    ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                    : "text-[#B9AF95] hover:text-white"
+                }`}
+              >
+                {df.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Assigned Geography Card */}
-      <div className="p-4 rounded-xl bg-[#0F2338]/80 border border-[#22405E] flex flex-wrap items-center justify-between gap-3 text-[12px]">
-        <div className="flex items-center gap-2 text-[#D4A24C]">
-          <MapPin className="w-4 h-4" />
-          <span className="font-semibold uppercase tracking-wider text-[11px] text-[#F5EFE0]">
-            My Assigned Area:
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="px-2.5 py-1 rounded bg-[#071322] border border-[#22405E] text-[#F5EFE0]">
-            Mandal: <strong className="text-[#D4A24C]">{currentUser.assignedMandalName || "Kadapa Urban"}</strong>
-          </span>
-          <span className="px-2.5 py-1 rounded bg-[#071322] border border-[#22405E] text-[#F5EFE0]">
-            Villages: <strong className="text-[#D4A24C]">{currentUser.assignedVillageNames?.join(", ") || "Chinna Chowk, Utukur"}</strong>
-          </span>
-          <span className="px-2.5 py-1 rounded bg-[#071322] border border-[#22405E] text-[#F5EFE0]">
-            Director: <strong className="text-[#D8CFB8]">{currentUser.directorName || "Naresh Palle"}</strong>
-          </span>
-        </div>
-      </div>
-
-      {/* KPI Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div
-          onClick={() => setActiveTab("ALL")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            activeTab === "ALL"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
-          }`}
-        >
-          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block">Total Work</span>
-          <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-1">{totalCount}</div>
-        </div>
-
-        <div
-          onClick={() => setActiveTab("PENDING")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            activeTab === "PENDING"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
-          }`}
-        >
-          <span className="text-[10px] uppercase tracking-wider text-blue-300 block">Pending</span>
-          <div className="font-display text-2xl font-bold text-blue-400 mt-1">{pendingCount}</div>
-        </div>
-
-        <div
-          onClick={() => setActiveTab("IN_PROGRESS")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            activeTab === "IN_PROGRESS"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
-          }`}
-        >
-          <span className="text-[10px] uppercase tracking-wider text-amber-300 block">In Progress</span>
-          <div className="font-display text-2xl font-bold text-amber-400 mt-1">{inProgressCount}</div>
-        </div>
-
-        <div
-          onClick={() => setActiveTab("COMPLETED")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer ${
-            activeTab === "COMPLETED"
-              ? "bg-[#122A44] border-[#D4A24C] shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/40"
-          }`}
-        >
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block">Completed</span>
-          <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{completedCount}</div>
-        </div>
-
-        <div
-          onClick={() => setActiveTab("OVERDUE")}
-          className={`p-4 rounded-xl border transition-all cursor-pointer col-span-2 sm:col-span-1 ${
-            activeTab === "OVERDUE"
-              ? "bg-rose-950/60 border-rose-500 shadow-md"
-              : "bg-[#0B1A2C] border-[#22405E] hover:border-rose-500/50"
-          }`}
-        >
-          <span className="text-[10px] uppercase tracking-wider text-rose-400 block flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" /> Overdue
-          </span>
-          <div className="font-display text-2xl font-bold text-rose-400 mt-1">{overdueCount}</div>
+          {/* Quick Search */}
+          <div className="relative min-w-[200px] flex-1 sm:flex-initial">
+            <Search className="w-3.5 h-3.5 text-[#8E9CAE] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search issues, citizens, villages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Action Bar: Search & Filter */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
-          <input
-            type="text"
-            placeholder="Search my issues, citizens, villages..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0F2338] border border-[#22405E] rounded-xl pl-9 pr-4 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1">
-          {(["ALL", "PENDING", "IN_PROGRESS", "COMPLETED", "OVERDUE"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold tracking-wider transition-all cursor-pointer shrink-0 ${
-                activeTab === tab
-                  ? "bg-[#D4A24C] text-[#071322]"
-                  : "bg-[#0F2338] text-[#D8CFB8] hover:text-white border border-[#22405E]"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Issues Grid / Mobile Task Cards */}
+      {/* 3. Submitted Issues Grid */}
       {loading ? (
-        <div className="p-12 text-center text-sm text-[#8E9CAE]">Loading assigned field work...</div>
+        <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0B1A2C] rounded-2xl border border-[#22405E]">
+          Loading submitted complaints...
+        </div>
       ) : filteredIssues.length === 0 ? (
-        <div className="p-12 rounded-2xl bg-[#0B1A2C] border border-[#22405E] text-center space-y-3">
-          <FileText className="w-8 h-8 text-[#8E9CAE] mx-auto opacity-50" />
-          <h3 className="text-sm font-semibold text-[#F5EFE0]">No issues found in this category</h3>
+        <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0B1A2C] rounded-2xl border border-[#22405E] space-y-3">
+          <div className="w-12 h-12 rounded-full bg-[#142B45] text-[#D4A24C] flex items-center justify-center mx-auto">
+            <FileText className="w-6 h-6" />
+          </div>
+          <p className="text-base text-[#F5EFE0] font-semibold">No complaints found for the selected filter</p>
           <p className="text-xs text-[#8E9CAE]">
-            {searchQuery
-              ? "Try adjusting your search terms."
-              : "Use the button above to log a new complaint from local citizens."}
+            Click "+ Add Complaint / Requirement" to log a new issue from your assigned area.
           </p>
         </div>
       ) : (
@@ -359,284 +457,519 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             <div
               key={issue.id}
               onClick={() => setSelectedIssue(issue)}
-              className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer space-y-3 relative group shadow-sm hover:shadow-md"
+              className="p-5 rounded-2xl bg-gradient-to-b from-[#0F2338] to-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all space-y-3.5 cursor-pointer shadow-lg group"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] font-mono text-[#D4A24C] bg-[#071322] px-1.5 py-0.5 rounded border border-[#D4A24C]/30">
-                    #{issue.id}
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                      issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                        ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                        : issue.status === "IN_PROGRESS"
-                        ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                        : issue.status === "OVERDUE"
-                        ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
-                        : "bg-blue-950/60 text-blue-300 border-blue-500/40"
-                    }`}
-                  >
-                    {issue.status}
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-[#1A3654] text-[#D8CFB8]">
+              {/* Card Header */}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-mono text-[#D4A24C] font-semibold">
+                  #{issue.id}
+                </span>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/25">
                     {issue.category}
                   </span>
+                  {issue.department && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#071322] text-[#8E9CAE] border border-[#22405E]">
+                      {issue.department.split("(")[0]}
+                    </span>
+                  )}
+                  <span
+                    className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                      issue.priority === "URGENT" || issue.priority === "HIGH"
+                        ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
+                        : "bg-[#071322] text-[#B9AF95] border border-[#22405E]"
+                    }`}
+                  >
+                    {issue.priority}
+                  </span>
                 </div>
-
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                    issue.priority === "URGENT"
-                      ? "text-red-400 bg-red-950/60 border border-red-500/40"
-                      : issue.priority === "HIGH"
-                      ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
-                      : "text-[#D8CFB8] bg-[#0F2338]"
-                  }`}
-                >
-                  {issue.priority}
-                </span>
               </div>
 
+              {/* Title & Description */}
               <div>
-                <h3 className="font-display text-[15px] font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
+                <h3 className="font-display text-base font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
                   {issue.title}
                 </h3>
-                <p className="text-[12px] text-[#A69B80] line-clamp-2 mt-1 leading-relaxed">
+                <p className="text-xs text-[#A69B80] line-clamp-2 mt-1 leading-relaxed">
                   {issue.description}
                 </p>
               </div>
 
-              {/* Location & Reporter Strip */}
-              <div className="pt-2 border-t border-[#22405E]/60 flex items-center justify-between text-[11px] text-[#8E9CAE]">
-                <span className="flex items-center gap-1 text-[#D8CFB8]">
-                  <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
-                  {issue.villageName} {issue.placeName ? `· ${issue.placeName}` : ""}
-                </span>
-                <span>By {issue.reportedBy}</span>
-              </div>
-
-              {/* Latest update preview if exists */}
-              {issue.lastStatusRemarks && (
-                <div className="p-2.5 rounded-lg bg-[#071322]/80 border border-[#22405E] text-[11px] text-[#E2DCBE]">
-                  <span className="text-[9px] uppercase text-[#D4A24C] font-semibold block">
-                    Latest Progress Remark
+              {/* Location & Reporter Details */}
+              <div className="pt-2.5 border-t border-[#22405E]/60 space-y-1 text-xs">
+                <div className="flex items-center justify-between text-[#8E9CAE]">
+                  <span className="flex items-center gap-1.5 text-[#F5EFE0] truncate">
+                    <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+                    <strong>{issue.mandalName}</strong> · {issue.villageName}
                   </span>
-                  <p className="line-clamp-1 mt-0.5">{issue.lastStatusRemarks}</p>
+                  <span className="text-[11px] text-[#B9AF95] font-mono shrink-0">
+                    {issue.reportedDate}
+                  </span>
                 </div>
-              )}
+
+                {issue.placeName && (
+                  <p className="text-[11px] text-[#8E9CAE] pl-5 truncate">
+                    📍 Landmark: {issue.placeName}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] pt-1">
+                  <span>
+                    Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
+                    {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
+                  </span>
+                  {issue.attachments && issue.attachments.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono">
+                      <Paperclip className="w-3 h-3" />
+                      {issue.attachments.length} {issue.attachments.length === 1 ? "Proof" : "Proofs"}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal: Add New Complaint / Requirement */}
+      {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-[#0B1A2C] border border-[#D4A24C] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl text-[#F5EFE0] overflow-hidden animate-scaleUp">
-            <div className="p-5 border-b border-[#22405E] bg-[#0F2338] flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C]">
-                  Ground Field Intake
-                </span>
-                <h3 className="font-display text-xl text-[#F5EFE0]">
-                  Log New Citizen Complaint / Requirement
-                </h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
+          onClick={() => setIsAddModalOpen(false)}
+        >
+          <div
+            className="relative bg-gradient-to-b from-[#0F2338] to-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-[0_25px_70px_rgba(0,0,0,0.85)] text-[#F5EFE0] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 border-b border-[#22405E] bg-[#071322]/70 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] font-mono">
+                    GROUND FIELD INTAKE · BANAGANAPALLE AC
+                  </span>
+                  <h3 className="font-display text-lg sm:text-xl text-[#F5EFE0]">
+                    Log New Citizen Complaint / Requirement
+                  </h3>
+                </div>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-[#8E9CAE] hover:text-white p-1 rounded-md"
+                className="text-[#8E9CAE] hover:text-white p-1.5 rounded-lg hover:bg-[#142B45] transition-colors cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4 text-[12px]">
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs no-scrollbar">
               {/* Immutability Notice */}
-              <div className="p-3 rounded-xl bg-[#0F2338] border border-[#D4A24C]/30 flex items-center gap-2.5 text-[11px] text-[#D8CFB8]">
+              <div className="p-3 rounded-xl bg-[#071322] border border-[#D4A24C]/30 flex items-center gap-2.5 text-[11.5px] text-[#D8CFB8]">
                 <Lock className="w-4 h-4 text-[#D4A24C] shrink-0" />
                 <span>
-                  <strong>Important:</strong> Once submitted, the original complaint details
-                  become permanently locked to maintain audit integrity.
+                  <strong>Important:</strong> Once submitted, the original complaint details become permanently locked to maintain audit integrity.
                 </span>
               </div>
 
               {formError && (
-                <div className="p-3 rounded-lg bg-red-950/70 border border-red-500/40 text-red-300">
+                <div className="p-3 rounded-lg bg-red-950/70 border border-red-500/40 text-red-300 text-xs">
                   {formError}
                 </div>
               )}
 
               {submissionSuccess && (
-                <div className="p-3 rounded-lg bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 flex items-center gap-2">
+                <div className="p-3 rounded-lg bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" /> Complaint recorded and locked successfully!
                 </div>
               )}
 
               <form onSubmit={handleCreateComplaint} className="space-y-4">
+                {/* 1. Issue Title */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
+                    Issue Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Drinking Water Pipeline Burst at Main Bazar or Need R&B Road Repair"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none placeholder-[#5F6875]"
+                  />
+                </div>
+
+                {/* 2 & 3. Category & Department */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Issue Title *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Drinking Water Pipeline Burst at Main Bazar"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    />
-                  </div>
-
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Type
-                    </label>
-                    <select
-                      value={newIssueType}
-                      onChange={(e) => setNewIssueType(e.target.value as any)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    >
-                      <option value="COMPLAINT">COMPLAINT (Grievance / Broken Civic Asset)</option>
-                      <option value="REQUIREMENT">REQUIREMENT (New Need / Community Proposal)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Category
+                      Category *
                     </label>
                     <select
                       value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value as any)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                     >
-                      <option value="Water Supply">Water Supply</option>
-                      <option value="Road">Road & Potholes</option>
-                      <option value="Electricity">Electricity & Streetlights</option>
-                      <option value="Sanitation">Sanitation & Garbage</option>
-                      <option value="Drainage">Drainage & Sewage</option>
-                      <option value="Healthcare">Healthcare & PHC</option>
-                      <option value="Welfare">Welfare Schemes</option>
-                      <option value="Revenue">Revenue & Land Issues</option>
-                      <option value="Education">Schools & Education</option>
-                      <option value="Other">Other Community Matter</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Priority
-                    </label>
-                    <select
-                      value={newPriority}
-                      onChange={(e) => setNewPriority(e.target.value as any)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    >
-                      <option value="LOW">LOW</option>
-                      <option value="MEDIUM">MEDIUM</option>
-                      <option value="HIGH">HIGH</option>
-                      <option value="URGENT">URGENT (Affecting school / hospital / safety)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Assigned Village / Ward *
-                    </label>
-                    <select
-                      value={newVillageId}
-                      onChange={(e) => setNewVillageId(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    >
-                      {villages.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name} ({v.code})
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
                         </option>
                       ))}
                     </select>
                   </div>
 
-                  <div className="col-span-2">
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Place / Specific Landmark (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Near Ramalayam Temple Ward 4"
-                      value={newPlaceName}
-                      onChange={(e) => setNewPlaceName(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Detailed Description *
-                    </label>
-                    <textarea
-                      rows={3}
-                      required
-                      placeholder="Describe the ground situation, how many households affected, and urgency..."
-                      value={newDescription}
-                      onChange={(e) => setNewDescription(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed"
-                    />
-                  </div>
-
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Reported By (Citizen / Group Leader) *
+                      Department *
                     </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. P. Sudhakar Reddy"
-                      value={newReportedBy}
-                      onChange={(e) => setNewReportedBy(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Citizen Contact Number
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="+91 98480 12345"
-                      value={newReporterPhone}
-                      onChange={(e) => setNewReporterPhone(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="col-span-2">
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Initial Ground Photo / Image URL (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="https://images.unsplash.com/... or uploaded photo link"
-                      value={newAttachmentUrl}
-                      onChange={(e) => setNewAttachmentUrl(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-lg p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                    />
+                    <select
+                      value={newDepartment}
+                      onChange={(e) => setNewDepartment(e.target.value)}
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    >
+                      {DEPARTMENTS.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#22405E]">
+                {/* 4. Priority & Type */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
+                      Priority *
+                    </label>
+                    <select
+                      value={newPriority}
+                      onChange={(e) => setNewPriority(e.target.value as any)}
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    >
+                      <option value="LOW">LOW — Minor maintenance</option>
+                      <option value="MEDIUM">MEDIUM — Normal community matter</option>
+                      <option value="HIGH">HIGH — Critical public disruption</option>
+                      <option value="URGENT">URGENT — Affecting hospital / school / safety</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
+                      Intake Type
+                    </label>
+                    <select
+                      value={newIssueType}
+                      onChange={(e) => setNewIssueType(e.target.value as any)}
+                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    >
+                      <option value="COMPLAINT">COMPLAINT (Grievance / Broken Civic Asset)</option>
+                      <option value="REQUIREMENT">REQUIREMENT (New Need / Community Proposal)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* 5, 6, 7 & 8. Geographic Scope */}
+                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5" />
+                      Constituency Geographic Hierarchy
+                    </span>
+                    <span className="text-[10px] text-[#8E9CAE] font-mono">
+                      Assembly: Banaganapalle (AC-140)
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Fixed Mandal / Town Selector */}
+                    <div>
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Mandal / Town (Fixed Options) *
+                      </label>
+                      <select
+                        value={selectedMandalId}
+                        onChange={(e) => setSelectedMandalId(e.target.value)}
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-semibold"
+                      >
+                        {FIXED_MANDALS_TOWNS.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Village / Ward (Option to write/edit) */}
+                    <div>
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Village / Ward (Type or Custom Write) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ward 4 or Yaganti Sector or Cheruvupalli"
+                        value={villageWardText}
+                        onChange={(e) => setVillageWardText(e.target.value)}
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Place / Landmark */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Place / Specific Landmark (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Near Ramalayam Temple, Beside Yaganti Main Road Circle"
+                        value={newPlaceName}
+                        onChange={(e) => setNewPlaceName(e.target.value)}
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Description */}
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
+                    Detailed Description *
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="Describe the ground situation, how many households or commuters are affected, and severity..."
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed placeholder-[#5F6875]"
+                  />
+                </div>
+
+                {/* 9 & 10. Reported by (Citizen / Cadre / Leader) */}
+                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5" />
+                      Reported By Details
+                    </span>
+                    <span className="text-[10.5px] text-[#8E9CAE]">Citizen / Cadre / Leader</span>
+                  </div>
+
+                  {/* Segmented Choice: Citizen / Cadre / Leader */}
+                  <div>
+                    <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1.5">
+                      Source Category *
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          { id: "CITIZEN", label: "Citizen" },
+                          { id: "CADRE", label: "Party Cadre" },
+                          { id: "LEADER", label: "Party Leader / Rep" }
+                        ] as const
+                      ).map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setReporterType(item.id)}
+                          className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                            reporterType === item.id
+                              ? "bg-[#D4A24C] text-[#071322] border-[#D4A24C] font-bold shadow-sm"
+                              : "bg-[#0B1A2C] text-[#B9AF95] border-[#22405E] hover:border-[#D4A24C]/40"
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* If Cadre or Leader is selected, pop up designation input */}
+                  {(reporterType === "CADRE" || reporterType === "LEADER") && (
+                    <div className="p-3 rounded-lg bg-[#142B45]/60 border border-[#D4A24C]/40 animate-fadeIn space-y-1">
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold">
+                        {reporterType === "LEADER" ? "Leader Position / Official Designation *" : "Cadre Role / Booth Responsibility *"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={
+                          reporterType === "LEADER"
+                            ? "e.g. Mandal President, Ward In-charge, Sarpanch, ZPTC, MPTC"
+                            : "e.g. Booth Convener, Village Youth Secretary, Ward Activist"
+                        }
+                        value={reporterDesignation}
+                        onChange={(e) => setReporterDesignation(e.target.value)}
+                        className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Reporter Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. K. Subba Rayudu"
+                        value={newReportedBy}
+                        onChange={(e) => setNewReportedBy(e.target.value)}
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Contact Number / Mobile *
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+91 98480 33441"
+                        value={newReporterPhone}
+                        onChange={(e) => setNewReporterPhone(e.target.value)}
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 11. Multi-Proof (Photos & Documents) Upload (Not Mandatory) */}
+                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5" />
+                      Proof Photos & Documents (Not Mandatory)
+                    </span>
+                    <span className="text-[10.5px] text-[#8E9CAE]">Upload multiple photos or PDFs</span>
+                  </div>
+
+                  {/* Upload controls */}
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center justify-center px-4 py-2.5 bg-[#142B45] hover:bg-[#1E3A5A] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                    >
+                      <Upload className="w-4 h-4 mr-1.5" />
+                      Upload Photos / Document Files
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      multiple
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                    />
+
+                    <div className="flex-1 flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="Or paste direct image URL link..."
+                        value={newAttachmentUrl}
+                        onChange={(e) => setNewAttachmentUrl(e.target.value)}
+                        className="flex-1 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                      />
+                      {newAttachmentUrl.trim() && (
+                        <button
+                          type="button"
+                          onClick={handleAddUrlAttachment}
+                          className="px-3 py-2 bg-[#D4A24C] text-[#071322] text-xs font-bold rounded-xl"
+                        >
+                          Add
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Uploaded Proof Badges / Previews */}
+                  {proofFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {proofFiles.map((proof, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 text-xs text-[#F5EFE0]"
+                        >
+                          {proof.type === "image" ? (
+                            <img src={proof.url} alt="Proof" className="w-5 h-5 rounded object-cover" />
+                          ) : (
+                            <Paperclip className="w-4 h-4 text-[#D4A24C]" />
+                          )}
+                          <span className="max-w-[150px] truncate">{proof.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveProof(idx)}
+                            className="text-rose-400 hover:text-rose-200 p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 12. Assigned Ticket Hierarchy Details */}
+                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5" />
+                      Assigned Ticket Hierarchy
+                    </span>
+                    <span className="text-[10px] text-[#8E9CAE] font-mono">Field Routing</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Assigned Ticket: Person Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={assignedPersonName}
+                        onChange={(e) => setAssignedPersonName(e.target.value)}
+                        placeholder="e.g. Demo Volunteer"
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Assigned Person Contact: Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={assignedPersonPhone}
+                        onChange={(e) => setAssignedPersonPhone(e.target.value)}
+                        placeholder="+91 98850 44003"
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Buttons */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#22405E]">
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700 text-xs font-semibold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 rounded-lg bg-[#D4A24C] text-[#071322] font-semibold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-xs sm:text-sm font-bold hover:brightness-110 flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
                   >
                     <Send className="w-4 h-4" />
                     {submitting ? "Submitting & Locking..." : "Submit Complaint (Locked)"}

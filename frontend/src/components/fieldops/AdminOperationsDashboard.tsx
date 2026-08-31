@@ -55,7 +55,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     currentUser.email === "support@leaderslens.ai" ||
     (currentUser.primaryRole === "SUPER_ADMIN" && !!currentUser.isPlatformAdmin && !currentUser.partyId);
   const [selectedConstituencyId, setSelectedConstituencyId] = useState<string>(
-    currentUser.assemblyConstituencyId || "PDT-AC"
+    currentUser.assemblyConstituencyId || "BNG-AC"
   );
 
   // Selected Issue for Modal
@@ -63,10 +63,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
   // Expanded Nodes in Geographic Tree
   const [expandedMandals, setExpandedMandals] = useState<Record<string, boolean>>({
-    "MDL-PDT-MAIN": true
+    "MDL-BNG-TWN": true
   });
   const [expandedVillages, setExpandedVillages] = useState<Record<string, boolean>>({
-    "VIL-PDT-01": true
+    "VIL-BNG-TWN-01": true
   });
 
   // View Mode: Geographic Tree vs Master Table vs Director Command vs Political Admins
@@ -87,16 +87,16 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     try {
       const [drilldown, issueList, userList, mandalList, villageList] = await Promise.all([
         politicalApiService.getGeographicDrilldown(
-          currentUser.assemblyConstituencyId || "PDT-AC",
+          currentUser.assemblyConstituencyId || "BNG-AC",
           currentUser.stateId || "AP"
         ),
         politicalApiService.getFieldIssues(),
         politicalApiService.getUsers(),
         politicalApiService.getMandals(
-          currentUser.assemblyConstituencyId || "PDT-AC",
+          currentUser.assemblyConstituencyId || "BNG-AC",
           currentUser.stateId || "AP"
         ),
-        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "PDT-AC")
+        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "BNG-AC")
       ]);
 
       setDrilldownData(drilldown);
@@ -286,7 +286,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     </span>
                   )}
                   <span className="text-xs font-medium text-[#8E9CAE] bg-[#071322] px-2.5 py-0.5 rounded-full border border-[#22405E]">
-                    {currentUser.assignedConstituency || "Poddutur AC (AC-139)"}
+                    {currentUser.assignedConstituency || "Banaganapalle AC (AC-140)"}
                   </span>
                   <button
                     type="button"
@@ -304,18 +304,18 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 </h1>
 
                 <p className="text-xs text-[#D8CFB8] flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span>🏛️ <strong>Role:</strong> {currentUser.designation || currentUser.roleTitle || "Constituency Political Admin (MLA Office)"}</span>
-                  <span>✉️ <strong>Email:</strong> {currentUser.email}</span>
+                  <span>🏛️ <strong>Designation:</strong> {currentUser.designation || "Minister for Roads & Buildings and Infrastructure | MLA Banaganapalle"}</span>
+                  <span>✉️ <strong>Official Email:</strong> {currentUser.email}</span>
                   <span>📞 <strong>Office Hotline:</strong> {currentUser.phone || "+91 98850 44001"}</span>
-                  <span>📍 <strong>Camp Office:</strong> {currentUser.assignedConstituency?.includes("Poddutur") ? "MLA Camp Office, Main Road, Poddutur, AP" : "MLA Camp Office, 7-Roads Junction, Kadapa, AP"}</span>
+                  <span>📍 <strong>Camp Office:</strong> MLA Camp Office, RTC Bus Stand Road, Banaganapalle Town, AP</span>
                 </p>
 
                 {/* Key Ministerial / MLA Focus Portfolios */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold mr-1">
-                    Constituency Portfolios:
+                    Ministerial & Constituency Portfolios:
                   </span>
-                  {["Civic Infrastructure & Drainage", "Drinking Water Pipeline Augmentation", "Public Health & Hospital Care"].map((dept) => (
+                  {["Roads & Buildings Infrastructure (R&B)", "Drinking Water & Rural Water Supply", "Yaganti & Owk Tourism & Irrigation", "5 Mandals & 2 Towns Ground Governance"].map((dept) => (
                     <span
                       key={dept}
                       className="text-[10.5px] px-2.5 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/20 font-medium"

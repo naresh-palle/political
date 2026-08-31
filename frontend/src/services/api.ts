@@ -1197,7 +1197,7 @@ export const politicalApiService = {
     });
 
     return {
-      assemblyConstituencyId: assemblyConstituencyId || "PDT-AC",
+      assemblyConstituencyId: assemblyConstituencyId || "BNG-AC",
       stateId: stateId || "AP",
       mandals: result
     };
