@@ -731,7 +731,7 @@ export const politicalApiService = {
     onProgress?: (step: number, message: string) => void;
   }): Promise<AuditReport> {
     const steps = [
-      { step: 1, text: "Querying MongoDB cluster & official ECI boundary geometries..." },
+      { step: 1, text: "Loading constituency intelligence & boundary geometries..." },
       { step: 2, text: "Verifying candidates, party filings & historical vote shares..." },
       { step: 3, text: "Querying social listening graph APIs (Meta, Google, X)..." },
       { step: 4, text: "Calculating competitive social footprint & sentiment curves..." },

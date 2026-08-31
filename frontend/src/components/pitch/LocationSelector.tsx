@@ -577,7 +577,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
               <div className="text-xs text-[#B9AF95] flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-400" />
-                Live MongoDB connection & real-time multi-platform audit ready
+                Real-time multi-platform intelligence audit ready
               </div>
 
               <button

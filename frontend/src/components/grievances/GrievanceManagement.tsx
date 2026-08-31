@@ -2645,19 +2645,6 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
           )}
         </div>
       )}
-
-      {/* Footer Attribution */}
-      <div className="text-center py-4 border-t border-[#22405E]/40 text-xs text-[#8E9CAE]">
-        Developed and Maintained by{" "}
-        <a
-          href="https://palramai.in"
-          target="_blank"
-          rel="noreferrer"
-          className="text-[#D4A24C] font-semibold hover:underline"
-        >
-          palramai.in
-        </a>
-      </div>
     </div>
   );
 };

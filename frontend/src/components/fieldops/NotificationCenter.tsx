@@ -200,19 +200,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             ))
           )}
         </div>
-
-        {/* Footer with Attribution */}
-        <div className="p-2.5 bg-[#071322] border-t border-[#22405E] text-center text-[10px] text-[#8E9CAE]">
-          Developed and Maintained by{" "}
-          <a
-            href="https://palramai.in"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[#D4A24C] hover:underline font-semibold"
-          >
-            palramai.in
-          </a>
-        </div>
       </div>
     </div>
   );
