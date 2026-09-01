@@ -614,31 +614,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
       )}
 
-      {/* 1. Master Grievances Summary Stream Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#0E1724]/80 backdrop-blur-xl border border-[#223348]">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="px-4 py-2 rounded-xl text-xs font-semibold tracking-wider flex items-center gap-2 bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold">
-            <Layers className="w-3.5 h-3.5" />
-            <span>All Grievances ({issues.length + normalizedGrievances.length})</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-xs text-[#CBD5E1] font-mono hidden sm:block">
-            Showing <strong className="text-[#D4A24C]">{sortedAndFilteredOperations.length}</strong> active grievance records
-          </div>
-
-          <button
-            onClick={() => setIsAiPdfModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] via-[#D4A24C] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
-            title="Generate and Export AI Executive Dossier PDF"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Export PDF Report</span>
-          </button>
-        </div>
-      </div>
-
       {/* 1. Official Tickets Master Summary Header Strip */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#223348]/70 pb-3">
@@ -651,14 +626,25 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 Tickets Operational Overview
               </h2>
               <span className="text-[11px] text-[#8E9CAE]">
-                Constituency AC-140 · Live Real-time Ground Intelligence
+                Constituency AC-140 · Live Real-time Ground Intelligence ({sortedAndFilteredOperations.length} Records)
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-[#CBD5E1] font-mono">
-            <span className="text-[#8E9CAE]">Stream:</span>
-            <strong className="text-[#D4A24C]">All Operations</strong>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-[#CBD5E1] font-mono">
+              <span className="text-[#8E9CAE]">Stream:</span>
+              <strong className="text-[#D4A24C]">All Operations</strong>
+            </div>
+
+            <button
+              onClick={() => setIsAiPdfModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D97724] via-[#D4A24C] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+              title="Generate and Export AI Executive Dossier PDF"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Export PDF</span>
+            </button>
           </div>
         </div>
 
@@ -937,7 +923,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         <div className="pt-3 border-t border-[#223348]/70 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
-              <span>🏛️</span> DEPARTMENT — Full Civic Roster & Distribution:
+              <span>🏛️</span> DEPARTMENT
             </span>
             <span className="text-[11px] text-[#8E9CAE]">
               {analyticsMatrix.departmentCounts.length} active department categories across constituency
@@ -953,7 +939,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   : "bg-[#0B131E]/80 border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/50"
               }`}
             >
-              All Departments ({totalOperationsCount})
+              All Grievances ({totalOperationsCount})
             </button>
 
             {analyticsMatrix.departmentCounts.map((dept) => {
