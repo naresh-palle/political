@@ -82,11 +82,11 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
     <>
       {/* 1. Modal UI (Centered Compact Export Dialog - Hidden on Print) */}
       <div
-        className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn print:hidden"
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] animate-fadeIn print:hidden"
         onClick={onClose}
       >
         <div
-          className="relative bg-[#0B131E] border border-[#D4A24C]/40 rounded-2xl w-full max-w-md shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto"
+          className="relative bg-[#0B131E] border border-[#D4A24C]/60 rounded-2xl w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden text-[#F5EFE0] my-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
