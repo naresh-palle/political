@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { 
   Printer, 
   Download, 
@@ -78,15 +79,16 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
     document.body.removeChild(link);
   };
 
-  return (
+  const modalContent = (
     <>
-      {/* 1. Modal UI (Centered exactly in viewport as per design - Hidden on Print) */}
+      {/* 1. Modal UI (Mounted directly on document.body via React Portal - Perfect Viewport Center) */}
       <div
-        className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-sm animate-fadeIn print:hidden"
+        className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn print:hidden w-screen h-screen overflow-hidden"
+        style={{ margin: 0, top: 0, left: 0, right: 0, bottom: 0 }}
         onClick={onClose}
       >
         <div
-          className="relative bg-[#0B131E] border border-[#D4A24C]/60 rounded-2xl w-full max-w-md shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto animate-scaleUp"
+          className="relative bg-[#0B131E] border border-[#D4A24C]/60 rounded-2xl w-full max-w-md shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto animate-scaleUp z-10"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -285,4 +287,6 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
       </div>
     </>
   );
+
+  return typeof document !== "undefined" ? createPortal(modalContent, document.body) : null;
 };
