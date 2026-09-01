@@ -25,6 +25,7 @@ import { GrievanceManagement } from "./components/grievances/GrievanceManagement
 import { VolunteerMonitoring } from "./components/volunteers/VolunteerMonitoring";
 import { CampaignWebsiteGenerator } from "./components/webbuilder/CampaignWebsiteGenerator";
 import { RoleManagement } from "./components/governance/RoleManagement";
+import { ContactDatabase } from "./components/contacts/ContactDatabase";
 import { AuditReport, UserProfile } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
 import { PartyThemeProvider, usePartyTheme } from "./context/PartyThemeContext";
@@ -53,13 +54,13 @@ function AppInner() {
   const [viewState, setViewState] = useState<"select" | "loading" | "audit">("select");
   
   const [activeProduct, setActiveProduct] = useState<
-    "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance"
+    "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts"
   >(() => {
     try {
       const savedProduct = localStorage.getItem(PRODUCT_STORAGE_KEY);
       if (
         savedProduct &&
-        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance"].includes(savedProduct)
+        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts"].includes(savedProduct)
       ) {
         return savedProduct as any;
       }
@@ -332,6 +333,11 @@ function AppInner() {
                   currentProfile={currentProfile}
                   onSwitchProfile={handleSwitchProfile}
                 />
+              )}
+
+              {/* Module 7: CONSTITUENCY CONTACT DATABASE & CITIZEN DIRECTORY */}
+              {activeProduct === "contacts" && (
+                <ContactDatabase currentUser={currentProfile} />
               )}
             </main>
 

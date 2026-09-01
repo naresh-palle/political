@@ -62,6 +62,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   // Filters & Sorting State
   const [activeTab, setActiveTab] = useState<"ALL" | "OVERDUE" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANT_BE_DONE">("ALL");
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [filterDepartment, setFilterDepartment] = useState<string>("ALL");
+  const [filterType, setFilterType] = useState<string>("ALL");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
   const [filterVolunteerId, setFilterVolunteerId] = useState<string>("ALL");
@@ -85,6 +87,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   }, [
     activeTab,
     filterCategory,
+    filterDepartment,
+    filterType,
     filterPriority,
     filterReporterType,
     filterVolunteerId,
@@ -159,6 +163,50 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     }
 
     return { gender, age };
+  };
+
+  // Helper to extract or classify Department
+  const getItemDepartment = (item: FieldIssue) => {
+    if (item.department && !["Public Works", "General"].includes(item.department)) {
+      return item.department;
+    }
+    const cat = (item.category || "").toLowerCase();
+    const title = (item.title || "").toLowerCase();
+    if (cat.includes("water") || title.includes("water") || title.includes("pipeline")) return "Water Supply (RWS)";
+    if (cat.includes("road") || title.includes("road") || title.includes("pothole") || title.includes("transit")) return "Roads & Buildings";
+    if (cat.includes("pension") || cat.includes("welfare") || title.includes("pension") || title.includes("dbt")) return "Social Welfare";
+    if (cat.includes("electric") || title.includes("power") || title.includes("voltage") || title.includes("transformer")) return "Energy (Discom)";
+    if (cat.includes("revenue") || title.includes("passbook") || title.includes("land") || title.includes("patta")) return "Revenue & Land";
+    if (cat.includes("health") || title.includes("doctor") || title.includes("phc") || title.includes("hospital")) return "Health & Medical";
+    if (cat.includes("panchayat") || cat.includes("drain") || title.includes("sanitation") || title.includes("garbage")) return "Panchayat Raj";
+    return item.department || "Public Works";
+  };
+
+  // Helper to extract or classify Type
+  const getItemType = (item: FieldIssue) => {
+    if (item.issueType && !["COMPLAINT", "REQUIREMENT", "GRIEVANCE"].includes(item.issueType.toUpperCase())) {
+      return item.issueType;
+    }
+    const cat = (item.category || "").toLowerCase();
+    const desc = (item.description || "").toLowerCase();
+    const title = (item.title || "").toLowerCase();
+
+    if (cat.includes("pension") || desc.includes("pension") || desc.includes("scheme") || title.includes("dbt")) {
+      return "Welfare Scheme";
+    }
+    if (cat.includes("road") || cat.includes("water") || cat.includes("transformer") || title.includes("pothole") || title.includes("pipeline")) {
+      return "Infrastructure";
+    }
+    if (desc.includes("urgent") || cat.includes("urgent") || item.priority === "URGENT") {
+      return "Urgent Aid";
+    }
+    if (cat.includes("passbook") || desc.includes("certificate") || desc.includes("seva") || title.includes("passbook")) {
+      return "Documentation";
+    }
+    if (cat.includes("garbage") || cat.includes("sanitation") || title.includes("doctor")) {
+      return "Public Service";
+    }
+    return item.reporterType === "CITIZEN" ? "Citizen Petition" : "Public Works";
   };
 
   // Convert GrievanceItems to normalized FieldIssue structure for unified rendering
@@ -295,7 +343,27 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       }
     ];
 
-    // 5. Dept / Category Counts
+    // 5. Department Counts
+    const deptMap = new Map<string, number>();
+    const typeMap = new Map<string, number>();
+
+    allOperationsList.forEach((item) => {
+      const dept = getItemDepartment(item);
+      deptMap.set(dept, (deptMap.get(dept) || 0) + 1);
+
+      const itype = getItemType(item);
+      typeMap.set(itype, (typeMap.get(itype) || 0) + 1);
+    });
+
+    const departmentCounts = Array.from(deptMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const typeCounts = Array.from(typeMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // 6. Dept / Category Counts
     const categoryCounts: { category: string; count: number }[] = availableCategories.map((cat) => ({
       category: cat,
       count: allOperationsList.filter((i) => i.category === cat).length
@@ -306,6 +374,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       genderCounts: { male: maleCount, female: femaleCount, other: otherGenderCount },
       ageCounts: { "20-30": age20_30, "30-40": age30_40, "40-50": age40_50, "50+": age50Plus },
       mandalCounts,
+      departmentCounts,
+      typeCounts,
       categoryCounts
     };
   }, [allOperationsList, availableCategories]);
@@ -340,8 +410,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       if (activeTab === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
       if (activeTab === "COMPLETED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
 
-      // Category Filter
+      // Category, Department, Type Filters
       if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
+      if (filterDepartment !== "ALL" && getItemDepartment(item) !== filterDepartment) return false;
+      if (filterType !== "ALL" && getItemType(item) !== filterType) return false;
       if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
       if (filterReporterType !== "ALL" && item.reporterType !== filterReporterType) return false;
       if (filterVolunteerId !== "ALL" && item.assignedVolunteerId !== filterVolunteerId) return false;
@@ -406,6 +478,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     allOperationsList,
     activeTab,
     filterCategory,
+    filterDepartment,
+    filterType,
     filterPriority,
     filterReporterType,
     filterVolunteerId,
@@ -426,6 +500,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const hasActiveFilters =
     activeTab !== "ALL" ||
     filterCategory !== "ALL" ||
+    filterDepartment !== "ALL" ||
+    filterType !== "ALL" ||
     filterPriority !== "ALL" ||
     filterReporterType !== "ALL" ||
     filterVolunteerId !== "ALL" ||
@@ -438,6 +514,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const clearAllFilters = () => {
     setActiveTab("ALL");
     setFilterCategory("ALL");
+    setFilterDepartment("ALL");
+    setFilterType("ALL");
     setFilterPriority("ALL");
     setFilterReporterType("ALL");
     setFilterVolunteerId("ALL");
@@ -533,51 +611,21 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
       )}
 
-      {/* 1. Merged Operations Stream Switcher */}
+      {/* 1. Master Grievances Summary Stream Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#0E1724]/80 backdrop-blur-xl border border-[#223348]">
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setOperationsStream("ALL")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-              operationsStream === "ALL"
-                ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                : "bg-[#0B131E]/80 text-[#CBD5E1] hover:text-[#F5EFE0] border border-[#223348]"
-            }`}
-          >
+          <div className="px-4 py-2 rounded-xl text-xs font-semibold tracking-wider flex items-center gap-2 bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold">
             <Layers className="w-3.5 h-3.5" />
             <span>All Grievances ({issues.length + normalizedGrievances.length})</span>
-          </button>
-
-          <button
-            onClick={() => setOperationsStream("FIELD_ISSUES")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-              operationsStream === "FIELD_ISSUES"
-                ? "bg-[#D4A24C] text-[#0B131E] shadow-md font-bold"
-                : "bg-[#0B131E]/80 text-[#CBD5E1] hover:text-[#F5EFE0] border border-[#223348]"
-            }`}
-          >
-            <ClipboardList className="w-3.5 h-3.5" />
-            <span>Field Grievances ({issues.length})</span>
-          </button>
-
-          <button
-            onClick={() => setOperationsStream("GRIEVANCES")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
-              operationsStream === "GRIEVANCES"
-                ? "bg-[#D4A24C] text-[#0B131E] shadow-md font-bold"
-                : "bg-[#0B131E]/80 text-[#CBD5E1] hover:text-[#F5EFE0] border border-[#223348]"
-            }`}
-          >
-            <Inbox className="w-3.5 h-3.5" />
-            <span>Citizen Petitions ({normalizedGrievances.length})</span>
-          </button>
+          </div>
         </div>
 
         <div className="text-xs text-[#CBD5E1] font-mono">
           Showing <strong className="text-[#D4A24C]">{sortedAndFilteredOperations.length}</strong> active grievance records
         </div>
       </div>
-      {/* 1. Official Tickets Master Summary Header Strip (From User Sketch) */}
+
+      {/* 1. Official Tickets Master Summary Header Strip */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#223348]/70 pb-3">
           <div className="flex items-center gap-2.5">
@@ -596,9 +644,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
           <div className="flex items-center gap-1.5 text-xs text-[#CBD5E1] font-mono">
             <span className="text-[#8E9CAE]">Stream:</span>
-            <strong className="text-[#D4A24C]">
-              {operationsStream === "ALL" ? "All Operations" : operationsStream === "FIELD_ISSUES" ? "Field Issues" : "Citizen Petitions"}
-            </strong>
+            <strong className="text-[#D4A24C]">All Operations</strong>
           </div>
         </div>
 
@@ -675,69 +721,69 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
 
-        {/* 2. Demographic & Regional Breakdown Matrix (Priority | Gender | Age | Mandal-wise) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+        {/* 2. Demographic, Regional, Department & Type Breakdown Matrix */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 pt-2">
           {/* Card 1: Priority Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Priority
               </span>
-              <span className="text-[10px] text-[#8E9CAE]">SLA Tiers</span>
+              <span className="text-[9.5px] text-[#8E9CAE]">SLA Tiers</span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 text-xs">
+            <div className="grid grid-cols-2 gap-1 text-xs">
               <button
                 onClick={() => setFilterPriority(filterPriority === "LOW" ? "ALL" : "LOW")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                   filterPriority === "LOW"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
-                <span className="text-[10px] text-[#8E9CAE] block">Low</span>
-                <strong className="text-sm text-[#F5EFE0] font-mono font-bold">
+                <span className="text-[9.5px] text-[#8E9CAE] block">Low</span>
+                <strong className="text-xs text-[#F5EFE0] font-mono font-bold">
                   {analyticsMatrix.priorityCounts.LOW}
                 </strong>
               </button>
 
               <button
                 onClick={() => setFilterPriority(filterPriority === "MEDIUM" ? "ALL" : "MEDIUM")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                   filterPriority === "MEDIUM"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
-                <span className="text-[10px] text-amber-300/80 block">Medium</span>
-                <strong className="text-sm text-amber-400 font-mono font-bold">
+                <span className="text-[9.5px] text-amber-300/80 block">Medium</span>
+                <strong className="text-xs text-amber-400 font-mono font-bold">
                   {analyticsMatrix.priorityCounts.MEDIUM}
                 </strong>
               </button>
 
               <button
                 onClick={() => setFilterPriority(filterPriority === "HIGH" ? "ALL" : "HIGH")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                   filterPriority === "HIGH"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
-                <span className="text-[10px] text-orange-300/80 block">High</span>
-                <strong className="text-sm text-orange-400 font-mono font-bold">
+                <span className="text-[9.5px] text-orange-300/80 block">High</span>
+                <strong className="text-xs text-orange-400 font-mono font-bold">
                   {analyticsMatrix.priorityCounts.HIGH}
                 </strong>
               </button>
 
               <button
                 onClick={() => setFilterPriority(filterPriority === "URGENT" ? "ALL" : "URGENT")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
                   filterPriority === "URGENT"
                     ? "bg-[#131E2D] border-red-500 text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-red-500/40"
                 }`}
               >
-                <span className="text-[10px] text-red-400/90 block">Urgent</span>
-                <strong className="text-sm text-red-400 font-mono font-bold">
+                <span className="text-[9.5px] text-red-400/90 block">Urgent</span>
+                <strong className="text-xs text-red-400 font-mono font-bold">
                   {analyticsMatrix.priorityCounts.URGENT}
                 </strong>
               </button>
@@ -745,44 +791,44 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 2: Gender Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Gender
               </span>
-              <span className="text-[10px] text-[#8E9CAE]">Citizen Demo</span>
+              <span className="text-[9.5px] text-[#8E9CAE]">Citizen Demo</span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 text-xs">
+            <div className="grid grid-cols-2 gap-1 text-xs">
               <button
                 onClick={() => setFilterGender(filterGender === "Male" ? "ALL" : "Male")}
-                className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
                   filterGender === "Male"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#8E9CAE] font-semibold">M (Male)</span>
+                  <span className="text-[10px] text-[#8E9CAE] font-semibold">M (Male)</span>
                   <span className="text-xs">👨</span>
                 </div>
-                <strong className="text-base text-[#F5EFE0] font-mono font-bold block mt-1">
+                <strong className="text-sm text-[#F5EFE0] font-mono font-bold block mt-1">
                   {analyticsMatrix.genderCounts.male}
                 </strong>
               </button>
 
               <button
                 onClick={() => setFilterGender(filterGender === "Female" ? "ALL" : "Female")}
-                className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
                   filterGender === "Female"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-pink-300/90 font-semibold">F (Female)</span>
+                  <span className="text-[10px] text-pink-300/90 font-semibold">F (Female)</span>
                   <span className="text-xs">👩</span>
                 </div>
-                <strong className="text-base text-pink-300 font-mono font-bold block mt-1">
+                <strong className="text-sm text-pink-300 font-mono font-bold block mt-1">
                   {analyticsMatrix.genderCounts.female}
                 </strong>
               </button>
@@ -790,26 +836,26 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 3: Age Groups Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Age
               </span>
-              <span className="text-[10px] text-[#8E9CAE]">Cohorts</span>
+              <span className="text-[9.5px] text-[#8E9CAE]">Cohorts</span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 text-xs">
+            <div className="grid grid-cols-2 gap-1 text-xs">
               {(["20-30", "30-40", "40-50", "50+"] as const).map((ageGroup) => (
                 <button
                   key={ageGroup}
                   onClick={() => setFilterAgeGroup(filterAgeGroup === ageGroup ? "ALL" : ageGroup)}
-                  className={`p-1.5 px-2 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                  className={`p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
                     filterAgeGroup === ageGroup
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="text-[10.5px] text-[#8E9CAE] font-medium">{ageGroup}</span>
-                  <strong className="text-xs text-[#F5EFE0] font-mono font-bold">
+                  <span className="text-[9.5px] text-[#8E9CAE] font-medium">{ageGroup}</span>
+                  <strong className="text-[11px] text-[#F5EFE0] font-mono font-bold">
                     {analyticsMatrix.ageCounts[ageGroup]}
                   </strong>
                 </button>
@@ -817,29 +863,81 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             </div>
           </div>
 
-          {/* Card 4: Mandal-wise Breakdown (BPL, KKL, OWK, SJM, KLM) */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2.5">
+          {/* Card 4: Mandal-wise Breakdown */}
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Mandal Wise
               </span>
-              <span className="text-[10px] text-[#8E9CAE]">5 Sectors</span>
+              <span className="text-[9.5px] text-[#8E9CAE]">5 Sectors</span>
             </div>
             <div className="grid grid-cols-3 gap-1 text-xs">
               {analyticsMatrix.mandalCounts.map((m) => (
                 <button
                   key={m.key}
                   onClick={() => setFilterMandalId(filterMandalId === m.id ? "ALL" : m.id)}
-                  className={`p-1.5 rounded-lg border text-center transition-all cursor-pointer ${
+                  className={`p-1 rounded-lg border text-center transition-all cursor-pointer ${
                     filterMandalId === m.id
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="text-[9.5px] text-[#8E9CAE] block font-bold truncate">{m.key}</span>
-                  <strong className="text-xs text-[#D4A24C] font-mono font-bold block mt-0.5">
+                  <span className="text-[9px] text-[#8E9CAE] block font-bold truncate">{m.key}</span>
+                  <strong className="text-[11px] text-[#D4A24C] font-mono font-bold block mt-0.5">
                     {m.count}
                   </strong>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 5: Department Breakdown */}
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
+                Department
+              </span>
+              <span className="text-[9.5px] text-[#8E9CAE]">Civic Depts</span>
+            </div>
+            <div className="space-y-1 text-xs max-h-24 overflow-y-auto pr-0.5 no-scrollbar">
+              {analyticsMatrix.departmentCounts.slice(0, 4).map((d) => (
+                <button
+                  key={d.name}
+                  onClick={() => setFilterDepartment(filterDepartment === d.name ? "ALL" : d.name)}
+                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                    filterDepartment === d.name
+                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
+                      : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
+                  }`}
+                >
+                  <span className="text-[9.5px] text-[#CBD5E1] truncate pr-1">{d.name}</span>
+                  <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{d.count}</strong>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Card 6: Type Breakdown */}
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
+                Type
+              </span>
+              <span className="text-[9.5px] text-[#8E9CAE]">Nature</span>
+            </div>
+            <div className="space-y-1 text-xs max-h-24 overflow-y-auto pr-0.5 no-scrollbar">
+              {analyticsMatrix.typeCounts.slice(0, 4).map((t) => (
+                <button
+                  key={t.name}
+                  onClick={() => setFilterType(filterType === t.name ? "ALL" : t.name)}
+                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                    filterType === t.name
+                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
+                      : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
+                  }`}
+                >
+                  <span className="text-[9.5px] text-[#CBD5E1] truncate pr-1">{t.name}</span>
+                  <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{t.count}</strong>
                 </button>
               ))}
             </div>
@@ -1081,14 +1179,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
 
-        {/* Row 2: Granular Filter Dropdowns (Status, Category, Priority, Gender, Age, Mandal, Assignee) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 pt-1 text-xs">
+        {/* Row 2: Granular Filter Dropdowns (Status, Department, Type, Category, Priority, Gender, Age, Mandal, Assignee) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-2 pt-1 text-xs">
           {/* Status Filter */}
           <div>
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value as any)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Status: All</option>
               <option value="PENDING">Status: 🟡 Pending</option>
@@ -1099,12 +1197,44 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             </select>
           </div>
 
+          {/* Department Filter */}
+          <div>
+            <select
+              value={filterDepartment}
+              onChange={(e) => setFilterDepartment(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Dept: All</option>
+              {analyticsMatrix.departmentCounts.map((d) => (
+                <option key={d.name} value={d.name}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Type Filter */}
+          <div>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Type: All</option>
+              {analyticsMatrix.typeCounts.map((t) => (
+                <option key={t.name} value={t.name}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Category Filter */}
           <div>
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Category: All</option>
               {availableCategories.map((c) => (
@@ -1120,7 +1250,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Priority: All</option>
               <option value="URGENT">🔴 Urgent</option>
@@ -1135,7 +1265,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <select
               value={filterGender}
               onChange={(e) => setFilterGender(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Gender: All</option>
               <option value="Male">👨 Male (M)</option>
@@ -1148,7 +1278,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <select
               value={filterAgeGroup}
               onChange={(e) => setFilterAgeGroup(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Age: All</option>
               <option value="20-30">Age: 20-30</option>
@@ -1163,7 +1293,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <select
               value={filterMandalId}
               onChange={(e) => setFilterMandalId(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Mandal: All</option>
               {mandals.map((m) => (
@@ -1179,7 +1309,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <select
               value={filterVolunteerId}
               onChange={(e) => setFilterVolunteerId(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Assignee: All</option>
               {volunteers.map((v) => (
@@ -1199,6 +1329,16 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               {activeTab !== "ALL" && (
                 <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
                   Status: {activeTab}
+                </span>
+              )}
+              {filterDepartment !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Dept: {filterDepartment}
+                </span>
+              )}
+              {filterType !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Type: {filterType}
                 </span>
               )}
               {filterCategory !== "ALL" && (

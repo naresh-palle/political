@@ -25,8 +25,8 @@ import {
 } from "lucide-react";
 
 interface NavbarProps {
-  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance";
-  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => void;
+  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts";
+  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts") => void;
   isAuditView?: boolean;
   onResetToSelect?: () => void;
   currentProfile: UserProfile;
@@ -157,7 +157,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Products */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
-            {/* Primary Grievances / Ground Intake Tab */}
             <button
               onClick={() => onProductChange("fieldops")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -170,7 +169,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Grievances" : "Field Operations"}
             </button>
 
-            {/* Pitch / Audit (Platform Super Admin ONLY) */}
+            <button
+              onClick={() => onProductChange("contacts")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeProduct === "contacts"
+                  ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
+                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
+              }`}
+            >
+              <Users2 className="w-3.5 h-3.5" />
+              <span>Contact Database</span>
+            </button>
+
             {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("pitch")}
@@ -184,7 +194,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Grievances Tab (Visible for Political Admin & Super Admin; merged inside Field Operations for Manager) */}
             {!isVolunteer && !isDirector && (
               <button
                 onClick={() => onProductChange("grievances")}
@@ -198,7 +207,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Volunteers & Web Studio (Platform Super Admin ONLY) */}
             {isPlatformAdmin && (
               <>
                 <button
@@ -224,7 +232,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
 
-            {/* User Management / Governance (Platform Admin & Political Admin ONLY) */}
             {(isPlatformAdmin || isPoliticalAdmin) && (
               <button
                 onClick={() => onProductChange("governance")}
@@ -241,7 +248,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Meta, Notifications & User Persona */}
           <div className="flex items-center space-x-3">
-            {/* Notification Bell Button */}
             <button
               onClick={() => setIsNotifOpen(true)}
               className="relative p-2 rounded-lg bg-[#142B45] border border-[#D4A24C]/25 text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
@@ -255,7 +261,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* User Profile Pill & Dropdown */}
             <div className="relative" ref={userMenuRef}>
               <div
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -277,7 +282,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <ChevronDown className={`w-3.5 h-3.5 text-[#D4A24C] transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
               </div>
 
-              {/* User Dropdown Menu */}
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0D2137] border border-[#D4A24C]/30 shadow-2xl p-2 z-50 animate-fadeIn">
                   <div className="p-2.5 border-b border-[#1E3A5A] mb-1">
@@ -349,6 +353,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Grievances" : "Field Ops"}
+          </button>
+
+          <button
+            onClick={() => onProductChange("contacts")}
+            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              activeProduct === "contacts" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
+            }`}
+          >
+            Contact Database
           </button>
 
           {isPlatformAdmin && (
