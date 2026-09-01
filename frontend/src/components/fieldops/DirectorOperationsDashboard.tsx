@@ -735,12 +735,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
 
-        {/* 2. Demographic, Regional, Department & Type Breakdown Matrix */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 pt-2">
+        {/* 2. Demographic, Regional & Type Breakdown Matrix (5 Pillars) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
           {/* Card 1: Priority Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Priority
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">SLA Tiers</span>
@@ -805,9 +805,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 2: Gender Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Gender
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">Citizen Demo</span>
@@ -850,9 +850,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 3: Age Groups Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Age
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">Cohorts</span>
@@ -878,9 +878,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 4: Mandal-wise Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
+              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Mandal Wise
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">5 Sectors</span>
@@ -905,54 +905,27 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             </div>
           </div>
 
-          {/* Card 5: Department Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[160px]">
+          {/* Card 5: Type Breakdown */}
+          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-1.5 shrink-0">
-              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Department ({analyticsMatrix.departmentCounts.length})
+              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
+                Type
               </span>
-              <span className="text-[9px] text-[#8E9CAE]">All Civic Depts</span>
+              <span className="text-[9.5px] text-[#8E9CAE]">Nature of Issues</span>
             </div>
-            <div className="max-h-[110px] overflow-y-auto space-y-1 text-xs pr-1 flex-1 no-scrollbar">
-              {analyticsMatrix.departmentCounts.map((d) => (
-                <button
-                  key={d.name}
-                  onClick={() => setFilterDepartment(filterDepartment === d.name ? "ALL" : d.name)}
-                  title={d.name}
-                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
-                    filterDepartment === d.name
-                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
-                      : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                  }`}
-                >
-                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[100px]">{d.name}</span>
-                  <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{d.count}</strong>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 6: Type Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[160px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-1.5 shrink-0">
-              <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Type ({analyticsMatrix.typeCounts.length})
-              </span>
-              <span className="text-[9px] text-[#8E9CAE]">All Types</span>
-            </div>
-            <div className="max-h-[110px] overflow-y-auto space-y-1 text-xs pr-1 flex-1 no-scrollbar">
+            <div className="max-h-[105px] overflow-y-auto space-y-1 text-xs pr-1 flex-1 no-scrollbar">
               {analyticsMatrix.typeCounts.map((t) => (
                 <button
                   key={t.name}
                   onClick={() => setFilterType(filterType === t.name ? "ALL" : t.name)}
                   title={t.name}
-                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
+                  className={`w-full p-1 px-2 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
                     filterType === t.name
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[100px]">{t.name}</span>
+                  <span className="text-[10px] text-[#CBD5E1] truncate block">{t.name}</span>
                   <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{t.count}</strong>
                 </button>
               ))}
@@ -960,11 +933,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
 
-        {/* 3. Complete Department Intelligence Strip */}
-        <div className="pt-2 border-t border-[#223348]/70 space-y-2">
+        {/* 3. Full Department Roster & Civic Intelligence Distribution */}
+        <div className="pt-3 border-t border-[#223348]/70 space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
-              <span>🏛️</span> Full Civic Department Roster & Distribution:
+            <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
+              <span>🏛️</span> DEPARTMENT — Full Civic Roster & Distribution:
             </span>
             <span className="text-[11px] text-[#8E9CAE]">
               {analyticsMatrix.departmentCounts.length} active department categories across constituency
@@ -974,9 +947,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setFilterDepartment("ALL")}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                 filterDepartment === "ALL"
-                  ? "bg-[#D4A24C] text-[#0B131E] font-bold border-[#D4A24C]"
+                  ? "bg-[#D4A24C] text-[#0B131E] font-bold border-[#D4A24C] shadow-sm"
                   : "bg-[#0B131E]/80 border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/50"
               }`}
             >
@@ -992,13 +965,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 <button
                   key={dept.name}
                   onClick={() => setFilterDepartment(isSelected ? "ALL" : dept.name)}
-                  className={`px-2.5 py-1 rounded-lg text-xs border transition-all cursor-pointer flex items-center gap-2 ${
+                  className={`px-2.5 py-1.5 rounded-lg text-xs border transition-all cursor-pointer flex items-center gap-2 ${
                     isSelected
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40 shadow-sm"
                       : "bg-[#0B131E]/80 border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="font-medium">{dept.name}</span>
+                  <span className="font-medium text-[#F5EFE0]">{dept.name}</span>
                   <span className="px-1.5 py-0.2 rounded bg-[#070D15] text-[#D4A24C] font-mono text-[10.5px] font-bold">
                     {dept.count}
                   </span>
@@ -1574,38 +1547,35 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             ))}
           </div>
         ) : (
-          /* TABLE VIEW */
-          <div className="rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
-                    <th className="py-3.5 px-4 font-mono">ID</th>
-                    <th className="py-3.5 px-4">Type</th>
-                    <th className="py-3.5 px-4">Issue Title & Scope</th>
-                    <th className="py-3.5 px-4">Category / Dept</th>
-                    <th className="py-3.5 px-4">Mandal / Town</th>
-                    <th className="py-3.5 px-4">Village / Ward</th>
-                    <th className="py-3.5 px-4">Reported By</th>
-                    <th className="py-3.5 px-4">Created Date</th>
-                    <th className="py-3.5 px-4">Complete Date</th>
-                    <th className="py-3.5 px-4 text-center">Proofs</th>
-                    <th className="py-3.5 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#223348]/50">
-                  {paginatedOperations.map((issue) => (
-                    <tr
-                      key={issue.id}
-                      onClick={() => setSelectedIssue(issue)}
-                      className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
-                    >
-                      <td className="py-3 px-4 font-mono font-bold text-[#D4A24C] whitespace-nowrap">
+          /* TABLE VIEW WITH WORDWRAP - ZERO HORIZONTAL SCROLL */
+          <div className="rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348]/80 overflow-hidden shadow-xl">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
+                  <th className="py-3 px-3 w-[11%]">ID & Type</th>
+                  <th className="py-3 px-3 w-[29%]">Issue Title & Scope</th>
+                  <th className="py-3 px-3 w-[15%]">Category / Dept</th>
+                  <th className="py-3 px-3 w-[15%]">Mandal / Location</th>
+                  <th className="py-3 px-3 w-[14%]">Reported By</th>
+                  <th className="py-3 px-3 w-[10%]">Timeline</th>
+                  <th className="py-3 px-3 w-[6%] text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#223348]/50">
+                {paginatedOperations.map((issue) => (
+                  <tr
+                    key={issue.id}
+                    onClick={() => setSelectedIssue(issue)}
+                    className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
+                  >
+                    {/* 1. ID & Type */}
+                    <td className="py-3 px-3 align-top">
+                      <div className="font-mono font-bold text-[#D4A24C] text-[11px]">
                         #{issue.id}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      </div>
+                      <div className="mt-1">
                         <span
-                          className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                          className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border inline-block ${
                             issue.issueType === "GRIEVANCE"
                               ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
                               : "bg-sky-950/70 text-sky-300 border-sky-500/40"
@@ -1613,76 +1583,111 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                         >
                           {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
                         </span>
-                      </td>
-                      <td className="py-3 px-4 max-w-[220px]">
-                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
-                          {issue.title}
-                        </div>
-                        <div className="text-[11px] text-[#8E9CAE] truncate mt-0.5">
-                          {issue.description}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
-                        {issue.department && (
-                          <div className="text-[10.5px] text-[#8E9CAE]">{issue.department.split("(")[0]}</div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap text-[#F5EFE0]">
-                        {issue.mandalName}
-                      </td>
-                      <td className="py-3 px-4 max-w-[150px]">
-                        <div className="text-[#F5EFE0] truncate font-medium">{issue.villageName}</div>
-                        {issue.placeName && (
-                          <div className="text-[10.5px] text-[#8E9CAE] truncate">📍 {issue.placeName}</div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
-                        <div className="text-[10.5px] text-[#D4A24C]">
-                          {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
-                          {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 font-mono text-[#CBD5E1] whitespace-nowrap">
-                        {issue.reportedDate}
-                      </td>
-                      <td className="py-3 px-4 font-mono whitespace-nowrap">
-                        {issue.completedDate ? (
-                          <span className="text-emerald-400 font-semibold">{issue.completedDate}</span>
-                        ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
-                          <span className="text-emerald-400 font-semibold">{issue.updatedDate || issue.reportedDate}</span>
-                        ) : (
-                          <span className="text-amber-400/90 text-[11px] font-sans">In Progress</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        {issue.attachments && issue.attachments.length > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[10.5px] font-mono">
-                            <Paperclip className="w-3 h-3" />
-                            {issue.attachments.length}
-                          </span>
-                        ) : (
-                          <span className="text-[#5F6875]">—</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedIssue(issue);
-                          }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
+                      </div>
+                      <div className="mt-1">
+                        <span
+                          className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
+                            issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                              ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                              : issue.status === "IN_PROGRESS"
+                              ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                              : issue.status === "OVERDUE" || (issue as any).status === "Can't be done"
+                              ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
+                              : "bg-blue-950/60 text-blue-300 border-blue-500/40"
+                          }`}
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          {issue.status}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* 2. Title & Scope (Word-wrapped) */}
+                    <td className="py-3 px-3 align-top">
+                      <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors break-words leading-snug">
+                        {issue.title}
+                      </div>
+                      <div className="text-[11px] text-[#8E9CAE] break-words mt-1 leading-relaxed">
+                        {issue.description}
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <span
+                          className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded ${
+                            issue.priority === "URGENT"
+                              ? "text-red-400 bg-red-950/60 border border-red-500/40"
+                              : issue.priority === "HIGH"
+                              ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
+                              : "text-[#CBD5E1] bg-[#0B131E]"
+                          }`}
+                        >
+                          Priority: {issue.priority}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* 3. Category & Department (Word-wrapped) */}
+                    <td className="py-3 px-3 align-top">
+                      <div className="font-medium text-[#F5EFE0] break-words">{issue.category}</div>
+                      {issue.department && (
+                        <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
+                          {issue.department}
+                        </div>
+                      )}
+                    </td>
+
+                    {/* 4. Mandal & Location (Word-wrapped) */}
+                    <td className="py-3 px-3 align-top">
+                      <div className="font-medium text-[#F5EFE0] break-words">{issue.mandalName}</div>
+                      <div className="text-[10.5px] text-[#8E9CAE] break-words mt-0.5">
+                        📍 {issue.villageName || issue.placeName || "Sector Ward"}
+                      </div>
+                    </td>
+
+                    {/* 5. Reported By (Word-wrapped) */}
+                    <td className="py-3 px-3 align-top">
+                      <div className="font-medium text-[#F5EFE0] break-words">{issue.reportedBy}</div>
+                      <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
+                        {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                        {issue.reporterPhone ? ` · ${issue.reporterPhone}` : ""}
+                      </div>
+                      <div className="text-[10px] text-[#8E9CAE] break-words mt-0.5">
+                        Agent: <strong className="text-[#CBD5E1]">{issue.assignedVolunteerName || "Unassigned"}</strong>
+                      </div>
+                    </td>
+
+                    {/* 6. Timeline Dates (Word-wrapped) */}
+                    <td className="py-3 px-3 align-top font-mono text-[10.5px]">
+                      <div className="text-[#CBD5E1]">
+                        <span className="text-[#8E9CAE]">Rep: </span>
+                        {issue.reportedDate}
+                      </div>
+                      <div className="mt-1">
+                        {issue.completedDate ? (
+                          <span className="text-emerald-400 font-semibold">Done: {issue.completedDate}</span>
+                        ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
+                          <span className="text-emerald-400 font-semibold">Resolved</span>
+                        ) : (
+                          <span className="text-amber-400/90">Pending</span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* 7. Action */}
+                    <td className="py-3 px-3 align-top text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedIssue(issue);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
