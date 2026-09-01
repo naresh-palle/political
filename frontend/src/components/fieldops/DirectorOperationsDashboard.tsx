@@ -724,66 +724,66 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         {/* 2. Demographic, Regional, Department & Type Breakdown Matrix */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 pt-2">
           {/* Card 1: Priority Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Priority
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">SLA Tiers</span>
             </div>
-            <div className="grid grid-cols-2 gap-1 text-xs">
+            <div className="grid grid-cols-2 gap-1.5 text-xs flex-1">
               <button
                 onClick={() => setFilterPriority(filterPriority === "LOW" ? "ALL" : "LOW")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
                   filterPriority === "LOW"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
                 <span className="text-[9.5px] text-[#8E9CAE] block">Low</span>
-                <strong className="text-xs text-[#F5EFE0] font-mono font-bold">
+                <strong className="text-xs text-[#F5EFE0] font-mono font-bold mt-0.5">
                   {analyticsMatrix.priorityCounts.LOW}
                 </strong>
               </button>
 
               <button
                 onClick={() => setFilterPriority(filterPriority === "MEDIUM" ? "ALL" : "MEDIUM")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
                   filterPriority === "MEDIUM"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
                 <span className="text-[9.5px] text-amber-300/80 block">Medium</span>
-                <strong className="text-xs text-amber-400 font-mono font-bold">
+                <strong className="text-xs text-amber-400 font-mono font-bold mt-0.5">
                   {analyticsMatrix.priorityCounts.MEDIUM}
                 </strong>
               </button>
 
               <button
                 onClick={() => setFilterPriority(filterPriority === "HIGH" ? "ALL" : "HIGH")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
                   filterPriority === "HIGH"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                 }`}
               >
                 <span className="text-[9.5px] text-orange-300/80 block">High</span>
-                <strong className="text-xs text-orange-400 font-mono font-bold">
+                <strong className="text-xs text-orange-400 font-mono font-bold mt-0.5">
                   {analyticsMatrix.priorityCounts.HIGH}
                 </strong>
               </button>
 
               <button
                 onClick={() => setFilterPriority(filterPriority === "URGENT" ? "ALL" : "URGENT")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
                   filterPriority === "URGENT"
                     ? "bg-[#131E2D] border-red-500 text-[#F5EFE0]"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-red-500/40"
                 }`}
               >
                 <span className="text-[9.5px] text-red-400/90 block">Urgent</span>
-                <strong className="text-xs text-red-400 font-mono font-bold">
+                <strong className="text-xs text-red-400 font-mono font-bold mt-0.5">
                   {analyticsMatrix.priorityCounts.URGENT}
                 </strong>
               </button>
@@ -791,17 +791,17 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 2: Gender Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Gender
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">Citizen Demo</span>
             </div>
-            <div className="grid grid-cols-2 gap-1 text-xs">
+            <div className="grid grid-cols-2 gap-1.5 text-xs flex-1">
               <button
                 onClick={() => setFilterGender(filterGender === "Male" ? "ALL" : "Male")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
                   filterGender === "Male"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
@@ -818,7 +818,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
               <button
                 onClick={() => setFilterGender(filterGender === "Female" ? "ALL" : "Female")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
                   filterGender === "Female"
                     ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
                     : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
@@ -836,19 +836,19 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 3: Age Groups Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Age
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">Cohorts</span>
             </div>
-            <div className="grid grid-cols-2 gap-1 text-xs">
+            <div className="grid grid-cols-2 gap-1.5 text-xs flex-1">
               {(["20-30", "30-40", "40-50", "50+"] as const).map((ageGroup) => (
                 <button
                   key={ageGroup}
                   onClick={() => setFilterAgeGroup(filterAgeGroup === ageGroup ? "ALL" : ageGroup)}
-                  className={`p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                  className={`p-1.5 px-2 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
                     filterAgeGroup === ageGroup
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
@@ -864,19 +864,19 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 4: Mandal-wise Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Mandal Wise
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">5 Sectors</span>
             </div>
-            <div className="grid grid-cols-3 gap-1 text-xs">
+            <div className="grid grid-cols-3 gap-1 text-xs flex-1">
               {analyticsMatrix.mandalCounts.map((m) => (
                 <button
                   key={m.key}
                   onClick={() => setFilterMandalId(filterMandalId === m.id ? "ALL" : m.id)}
-                  className={`p-1 rounded-lg border text-center transition-all cursor-pointer ${
+                  className={`p-1 rounded-lg border text-center transition-all cursor-pointer flex flex-col justify-center ${
                     filterMandalId === m.id
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
@@ -892,25 +892,26 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 5: Department Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Department
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">Civic Depts</span>
             </div>
-            <div className="space-y-1 text-xs max-h-24 overflow-y-auto pr-0.5 no-scrollbar">
-              {analyticsMatrix.departmentCounts.slice(0, 4).map((d) => (
+            <div className="space-y-1 text-xs flex-1 flex flex-col justify-between">
+              {analyticsMatrix.departmentCounts.slice(0, 3).map((d) => (
                 <button
                   key={d.name}
                   onClick={() => setFilterDepartment(filterDepartment === d.name ? "ALL" : d.name)}
-                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                  title={d.name}
+                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
                     filterDepartment === d.name
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="text-[9.5px] text-[#CBD5E1] truncate pr-1">{d.name}</span>
+                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[90px]">{d.name}</span>
                   <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{d.count}</strong>
                 </button>
               ))}
@@ -918,25 +919,26 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 6: Type Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] space-y-2 flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Type
               </span>
               <span className="text-[9.5px] text-[#8E9CAE]">Nature</span>
             </div>
-            <div className="space-y-1 text-xs max-h-24 overflow-y-auto pr-0.5 no-scrollbar">
-              {analyticsMatrix.typeCounts.slice(0, 4).map((t) => (
+            <div className="space-y-1 text-xs flex-1 flex flex-col justify-between">
+              {analyticsMatrix.typeCounts.slice(0, 3).map((t) => (
                 <button
                   key={t.name}
                   onClick={() => setFilterType(filterType === t.name ? "ALL" : t.name)}
-                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                  title={t.name}
+                  className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
                     filterType === t.name
                       ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="text-[9.5px] text-[#CBD5E1] truncate pr-1">{t.name}</span>
+                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[90px]">{t.name}</span>
                   <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{t.count}</strong>
                 </button>
               ))}

@@ -112,16 +112,16 @@ function AppInner() {
   const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
 
   // Role routing enforcement:
-  // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance)
-  // - Political Admin & Director: Field Operations, Grievances, User Management (governance) ONLY
-  // - Volunteer: Field Operations, Grievances ONLY
+  // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
+  // - Political Admin & Director: Field Operations, Grievances, User Management (governance), Contact Database (contacts)
+  // - Volunteer: Field Operations, Grievances, Contact Database (contacts)
   useEffect(() => {
-    if (isVolunteer && !["fieldops", "grievances"].includes(activeProduct)) {
+    if (isVolunteer && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "grievances", "governance"].includes(activeProduct)) {
+    } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
