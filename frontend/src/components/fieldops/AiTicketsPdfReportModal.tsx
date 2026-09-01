@@ -68,21 +68,44 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
     }
   }, [isOpen]);
 
+  // Lock body scroll and listen for Escape key when modal is active
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
+  // Filter only Field Tickets (excluding non-ticket grievance petitions)
+  const ticketIssues = issues.filter(
+    (i) => (i as any).issueType === "FIELD_ISSUE" || (i as any).type === "ticket" || !(i as any).issueType || (i as any).id?.startsWith("iss-")
+  );
+  const effectiveIssues = ticketIssues.length > 0 ? ticketIssues : issues;
+
   // Analytics Computation
-  const totalCount = issues.length;
-  const resolvedCount = issues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-  const pendingCount = issues.filter((i) => ["NEW", "ASSIGNED", "IN_PROGRESS"].includes(i.status)).length;
-  const overdueCount = issues.filter((i) => i.status === "OVERDUE" || (i as any).status === "Can't be done").length;
-  const urgentCount = issues.filter((i) => i.priority === "URGENT").length;
-  const highCount = issues.filter((i) => i.priority === "HIGH").length;
+  const totalCount = effectiveIssues.length;
+  const resolvedCount = effectiveIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
+  const pendingCount = effectiveIssues.filter((i) => ["NEW", "ASSIGNED", "IN_PROGRESS"].includes(i.status)).length;
+  const overdueCount = effectiveIssues.filter((i) => i.status === "OVERDUE" || (i as any).status === "Can't be done").length;
+  const urgentCount = effectiveIssues.filter((i) => i.priority === "URGENT").length;
+  const highCount = effectiveIssues.filter((i) => i.priority === "HIGH").length;
 
   const resolutionRate = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 0;
 
   // Department counts
   const deptMap = new Map<string, number>();
-  issues.forEach((i) => {
+  effectiveIssues.forEach((i) => {
     const dept = i.department || "Public Works";
     deptMap.set(dept, (deptMap.get(dept) || 0) + 1);
   });
@@ -92,7 +115,7 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
 
   // Mandal counts
   const mandalMap = new Map<string, number>();
-  issues.forEach((i) => {
+  effectiveIssues.forEach((i) => {
     const mandal = i.mandalName || "Main Sector";
     mandalMap.set(mandal, (mandalMap.get(mandal) || 0) + 1);
   });
@@ -106,7 +129,7 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
     year: "numeric"
   });
 
-  const reportId = `LL-AI-DOSSIER-${Math.floor(100000 + Math.random() * 900000)}`;
+  const reportId = `LL-AI-TICKETS-${Math.floor(100000 + Math.random() * 900000)}`;
 
   const handlePrintPdf = () => {
     window.print();
@@ -114,7 +137,7 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
 
   const handleDownloadCsv = () => {
     const headers = "Ticket ID,Title,Category,Department,Mandal,Village/Ward,Citizen,Phone,Priority,Status,Assigned Volunteer,Reported Date\n";
-    const rows = issues
+    const rows = effectiveIssues
       .map((i) =>
         `"${i.id}","${i.title.replace(/"/g, '""')}","${i.category || ""}","${i.department || ""}","${i.mandalName || ""}","${i.villageName || ""}","${i.reportedBy || ""}","${i.reporterPhone || ""}","${i.priority}","${i.status}","${i.assignedVolunteerName || "Unassigned"}","${i.reportedDate || i.createdAt?.split("T")[0] || ""}"`
       )
@@ -123,16 +146,22 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Constituency_Tickets_AI_Dossier_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `Constituency_Tickets_AI_Report_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
+      onClick={onClose}
+    >
       {/* Container */}
-      <div className="bg-[#0B131E] border border-[#D4A24C]/40 rounded-2xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden relative">
+      <div
+        className="relative bg-[#0B131E] border border-[#D4A24C]/40 rounded-2xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Top Control Bar (Hidden on Print) */}
         <div className="p-3.5 sm:p-4 bg-[#0E1724] border-b border-[#223348] flex items-center justify-between gap-3 shrink-0 print:hidden">
@@ -142,13 +171,13 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
             </div>
             <div>
               <h3 className="font-display text-base sm:text-lg font-bold text-[#F5EFE0] flex items-center gap-2">
-                <span>AI Constituency Intelligence Dossier</span>
+                <span>AI Field Tickets Intelligence Dossier</span>
                 <span className="px-2 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C]/40 text-[#D4A24C] text-[10px] uppercase font-mono tracking-wider font-semibold">
                   Executive PDF
                 </span>
               </h3>
               <p className="text-xs text-[#8E9CAE]">
-                Official Ground Grievances & Strategic Action Directive
+                Official Field Tickets Register & Operational Directives ({totalCount} Tickets)
               </p>
             </div>
           </div>
@@ -159,7 +188,7 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
                 <button
                   onClick={handleDownloadCsv}
                   className="px-3 py-1.5 rounded-xl bg-[#131E2D] border border-[#223348] hover:border-[#D4A24C]/40 text-[#CBD5E1] hover:text-[#F5EFE0] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Export Raw Data to CSV"
+                  title="Export Raw Tickets to CSV"
                 >
                   <Download className="w-3.5 h-3.5 text-[#D4A24C]" />
                   <span className="hidden sm:inline">CSV Data</span>
@@ -176,11 +205,14 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
               </>
             )}
 
+            {/* Prominent Close Button */}
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-xl bg-[#131E2D] border border-[#223348] text-[#8E9CAE] hover:text-[#F5EFE0] flex items-center justify-center text-sm transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-[#131E2D] hover:bg-rose-950/60 border border-[#223348] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-300 flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer shadow-sm"
+              title="Close (Press Escape)"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 text-rose-400" />
+              <span>Close</span>
             </button>
           </div>
         </div>
@@ -380,7 +412,7 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#223348]/60 bg-[#0B131E]">
-                    {issues.map((item) => (
+                    {effectiveIssues.map((item) => (
                       <tr key={item.id} className="hover:bg-[#131E2D]/50 transition-colors">
                         <td className="p-2.5 font-mono text-[11px] font-bold text-[#D4A24C] whitespace-nowrap">
                           {item.id}
@@ -466,6 +498,29 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
                   <span>Official Stamp & Seal:</span>
                   <strong className="text-[#D4A24C] font-mono">VERIFIED · {reportId}</strong>
                 </div>
+              </div>
+            </div>
+
+            {/* Bottom Modal Actions (Hidden on Print) */}
+            <div className="pt-4 pb-2 border-t border-[#223348] flex items-center justify-between gap-3 print:hidden">
+              <div className="text-xs text-[#8E9CAE]">
+                Press <kbd className="px-1.5 py-0.5 rounded bg-[#131E2D] border border-[#223348] text-[#D4A24C] font-mono text-[10px]">Esc</kbd> anytime to exit
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-rose-950/60 border border-[#223348] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4 text-rose-400" />
+                  <span>Close Dossier</span>
+                </button>
+                <button
+                  onClick={handlePrintPdf}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print / Save PDF</span>
+                </button>
               </div>
             </div>
 

@@ -1759,7 +1759,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         <AiTicketsPdfReportModal
           isOpen={isAiPdfModalOpen}
           onClose={() => setIsAiPdfModalOpen(false)}
-          issues={sortedAndFilteredOperations}
+          issues={issues}
           currentUser={currentUser}
           constituencyName="Banaganapalle AC (AC-140)"
         />
