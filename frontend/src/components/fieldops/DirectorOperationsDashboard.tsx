@@ -1190,14 +1190,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               </button>
             </div>
 
-            {/* AI Export PDF Button */}
+            {/* Export to PDF Button */}
             <button
               onClick={() => setIsAiPdfModalOpen(true)}
               className="p-1.5 px-3 rounded-xl bg-[#131E2D] border border-[#D4A24C]/50 hover:border-[#D4A24C] text-[#D4A24C] hover:text-[#F5EFE0] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-              title="Generate & Export AI Executive PDF Report"
+              title="Generate & Export Tickets PDF Report"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" />
-              <span className="text-[11px]">AI PDF Dossier</span>
+              <span className="text-[11px]">Export to PDF</span>
             </button>
           </div>
         </div>
@@ -1754,12 +1754,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         )}
       </div>
 
-      {/* AI Tickets Executive PDF Intelligence Dossier Modal */}
+      {/* Tickets Table PDF Export Modal */}
       {isAiPdfModalOpen && (
         <AiTicketsPdfReportModal
           isOpen={isAiPdfModalOpen}
           onClose={() => setIsAiPdfModalOpen(false)}
-          issues={issues}
+          issues={sortedAndFilteredOperations}
           currentUser={currentUser}
           constituencyName="Banaganapalle AC (AC-140)"
         />

@@ -1,21 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { 
-  FileText, 
   Printer, 
   Download, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  Users, 
-  Building2, 
-  Layers, 
   X, 
-  Brain,
-  ShieldCheck,
-  Flame,
-  BarChart3,
-  MapPin
+  FileText
 } from "lucide-react";
 import { FieldIssue, UserProfile } from "../../types";
 
@@ -34,40 +22,6 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
   currentUser,
   constituencyName = "Banaganapalle AC (AC-140)"
 }) => {
-  const [isGenerating, setIsGenerating] = useState(true);
-  const [generationStep, setGenerationStep] = useState(1);
-  const [generationProgress, setGenerationProgress] = useState(15);
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsGenerating(true);
-      setGenerationStep(1);
-      setGenerationProgress(20);
-
-      const t1 = setTimeout(() => {
-        setGenerationStep(2);
-        setGenerationProgress(45);
-      }, 500);
-
-      const t2 = setTimeout(() => {
-        setGenerationStep(3);
-        setGenerationProgress(75);
-      }, 1000);
-
-      const t3 = setTimeout(() => {
-        setGenerationStep(4);
-        setGenerationProgress(100);
-        setIsGenerating(false);
-      }, 1500);
-
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-      };
-    }
-  }, [isOpen]);
-
   // Lock body scroll and listen for Escape key when modal is active
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,66 +41,30 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
 
   if (!isOpen) return null;
 
-  // Filter only Field Tickets (excluding non-ticket grievance petitions)
-  const ticketIssues = issues.filter(
-    (i) => (i as any).issueType === "FIELD_ISSUE" || (i as any).type === "ticket" || !(i as any).issueType || (i as any).id?.startsWith("iss-")
-  );
-  const effectiveIssues = ticketIssues.length > 0 ? ticketIssues : issues;
-
-  // Analytics Computation
-  const totalCount = effectiveIssues.length;
-  const resolvedCount = effectiveIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-  const pendingCount = effectiveIssues.filter((i) => ["NEW", "ASSIGNED", "IN_PROGRESS"].includes(i.status)).length;
-  const overdueCount = effectiveIssues.filter((i) => i.status === "OVERDUE" || (i as any).status === "Can't be done").length;
-  const urgentCount = effectiveIssues.filter((i) => i.priority === "URGENT").length;
-  const highCount = effectiveIssues.filter((i) => i.priority === "HIGH").length;
-
-  const resolutionRate = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 0;
-
-  // Department counts
-  const deptMap = new Map<string, number>();
-  effectiveIssues.forEach((i) => {
-    const dept = i.department || "Public Works";
-    deptMap.set(dept, (deptMap.get(dept) || 0) + 1);
-  });
-  const deptList = Array.from(deptMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
-
-  // Mandal counts
-  const mandalMap = new Map<string, number>();
-  effectiveIssues.forEach((i) => {
-    const mandal = i.mandalName || "Main Sector";
-    mandalMap.set(mandal, (mandalMap.get(mandal) || 0) + 1);
-  });
-  const mandalList = Array.from(mandalMap.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
-
   const reportDate = new Date().toLocaleDateString("en-IN", {
     day: "numeric",
     month: "long",
     year: "numeric"
   });
 
-  const reportId = `LL-AI-TICKETS-${Math.floor(100000 + Math.random() * 900000)}`;
+  const reportId = `LL-REG-${Math.floor(100000 + Math.random() * 900000)}`;
 
   const handlePrintPdf = () => {
     window.print();
   };
 
   const handleDownloadCsv = () => {
-    const headers = "Ticket ID,Title,Category,Department,Mandal,Village/Ward,Citizen,Phone,Priority,Status,Assigned Volunteer,Reported Date\n";
-    const rows = effectiveIssues
+    const headers = "ID,Type,Title,Description,Category,Department,Mandal,Village/Ward,Reported By,Phone,Priority,Status,Reported Date,Complete Date,Assigned Volunteer\n";
+    const rows = issues
       .map((i) =>
-        `"${i.id}","${i.title.replace(/"/g, '""')}","${i.category || ""}","${i.department || ""}","${i.mandalName || ""}","${i.villageName || ""}","${i.reportedBy || ""}","${i.reporterPhone || ""}","${i.priority}","${i.status}","${i.assignedVolunteerName || "Unassigned"}","${i.reportedDate || i.createdAt?.split("T")[0] || ""}"`
+        `"${i.id}","${(i as any).issueType || "FIELD_ISSUE"}","${(i.title || "").replace(/"/g, '""')}","${(i.description || "").replace(/"/g, '""')}","${i.category || ""}","${i.department || ""}","${i.mandalName || ""}","${i.villageName || ""}","${i.reportedBy || ""}","${i.reporterPhone || ""}","${i.priority}","${i.status}","${i.reportedDate || ""}","${(i as any).completedDate || ""}","${i.assignedVolunteerName || "Unassigned"}"`
       )
       .join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Constituency_Tickets_AI_Report_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `Operations_Tickets_Register_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -159,53 +77,47 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
     >
       {/* Container */}
       <div
-        className="relative bg-[#0B131E] border border-[#D4A24C]/40 rounded-2xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto"
+        className="relative bg-[#0B131E] border border-[#D4A24C]/40 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        
         {/* Top Control Bar (Hidden on Print) */}
         <div className="p-3.5 sm:p-4 bg-[#0E1724] border-b border-[#223348] flex items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#D97724] to-[#C99738] text-[#0B131E] flex items-center justify-center shadow-md">
-              <Brain className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#D97724] to-[#C99738] text-[#0B131E] flex items-center justify-center shadow-md font-bold">
+              <FileText className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-display text-base sm:text-lg font-bold text-[#F5EFE0] flex items-center gap-2">
-                <span>AI Field Tickets Intelligence Dossier</span>
+              <h3 className="font-display text-base font-bold text-[#F5EFE0] flex items-center gap-2">
+                <span>Operations & Tickets Register</span>
                 <span className="px-2 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C]/40 text-[#D4A24C] text-[10px] uppercase font-mono tracking-wider font-semibold">
-                  Executive PDF
+                  PDF Preview
                 </span>
               </h3>
               <p className="text-xs text-[#8E9CAE]">
-                Official Field Tickets Register & Operational Directives ({totalCount} Tickets)
+                {constituencyName} · Showing {issues.length} active records
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {!isGenerating && (
-              <>
-                <button
-                  onClick={handleDownloadCsv}
-                  className="px-3 py-1.5 rounded-xl bg-[#131E2D] border border-[#223348] hover:border-[#D4A24C]/40 text-[#CBD5E1] hover:text-[#F5EFE0] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Export Raw Tickets to CSV"
-                >
-                  <Download className="w-3.5 h-3.5 text-[#D4A24C]" />
-                  <span className="hidden sm:inline">CSV Data</span>
-                </button>
+            <button
+              onClick={handleDownloadCsv}
+              className="px-3 py-1.5 rounded-xl bg-[#131E2D] border border-[#223348] hover:border-[#D4A24C]/40 text-[#CBD5E1] hover:text-[#F5EFE0] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Export Table to CSV"
+            >
+              <Download className="w-3.5 h-3.5 text-[#D4A24C]" />
+              <span className="hidden sm:inline">CSV</span>
+            </button>
 
-                <button
-                  onClick={handlePrintPdf}
-                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
-                  title="Print or Save as Official PDF"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print / Save as PDF</span>
-                </button>
-              </>
-            )}
+            <button
+              onClick={handlePrintPdf}
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+              title="Print or Save as PDF"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print / Save as PDF</span>
+            </button>
 
-            {/* Prominent Close Button */}
             <button
               onClick={onClose}
               className="px-3 py-1.5 rounded-xl bg-[#131E2D] hover:bg-rose-950/60 border border-[#223348] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-300 flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer shadow-sm"
@@ -217,315 +129,173 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
           </div>
         </div>
 
-        {/* AI Generation State View */}
-        {isGenerating ? (
-          <div className="p-12 sm:p-16 flex flex-col items-center justify-center text-center space-y-6 flex-1">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-[#131E2D] border border-[#D4A24C]/50 flex items-center justify-center text-[#D4A24C] shadow-2xl animate-pulse">
-                <Sparkles className="w-10 h-10" />
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-emerald-500 text-black flex items-center justify-center text-xs font-bold">
-                AI
+        {/* Printable Table Section */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0B131E] text-[#F5EFE0] space-y-4 printable-report">
+          
+          {/* Header Strip for Print / PDF */}
+          <div className="border-b border-[#223348] pb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg sm:text-xl font-bold text-[#F5EFE0]">
+                Leader's Lens — Operations & Tickets Register
+              </h2>
+              <div className="text-xs text-[#8E9CAE] mt-0.5">
+                {constituencyName} · Authority: <strong className="text-[#CBD5E1]">{currentUser.name}</strong> · Date: <strong className="text-[#D4A24C]">{reportDate}</strong>
               </div>
             </div>
-
-            <div className="space-y-2 max-w-md">
-              <h4 className="font-display text-lg font-bold text-[#F5EFE0]">
-                Synthesizing Constituency AI Intelligence Dossier...
-              </h4>
-              <p className="text-xs text-[#8E9CAE] leading-relaxed">
-                {generationStep === 1 && "Aggregating active constituency tickets & field telemetry..."}
-                {generationStep === 2 && "Synthesizing demographic cohorts & SLA risk indices..."}
-                {generationStep === 3 && "Classifying cross-departmental civic bottlenecks..."}
-                {generationStep === 4 && "Compiling official Executive Briefing & Action Directives..."}
-              </p>
-            </div>
-
-            {/* Progress bar */}
-            <div className="w-full max-w-sm bg-[#131E2D] rounded-full h-2 overflow-hidden border border-[#223348]">
-              <div
-                className="bg-gradient-to-r from-[#D97724] to-[#C99738] h-full transition-all duration-300"
-                style={{ width: `${generationProgress}%` }}
-              />
+            <div className="text-right text-xs font-mono text-[#8E9CAE]">
+              <div>Ref: <strong className="text-[#D4A24C]">{reportId}</strong></div>
+              <div>Total Records: <strong className="text-[#F5EFE0]">{issues.length}</strong></div>
             </div>
           </div>
-        ) : (
-          /* Report Document Body */
-          <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#0B131E] text-[#F5EFE0] space-y-6 printable-report">
-            
-            {/* 1. Official Dossier Header */}
-            <div className="border-b-2 border-[#D4A24C] pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-[#D4A24C] text-[#0B131E] text-[10px] font-bold uppercase tracking-wider">
-                    CONFIDENTIAL · COMMAND DOSSIER
-                  </span>
-                  <span className="text-[11px] font-mono text-[#8E9CAE]">
-                    Report Ref: {reportId}
-                  </span>
-                </div>
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#F5EFE0]">
-                  {constituencyName}
-                </h1>
-                <p className="text-xs text-[#D4A24C] font-medium">
-                  Comprehensive Ground Grievances Register & AI Strategic Nodal Directive
-                </p>
-              </div>
 
-              <div className="sm:text-right text-xs text-[#8E9CAE] space-y-0.5">
-                <div><strong>Generated Date:</strong> {reportDate}</div>
-                <div><strong>Authority:</strong> {currentUser.name} ({currentUser.role || "Campaign Director"})</div>
-                <div><strong>AI Confidence:</strong> <span className="text-emerald-400 font-bold">98.4% Verified Ground Telemetry</span></div>
-              </div>
-            </div>
-
-            {/* 2. Executive AI Diagnostics & Sentiment Brief */}
-            <div className="p-4 rounded-xl bg-[#0E1724] border border-[#D4A24C]/30 space-y-3">
-              <div className="flex items-center justify-between border-b border-[#223348] pb-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#D4A24C] uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-[#D4A24C]" />
-                  <span>Executive AI Strategic Diagnostics</span>
-                </div>
-                <span className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">
-                  Ground Mood: Proactive Resolution Required
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs leading-relaxed text-[#CBD5E1]">
-                <div className="p-3 rounded-lg bg-[#070D15] border border-[#223348]">
-                  <strong className="text-[#F5EFE0] block mb-1 flex items-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5 text-orange-400" /> Ground Pressure Points
-                  </strong>
-                  Water Supply (RWS) and Transformer/Power Fluctuations account for <strong>45% of critical civic dissatisfaction</strong>. Immediate nodal intervention will yield high voter sentiment lift.
-                </div>
-
-                <div className="p-3 rounded-lg bg-[#070D15] border border-[#223348]">
-                  <strong className="text-[#F5EFE0] block mb-1 flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> Escalation / SLA Warnings
-                  </strong>
-                  <strong>{overdueCount} critical ticket</strong> has breached standard SLA windows. Nodal officer reassignment recommended to avoid local community dissatisfaction.
-                </div>
-
-                <div className="p-3 rounded-lg bg-[#070D15] border border-[#223348]">
-                  <strong className="text-[#F5EFE0] block mb-1 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Cadre & Nodal Velocity
-                  </strong>
-                  Resolution rate stands at <strong className="text-emerald-400">{resolutionRate}%</strong> across active field squads. High community rapport observed among Female & Senior Citizen cohorts.
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Top-Level Metric Scorecard */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-              <div className="p-3 rounded-xl bg-[#0E1724] border border-[#223348]">
-                <span className="text-[10px] text-[#8E9CAE] uppercase tracking-wider font-semibold block">Total Volume</span>
-                <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-0.5">{totalCount}</div>
-                <span className="text-[10px] text-[#8E9CAE]">100% Tracked</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#0E1724] border border-emerald-500/30">
-                <span className="text-[10px] text-emerald-300 uppercase tracking-wider font-semibold block">Resolved / Fixed</span>
-                <div className="font-display text-2xl font-bold text-emerald-400 mt-0.5">{resolvedCount}</div>
-                <span className="text-[10px] text-emerald-400/80">{resolutionRate}% Resolution Rate</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#0E1724] border border-blue-500/30">
-                <span className="text-[10px] text-blue-300 uppercase tracking-wider font-semibold block">Active / In Progress</span>
-                <div className="font-display text-2xl font-bold text-blue-400 mt-0.5">{pendingCount}</div>
-                <span className="text-[10px] text-blue-300/80">Under Nodal Action</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-[#0E1724] border border-rose-500/30">
-                <span className="text-[10px] text-rose-300 uppercase tracking-wider font-semibold block">SLA Overdue / High Risk</span>
-                <div className="font-display text-2xl font-bold text-rose-400 mt-0.5">{overdueCount}</div>
-                <span className="text-[10px] text-rose-300/80">Requires Escalation</span>
-              </div>
-            </div>
-
-            {/* 4. Cross-Departmental & Sector Breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Department Roster */}
-              <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] space-y-2">
-                <div className="flex items-center justify-between border-b border-[#223348] pb-1.5">
-                  <span className="text-xs font-bold text-[#D4A24C] uppercase flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5" /> Department Distribution
-                  </span>
-                  <span className="text-[10px] text-[#8E9CAE]">{deptList.length} Civic Depts</span>
-                </div>
-                <div className="space-y-1.5 text-xs">
-                  {deptList.map((d) => (
-                    <div key={d.name} className="flex items-center justify-between p-1.5 rounded bg-[#070D15] border border-[#223348]/60">
-                      <span className="text-[#CBD5E1] font-medium">{d.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#D4A24C] font-mono font-bold">{d.count} tickets</span>
-                        <span className="text-[10px] text-[#8E9CAE]">({Math.round((d.count / (totalCount || 1)) * 100)}%)</span>
+          {/* EXACT TABLE FROM DASHBOARD */}
+          <div className="rounded-xl border border-[#223348] overflow-hidden">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#131E2D] border-b border-[#223348] text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+                  <th className="py-2.5 px-3 w-[12%]">ID & Type</th>
+                  <th className="py-2.5 px-3 w-[30%]">Issue Title & Scope</th>
+                  <th className="py-2.5 px-3 w-[16%]">Category / Dept</th>
+                  <th className="py-2.5 px-3 w-[15%]">Mandal / Location</th>
+                  <th className="py-2.5 px-3 w-[15%]">Reported By</th>
+                  <th className="py-2.5 px-3 w-[12%]">Timeline</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#223348]/60 bg-[#0B131E]">
+                {issues.map((issue) => (
+                  <tr key={issue.id} className="hover:bg-[#131E2D]/40 transition-colors">
+                    {/* 1. ID & Type */}
+                    <td className="py-2.5 px-3 align-top">
+                      <div className="font-mono font-bold text-[#D4A24C] text-[11px]">
+                        #{issue.id}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Mandal Distribution */}
-              <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] space-y-2">
-                <div className="flex items-center justify-between border-b border-[#223348] pb-1.5">
-                  <span className="text-xs font-bold text-[#D4A24C] uppercase flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5" /> Mandal Sector Volume
-                  </span>
-                  <span className="text-[10px] text-[#8E9CAE]">{mandalList.length} Sectors</span>
-                </div>
-                <div className="space-y-1.5 text-xs">
-                  {mandalList.map((m) => (
-                    <div key={m.name} className="flex items-center justify-between p-1.5 rounded bg-[#070D15] border border-[#223348]/60">
-                      <span className="text-[#CBD5E1] font-medium">{m.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#D4A24C] font-mono font-bold">{m.count} tickets</span>
-                        <span className="text-[10px] text-[#8E9CAE]">({Math.round((m.count / (totalCount || 1)) * 100)}%)</span>
+                      <div className="mt-1">
+                        <span
+                          className={`text-[8.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border inline-block ${
+                            (issue as any).issueType === "GRIEVANCE"
+                              ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
+                              : "bg-sky-950/70 text-sky-300 border-sky-500/40"
+                          }`}
+                        >
+                          {(issue as any).issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
+                        </span>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                      <div className="mt-1">
+                        <span
+                          className={`text-[8.5px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
+                            issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                              ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                              : issue.status === "IN_PROGRESS"
+                              ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                              : issue.status === "OVERDUE" || (issue as any).status === "Can't be done"
+                              ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
+                              : "bg-blue-950/60 text-blue-300 border-blue-500/40"
+                          }`}
+                        >
+                          {issue.status}
+                        </span>
+                      </div>
+                    </td>
 
-            {/* 5. Master Itemized Tickets Register Table */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#D4A24C]" />
-                  <span>Master Itemized Tickets Register ({issues.length} Records)</span>
-                </h3>
-                <span className="text-[11px] text-[#8E9CAE]">Full Grievances Catalog</span>
-              </div>
+                    {/* 2. Title & Scope */}
+                    <td className="py-2.5 px-3 align-top">
+                      <div className="font-semibold text-[#F5EFE0] break-words leading-snug">
+                        {issue.title}
+                      </div>
+                      <div className="text-[10.5px] text-[#8E9CAE] break-words mt-0.5 leading-relaxed">
+                        {issue.description}
+                      </div>
+                      <div className="mt-1">
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.2 rounded inline-block ${
+                            issue.priority === "URGENT"
+                              ? "text-red-400 bg-red-950/60 border border-red-500/40"
+                              : issue.priority === "HIGH"
+                              ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
+                              : "text-[#CBD5E1] bg-[#131E2D]"
+                          }`}
+                        >
+                          Priority: {issue.priority}
+                        </span>
+                      </div>
+                    </td>
 
-              <div className="overflow-x-auto rounded-xl border border-[#223348]">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#131E2D] text-[#8E9CAE] border-b border-[#223348] uppercase tracking-wider text-[10px]">
-                      <th className="p-2.5">Ticket ID</th>
-                      <th className="p-2.5">Title & Category</th>
-                      <th className="p-2.5">Department</th>
-                      <th className="p-2.5">Mandal / Location</th>
-                      <th className="p-2.5">Citizen / Petitioner</th>
-                      <th className="p-2.5">Priority</th>
-                      <th className="p-2.5">Status</th>
-                      <th className="p-2.5">Assigned Field Squad</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#223348]/60 bg-[#0B131E]">
-                    {effectiveIssues.map((item) => (
-                      <tr key={item.id} className="hover:bg-[#131E2D]/50 transition-colors">
-                        <td className="p-2.5 font-mono text-[11px] font-bold text-[#D4A24C] whitespace-nowrap">
-                          {item.id}
-                        </td>
-                        <td className="p-2.5 max-w-[200px]">
-                          <strong className="text-[#F5EFE0] block truncate">{item.title}</strong>
-                          <span className="text-[10px] text-[#8E9CAE] block">{item.category || "General"}</span>
-                        </td>
-                        <td className="p-2.5 whitespace-nowrap">
-                          <span className="px-2 py-0.5 rounded bg-[#070D15] border border-[#223348] text-[#CBD5E1] text-[10.5px]">
-                            {item.department || "Public Works"}
-                          </span>
-                        </td>
-                        <td className="p-2.5 text-[11px] text-[#CBD5E1] whitespace-nowrap">
-                          <div>{item.mandalName || "Banaganapalle"}</div>
-                          <span className="text-[10px] text-[#8E9CAE]">{item.villageName || "Town"}</span>
-                        </td>
-                        <td className="p-2.5 text-[11px] text-[#CBD5E1] whitespace-nowrap">
-                          <div className="font-semibold text-[#F5EFE0]">{item.reportedBy}</div>
-                          <span className="text-[10px] text-[#8E9CAE]">{item.reporterPhone || "Verified Citizen"}</span>
-                        </td>
-                        <td className="p-2.5 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              item.priority === "URGENT"
-                                ? "bg-red-950/70 text-red-400 border border-red-500/40"
-                                : item.priority === "HIGH"
-                                ? "bg-orange-950/70 text-orange-400 border border-orange-500/40"
-                                : item.priority === "MEDIUM"
-                                ? "bg-amber-950/70 text-amber-400 border border-amber-500/40"
-                                : "bg-emerald-950/70 text-emerald-400 border border-emerald-500/40"
-                            }`}
-                          >
-                            {item.priority}
-                          </span>
-                        </td>
-                        <td className="p-2.5 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              ["COMPLETED", "RESOLVED"].includes(item.status)
-                                ? "bg-emerald-950/70 text-emerald-400 border border-emerald-500/40"
-                                : item.status === "OVERDUE" || (item as any).status === "Can't be done"
-                                ? "bg-rose-950/70 text-rose-400 border border-rose-500/40"
-                                : "bg-blue-950/70 text-blue-400 border border-blue-500/40"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </td>
-                        <td className="p-2.5 text-[11px] text-[#CBD5E1] whitespace-nowrap">
-                          {item.assignedVolunteerName || "Unassigned"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    {/* 3. Category & Department */}
+                    <td className="py-2.5 px-3 align-top">
+                      <div className="font-medium text-[#F5EFE0] break-words">{issue.category}</div>
+                      {issue.department && (
+                        <div className="text-[10px] text-[#D4A24C] break-words mt-0.5">
+                          {issue.department}
+                        </div>
+                      )}
+                    </td>
 
-            {/* 6. Official Sign-off & Directives Block */}
-            <div className="pt-6 border-t-2 border-[#223348] grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-              <div className="p-4 rounded-xl bg-[#0E1724] border border-[#223348] space-y-2">
-                <span className="text-[10px] uppercase font-bold text-[#D4A24C] block tracking-wider">
-                  Campaign Command Directive
-                </span>
-                <p className="text-[#8E9CAE] leading-relaxed text-[11px]">
-                  All high-priority and overdue tickets in this register are escalated directly to the respective Nodal Officers under the supervision of the Campaign Director.
-                </p>
-                <div className="pt-4 border-t border-[#223348]/60 flex items-center justify-between text-[11px]">
-                  <span>Authorized Signature:</span>
-                  <strong className="text-[#F5EFE0] font-display">{currentUser.name}</strong>
-                </div>
-              </div>
+                    {/* 4. Mandal & Location */}
+                    <td className="py-2.5 px-3 align-top">
+                      <div className="font-medium text-[#F5EFE0] break-words">{issue.mandalName}</div>
+                      <div className="text-[10px] text-[#8E9CAE] break-words mt-0.5">
+                        📍 {issue.villageName || (issue as any).placeName || "Sector Ward"}
+                      </div>
+                    </td>
 
-              <div className="p-4 rounded-xl bg-[#0E1724] border border-[#223348] space-y-2">
-                <span className="text-[10px] uppercase font-bold text-[#D4A24C] block tracking-wider">
-                  Constituency MLA / MP Action Cell
-                </span>
-                <p className="text-[#8E9CAE] leading-relaxed text-[11px]">
-                  Official sign-off for public grievance escalation and cross-ministry budget approvals for urgent infrastructure work.
-                </p>
-                <div className="pt-4 border-t border-[#223348]/60 flex items-center justify-between text-[11px]">
-                  <span>Official Stamp & Seal:</span>
-                  <strong className="text-[#D4A24C] font-mono">VERIFIED · {reportId}</strong>
-                </div>
-              </div>
-            </div>
+                    {/* 5. Reported By */}
+                    <td className="py-2.5 px-3 align-top">
+                      <div className="font-medium text-[#F5EFE0] break-words">{issue.reportedBy}</div>
+                      <div className="text-[10px] text-[#D4A24C] break-words mt-0.5">
+                        {(issue as any).reporterType === "LEADER" ? "Leader" : (issue as any).reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                        {issue.reporterPhone ? ` · ${issue.reporterPhone}` : ""}
+                      </div>
+                      <div className="text-[9.5px] text-[#8E9CAE] break-words mt-0.5">
+                        Agent: <strong className="text-[#CBD5E1]">{issue.assignedVolunteerName || "Unassigned"}</strong>
+                      </div>
+                    </td>
 
-            {/* Bottom Modal Actions (Hidden on Print) */}
-            <div className="pt-4 pb-2 border-t border-[#223348] flex items-center justify-between gap-3 print:hidden">
-              <div className="text-xs text-[#8E9CAE]">
-                Press <kbd className="px-1.5 py-0.5 rounded bg-[#131E2D] border border-[#223348] text-[#D4A24C] font-mono text-[10px]">Esc</kbd> anytime to exit
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-rose-950/60 border border-[#223348] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <X className="w-4 h-4 text-rose-400" />
-                  <span>Close Dossier</span>
-                </button>
-                <button
-                  onClick={handlePrintPdf}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Print / Save PDF</span>
-                </button>
-              </div>
-            </div>
-
+                    {/* 6. Timeline */}
+                    <td className="py-2.5 px-3 align-top font-mono text-[10px]">
+                      <div className="text-[#CBD5E1]">
+                        <span className="text-[#8E9CAE]">Rep: </span>
+                        {issue.reportedDate}
+                      </div>
+                      <div className="mt-1">
+                        {(issue as any).completedDate ? (
+                          <span className="text-emerald-400 font-semibold">Done: {(issue as any).completedDate}</span>
+                        ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
+                          <span className="text-emerald-400 font-semibold">Resolved</span>
+                        ) : (
+                          <span className="text-amber-400/90">Pending</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {/* Bottom Action Footer (Hidden on Print) */}
+          <div className="pt-3 border-t border-[#223348] flex items-center justify-between gap-3 print:hidden">
+            <div className="text-xs text-[#8E9CAE]">
+              Press <kbd className="px-1.5 py-0.5 rounded bg-[#131E2D] border border-[#223348] text-[#D4A24C] font-mono text-[10px]">Esc</kbd> anytime to close
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onClose}
+                className="px-4 py-1.5 rounded-xl bg-[#131E2D] hover:bg-rose-950/60 border border-[#223348] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5 text-rose-400" />
+                <span>Close</span>
+              </button>
+              <button
+                onClick={handlePrintPdf}
+                className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print / Save PDF</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
 
       </div>
     </div>
