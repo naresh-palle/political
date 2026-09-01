@@ -129,14 +129,14 @@ function AppInner() {
     }
   }, [isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
-  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance") => {
+  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts") => {
     let targetProduct = product;
     if (isVolunteer) {
-      targetProduct = !["fieldops", "grievances"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "grievances", "contacts"].includes(product) ? "fieldops" : product;
     } else if (isPoliticalAdmin || isDirector) {
-      targetProduct = !["fieldops", "grievances", "governance"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
     } else if (!isPlatformAdmin) {
-      targetProduct = "fieldops";
+      targetProduct = ["contacts", "fieldops", "grievances"].includes(product) ? product : "fieldops";
     }
     setActiveProduct(targetProduct);
     try {
@@ -177,12 +177,12 @@ function AppInner() {
         : "DIRECTOR"
     );
 
-    if (userRole === "VOLUNTEER" && !["fieldops", "grievances"].includes(activeProduct)) {
+    if (userRole === "VOLUNTEER" && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if ((userRole === "POLITICAL_ADMIN" || userRole === "DIRECTOR") && !["fieldops", "grievances", "governance"].includes(activeProduct)) {
+    } else if ((userRole === "POLITICAL_ADMIN" || userRole === "DIRECTOR") && !["fieldops", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");

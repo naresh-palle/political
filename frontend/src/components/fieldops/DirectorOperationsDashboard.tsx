@@ -35,10 +35,12 @@ import {
   List,
   Eye,
   Paperclip,
-  Inbox,
   ClipboardList,
-  Building2
+  Building2,
+  Sparkles,
+  Printer
 } from "lucide-react";
+import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 
 interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -55,6 +57,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
   const [operationsStream, setOperationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("ALL");
+  const [isAiPdfModalOpen, setIsAiPdfModalOpen] = useState(false);
 
   // Selected Issue for Full-Page Detail View
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
@@ -620,8 +623,19 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
 
-        <div className="text-xs text-[#CBD5E1] font-mono">
-          Showing <strong className="text-[#D4A24C]">{sortedAndFilteredOperations.length}</strong> active grievance records
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-[#CBD5E1] font-mono hidden sm:block">
+            Showing <strong className="text-[#D4A24C]">{sortedAndFilteredOperations.length}</strong> active grievance records
+          </div>
+
+          <button
+            onClick={() => setIsAiPdfModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] via-[#D4A24C] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+            title="Generate and Export AI Executive Dossier PDF"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>AI Export PDF Report</span>
+          </button>
         </div>
       </div>
 
@@ -892,26 +906,26 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 5: Department Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[160px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-1.5 shrink-0">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Department
+                Department ({analyticsMatrix.departmentCounts.length})
               </span>
-              <span className="text-[9.5px] text-[#8E9CAE]">Civic Depts</span>
+              <span className="text-[9px] text-[#8E9CAE]">All Civic Depts</span>
             </div>
-            <div className="space-y-1 text-xs flex-1 flex flex-col justify-between">
-              {analyticsMatrix.departmentCounts.slice(0, 3).map((d) => (
+            <div className="max-h-[110px] overflow-y-auto space-y-1 text-xs pr-1 flex-1 no-scrollbar">
+              {analyticsMatrix.departmentCounts.map((d) => (
                 <button
                   key={d.name}
                   onClick={() => setFilterDepartment(filterDepartment === d.name ? "ALL" : d.name)}
                   title={d.name}
                   className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
                     filterDepartment === d.name
-                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
+                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[90px]">{d.name}</span>
+                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[100px]">{d.name}</span>
                   <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{d.count}</strong>
                 </button>
               ))}
@@ -919,30 +933,81 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 6: Type Breakdown */}
-          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[148px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
+          <div className="p-3 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[160px]">
+            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-1.5 shrink-0">
               <span className="text-[10.5px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Type
+                Type ({analyticsMatrix.typeCounts.length})
               </span>
-              <span className="text-[9.5px] text-[#8E9CAE]">Nature</span>
+              <span className="text-[9px] text-[#8E9CAE]">All Types</span>
             </div>
-            <div className="space-y-1 text-xs flex-1 flex flex-col justify-between">
-              {analyticsMatrix.typeCounts.slice(0, 3).map((t) => (
+            <div className="max-h-[110px] overflow-y-auto space-y-1 text-xs pr-1 flex-1 no-scrollbar">
+              {analyticsMatrix.typeCounts.map((t) => (
                 <button
                   key={t.name}
                   onClick={() => setFilterType(filterType === t.name ? "ALL" : t.name)}
                   title={t.name}
                   className={`w-full p-1 px-1.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
                     filterType === t.name
-                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
+                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
                       : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
                   }`}
                 >
-                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[90px]">{t.name}</span>
+                  <span className="text-[9.5px] text-[#CBD5E1] truncate block max-w-[100px]">{t.name}</span>
                   <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{t.count}</strong>
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* 3. Complete Department Intelligence Strip */}
+        <div className="pt-2 border-t border-[#223348]/70 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
+              <span>🏛️</span> Full Civic Department Roster & Distribution:
+            </span>
+            <span className="text-[11px] text-[#8E9CAE]">
+              {analyticsMatrix.departmentCounts.length} active department categories across constituency
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setFilterDepartment("ALL")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                filterDepartment === "ALL"
+                  ? "bg-[#D4A24C] text-[#0B131E] font-bold border-[#D4A24C]"
+                  : "bg-[#0B131E]/80 border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/50"
+              }`}
+            >
+              All Departments ({totalOperationsCount})
+            </button>
+
+            {analyticsMatrix.departmentCounts.map((dept) => {
+              const deptItems = allOperationsList.filter((i) => getItemDepartment(i) === dept.name);
+              const resolved = deptItems.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
+              const isSelected = filterDepartment === dept.name;
+
+              return (
+                <button
+                  key={dept.name}
+                  onClick={() => setFilterDepartment(isSelected ? "ALL" : dept.name)}
+                  className={`px-2.5 py-1 rounded-lg text-xs border transition-all cursor-pointer flex items-center gap-2 ${
+                    isSelected
+                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40 shadow-sm"
+                      : "bg-[#0B131E]/80 border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/40"
+                  }`}
+                >
+                  <span className="font-medium">{dept.name}</span>
+                  <span className="px-1.5 py-0.2 rounded bg-[#070D15] text-[#D4A24C] font-mono text-[10.5px] font-bold">
+                    {dept.count}
+                  </span>
+                  <span className="text-[10px] text-emerald-400">
+                    ({resolved}/{dept.count} fixed)
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1178,6 +1243,16 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 <span className="text-[11px] hidden sm:inline">Table</span>
               </button>
             </div>
+
+            {/* AI Export PDF Button */}
+            <button
+              onClick={() => setIsAiPdfModalOpen(true)}
+              className="p-1.5 px-3 rounded-xl bg-[#131E2D] border border-[#D4A24C]/50 hover:border-[#D4A24C] text-[#D4A24C] hover:text-[#F5EFE0] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Generate & Export AI Executive PDF Report"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" />
+              <span className="text-[11px]">AI PDF Dossier</span>
+            </button>
           </div>
         </div>
 
@@ -1700,6 +1775,17 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         )}
       </div>
+
+      {/* AI Tickets Executive PDF Intelligence Dossier Modal */}
+      {isAiPdfModalOpen && (
+        <AiTicketsPdfReportModal
+          isOpen={isAiPdfModalOpen}
+          onClose={() => setIsAiPdfModalOpen(false)}
+          issues={sortedAndFilteredOperations}
+          currentUser={currentUser}
+          constituencyName="Banaganapalle AC (AC-140)"
+        />
+      )}
     </div>
   );
 };
