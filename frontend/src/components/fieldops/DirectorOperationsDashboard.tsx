@@ -34,13 +34,9 @@ import {
   LayoutGrid,
   List,
   Eye,
-  Paperclip,
   ClipboardList,
-  Building2,
-  Sparkles,
-  Printer
+  Building2
 } from "lucide-react";
-import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 
 interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -57,7 +53,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
   const [operationsStream, setOperationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("ALL");
-  const [isAiPdfModalOpen, setIsAiPdfModalOpen] = useState(false);
 
   // Selected Issue for Full-Page Detail View
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
@@ -631,20 +626,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-[#CBD5E1] font-mono">
-              <span className="text-[#8E9CAE]">Stream:</span>
-              <strong className="text-[#D4A24C]">All Operations</strong>
-            </div>
-
-            <button
-              onClick={() => setIsAiPdfModalOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D97724] via-[#D4A24C] to-[#C99738] text-[#0B131E] hover:brightness-110 text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
-              title="Generate and Export AI Executive Dossier PDF"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Export PDF</span>
-            </button>
+          <div className="flex items-center gap-1.5 text-xs text-[#CBD5E1] font-mono">
+            <span className="text-[#8E9CAE]">Stream:</span>
+            <strong className="text-[#D4A24C]">All Operations</strong>
           </div>
         </div>
 
@@ -1202,16 +1186,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 <span className="text-[11px] hidden sm:inline">Table</span>
               </button>
             </div>
-
-            {/* AI Export PDF Button */}
-            <button
-              onClick={() => setIsAiPdfModalOpen(true)}
-              className="p-1.5 px-3 rounded-xl bg-[#131E2D] border border-[#D4A24C]/50 hover:border-[#D4A24C] text-[#D4A24C] hover:text-[#F5EFE0] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-              title="Generate & Export AI Executive PDF Report"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" />
-              <span className="text-[11px]">AI PDF Dossier</span>
-            </button>
           </div>
         </div>
 
@@ -1766,17 +1740,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         )}
       </div>
-
-      {/* AI Tickets Executive PDF Intelligence Dossier Modal */}
-      {isAiPdfModalOpen && (
-        <AiTicketsPdfReportModal
-          isOpen={isAiPdfModalOpen}
-          onClose={() => setIsAiPdfModalOpen(false)}
-          issues={sortedAndFilteredOperations}
-          currentUser={currentUser}
-          constituencyName="Banaganapalle AC (AC-140)"
-        />
-      )}
     </div>
   );
 };
