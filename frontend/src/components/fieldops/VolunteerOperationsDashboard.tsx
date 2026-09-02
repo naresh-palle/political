@@ -380,6 +380,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   }, [currentUser.id]);
 
   useEffect(() => {
+    if (initialFilterStatus) {
+      setFilterStatus(initialFilterStatus);
+    }
+  }, [initialFilterStatus]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (isAddModalOpen) setIsAddModalOpen(false);

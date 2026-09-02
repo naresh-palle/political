@@ -26,7 +26,7 @@ export const FieldOpsManager: React.FC<FieldOpsManagerProps> = ({ currentUser, i
     return <VolunteerOperationsDashboard currentUser={currentUser} initialFilterStatus={initialFilter} />;
   }
 
-  if (role === "DIRECTOR") {
+  if (role === "DIRECTOR" || initialFilter === "NEW") {
     return <DirectorOperationsDashboard currentUser={currentUser} initialFilterStatus={initialFilter} />;
   }
 

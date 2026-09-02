@@ -101,6 +101,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     loadDirectorData();
   }, [currentUser.id]);
 
+  useEffect(() => {
+    if (initialFilterStatus === "NEW") {
+      setActiveTab("PENDING");
+    } else if (initialFilterStatus) {
+      setActiveTab(initialFilterStatus as any);
+    }
+  }, [initialFilterStatus]);
+
   // Reset pagination to Page 1 when any filter or sort changes
   useEffect(() => {
     setCurrentPage(1);

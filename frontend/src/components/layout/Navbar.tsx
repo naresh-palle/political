@@ -159,7 +159,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1.5">
             {/* Tab 1: Ground Intake & Issues */}
             <button
-              onClick={() => onProductChange("fieldops")}
+              onClick={() => {
+                window.location.hash = "#/field-ops";
+                onProductChange("fieldops");
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeProduct === "fieldops"
                   ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
@@ -172,7 +175,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Tab 2: Assign Tickets / Complaints */}
             <button
-              onClick={() => onProductChange("assigntickets")}
+              onClick={() => {
+                window.location.hash = "#/assign-tickets";
+                onProductChange("assigntickets");
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeProduct === "assigntickets"
                   ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
@@ -185,7 +191,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Tab 3: Contact Database */}
             <button
-              onClick={() => onProductChange("contacts")}
+              onClick={() => {
+                window.location.hash = "#/contacts";
+                onProductChange("contacts");
+              }}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeProduct === "contacts"
                   ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
