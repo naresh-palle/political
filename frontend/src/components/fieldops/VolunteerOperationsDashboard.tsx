@@ -927,6 +927,123 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         </div>
       </div>
 
+      {/* Top Stream Navigation Tabs: 1. Ground Intake, 2. Assign Tickets, 3. Contact Database */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-2 bg-[#091422] border border-[#22354D] rounded-2xl shadow-xl">
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+          <button
+            onClick={() => {
+              setFilterStatus("ALL");
+              setSearchQuery("");
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm shadow-md cursor-pointer transition-all shrink-0"
+          >
+            <span>📋</span> Ground Intake & Issues (1)
+          </button>
+
+          <button
+            onClick={() => {
+              setFilterStatus("NEW");
+              setSearchQuery("");
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#14263B] hover:bg-[#1E3654] text-[#D4A24C] border border-[#D4A24C]/40 font-bold text-xs sm:text-sm shadow-md cursor-pointer transition-all shrink-0"
+          >
+            <span>🏛️</span> Assign Tickets / Complaints (2)
+          </button>
+
+          <button
+            onClick={() => {
+              window.location.hash = "#/contacts";
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0E1A29] hover:bg-[#16273B] text-[#8E9CAE] hover:text-[#F5EFE0] border border-[#223348] font-semibold text-xs sm:text-sm cursor-pointer transition-all shrink-0"
+          >
+            <span>👥</span> Contact Database (3)
+          </button>
+        </div>
+
+        <div className="text-xs font-mono text-[#D4A24C] font-semibold hidden lg:block px-3">
+          Banaganapalle PGRS Command Center
+        </div>
+      </div>
+
+      {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+        <div
+          onClick={() => setFilterStatus("ALL")}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            filterStatus === "ALL"
+              ? "bg-[#14263B] border-[#D4A24C] shadow-md ring-1 ring-[#D4A24C]/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-[#D4A24C]/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block">
+            Total Tickets Assigned
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-[#D4A24C]">
+              {issues.length}
+            </span>
+            <span className="text-[10px] text-[#8E9CAE] font-mono">/ 150 Total</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => setFilterStatus("NEW")}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            filterStatus === "NEW"
+              ? "bg-[#14263B] border-amber-400 shadow-md ring-1 ring-amber-400/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-amber-500/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">
+            Pending / Open
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-amber-300">
+              {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "OVERDUE").length}
+            </span>
+            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action Required</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => setFilterStatus("IN_PROGRESS")}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            filterStatus === "IN_PROGRESS"
+              ? "bg-[#14263B] border-sky-400 shadow-md ring-1 ring-sky-400/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-sky-500/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block">
+            In Progress
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-sky-300">
+              {issues.filter((i) => i.status === "IN_PROGRESS").length}
+            </span>
+            <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground Work</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => setFilterStatus("RESOLVED")}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            filterStatus === "RESOLVED"
+              ? "bg-[#14263B] border-emerald-400 shadow-md ring-1 ring-emerald-400/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-emerald-500/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block">
+            Resolved / Completed
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-emerald-300">
+              {issues.filter((i) => i.status === "COMPLETED" || i.status === "RESOLVED").length}
+            </span>
+            <span className="text-[10px] text-emerald-400/80 font-mono font-semibold">Closed</span>
+          </div>
+        </div>
+      </div>
+
       {/* 2. Filter & Sort Master Toolbar */}
       <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
         {/* Row 1: Search, Sort & View Mode */}
