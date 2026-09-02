@@ -116,6 +116,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   currentUser
 }) => {
   const [issues, setIssues] = useState<FieldIssue[]>([]);
+  const [volunteers, setVolunteers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Selected Issue for Full-Page Detail View
@@ -200,13 +201,24 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const loadVolunteerData = async () => {
     setLoading(true);
     try {
-      const issueList = await politicalApiService.getFieldIssues({
-        userId: currentUser.id,
-        userRole: "VOLUNTEER"
-      });
+      const [allUsers, issueList] = await Promise.all([
+        politicalApiService.getUsers(),
+        politicalApiService.getFieldIssues({
+          userId: currentUser.id,
+          userRole: "VOLUNTEER"
+        })
+      ]);
+
+      const volList = allUsers.filter(
+        (u) =>
+          (u.primaryRole === "VOLUNTEER" || u.roleId === "VOLUNTEER" || u.role === "volunteer") &&
+          u.status === "ACTIVE"
+      );
+      setVolunteers(volList.length > 0 ? volList : [currentUser]);
       setIssues(issueList);
     } catch (e) {
       console.error(e);
+      setVolunteers([currentUser]);
     } finally {
       setLoading(false);
     }
@@ -526,7 +538,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   };
 
   const handleAssignVolunteer = async (issueId: string, newVolunteerId: string) => {
-    const newVolName = newVolunteerId === currentUser.id ? currentUser.name : "Unassigned";
+    const selectedVol = volunteers.find((v) => v.id === newVolunteerId);
+    const newVolName = selectedVol ? selectedVol.name : newVolunteerId === currentUser.id ? currentUser.name : "Unassigned";
 
     setIssues((prev) =>
       prev.map((item) => {
@@ -1058,7 +1071,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[175px]"
                           >
                             <option value="">-- Unassigned --</option>
-                            <option value={currentUser.id}>{currentUser.name} (Field Agent)</option>
+                            {volunteers.map((vol) => (
+                              <option key={vol.id} value={vol.id}>
+                                {vol.name} {vol.id === currentUser.id ? "(Me)" : ""}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       );
@@ -1156,7 +1173,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
                           >
                             <option value="">-- Unassigned --</option>
-                            <option value={currentUser.id}>{currentUser.name}</option>
+                            {volunteers.map((vol) => (
+                              <option key={vol.id} value={vol.id}>
+                                {vol.name} {vol.id === currentUser.id ? "(Me)" : ""}
+                              </option>
+                            ))}
                           </select>
                           <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
                             Agent: <span className="text-[#CBD5E1] font-semibold">{issue.assignedVolunteerName || "Unassigned"}</span>
