@@ -1687,7 +1687,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                       <span>Reporter: <strong className="text-[#F5EFE0]">{issue.reportedBy}</strong></span>
                     </div>
 
-                    {/* Direct Assign Complaint (Government Department) Dropdown */}
+                    {/* Direct Assign Complaint (Government Department) */}
                     {(() => {
                       const isAssignmentDisabled =
                         issue.status === "IN_PROGRESS" ||
@@ -1696,25 +1696,42 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                         issue.status === "CANT_BE_DONE" ||
                         (issue as any).status === "Can't be done";
 
+                      if (isAssignmentDisabled) {
+                        return (
+                          <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40">
+                            <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
+                              <span>🏛️</span> Assigned Dept:
+                            </span>
+                            <span className="text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1 truncate max-w-[200px]" title={issue.department || "General Administration"}>
+                              {issue.department || "General Administration"}
+                            </span>
+                          </div>
+                        );
+                      }
+
                       return (
-                        <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
-                            <span>🏛️</span> Assign Complaint:
-                          </span>
-                          <select
-                            value={issue.department || ""}
-                            disabled={isAssignmentDisabled}
-                            onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                            title={isAssignmentDisabled ? "Department assignment is locked for tickets in progress or completed" : "Assign to Government Department"}
-                            className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[190px]"
-                          >
-                            <option value="">-- Select Department --</option>
-                            {DEPARTMENTS.map((dept) => (
-                              <option key={dept} value={dept}>
-                                {dept}
-                              </option>
-                            ))}
-                          </select>
+                        <div className="space-y-1.5 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-between text-[10.5px] text-[#8E9CAE]">
+                            <span>Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong></span>
+                            <span className="text-[10px] text-amber-400 font-mono font-bold">Unresolved</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
+                              <span>🏛️</span> Assign Complaint:
+                            </span>
+                            <select
+                              value={issue.department || ""}
+                              onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
+                              className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[190px]"
+                            >
+                              <option value="">-- Select Department --</option>
+                              {DEPARTMENTS.map((dept) => (
+                                <option key={dept} value={dept}>
+                                  {dept}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                       );
                     })()}
@@ -1844,28 +1861,45 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                         </div>
                       </td>
 
-                      {/* 6. Assign Complaint (Direct Dropdown: Government Department) */}
+                      {/* 6. Assign Complaint / Resolved Department */}
                       <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
-                          <span>🏛️</span> Assign Complaint {isAssignmentDisabled && <span className="text-[9px] text-[#8E9CAE]">🔒 Locked</span>}
-                        </div>
-                        <select
-                          value={issue.department || ""}
-                          disabled={isAssignmentDisabled}
-                          onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                          title={isAssignmentDisabled ? "Department assignment is locked for tickets in progress or completed" : "Assign to Government Department"}
-                          className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
-                        >
-                          <option value="">-- Select Department --</option>
-                          {DEPARTMENTS.map((dept) => (
-                            <option key={dept} value={dept}>
-                              {dept}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
-                          Dept: <span className="text-[#D4A24C] font-semibold">{issue.department || "Unassigned"}</span>
-                        </div>
+                        {isAssignmentDisabled ? (
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1 flex items-center gap-1">
+                              <span>🏛️</span> Assigned Department
+                            </div>
+                            <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words">
+                              {issue.department || "General Administration"}
+                            </div>
+                            <div className="text-[10px] text-[#8E9CAE] mt-1">
+                              Category: <span className="text-[#CBD5E1] font-medium">{issue.category}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
+                              <span>🏛️</span> Assign Complaint
+                            </div>
+                            <div className="text-[10px] text-[#8E9CAE] mb-1 truncate">
+                              Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong>
+                            </div>
+                            <select
+                              value={issue.department || ""}
+                              onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
+                              className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                            >
+                              <option value="">-- Select Department --</option>
+                              {DEPARTMENTS.map((dept) => (
+                                <option key={dept} value={dept}>
+                                  {dept}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
+                              Dept: <span className="text-[#D4A24C] font-semibold">{issue.department || "Unassigned"}</span>
+                            </div>
+                          </div>
+                        )}
                       </td>
 
                       {/* 7. Timeline Dates & Duration (Word-wrapped) */}
