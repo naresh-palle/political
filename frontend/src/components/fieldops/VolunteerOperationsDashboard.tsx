@@ -144,6 +144,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState<string>("Roads & Buildings");
   const [newDepartment, setNewDepartment] = useState<string>("Roads & Buildings (R&B)");
+  const [otherDepartmentText, setOtherDepartmentText] = useState("");
   const [newPriority, setNewPriority] = useState<IssuePriority>("HIGH");
   const [newIssueType, setNewIssueType] = useState<"COMPLAINT" | "REQUIREMENT">("COMPLAINT");
   
@@ -281,12 +282,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       allAttachments.push(newAttachmentUrl.trim());
     }
 
+    const finalDepartment = newDepartment.includes("Other")
+      ? (otherDepartmentText.trim() ? `Other: ${otherDepartmentText.trim()}` : "Other Government Department")
+      : newDepartment;
+
     try {
       const payload: Partial<FieldIssue> = {
         title: newTitle.trim(),
         description: newDescription.trim(),
         category: newCategory,
-        department: newDepartment,
+        department: finalDepartment,
         priority: newPriority,
         issueType: newIssueType,
         status: "NEW",
@@ -1032,19 +1037,32 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </div>
 
                     {/* Direct Assign Complaint Dropdown */}
-                    <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
-                      <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
-                        <span>👤</span> Assign Complaint:
-                      </span>
-                      <select
-                        value={issue.assignedVolunteerId || ""}
-                        onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
-                        className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[175px]"
-                      >
-                        <option value="">-- Unassigned --</option>
-                        <option value={currentUser.id}>{currentUser.name} (Field Agent)</option>
-                      </select>
-                    </div>
+                    {(() => {
+                      const isAssignmentDisabled =
+                        issue.status === "IN_PROGRESS" ||
+                        issue.status === "COMPLETED" ||
+                        issue.status === "RESOLVED" ||
+                        issue.status === "CANT_BE_DONE" ||
+                        (issue as any).status === "Can't be done";
+
+                      return (
+                        <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
+                            <span>👤</span> Assign Complaint:
+                          </span>
+                          <select
+                            value={issue.assignedVolunteerId || ""}
+                            disabled={isAssignmentDisabled}
+                            onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
+                            title={isAssignmentDisabled ? "Assignment is locked for tickets in progress or completed" : "Select volunteer agent"}
+                            className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[175px]"
+                          >
+                            <option value="">-- Unassigned --</option>
+                            <option value={currentUser.id}>{currentUser.name} (Field Agent)</option>
+                          </select>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               );
@@ -1070,6 +1088,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 <tbody className="divide-y divide-[#223348]/50">
                   {paginatedIssues.map((issue) => {
                     const timing = getTicketTimingDetails(issue);
+                    const isAssignmentDisabled =
+                      issue.status === "IN_PROGRESS" ||
+                      issue.status === "COMPLETED" ||
+                      issue.status === "RESOLVED" ||
+                      issue.status === "CANT_BE_DONE" ||
+                      (issue as any).status === "Can't be done";
 
                     return (
                       <tr
@@ -1122,12 +1146,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         {/* Assign Complaint Dropdown */}
                         <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                           <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
-                            <span>👤</span> Assign Complaint
+                            <span>👤</span> Assign Complaint {isAssignmentDisabled && <span className="text-[9px] text-[#8E9CAE]">🔒 Locked</span>}
                           </div>
                           <select
                             value={issue.assignedVolunteerId || ""}
+                            disabled={isAssignmentDisabled}
                             onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
-                            className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                            title={isAssignmentDisabled ? "Assignment is locked for tickets in progress or completed" : "Select volunteer agent"}
+                            className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
                           >
                             <option value="">-- Unassigned --</option>
                             <option value={currentUser.id}>{currentUser.name}</option>
@@ -1395,6 +1421,22 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         </option>
                       ))}
                     </select>
+
+                    {newDepartment.includes("Other") && (
+                      <div className="mt-2.5 animate-fadeIn">
+                        <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                          Specify Other Government Department Details *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Enter specific department / office name..."
+                          value={otherDepartmentText}
+                          onChange={(e) => setOtherDepartmentText(e.target.value)}
+                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
