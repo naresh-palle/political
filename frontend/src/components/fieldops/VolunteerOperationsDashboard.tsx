@@ -1375,15 +1375,28 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         issue.status === "CANT_BE_DONE" ||
                         (issue as any).status === "Can't be done";
 
-                      if (isAssignmentDisabled) {
+                      const isAssignTabActive = filterStatus === "NEW" || window.location.hash.includes("assign-tickets");
+
+                      if (!isAssignTabActive || isAssignmentDisabled) {
+                        const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
                         return (
-                          <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40">
-                            <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
-                              <span>🏛️</span> Assigned Dept:
-                            </span>
-                            <span className="text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1 truncate max-w-[200px]" title={issue.department || "General Administration"}>
-                              {issue.department || "General Administration"}
-                            </span>
+                          <div className="space-y-1.5 pt-2 border-t border-[#223348]/40">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-[#8E9CAE]">Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong></span>
+                              <span className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded ${
+                                isUnresolved ? "bg-amber-950/80 text-amber-300 border border-amber-500/40" : "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+                              }`}>
+                                {isUnresolved ? "🟡 Unresolved" : "🟢 Resolved"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1">
+                              <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
+                                <span>🏛️</span> Assigned Dept:
+                              </span>
+                              <span className="text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1 truncate max-w-[200px]" title={issue.department || "General Administration"}>
+                                {issue.department || "General Administration"}
+                              </span>
+                            </div>
                           </div>
                         );
                       }
@@ -1504,43 +1517,59 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         </td>
                         {/* Assign Complaint / Resolved Department & WhatsApp Action */}
                         <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
-                          {isAssignmentDisabled ? (
-                            <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1 flex items-center gap-1">
-                                <span>🏛️</span> Assigned Department
-                              </div>
-                              <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words">
-                                {issue.department || "General Administration"}
-                              </div>
-                              <div className="text-[10px] text-[#8E9CAE] mt-1">
-                                Category: <span className="text-[#CBD5E1] font-medium">{issue.category}</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="space-y-1">
-                              <select
-                                value={issue.department || ""}
-                                onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                                className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
-                              >
-                                <option value="">-- Select Department --</option>
-                                {DEPARTMENTS.map((dept) => (
-                                  <option key={dept} value={dept}>
-                                    {dept}
-                                  </option>
-                                ))}
-                              </select>
+                          {(() => {
+                            const isAssignTabActive = filterStatus === "NEW" || window.location.hash.includes("assign-tickets");
+                            const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
 
-                              <button
-                                type="button"
-                                onClick={() => setAssignModalIssue(issue)}
-                                className="w-full py-1 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10.5px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
-                              >
-                                <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20" />
-                                Assign & WhatsApp
-                              </button>
-                            </div>
-                          )}
+                            if (!isAssignTabActive || isAssignmentDisabled) {
+                              return (
+                                <div>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                                      <span>🏛️</span> Assigned Dept
+                                    </span>
+                                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                                      isUnresolved ? "bg-amber-950 text-amber-300 border border-amber-500/40" : "bg-emerald-950 text-emerald-300 border border-emerald-500/40"
+                                    }`}>
+                                      {isUnresolved ? "Unresolved" : "Resolved"}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words">
+                                    {issue.department || "General Administration"}
+                                  </div>
+                                  <div className="text-[10px] text-[#8E9CAE] mt-1">
+                                    Category: <span className="text-[#CBD5E1] font-medium">{issue.category}</span>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="space-y-1">
+                                <select
+                                  value={issue.department || ""}
+                                  onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
+                                  className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                                >
+                                  <option value="">-- Select Department --</option>
+                                  {DEPARTMENTS.map((dept) => (
+                                    <option key={dept} value={dept}>
+                                      {dept}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <button
+                                  type="button"
+                                  onClick={() => setAssignModalIssue(issue)}
+                                  className="w-full py-1 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10.5px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20" />
+                                  Assign & WhatsApp
+                                </button>
+                              </div>
+                            );
+                          })()}
                         </td>
                         {/* Timeline & Duration */}
                         <td className="py-3 px-3 align-top font-mono text-[10.5px]">
