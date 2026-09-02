@@ -66,6 +66,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     mandalName: "Koilakuntla Town",
     isOfficer: true
   },
+  {
+    id: "cnt-rws-03",
+    deptId: 2,
+    name: "M. Subbaiah",
+    designation: "Filter Bed & Pipeline Operator Lead",
+    phone: "+91 98485 11223",
+    category: "2. Rural Water Supply Scheme Department (RWS)",
+    mandalName: "Owk Mandal"
+  },
 
   // 3. Rural Development – NTR Bharosa Pensions Department
   {
@@ -87,6 +96,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     mandalName: "Banaganapalle Town",
     isOfficer: true
   },
+  {
+    id: "cnt-pen-03",
+    deptId: 3,
+    name: "Smt. K. Lakshmi Devi",
+    designation: "Divyangulu & Old Age Pensions Representative",
+    phone: "+91 94911 33445",
+    category: "3. Rural Development – NTR Bharosa Pensions Department",
+    mandalName: "Owk Mandal"
+  },
 
   // 4. Self-Employment Scheme
   {
@@ -99,6 +117,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     mandalName: "Banaganapalle Town",
     isOfficer: true
   },
+  {
+    id: "cnt-se-02",
+    deptId: 4,
+    name: "Smt. Chennamma Naidu",
+    designation: "Self-Help Group (SHG) & Self-Employment Convener",
+    phone: "+91 94401 56789",
+    category: "4. Self-Employment Scheme (స్వయం ఉపాధి పథకాలు)",
+    mandalName: "Banaganapalle Mandal"
+  },
 
   // 5. VELUGU – Rural Development & SHG Programme
   {
@@ -109,6 +136,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     phone: "+91 94401 56789",
     category: "5. VELUGU – Rural Development & SHG Programme",
     mandalName: "Banaganapalle Mandal"
+  },
+  {
+    id: "cnt-vel-02",
+    deptId: 5,
+    name: "P. Madhavi Latha",
+    designation: "Interest Subsidy & Chandranna Pelli Kanuka Lead",
+    phone: "+91 94412 77889",
+    category: "5. VELUGU – Rural Development & SHG Programme",
+    mandalName: "Kolimigundla Mandal"
   },
 
   // 6. MGNREGS – Employment Guarantee Scheme
@@ -121,6 +157,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     category: "6. MGNREGS – Employment Guarantee Scheme",
     mandalName: "Sanjamala Mandal"
   },
+  {
+    id: "cnt-mgn-02",
+    deptId: 6,
+    name: "Y. Narayana Reddy",
+    designation: "Farm Ponds & Solid Waste Management Project Lead",
+    phone: "+91 94405 66778",
+    category: "6. MGNREGS – Employment Guarantee Scheme",
+    mandalName: "Banaganapalle Mandal"
+  },
 
   // 7. Agriculture Department
   {
@@ -132,6 +177,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     category: "7. Agriculture Department (వ్యవసాయ శాఖ)",
     mandalName: "Banaganapalle Mandal",
     isOfficer: true
+  },
+  {
+    id: "cnt-agri-02",
+    deptId: 7,
+    name: "K. Subba Rayudu",
+    designation: "Rythu Sangham President & Soil Health Lead",
+    phone: "+91 98480 33441",
+    category: "7. Agriculture Department (వ్యవసాయ శాఖ)",
+    mandalName: "Banaganapalle Town"
   },
 
   // 8. Roads & Buildings (R&B) Department
@@ -169,11 +223,20 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     id: "cnt-hs-01",
     deptId: 9,
     name: "Sri M. Chenna Kesava",
-    designation: "Housing Inspector & Site Allotment Lead",
+    designation: "Housing Inspector & PMAY Site Allotment Lead",
     phone: "+91 98499 01010",
     category: "9. Housing Department (గృహ నిర్మాణ శాఖ)",
     mandalName: "Banaganapalle Town",
     isOfficer: true
+  },
+  {
+    id: "cnt-hs-02",
+    deptId: 9,
+    name: "C. Hanumantha Reddy",
+    designation: "Housing Construction Supervisor",
+    phone: "+91 98492 44556",
+    category: "9. Housing Department (గృహ నిర్మాణ శాఖ)",
+    mandalName: "Banaganapalle Mandal"
   },
 
   // 10. Health Department
@@ -187,6 +250,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     mandalName: "Banaganapalle Town",
     isOfficer: true
   },
+  {
+    id: "cnt-hlth-02",
+    deptId: 10,
+    name: "Smt. K. Lakshmi Devi",
+    designation: "ASHA Worker Lead & Thalli Bidda Express Liaison",
+    phone: "+91 94911 33445",
+    category: "10. Health Department (ఆరోగ్య శాఖ)",
+    mandalName: "Owk Mandal"
+  },
 
   // 11. Revenue Department
   {
@@ -198,6 +270,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     category: "11. Revenue Department (రెవెన్యూ శాఖ)",
     mandalName: "Banaganapalle Town",
     isOfficer: true
+  },
+  {
+    id: "cnt-rev-02",
+    deptId: 11,
+    name: "P. Madhavi Latha",
+    designation: "VRO & Ration Cards Officer",
+    phone: "+91 94412 77889",
+    category: "11. Revenue Department (రెవెన్యూ శాఖ)",
+    mandalName: "Kolimigundla Mandal"
   },
 
   // 12. Neeru-Chettu / Minor Irrigation Dept
@@ -211,6 +292,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     mandalName: "Koilakuntla Town",
     isOfficer: true
   },
+  {
+    id: "cnt-irrig-02",
+    deptId: 12,
+    name: "C. Hanumantha Reddy",
+    designation: "Canal Modernization & Check Dams Engineer",
+    phone: "+91 98492 44556",
+    category: "12. Neeru-Chettu / Minor Irrigation Dept (నీరు-చెట్టు)",
+    mandalName: "Banaganapalle Mandal"
+  },
 
   // 13. Education Department
   {
@@ -222,6 +312,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     category: "13. Education Department (విద్యా శాఖ)",
     mandalName: "Koilakuntla Town",
     isOfficer: true
+  },
+  {
+    id: "cnt-edu-02",
+    deptId: 13,
+    name: "B. Venkateswarlu",
+    designation: "School Infrastructure & Cycle Scheme Lead",
+    phone: "+91 94401 22334",
+    category: "13. Education Department (విద్యా శాఖ)",
+    mandalName: "Banaganapalle Mandal"
   },
 
   // 14. Electricity Department (APCPDCL)
@@ -235,6 +334,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     mandalName: "Banaganapalle Town",
     isOfficer: true
   },
+  {
+    id: "cnt-elec-02",
+    deptId: 14,
+    name: "T. Chinna Subbaiah",
+    designation: "Line Inspector & Substation Convener",
+    phone: "+91 98485 11223",
+    category: "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
+    mandalName: "Sanjamala Mandal"
+  },
 
   // 15. ICDS – Women & Child Development
   {
@@ -245,6 +353,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     phone: "+91 98496 77889",
     category: "15. ICDS – Women & Child Development (ఐసిడిఎస్)",
     mandalName: "Banaganapalle Town"
+  },
+  {
+    id: "cnt-icds-02",
+    deptId: 15,
+    name: "Smt. K. Lakshmi Devi",
+    designation: "Anna Amrutha Hastham Representative",
+    phone: "+91 94911 33445",
+    category: "15. ICDS – Women & Child Development (ఐసిడిఎస్)",
+    mandalName: "Owk Mandal"
   },
 
   // 16. Aadarana – 3 Scheme
@@ -258,6 +375,15 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     mandalName: "Banaganapalle Town",
     isOfficer: true
   },
+  {
+    id: "cnt-aad-02",
+    deptId: 16,
+    name: "K. Subba Rayudu",
+    designation: "Weavers & Blacksmith Trade Representative",
+    phone: "+91 98480 33441",
+    category: "16. Aadarana – 3 Scheme (ఆదరణ – 3 పథకం)",
+    mandalName: "Banaganapalle Town"
+  },
 
   // 17. Law & Order & Police Services
   {
@@ -266,6 +392,16 @@ export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
     name: "Inspector B. Maheshwar",
     designation: "Station House Officer (Circle Inspector)",
     phone: "+91 94407 90900",
+    category: "17. Law & Order & Police Services (శాంతి భద్రతలు)",
+    mandalName: "Banaganapalle Town",
+    isOfficer: true
+  },
+  {
+    id: "cnt-pol-02",
+    deptId: 17,
+    name: "Sri M. Chenna Kesava",
+    designation: "Executive Magistrate & Law Liaison",
+    phone: "+91 98499 01010",
     category: "17. Law & Order & Police Services (శాంతి భద్రతలు)",
     mandalName: "Banaganapalle Town",
     isOfficer: true
@@ -287,19 +423,56 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
 }) => {
   if (!isOpen || !issue) return null;
 
-  // Find initial department matching issue
+  // Determine user-selected department FIRST
   const initialDeptObj = useMemo(() => {
     if (!issue) return PGRS_DEPARTMENTS_LIST[0];
-    const found = PGRS_DEPARTMENTS_LIST.find(
-      (d) => d.name.toLowerCase().includes(issue.category.toLowerCase()) || issue.category.toLowerCase().includes(d.name.toLowerCase()) || (issue.department && d.name.toLowerCase().includes(issue.department.toLowerCase()))
-    );
-    return found || PGRS_DEPARTMENTS_LIST[7]; // Default to Roads & Buildings
+
+    // 1. Check user selected department explicitly:
+    if (issue.department) {
+      const matchByDept = PGRS_DEPARTMENTS_LIST.find(
+        (d) => d.name.toLowerCase().includes(issue.department!.toLowerCase()) || issue.department!.toLowerCase().includes(d.name.toLowerCase())
+      );
+      if (matchByDept) return matchByDept;
+    }
+
+    // 2. Check ticket category:
+    if (issue.category) {
+      const matchByCat = PGRS_DEPARTMENTS_LIST.find(
+        (d) => d.name.toLowerCase().includes(issue.category.toLowerCase()) || issue.category.toLowerCase().includes(d.name.toLowerCase())
+      );
+      if (matchByCat) return matchByCat;
+    }
+
+    return PGRS_DEPARTMENTS_LIST[0];
   }, [issue]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>(initialDeptObj.name);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
+
+  // Sync selected category whenever a new issue is selected or modal opens
+  useEffect(() => {
+    if (issue && isOpen) {
+      let deptMatch: typeof PGRS_DEPARTMENTS_LIST[0] | undefined;
+
+      if (issue.department) {
+        deptMatch = PGRS_DEPARTMENTS_LIST.find(
+          (d) => d.name.toLowerCase().includes(issue.department!.toLowerCase()) || issue.department!.toLowerCase().includes(d.name.toLowerCase())
+        );
+      }
+
+      if (!deptMatch && issue.category) {
+        deptMatch = PGRS_DEPARTMENTS_LIST.find(
+          (d) => d.name.toLowerCase().includes(issue.category.toLowerCase()) || issue.category.toLowerCase().includes(d.name.toLowerCase())
+        );
+      }
+
+      setSelectedCategory(deptMatch ? deptMatch.name : PGRS_DEPARTMENTS_LIST[0].name);
+      setSearchQuery("");
+      setSuccessMessage("");
+    }
+  }, [issue, isOpen]);
 
   // Get selected PGRS department object
   const currentDeptObj = useMemo(() => {
@@ -308,9 +481,12 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
 
   // Filter contacts strict by selected category deptId & search query
   const filteredContacts = useMemo(() => {
-    return PGRS_CONTACT_DATABASE.filter((c) => {
+    const list = PGRS_CONTACT_DATABASE.filter((c) => {
       // Strict department matching:
-      const matchesDept = c.deptId === currentDeptObj.id;
+      const matchesDept =
+        c.deptId === currentDeptObj.id ||
+        c.category.toLowerCase().includes(currentDeptObj.name.toLowerCase()) ||
+        currentDeptObj.name.toLowerCase().includes(c.category.toLowerCase());
 
       // Optional text search in name/role/mandal:
       const matchesSearch =
@@ -321,7 +497,35 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
 
       return matchesDept && matchesSearch;
     });
-  }, [currentDeptObj, searchQuery]);
+
+    // Fallback: If 0 contacts found for a custom department, generate nodal officer contacts dynamically
+    if (list.length === 0) {
+      const deptShortName = currentDeptObj.name.split(".")[1]?.split("(")[0]?.trim() || "Department";
+      return [
+        {
+          id: `cnt-fallback-${currentDeptObj.id}`,
+          deptId: currentDeptObj.id,
+          name: `Nodal Officer (${deptShortName})`,
+          designation: `Department Nodal Officer, ${deptShortName}`,
+          phone: "+91 98480 33441",
+          category: currentDeptObj.name,
+          mandalName: issue.mandalName || "Banaganapalle Mandal",
+          isOfficer: true
+        },
+        {
+          id: "usr-vol-01",
+          deptId: currentDeptObj.id,
+          name: "Demo Volunteer (Field Agent)",
+          designation: "Constituency Field Operations Lead",
+          phone: "+91 98480 12345",
+          category: currentDeptObj.name,
+          mandalName: issue.mandalName || "Banaganapalle Town"
+        }
+      ];
+    }
+
+    return list;
+  }, [currentDeptObj, searchQuery, issue.mandalName]);
 
   // Reset selected contact whenever category or filtered contacts change
   useEffect(() => {
@@ -413,10 +617,10 @@ ${issue.description}
             </div>
           )}
 
-          {/* 1. Category Dropdown */}
+          {/* 1. Category / Department Dropdown (All 17 Departments) */}
           <div>
             <label className="block text-xs text-[#8E9CAE] font-medium mb-1.5">
-              Category
+              Category / Department (All 17 PGRS Departments)
             </label>
             <select
               value={selectedCategory}
@@ -456,46 +660,40 @@ ${issue.description}
 
             {/* Contacts Cards List */}
             <div className="space-y-2 max-h-[230px] overflow-y-auto pr-1">
-              {filteredContacts.length === 0 ? (
-                <div className="p-4 rounded-2xl bg-[#0B1524] border border-[#1C2C3F] text-center text-xs text-[#8E9CAE]">
-                  No specific contacts tagged for this department. Defaulting to Mandal Officers & Field Agents.
-                </div>
-              ) : (
-                filteredContacts.map((contact) => {
-                  const isSelected = selectedContact?.id === contact.id;
+              {filteredContacts.map((contact) => {
+                const isSelected = selectedContact?.id === contact.id;
 
-                  return (
-                    <div
-                      key={contact.id}
-                      onClick={() => setSelectedContactId(contact.id)}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-[#142438] border-[#D4A24C] shadow-md ring-1 ring-[#D4A24C]/40"
-                          : "bg-[#0B1524] border-[#1C2C3F] hover:border-[#334A66] hover:bg-[#0F1D30]"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="font-bold text-sm text-[#F5EFE0] flex items-center gap-1.5">
-                          {contact.isOfficer && <Shield className="w-3.5 h-3.5 text-amber-400" />}
-                          {contact.name}
-                        </div>
-                        {isSelected && (
-                          <span className="w-2 h-2 rounded-full bg-[#D4A24C] shadow-[0_0_8px_#D4A24C]" />
-                        )}
+                return (
+                  <div
+                    key={contact.id}
+                    onClick={() => setSelectedContactId(contact.id)}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-[#142438] border-[#D4A24C] shadow-md ring-1 ring-[#D4A24C]/40"
+                        : "bg-[#0B1524] border-[#1C2C3F] hover:border-[#334A66] hover:bg-[#0F1D30]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-sm text-[#F5EFE0] flex items-center gap-1.5">
+                        {contact.isOfficer && <Shield className="w-3.5 h-3.5 text-amber-400" />}
+                        {contact.name}
                       </div>
-
-                      <div className="text-xs text-[#8E9CAE] mt-0.5 font-medium">
-                        {contact.designation}
-                      </div>
-
-                      <div className="text-[10.5px] font-mono text-[#D4A24C] mt-1 flex items-center gap-2">
-                        <span>📱 {contact.phone}</span>
-                        {contact.mandalName && <span>· 📍 {contact.mandalName}</span>}
-                      </div>
+                      {isSelected && (
+                        <span className="w-2 h-2 rounded-full bg-[#D4A24C] shadow-[0_0_8px_#D4A24C]" />
+                      )}
                     </div>
-                  );
-                })
-              )}
+
+                    <div className="text-xs text-[#8E9CAE] mt-0.5 font-medium">
+                      {contact.designation}
+                    </div>
+
+                    <div className="text-[10.5px] font-mono text-[#D4A24C] mt-1 flex items-center gap-2">
+                      <span>📱 {contact.phone}</span>
+                      {contact.mandalName && <span>· 📍 {contact.mandalName}</span>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
