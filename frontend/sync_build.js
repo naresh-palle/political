@@ -1,4 +1,4 @@
-﻿import fs from 'fs';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -23,25 +23,31 @@ function copyDir(src, dest) {
   }
 }
 
-// 1. Create 404.html in dist
+// 1. Create 404.html and CNAME in dist
 const distIndex = path.join(distDir, 'index.html');
 const dist404 = path.join(distDir, '404.html');
+const distCname = path.join(distDir, 'CNAME');
+const domainName = 'leaderslensconsulting.com';
+
 if (fs.existsSync(distIndex)) {
   fs.copyFileSync(distIndex, dist404);
 }
+fs.writeFileSync(distCname, domainName, 'utf-8');
 
 // 2. Sync dist to docs/
 if (fs.existsSync(distDir)) {
   copyDir(distDir, docsDir);
   fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf-8');
-  console.log('✓ Synced dist to docs/ with .nojekyll and 404.html');
+  fs.writeFileSync(path.join(docsDir, 'CNAME'), domainName, 'utf-8');
+  console.log('✓ Synced dist to docs/ with .nojekyll, 404.html, and CNAME (leaderslensconsulting.com)');
 }
 
-// 3. Sync dist critical assets to root . (index.html, 404.html, assets, images)
+// 3. Sync dist critical assets to root . (index.html, 404.html, CNAME, assets, images)
 if (fs.existsSync(distDir)) {
   fs.copyFileSync(distIndex, path.join(rootDir, 'index.html'));
   fs.copyFileSync(distIndex, path.join(rootDir, '404.html'));
   fs.writeFileSync(path.join(rootDir, '.nojekyll'), '', 'utf-8');
+  fs.writeFileSync(path.join(rootDir, 'CNAME'), domainName, 'utf-8');
   
   const distAssets = path.join(distDir, 'assets');
   const rootAssets = path.join(rootDir, 'assets');
@@ -57,5 +63,5 @@ if (fs.existsSync(distDir)) {
   if (fs.existsSync(distImages)) {
     copyDir(distImages, rootImages);
   }
-  console.log('✓ Synced dist to root . with updated index.html, assets, and images');
+  console.log('✓ Synced dist to root . with updated index.html, CNAME, assets, and images');
 }
