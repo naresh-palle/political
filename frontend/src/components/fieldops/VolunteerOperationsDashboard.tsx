@@ -873,149 +873,167 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     );
   }
 
+  const isAssignTicketsMode = initialFilterStatus === "NEW" || filterStatus === "NEW" || window.location.hash.includes("assign");
+
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
-      {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          {/* Volunteer Avatar & Main Name */}
-          <div className="flex items-start sm:items-center gap-4">
-            <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg flex-shrink-0"
-            />
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
-                  FIELD VOLUNTEER
-                </span>
-                <span className="text-xs font-semibold text-[#D4A24C] bg-[#142B45]/70 px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
-                  Banaganapalle AC (AC-140) · Nandyala PC
-                </span>
+      {!isAssignTicketsMode ? (
+        /* SCREENSHOT 1 ONLY: Ground Intake View */
+        <div className="space-y-5">
+          {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+              {/* Volunteer Avatar & Main Name */}
+              <div className="flex items-start sm:items-center gap-4">
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg flex-shrink-0"
+                />
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                      FIELD VOLUNTEER
+                    </span>
+                    <span className="text-xs font-semibold text-[#D4A24C] bg-[#142B45]/70 px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
+                      Banaganapalle AC (AC-140) · Nandyala PC
+                    </span>
+                  </div>
+                  <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal leading-tight">
+                    {currentUser.name}
+                  </h1>
+                </div>
               </div>
-              <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal leading-tight">
-                {currentUser.name}
-              </h1>
+
+              {/* "+ Add Complaint / Requirement" Primary Action Button */}
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                data-testid="add-complaint-btn"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start lg:self-center"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Add Complaint / Requirement</span>
+              </button>
+            </div>
+
+            {/* Assigned Details integrated directly at the top */}
+            <div className="pt-3 border-t border-[#22405E]/60 flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
+                <Building2 className="w-3.5 h-3.5 text-[#D4A24C]" />
+                <span>Mandal / Town:</span>
+                <strong className="text-[#F5EFE0]">{currentUser.assignedMandalName || "Banaganapalle Town"}</strong>
+              </div>
+
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
+                <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
+                <span>Assigned Wards / Villages:</span>
+                <strong className="text-[#F5EFE0]">
+                  {currentUser.assignedVillageNames?.join(", ") || "Banaganapalle Town Wards 1-10, Yaganti Sector"}
+                </strong>
+              </div>
+
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
+                <User className="w-3.5 h-3.5 text-[#D4A24C]" />
+                <span>Supervising Manager:</span>
+                <strong className="text-[#D4A24C]">{currentUser.directorName?.replace("Director", "Manager") || "Demo Manager"}</strong>
+              </div>
             </div>
           </div>
 
-          {/* "+ Add Complaint / Requirement" Primary Action Button */}
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            data-testid="add-complaint-btn"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start lg:self-center"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Add Complaint / Requirement</span>
-          </button>
-        </div>
+          {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters - Screenshot 1) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+            <div
+              onClick={() => {
+                setFilterStatus("ALL");
+                window.location.hash = "#/assign-tickets";
+              }}
+              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-[#D4A24C]/60 cursor-pointer space-y-1 transition-all"
+            >
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block">
+                Total Tickets Assigned
+              </span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{issues.length}</span>
+                <span className="text-[10px] text-[#8E9CAE] font-mono">/ 150 Total</span>
+              </div>
+            </div>
 
-        {/* Assigned Details integrated directly at the top */}
-        <div className="pt-3 border-t border-[#22405E]/60 flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
-            <Building2 className="w-3.5 h-3.5 text-[#D4A24C]" />
-            <span>Mandal / Town:</span>
-            <strong className="text-[#F5EFE0]">{currentUser.assignedMandalName || "Banaganapalle Town"}</strong>
-          </div>
+            <div
+              onClick={() => {
+                setFilterStatus("NEW");
+                window.location.hash = "#/assign-tickets";
+              }}
+              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-amber-500/60 cursor-pointer space-y-1 transition-all"
+            >
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">
+                Pending / Open
+              </span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-bold font-mono text-amber-300">
+                  {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "OVERDUE").length}
+                </span>
+                <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action Required</span>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
-            <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
-            <span>Assigned Wards / Villages:</span>
-            <strong className="text-[#F5EFE0]">
-              {currentUser.assignedVillageNames?.join(", ") || "Banaganapalle Town Wards 1-10, Yaganti Sector"}
-            </strong>
-          </div>
+            <div
+              onClick={() => {
+                setFilterStatus("IN_PROGRESS");
+                window.location.hash = "#/assign-tickets";
+              }}
+              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-sky-500/60 cursor-pointer space-y-1 transition-all"
+            >
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block">
+                In Progress
+              </span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-bold font-mono text-sky-300">
+                  {issues.filter((i) => i.status === "IN_PROGRESS").length}
+                </span>
+                <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground Work</span>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
-            <User className="w-3.5 h-3.5 text-[#D4A24C]" />
-            <span>Supervising Manager:</span>
-            <strong className="text-[#D4A24C]">{currentUser.directorName?.replace("Director", "Manager") || "Demo Manager"}</strong>
-          </div>
-        </div>
-      </div>
-
-      {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
-        <div
-          onClick={() => setFilterStatus("ALL")}
-          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
-            filterStatus === "ALL"
-              ? "bg-[#14263B] border-[#D4A24C] shadow-md ring-1 ring-[#D4A24C]/40"
-              : "bg-[#0F1E30] border-[#22354D] hover:border-[#D4A24C]/60"
-          }`}
-        >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block">
-            Total Tickets Assigned
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-[#D4A24C]">
-              {issues.length}
-            </span>
-            <span className="text-[10px] text-[#8E9CAE] font-mono">/ 150 Total</span>
-          </div>
-        </div>
-
-        <div
-          onClick={() => setFilterStatus("NEW")}
-          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
-            filterStatus === "NEW"
-              ? "bg-[#14263B] border-amber-400 shadow-md ring-1 ring-amber-400/40"
-              : "bg-[#0F1E30] border-[#22354D] hover:border-amber-500/60"
-          }`}
-        >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">
-            Pending / Open
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-amber-300">
-              {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "OVERDUE").length}
-            </span>
-            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action Required</span>
-          </div>
-        </div>
-
-        <div
-          onClick={() => setFilterStatus("IN_PROGRESS")}
-          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
-            filterStatus === "IN_PROGRESS"
-              ? "bg-[#14263B] border-sky-400 shadow-md ring-1 ring-sky-400/40"
-              : "bg-[#0F1E30] border-[#22354D] hover:border-sky-500/60"
-          }`}
-        >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block">
-            In Progress
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-sky-300">
-              {issues.filter((i) => i.status === "IN_PROGRESS").length}
-            </span>
-            <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground Work</span>
+            <div
+              onClick={() => {
+                setFilterStatus("RESOLVED");
+                window.location.hash = "#/assign-tickets";
+              }}
+              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-emerald-500/60 cursor-pointer space-y-1 transition-all"
+            >
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block">
+                Resolved / Completed
+              </span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-bold font-mono text-emerald-300">
+                  {issues.filter((i) => i.status === "COMPLETED" || i.status === "RESOLVED").length}
+                </span>
+                <span className="text-[10px] text-emerald-400/80 font-mono font-semibold">Closed</span>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div
-          onClick={() => setFilterStatus("RESOLVED")}
-          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
-            filterStatus === "RESOLVED"
-              ? "bg-[#14263B] border-emerald-400 shadow-md ring-1 ring-emerald-400/40"
-              : "bg-[#0F1E30] border-[#22354D] hover:border-emerald-500/60"
-          }`}
-        >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block">
-            Resolved / Completed
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-emerald-300">
-              {issues.filter((i) => i.status === "COMPLETED" || i.status === "RESOLVED").length}
-            </span>
-            <span className="text-[10px] text-emerald-400/80 font-mono font-semibold">Closed</span>
+      ) : (
+        /* SCREENSHOT 2: Full Assign Tickets / Complaints Stream */
+        <div className="space-y-5">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-[#091422] border border-[#22354D]">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#D4A24C]" />
+              <h2 className="text-base font-bold font-display text-[#F5EFE0]">🏛️ Assign Tickets / Complaints</h2>
+            </div>
+            <button
+              onClick={() => {
+                setFilterStatus("ALL");
+                window.location.hash = "#/field-ops";
+              }}
+              className="text-xs text-[#D4A24C] hover:underline font-semibold cursor-pointer"
+            >
+              ← Back to Ground Intake
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* 2. Filter & Sort Master Toolbar */}
-      <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+          {/* 2. Filter & Sort Master Toolbar */}
+          <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
         {/* Row 1: Search, Sort & View Mode */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           <div className="relative w-full lg:w-96">
@@ -1708,6 +1726,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         )}
       </div>
+      </div>
+      )}
 
       {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
       {isAddModalOpen && (
