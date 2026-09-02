@@ -879,7 +879,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     );
   }
 
-  const isAssignTicketsMode = initialFilterStatus === "NEW" || filterStatus === "NEW" || window.location.hash.includes("assign");
+  const isAssignTicketsMode = initialFilterStatus === "NEW" || window.location.hash.toLowerCase().includes("assign");
 
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">

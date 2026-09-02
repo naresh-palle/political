@@ -260,12 +260,12 @@ function AppInner() {
         : "DIRECTOR"
     );
 
-    if (userRole === "VOLUNTEER" && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
+    if (userRole === "VOLUNTEER" && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if ((userRole === "POLITICAL_ADMIN" || userRole === "DIRECTOR") && !["fieldops", "grievances", "governance", "contacts"].includes(activeProduct)) {
+    } else if ((userRole === "POLITICAL_ADMIN" || userRole === "DIRECTOR") && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
