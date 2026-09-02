@@ -389,7 +389,7 @@ function AppCanvas({
       }}
     >
       <div
-        className="fixed inset-0 pointer-events-none z-0 bg-black/40 backdrop-blur-[0.5px]"
+        className="fixed inset-0 pointer-events-none z-0 bg-[#060D17]/92 backdrop-blur-md"
         aria-hidden="true"
       />
       <div className="relative z-10 flex-1 flex flex-col">

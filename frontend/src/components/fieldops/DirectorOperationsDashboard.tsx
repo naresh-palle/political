@@ -544,7 +544,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
       {/* Manager Command Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-2xl">
         <div className="flex items-center gap-4">
           <img
             src={currentUser.avatar}
@@ -553,7 +553,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           />
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                 Campaign Manager
               </span>
               <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "Constituency Grievance Command"}</span>
@@ -568,13 +568,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="px-4 py-2 rounded-xl bg-[#0B131E]/80 border border-[#223348] text-right">
+          <div className="px-4 py-2 rounded-xl bg-[#070D15] border border-[#223348] text-right">
             <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Cadre Strength</span>
             <span className="font-display text-lg font-bold text-[#D4A24C]">
               {volunteers.length} Active Field Agents
             </span>
           </div>
-          <div className="px-4 py-2 rounded-xl bg-[#0B131E]/80 border border-[#223348] text-right">
+          <div className="px-4 py-2 rounded-xl bg-[#070D15] border border-[#223348] text-right">
             <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Resolution Rate</span>
             <span className="font-display text-lg font-bold text-emerald-400">
               {totalOperationsCount > 0 ? Math.round((completedCount / totalOperationsCount) * 100) : 0}%
@@ -585,7 +585,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
       {/* "No Work Done" Inactivity Alert Banner */}
       {inactiveVolunteerWarnings.length > 0 && (
-        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-md border border-rose-500/50 space-y-2">
+        <div className="p-4 rounded-xl bg-rose-950/90 border border-rose-500/50 space-y-2">
           <div className="flex items-center gap-2 text-rose-400 font-semibold text-xs uppercase tracking-wider">
             <AlertTriangle className="w-4 h-4 text-rose-400 animate-pulse" />
             <span>Grievance Alert: Overdue Issues Require Manager Intervention</span>
@@ -594,7 +594,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             {inactiveVolunteerWarnings.map((w, idx) => (
               <div
                 key={idx}
-                className="p-2.5 rounded-lg bg-[#0B131E]/90 border border-rose-500/30 flex items-center justify-between text-[11px]"
+                className="p-2.5 rounded-lg bg-[#0B131E] border border-rose-500/30 flex items-center justify-between text-[11px]"
               >
                 <div>
                   <strong className="text-[#F5EFE0] block">{w.volunteer.name}</strong>
@@ -613,7 +613,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       )}
 
       {/* 1. Official Tickets Master Summary Header Strip */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#223348]/70 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#131E2D] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
@@ -639,10 +639,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div
             onClick={() => setActiveTab("ALL")}
-            className={`p-3.5 sm:p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
+            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
               activeTab === "ALL"
                 ? "bg-[#131E2D] border-[#D4A24C] shadow-lg ring-1 ring-[#D4A24C]/50"
-                : "bg-[#0B131E]/80 border-[#223348]/80 hover:border-[#D4A24C]/40"
+                : "bg-[#0B131E] border-[#223348] hover:border-[#D4A24C]/40"
             }`}
           >
             <span className="text-[10.5px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">
@@ -656,10 +656,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
           <div
             onClick={() => setActiveTab("COMPLETED")}
-            className={`p-3.5 sm:p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
+            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
               activeTab === "COMPLETED"
                 ? "bg-[#131E2D] border-[#D4A24C] shadow-lg ring-1 ring-[#D4A24C]/50"
-                : "bg-[#0B131E]/80 border-[#223348]/80 hover:border-emerald-500/40"
+                : "bg-[#0B131E] border-[#223348] hover:border-emerald-500/40"
             }`}
           >
             <span className="text-[10.5px] uppercase tracking-wider text-emerald-300 block font-semibold">
@@ -675,10 +675,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
           <div
             onClick={() => setActiveTab("PENDING")}
-            className={`p-3.5 sm:p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
+            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
               activeTab === "PENDING"
                 ? "bg-[#131E2D] border-[#D4A24C] shadow-lg ring-1 ring-[#D4A24C]/50"
-                : "bg-[#0B131E]/80 border-[#223348]/80 hover:border-blue-500/40"
+                : "bg-[#0B131E] border-[#223348] hover:border-blue-500/40"
             }`}
           >
             <span className="text-[10.5px] uppercase tracking-wider text-blue-300 block font-semibold">
@@ -692,10 +692,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
           <div
             onClick={() => setActiveTab("CANT_BE_DONE")}
-            className={`p-3.5 sm:p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer ${
+            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
               activeTab === "CANT_BE_DONE" || activeTab === "OVERDUE"
-                ? "bg-rose-950/70 border-rose-500 shadow-lg ring-1 ring-rose-500/50"
-                : "bg-[#0B131E]/80 border-[#223348]/80 hover:border-rose-500/40"
+                ? "bg-rose-950 border-rose-500 shadow-lg ring-1 ring-rose-500/50"
+                : "bg-[#0B131E] border-[#223348] hover:border-rose-500/40"
             }`}
           >
             <span className="text-[10.5px] uppercase tracking-wider text-rose-300 block font-semibold flex items-center gap-1">
@@ -711,7 +711,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         {/* 2. Demographic, Regional & Type Breakdown Matrix (5 Pillars) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
           {/* Card 1: Priority Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
+          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Priority
@@ -778,7 +778,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 2: Gender Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
+          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Gender
@@ -823,7 +823,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 3: Age Groups Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
+          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Age
@@ -851,7 +851,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 4: Mandal-wise Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
+          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
               <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Mandal Wise
@@ -879,7 +879,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           {/* Card 5: Type Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0B131E]/90 border border-[#223348] flex flex-col justify-between min-h-[150px]">
+          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
             <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-1.5 shrink-0">
               <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
                 Type
@@ -1107,7 +1107,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       </div>
 
       {/* Filter & Sort Master Command Strip */}
-      <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+      <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#223348] shadow-lg space-y-3">
         {/* Row 1: Search, Sort & View Mode */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           <div className="relative w-full lg:w-96">
@@ -1438,12 +1438,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <div
                 key={issue.id}
                 onClick={() => setSelectedIssue(issue)}
-                className="p-5 rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 hover:border-[#D4A24C]/60 hover:bg-[#131E2D]/85 transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
+                className="p-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[10px] font-mono text-[#D4A24C] bg-[#0B131E] px-1.5 py-0.5 rounded border border-[#D4A24C]/30 font-bold">
+                      <span className="text-[10px] font-mono text-[#D4A24C] bg-[#070D15] px-1.5 py-0.5 rounded border border-[#D4A24C]/30 font-bold">
                         #{issue.id}
                       </span>
                       <span
@@ -1476,7 +1476,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                           ? "text-red-400 bg-red-950/60 border border-red-500/40"
                           : issue.priority === "HIGH"
                           ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
-                          : "text-[#D8CFB8] bg-[#0B131E]"
+                          : "text-[#D8CFB8] bg-[#070D15]"
                       }`}
                     >
                       {issue.priority}
@@ -1511,7 +1511,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   </div>
 
                   {issue.lastStatusRemarks && (
-                    <div className="p-2 rounded bg-[#0B131E]/90 text-[10px] text-[#E2DCBE] line-clamp-1 border border-[#223348]/50">
+                    <div className="p-2 rounded bg-[#070D15] text-[10px] text-[#E2DCBE] line-clamp-1 border border-[#223348]/50">
                       <strong className="text-[#D4A24C]">Update: </strong>{issue.lastStatusRemarks}
                     </div>
                   )}
@@ -1521,7 +1521,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         ) : (
           /* TABLE VIEW WITH WORDWRAP - ZERO HORIZONTAL SCROLL */
-          <div className="rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348]/80 overflow-hidden shadow-xl">
+          <div className="rounded-2xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-xl">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
