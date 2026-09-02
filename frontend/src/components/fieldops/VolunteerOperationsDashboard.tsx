@@ -62,44 +62,223 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_TO_DEPARTMENT: Record<string, string> = {
-  "Roads & Buildings": "Roads & Buildings (R&B)",
-  "Water Supply": "Panchayat Raj & Rural Water Supply (RWS)",
-  "Electricity": "APCPDCL Electricity Board & DISCOM",
-  "Sanitation & Garbage": "Municipal Administration & Urban Development (MA&UD)",
-  "Drainage & Sewage": "Municipal Administration & Urban Development (MA&UD)",
-  "Healthcare": "Health, Medical & Family Welfare (PHC / Hospital)",
-  "Agriculture & Irrigation": "Irrigation & Water Resources Department",
-  "Education": "School Education & Anganwadi Welfare",
-  "Revenue & Land Issues": "Revenue, Survey & Land Administration (MRO / Tahsildar)",
-  "Welfare Schemes": "Social Welfare, BC & Tribal Welfare",
-  "Law & Order": "Police, Law & Order & Traffic Safety",
-  "Other": "Other Government Department"
+  "Roads & Buildings": "8. Roads & Buildings (R&B) Department",
+  "Water Supply": "2. Rural Water Supply Scheme Department (RWS)",
+  "Electricity": "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
+  "Sanitation & Garbage": "6. MGNREGS – Employment Guarantee Scheme",
+  "Drainage & Sewage": "1. Panchayat Raj – Engineering Department",
+  "Healthcare": "10. Health Department (ఆరోగ్య శాఖ)",
+  "Agriculture & Irrigation": "7. Agriculture Department (వ్యవసాయ శాఖ)",
+  "Education": "13. Education Department (విద్యా శాఖ)",
+  "Revenue & Land Issues": "11. Revenue Department (రెవెన్యూ శాఖ)",
+  "Welfare Schemes": "3. Rural Development – NTR Bharosa Pensions Department",
+  "Law & Order": "17. Law & Order & Police Services (శాంతి భద్రతలు)",
+  "Other": "Other Government Department (ఇతర ప్రభుత్వ శాఖ)"
 };
 
+export interface PgrsDepartmentItem {
+  id: number;
+  name: string;
+  teluguName: string;
+  subDetails: string[];
+}
+
+export const PGRS_DEPARTMENTS_LIST: PgrsDepartmentItem[] = [
+  {
+    id: 1,
+    name: "1. Panchayat Raj – Engineering Department",
+    teluguName: "పంచాయతీ రాజ్ – ఇంజనీరింగ్ విభాగం",
+    subDetails: [
+      "Cement Roads (సిమెంట్ రోడ్లు)",
+      "Panchayat Buildings Department (పంచాయతీ భవనాలు)",
+      "Village Organisation (VO) Building (విలేజ్ ఆర్గనైజేషన్ భవనం)"
+    ]
+  },
+  {
+    id: 2,
+    name: "2. Rural Water Supply Scheme Department (RWS)",
+    teluguName: "గ్రామీణ తాగునీటి సరఫరా పథకం (RWS)",
+    subDetails: [
+      "Swachh Bharat Mission – Toilets & Works (స్వచ్ఛ భారత్ మిషన్ – మరుగుదొడ్లు)",
+      "Modernization of Filter Beds (ఫిల్టర్ బెడ్స్ ఆధునీకరణ)",
+      "Drains and Pipe lines (డ్రైన్లు మరియు పైప్‌లైన్లు)"
+    ]
+  },
+  {
+    id: 3,
+    name: "3. Rural Development – NTR Bharosa Pensions Department",
+    teluguName: "ఎన్టీఆర్ భరోసా పింఛన్ల శాఖ",
+    subDetails: [
+      "Old Age pensions (వృద్ధాప్య పింఛన్లు)",
+      "Widow Pensions (వితంతు పింఛన్లు)",
+      "Persons with Disabilities / Divyangulu (దివ్యాంగుల పింఛన్లు)",
+      "Dappu Artists Pensions (డప్పు కళాకారుల పింఛన్లు)",
+      "Leather Artisans Pensions (చర్మాకార వృత్తిదారుల పింఛన్లు)",
+      "Handloom Weavers Pensions (చేనేత కార్మికుల పింఛన్లు)",
+      "Toddy Tappers Pensions (గీత కార్మికుల పింఛన్లు)",
+      "Destitute Women / Single Women (ఒంటరి మహిళా పింఛన్లు)",
+      "Abhaya Hastham (అభయ హస్తం)",
+      "CKDU Pensions (సికెడియు పింఛన్లు)",
+      "DMHO / Medical Pensions (వైద్య పింఛన్లు)",
+      "Other Pensions (ఇతర పింఛన్లు)",
+      "New Pensions Application (కొత్త పింఛను)"
+    ]
+  },
+  {
+    id: 4,
+    name: "4. Self-Employment Scheme (స్వయం ఉపాధి పథకాలు)",
+    teluguName: "స్వయం ఉపాధి పథకాల కార్పొరేషన్",
+    subDetails: [
+      "SC Corporation / Scheduled Castes (షెడ్యూల్డ్ కులాల కార్పొరేషన్)",
+      "బి.సి కార్పొరేషన్ (BC Corporation)",
+      "EBC Corporation / Economically Backward Classes (ఈబీసీ కార్పొరేషన్)"
+    ]
+  },
+  {
+    id: 5,
+    name: "5. VELUGU – Rural Development & SHG Programme",
+    teluguName: "వెలుగు – స్వయం సహాయక సంఘాలు",
+    subDetails: [
+      "Bank Linkage (బ్యాంక్ లింకేజి)",
+      "Interest Subsidy / పావలా వడ్డీ (వడ్డీ రాయితీ)",
+      "Stree Nidhi (స్త్రీ నిధి)",
+      "Chandranna Pelli Kanuka (చంద్రన్న పెళ్లి కానుక)"
+    ]
+  },
+  {
+    id: 6,
+    name: "6. MGNREGS – Employment Guarantee Scheme",
+    teluguName: "ఉపాధి హామీ పథకం (MGNREGS)",
+    subDetails: [
+      "Employment Guarantee – Workdays (ఉపాధి హామీ పనిదినాలు)",
+      "Solid Waste Management (SWM / చెత్త సంపద కేంద్రాలు)",
+      "Form Ponds (ఫామ్ పాండ్స్)",
+      "Play Fields (క్రీడా మైదానాలు)",
+      "Vermi / NADEP Pits (వర్మీ / నాడెప్ గుంతలు)",
+      "Horticulture Development (తోటపెంపకం)",
+      "Soak Pits (ఇకుడు గుంతలు)"
+    ]
+  },
+  {
+    id: 7,
+    name: "7. Agriculture Department (వ్యవసాయ శాఖ)",
+    teluguName: "వ్యవసాయ శాఖ",
+    subDetails: [
+      "Farmer Loan Waiver (రైతు రుణమాఫీ)",
+      "Soil Health Cards for Farmers (నేల ఆరోగ్య కార్డులు)",
+      "Rythu Radham (రైతు రథం)",
+      "Power Tillers (పవర్ టిల్లర్లు)",
+      "Other Agricultural Machinery & Equipment (ఇతర వ్యవసాయ యంత్రాలు & పరికరాలు)"
+    ]
+  },
+  {
+    id: 8,
+    name: "8. Roads & Buildings (R&B) Department",
+    teluguName: "రోడ్లు మరియు భవనాల శాఖ (R&B)",
+    subDetails: [
+      "Cement Roads & Bridges (సిమెంట్ రోడ్లు & వంతెనలు)",
+      "Road Repairs & Maintenance (రోడ్డు మరమ్మత్తులు)"
+    ]
+  },
+  {
+    id: 9,
+    name: "9. Housing Department (గృహ నిర్మాణ శాఖ)",
+    teluguName: "గృహ నిర్మాణ శాఖ",
+    subDetails: [
+      "గృహ నిర్మాణం (Housing Construction / PMAY)",
+      "House Pattas / Sites Allotment (ఇళ్ల పట్టాల పంపిణీ)"
+    ]
+  },
+  {
+    id: 10,
+    name: "10. Health Department (ఆరోగ్య శాఖ)",
+    teluguName: "వైద్య మరియు ఆరోగ్య శాఖ",
+    subDetails: [
+      "యన్.టి.ఆర్ ఆరోగ్య సేవ (NTR Arogya Seva)",
+      "తల్లి బిడ్డ ఎక్స్ ప్రెస్ (Thalli Bidda Express 102)"
+    ]
+  },
+  {
+    id: 11,
+    name: "11. Revenue Department (రెవెన్యూ శాఖ)",
+    teluguName: "రెవెన్యూ శాఖ",
+    subDetails: [
+      "రేషన్ కార్డులు (Ration Cards / PDS)",
+      "దీపం పధకం (Deepam Gas Connection)",
+      "NFBS పధకం (National Family Benefit Scheme)"
+    ]
+  },
+  {
+    id: 12,
+    name: "12. Neeru-Chettu / Minor Irrigation Dept (నీరు-చెట్టు)",
+    teluguName: "చిన్న నీటిపారుదల శాఖ (నీరు-చెట్టు)",
+    subDetails: [
+      "కాలువల ఆధునీకరణ & వంతెనల వర్క్స్ (Canal Modernization & Bridges Works)",
+      "Watershed Development (వాటర్‌షెడ్ అభివృద్ది)",
+      "Check Dams Construction (చెక్‌డామ్‌ల నిర్మాణం)"
+    ]
+  },
+  {
+    id: 13,
+    name: "13. Education Department (విద్యా శాఖ)",
+    teluguName: "పాఠశాల విద్యా శాఖ",
+    subDetails: [
+      "Extra Classrooms (అదనపు తరగతి గదులు)",
+      "Toilets Facilities (పాఠశాల మరుగుదొడ్లు)",
+      "Compound Wall Construction (రక్షణ గోడ)",
+      "సైకిల్స్ పంపిణీ (Bicycle Distribution Scheme)"
+    ]
+  },
+  {
+    id: 14,
+    name: "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
+    teluguName: "విద్యుత్ శాఖ (APCPDCL)",
+    subDetails: [
+      "Electric Poles Replacement (విద్యుత్ స్థంభాలు)",
+      "ట్రాన్స్ ఫార్మార్లు (Transformers Installation / Repairs)",
+      "SC & ST Subsidy Plan (ఎస్సీ & ఎస్టీ విద్యుత్ సబ్సిడీ)",
+      "PM Surya Ghar Solar Scheme (పిఎం సూర్య ఘర్ ఉచిత సోలార్)",
+      "Rs. 125/- Category Services (రూ. 125 సేవలు)"
+    ]
+  },
+  {
+    id: 15,
+    name: "15. ICDS – Women & Child Development (ఐసిడిఎస్)",
+    teluguName: "మహిళా మరియు శిశు సంక్షేమ శాఖ (ICDS)",
+    subDetails: [
+      "ఆంగన్వాడీ భవనాలు (Anganwadi Buildings & Centers)",
+      "అన్న అమృత హస్తం (Anna Amrutha Hastham Nutritional Scheme)"
+    ]
+  },
+  {
+    id: 16,
+    name: "16. Aadarana – 3 Scheme (ఆదరణ – 3 పథకం)",
+    teluguName: "ఆదరణ – 3 పథకం (వృత్తిదారుల ఆదరణ పరికరాలు)",
+    subDetails: [
+      "రజక (Washermen / Laundry Tools & Iron Boxes)",
+      "Carpentry Tools (వడ్రంగి పనిముట్లు)",
+      "Tailoring Machines (కుట్టు మిషన్లు)",
+      "Weaving Tools & Handloom Equipment (చేనేత పరికరాలు)",
+      "Blacksmith Tools (కమ్మరి పరికరాలు)",
+      "Milk Business Equipment (పాల వ్యాపార పరికరాలు)",
+      "Naynee Brahmin / Barber Kits (నాయీ బ్రాహ్మణ పరికరాలు)",
+      "Stone Cutting Tools (రాతి పని పరికరాలు)"
+    ]
+  },
+  {
+    id: 17,
+    name: "17. Law & Order & Police Services (శాంతి భద్రతలు)",
+    teluguName: "పోలీస్ మరియు శాంతి భద్రతల శాఖ",
+    subDetails: [
+      "Police Help & Protection (పోలీస్ సాయం & రక్షణ)",
+      "Community Law & Order (సముదాయ శాంతి భద్రతలు)"
+    ]
+  }
+];
+
 const DEPARTMENTS = [
-  "Roads & Buildings (R&B)",
-  "Panchayat Raj & Rural Water Supply (RWS)",
-  "APCPDCL Electricity Board & DISCOM",
-  "Municipal Administration & Urban Development (MA&UD)",
-  "Health, Medical & Family Welfare (PHC / Hospital)",
-  "Irrigation & Water Resources Department",
-  "Agriculture, Farmers Welfare & Horticulture",
-  "School Education & Anganwadi Welfare",
-  "Higher & Technical Education",
-  "Revenue, Survey & Land Administration (MRO / Tahsildar)",
-  "Police, Law & Order & Traffic Safety",
-  "Social Welfare, BC & Tribal Welfare",
-  "Civil Supplies & Consumer Protection (Ration Cards / PDS)",
-  "Housing & Urban Poverty Alleviation (YSR / PMAY Housing)",
-  "Animal Husbandry, Veterinary & Dairy Development",
-  "Forest, Environment & Sanitation",
-  "Transport & Regional Transport Office (RTO)",
-  "Employment, Training & Youth Services",
-  "Women & Child Welfare Department",
-  "Disaster Management & Emergency Fire Services",
-  "Handlooms, Textiles & Cottage Industries",
-  "Commercial Taxes & Excise Department",
-  "Other Government Department"
+  ...PGRS_DEPARTMENTS_LIST.map((d) => d.name),
+  "Other Government Department (ఇతర ప్రభుత్వ శాఖ)"
 ];
 
 const FIXED_MANDALS_TOWNS = [
@@ -144,8 +323,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState<string>("Roads & Buildings");
-  const [newDepartment, setNewDepartment] = useState<string>("Roads & Buildings (R&B)");
+  const [newDepartment, setNewDepartment] = useState<string>("8. Roads & Buildings (R&B) Department");
   const [otherDepartmentText, setOtherDepartmentText] = useState("");
+  const [newSchemeSubDetail, setNewSchemeSubDetail] = useState("");
+  const [newAadharNumber, setNewAadharNumber] = useState("");
   const [newPriority, setNewPriority] = useState<IssuePriority>("HIGH");
   const [newIssueType, setNewIssueType] = useState<"COMPLAINT" | "REQUIREMENT">("COMPLAINT");
   
@@ -319,6 +500,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         reporterType: reporterType,
         reporterDesignation: reporterDesignation.trim(),
         reporterPhone: newReporterPhone.trim(),
+        aadharNumber: newAadharNumber.trim(),
+        schemeSubDetail: newSchemeSubDetail.trim(),
         reportedDate: new Date().toISOString().split("T")[0],
         assignedVolunteerId: currentUser.id,
         assignedVolunteerName: currentUser.name,
@@ -1034,6 +1217,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <p className="text-xs text-[#A69B80] line-clamp-2 mt-1 leading-relaxed">
                       {issue.description}
                     </p>
+                    {issue.schemeSubDetail && (
+                      <div className="text-[11px] font-semibold text-[#D4A24C] bg-[#142B45]/80 border border-[#D4A24C]/30 px-2.5 py-0.5 rounded-md inline-block mt-1.5">
+                        📋 Scheme Details: {issue.schemeSubDetail}
+                      </div>
+                    )}
                   </div>
 
                   {/* Registered & Closed Timestamps + Duration Chip */}
@@ -1069,12 +1257,19 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] pt-1">
-                      <span>
-                        Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
-                        {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
-                      </span>
+                      <div>
+                        <span>
+                          Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
+                          {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
+                        </span>
+                        {issue.aadharNumber && (
+                          <span className="text-[10px] text-[#8E9CAE] font-mono block mt-0.5">
+                            🆔 Aadhaar: <strong className="text-[#D4A24C]">{issue.aadharNumber}</strong>
+                          </span>
+                        )}
+                      </div>
                       {issue.attachments && issue.attachments.length > 0 && (
-                        <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono">
+                        <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono shrink-0">
                           <Paperclip className="w-3 h-3" />
                           {issue.attachments.length} {issue.attachments.length === 1 ? "Proof" : "Proofs"}
                         </span>
@@ -1495,11 +1690,20 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Department *
+                      Department / శాఖ (PGRS 17 Departments) *
                     </label>
                     <select
                       value={newDepartment}
-                      onChange={(e) => setNewDepartment(e.target.value)}
+                      onChange={(e) => {
+                        const dept = e.target.value;
+                        setNewDepartment(dept);
+                        const foundItem = PGRS_DEPARTMENTS_LIST.find((d) => d.name === dept);
+                        if (foundItem && foundItem.subDetails.length > 0) {
+                          setNewSchemeSubDetail(foundItem.subDetails[0]);
+                        } else {
+                          setNewSchemeSubDetail("");
+                        }
+                      }}
                       className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
                     >
                       {DEPARTMENTS.map((dept) => (
@@ -1509,15 +1713,41 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       ))}
                     </select>
 
+                    {/* Dynamic Scheme / Work Sub-Details Dropdown */}
+                    {(() => {
+                      const foundItem = PGRS_DEPARTMENTS_LIST.find((d) => d.name === newDepartment);
+                      if (foundItem && foundItem.subDetails.length > 0) {
+                        return (
+                          <div className="mt-2.5 animate-fadeIn">
+                            <label className="block text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
+                              Scheme / Work Sub-Details / పథకం వివరాలు *
+                            </label>
+                            <select
+                              value={newSchemeSubDetail}
+                              onChange={(e) => setNewSchemeSubDetail(e.target.value)}
+                              className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-medium cursor-pointer"
+                            >
+                              {foundItem.subDetails.map((sub) => (
+                                <option key={sub} value={sub}>
+                                  {sub}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
                     {newDepartment.includes("Other") && (
                       <div className="mt-2.5 animate-fadeIn">
                         <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                          Specify Other Government Department Details *
+                          Specify Other Government Department Details / ఇతర వివరాలు *
                         </label>
                         <input
                           type="text"
                           required
-                          placeholder="Enter specific department / office name..."
+                          placeholder="Enter specific department / office name in English or Telugu..."
                           value={otherDepartmentText}
                           onChange={(e) => setOtherDepartmentText(e.target.value)}
                           className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
@@ -1596,6 +1826,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       <input
                         type="text"
                         required
+                        placeholder="In English or Telugu..."
                         value={villageWardText}
                         onChange={(e) => setVillageWardText(e.target.value)}
                         className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
@@ -1605,10 +1836,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     {/* Place / Landmark */}
                     <div className="sm:col-span-2">
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Place / Specific Landmark (Optional)
+                        Place / Specific Landmark (Optional - English or Telugu)
                       </label>
                       <input
                         type="text"
+                        placeholder="e.g. Near Bus Stand, పంచాయతీ కార్యాలయం వద్ద..."
                         value={newPlaceName}
                         onChange={(e) => setNewPlaceName(e.target.value)}
                         className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
@@ -1621,7 +1853,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold">
-                      Detailed Description *
+                      Detailed Description / సమస్య వివరాలు * (English or Telugu)
                     </label>
                     <span className="text-[10px] text-[#8E9CAE] font-mono">
                       {newDescription.length}/300
@@ -1631,6 +1863,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     rows={3}
                     required
                     maxLength={300}
+                    placeholder="Enter issue details in English or Telugu (తెలుగులో వివరాలు నమోదు చేయండి)..."
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
                     className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed"
@@ -1642,7 +1875,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" />
-                      Personal Details
+                      Complainant Personal Details / ఫిర్యాదుదారు వివరాలు
                     </span>
                     <span className="text-[10.5px] text-[#8E9CAE]">Citizen / Cadre / Leader</span>
                   </div>
@@ -1685,6 +1918,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       <input
                         type="text"
                         required
+                        placeholder="e.g. Mandal Convener, Booth Agent..."
                         value={reporterDesignation}
                         onChange={(e) => setReporterDesignation(e.target.value)}
                         className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
@@ -1692,14 +1926,15 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                     <div>
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Full Name *
+                        Complainant Name / పేరు *
                       </label>
                       <input
                         type="text"
                         required
+                        placeholder="Full Name (English or Telugu)..."
                         value={newReportedBy}
                         onChange={(e) => setNewReportedBy(e.target.value)}
                         className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
@@ -1708,7 +1943,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
                     <div>
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Contact Number / Mobile *
+                        Phone Number / ఫోన్ సంఖ్య *
                       </label>
                       <div className="flex items-center">
                         <span className="px-3 py-2 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
@@ -1718,11 +1953,26 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           type="tel"
                           required
                           maxLength={10}
+                          placeholder="10 Digits..."
                           value={newReporterPhone}
                           onChange={(e) => setNewReporterPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                           className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Aadhaar Number / ఆధార్ సంఖ్య (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={12}
+                        placeholder="12 Digits..."
+                        value={newAadharNumber}
+                        onChange={(e) => setNewAadharNumber(e.target.value.replace(/\D/g, "").slice(0, 12))}
+                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
+                      />
                     </div>
                   </div>
 

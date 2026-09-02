@@ -39,35 +39,15 @@ import {
   Sparkles
 } from "lucide-react";
 import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
+import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
 
 interface DirectorDashboardProps {
   currentUser: UserProfile;
 }
 
 const DEPARTMENTS = [
-  "Roads & Buildings (R&B)",
-  "Panchayat Raj & Rural Water Supply (RWS)",
-  "APCPDCL Electricity Board & DISCOM",
-  "Municipal Administration & Urban Development (MA&UD)",
-  "Health, Medical & Family Welfare (PHC / Hospital)",
-  "Irrigation & Water Resources Department",
-  "Agriculture, Farmers Welfare & Horticulture",
-  "School Education & Anganwadi Welfare",
-  "Higher & Technical Education",
-  "Revenue, Survey & Land Administration (MRO / Tahsildar)",
-  "Police, Law & Order & Traffic Safety",
-  "Social Welfare, BC & Tribal Welfare",
-  "Civil Supplies & Consumer Protection (Ration Cards / PDS)",
-  "Housing & Urban Poverty Alleviation (YSR / PMAY Housing)",
-  "Animal Husbandry, Veterinary & Dairy Development",
-  "Forest, Environment & Sanitation",
-  "Transport & Regional Transport Office (RTO)",
-  "Employment, Training & Youth Services",
-  "Women & Child Welfare Department",
-  "Disaster Management & Emergency Fire Services",
-  "Handlooms, Textiles & Cottage Industries",
-  "Commercial Taxes & Excise Department",
-  "Other Government Department"
+  ...PGRS_DEPARTMENTS_LIST.map((d) => d.name),
+  "Other Government Department (ఇతర ప్రభుత్వ శాఖ)"
 ];
 
 export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
