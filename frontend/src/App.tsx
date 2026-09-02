@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { HomePage } from "./components/marketing/HomePage";
@@ -19,16 +19,18 @@ import { RecommendationsSection } from "./components/audit/RecommendationsSectio
 import { ScorecardSection } from "./components/audit/ScorecardSection";
 import { DataConfidenceSection } from "./components/audit/DataConfidenceSection";
 import { PresentationMode } from "./components/audit/PresentationMode";
-import { ExportModal } from "./components/audit/ExportModal";
 import { FieldOpsManager } from "./components/fieldops/FieldOpsManager";
-import { GrievanceManagement } from "./components/grievances/GrievanceManagement";
-import { VolunteerMonitoring } from "./components/volunteers/VolunteerMonitoring";
-import { CampaignWebsiteGenerator } from "./components/webbuilder/CampaignWebsiteGenerator";
-import { RoleManagement } from "./components/governance/RoleManagement";
-import { ContactDatabase } from "./components/contacts/ContactDatabase";
 import { AuditReport, UserProfile } from "./types";
 import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
 import { PartyThemeProvider, usePartyTheme } from "./context/PartyThemeContext";
+
+// Lazy-loaded heavy route chunks for instant initial render
+const GrievanceManagement = lazy(() => import("./components/grievances/GrievanceManagement").then(m => ({ default: m.GrievanceManagement })));
+const VolunteerMonitoring = lazy(() => import("./components/volunteers/VolunteerMonitoring").then(m => ({ default: m.VolunteerMonitoring })));
+const CampaignWebsiteGenerator = lazy(() => import("./components/webbuilder/CampaignWebsiteGenerator").then(m => ({ default: m.CampaignWebsiteGenerator })));
+const RoleManagement = lazy(() => import("./components/governance/RoleManagement").then(m => ({ default: m.RoleManagement })));
+const ContactDatabase = lazy(() => import("./components/contacts/ContactDatabase").then(m => ({ default: m.ContactDatabase })));
+const ExportModal = lazy(() => import("./components/audit/ExportModal").then(m => ({ default: m.ExportModal })));
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
@@ -393,29 +395,41 @@ function AppInner() {
                 </>
               )}
 
-              {/* Module 3: GRIEVANCE MANAGEMENT CRM */}
-              {activeProduct === "grievances" && (
-                <GrievanceManagement currentProfile={currentProfile} />
-              )}
+              {/* Lazy Loaded Auxiliary Modules wrapped in Suspense */}
+              <Suspense fallback={<div className="p-12 text-center text-[#D4A24C] font-mono text-xs animate-pulse">Loading module component...</div>}>
+                {/* Module 3: GRIEVANCE MANAGEMENT CRM */}
+                {activeProduct === "grievances" && (
+                  <GrievanceManagement currentProfile={currentProfile} />
+                )}
 
-              {/* Module 4: SOCIAL MEDIA VOLUNTEER MONITORING (ADMIN ONLY) */}
-              {activeProduct === "volunteers" && isAdmin && <VolunteerMonitoring />}
+                {/* Module 4: SOCIAL MEDIA VOLUNTEER MONITORING (ADMIN ONLY) */}
+                {activeProduct === "volunteers" && isAdmin && <VolunteerMonitoring />}
 
-              {/* Module 5: CAMPAIGN WEBSITE GENERATOR (ADMIN ONLY) */}
-              {activeProduct === "webbuilder" && isAdmin && <CampaignWebsiteGenerator />}
+                {/* Module 5: CAMPAIGN WEBSITE GENERATOR (ADMIN ONLY) */}
+                {activeProduct === "webbuilder" && isAdmin && <CampaignWebsiteGenerator />}
 
-              {/* Module 6: ROLE-BASED ACCESS & GOVERNANCE (ADMIN ONLY) */}
-              {activeProduct === "governance" && isAdmin && (
-                <RoleManagement
-                  currentProfile={currentProfile}
-                  onSwitchProfile={handleSwitchProfile}
-                />
-              )}
+                {/* Module 6: ROLE-BASED ACCESS & GOVERNANCE (ADMIN ONLY) */}
+                {activeProduct === "governance" && isAdmin && (
+                  <RoleManagement
+                    currentProfile={currentProfile}
+                    onSwitchProfile={handleSwitchProfile}
+                  />
+                )}
 
-              {/* Module 7: CONSTITUENCY CONTACT DATABASE & CITIZEN DIRECTORY */}
-              {activeProduct === "contacts" && (
-                <ContactDatabase currentUser={currentProfile} />
-              )}
+                {/* Module 7: CONSTITUENCY CONTACT DATABASE & CITIZEN DIRECTORY */}
+                {activeProduct === "contacts" && (
+                  <ContactDatabase currentUser={currentProfile} />
+                )}
+
+                {/* PDF Export Modal */}
+                {isExportModalOpen && auditData && (
+                  <ExportModal
+                    audit={auditData}
+                    isOpen={isExportModalOpen}
+                    onClose={() => setIsExportModalOpen(false)}
+                  />
+                )}
+              </Suspense>
             </main>
 
             {/* Global Footer */}
