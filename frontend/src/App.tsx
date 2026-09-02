@@ -34,12 +34,42 @@ const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
 const PRODUCT_STORAGE_KEY = "leaders_lens_active_product";
 
+type ActiveProductType = "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts";
+
+const PRODUCT_TO_HASH_MAP: Record<ActiveProductType, string> = {
+  fieldops: "#/field-ops",
+  grievances: "#/grievances",
+  volunteers: "#/volunteers",
+  webbuilder: "#/web-builder",
+  governance: "#/user-management",
+  contacts: "#/contacts",
+  pitch: "#/audit-pitch"
+};
+
+const HASH_TO_PRODUCT_MAP: Record<string, ActiveProductType> = {
+  "#/field-ops": "fieldops",
+  "#/fieldops": "fieldops",
+  "#/grievances": "grievances",
+  "#/volunteers": "volunteers",
+  "#/web-builder": "webbuilder",
+  "#/webbuilder": "webbuilder",
+  "#/governance": "governance",
+  "#/user-management": "governance",
+  "#/contacts": "contacts",
+  "#/audit-pitch": "pitch",
+  "#/pitch": "pitch"
+};
+
 export function App() {
   return <AppInner />;
 }
 
 function AppInner() {
   const [route, setRoute] = useState<"auth" | "app">(() => {
+    const currentHash = window.location.hash.toLowerCase();
+    if (currentHash === "#/login" || currentHash === "#/auth") {
+      return "auth";
+    }
     try {
       const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
       if (savedUser) {
@@ -53,16 +83,18 @@ function AppInner() {
 
   const [viewState, setViewState] = useState<"select" | "loading" | "audit">("select");
   
-  const [activeProduct, setActiveProduct] = useState<
-    "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts"
-  >(() => {
+  const [activeProduct, setActiveProduct] = useState<ActiveProductType>(() => {
+    const currentHash = window.location.hash.toLowerCase();
+    if (HASH_TO_PRODUCT_MAP[currentHash]) {
+      return HASH_TO_PRODUCT_MAP[currentHash];
+    }
     try {
       const savedProduct = localStorage.getItem(PRODUCT_STORAGE_KEY);
       if (
         savedProduct &&
         ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts"].includes(savedProduct)
       ) {
-        return savedProduct as any;
+        return savedProduct as ActiveProductType;
       }
     } catch {}
     return "fieldops";
@@ -110,6 +142,51 @@ function AppInner() {
   const isDirector = !isPlatformAdmin && !isPoliticalAdmin && (primaryRole === "DIRECTOR" || currentProfile?.roleId === "CAMPAIGN_MANAGER" || currentProfile?.role === "campaign_manager" || currentProfile?.roleId === "PARTY_ADMIN");
   const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile?.roleId === "VOLUNTEER");
   const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
+
+  // URL Hash Synchronization & Browser Title Sync
+  useEffect(() => {
+    let targetHash = "#/field-ops";
+    if (route === "auth") {
+      targetHash = "#/login";
+      document.title = "Login & Security | Leader's Lens";
+    } else {
+      targetHash = PRODUCT_TO_HASH_MAP[activeProduct] || "#/field-ops";
+      const titles: Record<ActiveProductType, string> = {
+        fieldops: "Field Operations Command | Leader's Lens",
+        grievances: "Grievance Management | Leader's Lens",
+        volunteers: "Volunteer Field Force | Leader's Lens",
+        webbuilder: "Campaign Web Builder | Leader's Lens",
+        governance: "User & Role Governance | Leader's Lens",
+        contacts: "Contact Database | Leader's Lens",
+        pitch: "Audit & Strategy Command | Leader's Lens"
+      };
+      document.title = titles[activeProduct] || "Leader's Lens";
+    }
+
+    if (window.location.hash !== targetHash) {
+      window.history.replaceState(null, "", targetHash);
+    }
+  }, [route, activeProduct]);
+
+  // Listen to browser Back/Forward navigation (`hashchange` event)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const currentHash = window.location.hash.toLowerCase();
+      if (currentHash === "#/login" || currentHash === "#/auth") {
+        setRoute("auth");
+      } else if (HASH_TO_PRODUCT_MAP[currentHash]) {
+        const prod = HASH_TO_PRODUCT_MAP[currentHash];
+        setActiveProduct(prod);
+        try {
+          const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+          if (savedUser) setRoute("app");
+        } catch {}
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // Role routing enforcement:
   // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
