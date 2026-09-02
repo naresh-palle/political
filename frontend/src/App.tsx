@@ -199,12 +199,12 @@ function AppInner() {
   // - Political Admin & Director: Field Operations, Grievances, User Management (governance), Contact Database (contacts)
   // - Volunteer: Field Operations, Grievances, Contact Database (contacts)
   useEffect(() => {
-    if (isVolunteer && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
+    if (isVolunteer && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "grievances", "governance", "contacts"].includes(activeProduct)) {
+    } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -212,14 +212,14 @@ function AppInner() {
     }
   }, [isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
-  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts") => {
+  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets") => {
     let targetProduct = product;
     if (isVolunteer) {
-      targetProduct = !["fieldops", "grievances", "contacts"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts"].includes(product) ? "fieldops" : product;
     } else if (isPoliticalAdmin || isDirector) {
-      targetProduct = !["fieldops", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
     } else if (!isPlatformAdmin) {
-      targetProduct = ["contacts", "fieldops", "grievances"].includes(product) ? product : "fieldops";
+      targetProduct = ["contacts", "fieldops", "assigntickets", "grievances"].includes(product) ? product : "fieldops";
     }
     setActiveProduct(targetProduct);
     try {

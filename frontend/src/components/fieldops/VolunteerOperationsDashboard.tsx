@@ -960,7 +960,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               </span>
               <div className="flex items-baseline justify-between">
                 <span className="text-2xl font-bold font-mono text-[#D4A24C]">{issues.length}</span>
-                <span className="text-[10px] text-[#8E9CAE] font-mono">/ 150 Total</span>
+                <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">Assigned</span>
               </div>
             </div>
 
@@ -972,7 +972,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-amber-500/60 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">
-                Pending / Open
+                Unresolved / Pending
               </span>
               <div className="flex items-baseline justify-between">
                 <span className="text-2xl font-bold font-mono text-amber-300">

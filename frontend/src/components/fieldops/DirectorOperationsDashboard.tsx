@@ -1267,7 +1267,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
         <div
-          onClick={() => setActiveTab("ALL")}
+          onClick={() => {
+            setActiveTab("ALL");
+            window.location.hash = "#/assign-tickets";
+          }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "ALL"
               ? "bg-[#14263B] border-[#D4A24C] shadow-md ring-1 ring-[#D4A24C]/40"
@@ -1281,12 +1284,15 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <span className="text-2xl font-bold font-mono text-[#D4A24C]">
               {issues.length}
             </span>
-            <span className="text-[10px] text-[#8E9CAE] font-mono">/ 150 Total</span>
+            <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">Assigned</span>
           </div>
         </div>
 
         <div
-          onClick={() => setActiveTab("PENDING")}
+          onClick={() => {
+            setActiveTab("PENDING");
+            window.location.hash = "#/assign-tickets";
+          }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "PENDING"
               ? "bg-[#14263B] border-amber-400 shadow-md ring-1 ring-amber-400/40"
@@ -1294,7 +1300,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           }`}
         >
           <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">
-            Pending / Open
+            Unresolved / Pending
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-amber-300">
@@ -1305,7 +1311,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
 
         <div
-          onClick={() => setActiveTab("IN_PROGRESS")}
+          onClick={() => {
+            setActiveTab("IN_PROGRESS");
+            window.location.hash = "#/assign-tickets";
+          }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "IN_PROGRESS"
               ? "bg-[#14263B] border-sky-400 shadow-md ring-1 ring-sky-400/40"
@@ -1324,7 +1333,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
 
         <div
-          onClick={() => setActiveTab("COMPLETED")}
+          onClick={() => {
+            setActiveTab("COMPLETED");
+            window.location.hash = "#/assign-tickets";
+          }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "COMPLETED"
               ? "bg-[#14263B] border-emerald-400 shadow-md ring-1 ring-emerald-400/40"
