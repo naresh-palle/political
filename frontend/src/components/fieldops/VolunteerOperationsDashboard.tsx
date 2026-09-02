@@ -509,6 +509,101 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     setSortBy("NEWEST");
   };
 
+  const handleAssignVolunteer = async (issueId: string, newVolunteerId: string) => {
+    const newVolName = newVolunteerId === currentUser.id ? currentUser.name : "Unassigned";
+
+    setIssues((prev) =>
+      prev.map((item) => {
+        if (item.id === issueId) {
+          return {
+            ...item,
+            assignedVolunteerId: newVolunteerId || undefined,
+            assignedVolunteerName: newVolName,
+            status: item.status === "NEW" && newVolunteerId ? "ASSIGNED" : item.status,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return item;
+      })
+    );
+
+    try {
+      await politicalApiService.updateFieldIssueStatus(issueId, {
+        assignedVolunteerId: newVolunteerId || undefined,
+        assignedVolunteerName: newVolName,
+        status: "ASSIGNED",
+        remarks: `Assigned to ${newVolName}`
+      });
+    } catch (e) {
+      console.warn("Assignment update fallback handled locally", e);
+    }
+  };
+
+  const getTicketTimingDetails = (issue: FieldIssue) => {
+    const regDateRaw = issue.createdAt || issue.reportedDate;
+    const regDateObj = new Date(regDateRaw);
+    const isValidReg = !isNaN(regDateObj.getTime());
+
+    const registeredTimeFormatted = isValidReg
+      ? regDateObj.toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        })
+      : issue.reportedDate;
+
+    const isClosed = issue.status === "COMPLETED" || issue.status === "RESOLVED";
+    const closeDateRaw = issue.completedDate || issue.updatedDate || issue.updatedAt || issue.lastStatusUpdateAt;
+    const closeDateObj = closeDateRaw ? new Date(closeDateRaw) : new Date();
+    const isValidClose = !isNaN(closeDateObj.getTime());
+
+    const closedTimeFormatted = isClosed
+      ? isValidClose
+        ? closeDateObj.toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+          })
+        : issue.completedDate || "Resolved"
+      : "In Progress";
+
+    const startTime = isValidReg ? regDateObj.getTime() : new Date(issue.reportedDate).getTime();
+    const endTime = isClosed
+      ? isValidClose
+        ? closeDateObj.getTime()
+        : Date.now()
+      : Date.now();
+
+    const diffMs = Math.max(0, endTime - startTime);
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    const remainingHours = diffHours % 24;
+
+    let durationText = "";
+    if (diffDays > 0) {
+      durationText = `${diffDays}d ${remainingHours}h`;
+    } else if (diffHours > 0) {
+      durationText = `${diffHours} hrs`;
+    } else {
+      const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+      durationText = `${diffMins} mins`;
+    }
+
+    return {
+      registeredTimeFormatted,
+      closedTimeFormatted,
+      isClosed,
+      durationText,
+      totalHours: diffHours
+    };
+  };
+
   // If an issue is selected, display the full-page dedicated IssueDetailView
   if (selectedIssue) {
     return (
@@ -834,190 +929,244 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {paginatedIssues.map((issue) => (
-              <div
-                key={issue.id}
-                onClick={() => setSelectedIssue(issue)}
-                className="p-5 rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 hover:border-[#D4A24C]/60 hover:bg-[#131E2D]/85 transition-all space-y-3.5 cursor-pointer shadow-lg group"
-              >
-                {/* Card Header */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-mono text-[#D4A24C] font-semibold">
-                    #{issue.id}
-                  </span>
+            {paginatedIssues.map((issue) => {
+              const timing = getTicketTimingDetails(issue);
 
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
-                      {issue.category}
+              return (
+                <div
+                  key={issue.id}
+                  onClick={() => setSelectedIssue(issue)}
+                  className="p-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all space-y-3 cursor-pointer shadow-lg group"
+                >
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-mono text-[#D4A24C] font-semibold">
+                      #{issue.id}
                     </span>
-                    {issue.department && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#0B131E] text-[#8E9CAE] border border-[#223348]">
-                        {issue.department.split("(")[0]}
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
+                        {issue.category}
                       </span>
-                    )}
-                    <span
-                      className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                        issue.priority === "URGENT" || issue.priority === "HIGH"
-                          ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
-                          : "bg-[#0B131E] text-[#B9AF95] border border-[#223348]"
+                      {issue.department && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#0B131E] text-[#8E9CAE] border border-[#223348]">
+                          {issue.department.split("(")[0]}
+                        </span>
+                      )}
+                      <span
+                        className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                          issue.priority === "URGENT" || issue.priority === "HIGH"
+                            ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
+                            : "bg-[#0B131E] text-[#B9AF95] border border-[#223348]"
+                        }`}
+                      >
+                        {issue.priority}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title & Description */}
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
+                      {issue.title}
+                    </h3>
+                    <p className="text-xs text-[#A69B80] line-clamp-2 mt-1 leading-relaxed">
+                      {issue.description}
+                    </p>
+                  </div>
+
+                  {/* Registered & Closed Timestamps + Duration Chip */}
+                  <div className="p-2 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between text-[10.5px] font-mono">
+                    <div>
+                      <span className="text-[#8E9CAE] block text-[9.5px]">Reg: {timing.registeredTimeFormatted}</span>
+                      {timing.isClosed ? (
+                        <span className="text-emerald-400 font-semibold block text-[9.5px]">Done: {timing.closedTimeFormatted}</span>
+                      ) : (
+                        <span className="text-amber-400 block font-semibold text-[9.5px]">Status: Open</span>
+                      )}
+                    </div>
+                    <div
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+                        timing.isClosed
+                          ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                          : issue.status === "OVERDUE"
+                          ? "bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse"
+                          : "bg-blue-950/80 text-blue-300 border-blue-500/40"
                       }`}
                     >
-                      {issue.priority}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Title & Description */}
-                <div>
-                  <h3 className="font-display text-base font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
-                    {issue.title}
-                  </h3>
-                  <p className="text-xs text-[#A69B80] line-clamp-2 mt-1 leading-relaxed">
-                    {issue.description}
-                  </p>
-                </div>
-
-                {/* Location & Reporter Details */}
-                <div className="pt-2.5 border-t border-[#223348]/60 space-y-1 text-xs">
-                  <div className="flex items-center justify-between text-[#8E9CAE]">
-                    <span className="flex items-center gap-1.5 text-[#F5EFE0] truncate">
-                      <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                      <strong>{issue.mandalName}</strong> · {issue.villageName}
-                    </span>
-                    <span className="text-[11px] text-[#B9AF95] font-mono shrink-0">
-                      {issue.reportedDate}
-                    </span>
+                      {timing.isClosed ? `⏱️ Closed in ${timing.durationText}` : `⏱️ Open ${timing.durationText}`}
+                    </div>
                   </div>
 
-                  {issue.placeName && (
-                    <p className="text-[11px] text-[#8E9CAE] pl-5 truncate">
-                      📍 Landmark: {issue.placeName}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between text-[11px] text-[#CBD5E1] pt-1 border-t border-[#223348]/40">
-                    <span>
-                      Created: <strong className="font-mono text-[#F5EFE0]">{issue.reportedDate}</strong>
-                    </span>
-                    <span>
-                      Complete:{" "}
-                      <strong className="font-mono text-emerald-400">
-                        {issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}
-                      </strong>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] pt-1">
-                    <span>
-                      Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
-                      {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
-                    </span>
-                    {issue.attachments && issue.attachments.length > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono">
-                        <Paperclip className="w-3 h-3" />
-                        {issue.attachments.length} {issue.attachments.length === 1 ? "Proof" : "Proofs"}
+                  {/* Location & Reporter Details */}
+                  <div className="pt-2 border-t border-[#223348]/60 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between text-[#8E9CAE]">
+                      <span className="flex items-center gap-1.5 text-[#F5EFE0] truncate">
+                        <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+                        <strong>{issue.mandalName}</strong> · {issue.villageName}
                       </span>
-                    )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] pt-1">
+                      <span>
+                        Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
+                        {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
+                      </span>
+                      {issue.attachments && issue.attachments.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono">
+                          <Paperclip className="w-3 h-3" />
+                          {issue.attachments.length} {issue.attachments.length === 1 ? "Proof" : "Proofs"}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Direct Assign Complaint Dropdown */}
+                    <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
+                        <span>👤</span> Assign Complaint:
+                      </span>
+                      <select
+                        value={issue.assignedVolunteerId || ""}
+                        onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
+                        className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[175px]"
+                      >
+                        <option value="">-- Unassigned --</option>
+                        <option value={currentUser.id}>{currentUser.name} (Field Agent)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           /* TABLE VIEW */
-          <div className="rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 overflow-hidden shadow-xl">
+          <div className="rounded-2xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
-                    <th className="py-3.5 px-4 font-mono">ID</th>
-                    <th className="py-3.5 px-4">Issue Title & Scope</th>
-                    <th className="py-3.5 px-4">Category / Dept</th>
-                    <th className="py-3.5 px-4">Mandal / Town</th>
-                    <th className="py-3.5 px-4">Village / Ward</th>
-                    <th className="py-3.5 px-4">Reported By</th>
-                    <th className="py-3.5 px-4">Created Date</th>
-                    <th className="py-3.5 px-4">Complete Date</th>
-                    <th className="py-3.5 px-4 text-center">Proofs</th>
-                    <th className="py-3.5 px-4 text-right">Action</th>
+                    <th className="py-3.5 px-3 w-[10%] font-mono">ID & Status</th>
+                    <th className="py-3.5 px-3 w-[24%]">Issue Title & Scope</th>
+                    <th className="py-3.5 px-3 w-[13%]">Category / Dept</th>
+                    <th className="py-3.5 px-3 w-[13%]">Mandal / Location</th>
+                    <th className="py-3.5 px-3 w-[12%]">Reported By</th>
+                    <th className="py-3.5 px-3 w-[14%]">Assign Complaint</th>
+                    <th className="py-3.5 px-3 w-[14%]">Timeline & Duration</th>
+                    <th className="py-3.5 px-3 w-[0%] text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#223348]/50">
-                  {paginatedIssues.map((issue) => (
-                    <tr
-                      key={issue.id}
-                      onClick={() => setSelectedIssue(issue)}
-                      className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
-                    >
-                      <td className="py-3 px-4 font-mono font-bold text-[#D4A24C] whitespace-nowrap">
-                        #{issue.id}
-                      </td>
-                      <td className="py-3 px-4 max-w-[240px]">
-                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
-                          {issue.title}
-                        </div>
-                        <div className="text-[11px] text-[#8E9CAE] truncate mt-0.5">
-                          {issue.description}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
-                        {issue.department && (
-                          <div className="text-[10.5px] text-[#8E9CAE]">{issue.department.split("(")[0]}</div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap text-[#F5EFE0]">
-                        {issue.mandalName}
-                      </td>
-                      <td className="py-3 px-4 max-w-[160px]">
-                        <div className="text-[#F5EFE0] truncate font-medium">{issue.villageName}</div>
-                        {issue.placeName && (
-                          <div className="text-[10.5px] text-[#8E9CAE] truncate">📍 {issue.placeName}</div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
-                        <div className="text-[10.5px] text-[#D4A24C]">
-                          {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
-                          {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 font-mono text-[#CBD5E1] whitespace-nowrap">
-                        {issue.reportedDate}
-                      </td>
-                      <td className="py-3 px-4 font-mono whitespace-nowrap">
-                        {issue.completedDate ? (
-                          <span className="text-emerald-400 font-semibold">{issue.completedDate}</span>
-                        ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
-                          <span className="text-emerald-400 font-semibold">{issue.updatedDate || issue.reportedDate}</span>
-                        ) : (
-                          <span className="text-amber-400/90 text-[11px] font-sans">In Progress</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        {issue.attachments && issue.attachments.length > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[10.5px] font-mono">
-                            <Paperclip className="w-3 h-3" />
-                            {issue.attachments.length}
-                          </span>
-                        ) : (
-                          <span className="text-[#5F6875]">—</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedIssue(issue);
-                          }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {paginatedIssues.map((issue) => {
+                    const timing = getTicketTimingDetails(issue);
+
+                    return (
+                      <tr
+                        key={issue.id}
+                        onClick={() => setSelectedIssue(issue)}
+                        className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
+                      >
+                        <td className="py-3 px-3 align-top font-mono">
+                          <div className="font-bold text-[#D4A24C]">#{issue.id}</div>
+                          <div className="mt-1">
+                            <span
+                              className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
+                                issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                                  : issue.status === "IN_PROGRESS"
+                                  ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                                  : issue.status === "OVERDUE"
+                                  ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
+                                  : "bg-blue-950/60 text-blue-300 border-blue-500/40"
+                              }`}
+                            >
+                              {issue.status}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 align-top">
+                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors break-words leading-snug">
+                            {issue.title}
+                          </div>
+                          <div className="text-[11px] text-[#8E9CAE] break-words mt-1 leading-relaxed">
+                            {issue.description}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 align-top">
+                          <div className="font-medium text-[#D8CFB8] break-words">{issue.category}</div>
+                          {issue.department && (
+                            <div className="text-[10.5px] text-[#8E9CAE] break-words mt-0.5">{issue.department.split("(")[0]}</div>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 align-top">
+                          <div className="text-[#F5EFE0] font-medium break-words">{issue.mandalName}</div>
+                          <div className="text-[10.5px] text-[#8E9CAE] break-words mt-0.5">📍 {issue.villageName}</div>
+                        </td>
+                        <td className="py-3 px-3 align-top">
+                          <div className="text-[#F5EFE0] font-medium break-words">{issue.reportedBy}</div>
+                          <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
+                            {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                          </div>
+                        </td>
+                        {/* Assign Complaint Dropdown */}
+                        <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
+                            <span>👤</span> Assign Complaint
+                          </div>
+                          <select
+                            value={issue.assignedVolunteerId || ""}
+                            onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
+                            className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                          >
+                            <option value="">-- Unassigned --</option>
+                            <option value={currentUser.id}>{currentUser.name}</option>
+                          </select>
+                          <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
+                            Agent: <span className="text-[#CBD5E1] font-semibold">{issue.assignedVolunteerName || "Unassigned"}</span>
+                          </div>
+                        </td>
+                        {/* Timeline & Duration */}
+                        <td className="py-3 px-3 align-top font-mono text-[10.5px]">
+                          <div className="text-[#CBD5E1]">
+                            <span className="text-[#8E9CAE]">Reg: </span>
+                            {timing.registeredTimeFormatted}
+                          </div>
+                          <div className="mt-0.5">
+                            {timing.isClosed ? (
+                              <span className="text-emerald-400 font-semibold">Done: {timing.closedTimeFormatted}</span>
+                            ) : (
+                              <span className="text-amber-400/90 font-semibold">Status: Open</span>
+                            )}
+                          </div>
+                          <div className="mt-1">
+                            <span
+                              className={`inline-block px-1.5 py-0.2 rounded text-[9.5px] font-bold uppercase border ${
+                                timing.isClosed
+                                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                                  : issue.status === "OVERDUE"
+                                  ? "bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse"
+                                  : "bg-blue-950/80 text-blue-300 border-blue-500/40"
+                              }`}
+                            >
+                              ⏱️ {timing.isClosed ? `Closed in ${timing.durationText}` : `Open ${timing.durationText}`}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 align-top text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedIssue(issue);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
