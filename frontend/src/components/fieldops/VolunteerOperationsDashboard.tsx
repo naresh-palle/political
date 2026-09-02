@@ -64,31 +64,42 @@ const CATEGORIES = [
 const CATEGORY_TO_DEPARTMENT: Record<string, string> = {
   "Roads & Buildings": "Roads & Buildings (R&B)",
   "Water Supply": "Panchayat Raj & Rural Water Supply (RWS)",
-  "Electricity": "APCPDCL Electricity Board",
-  "Sanitation & Garbage": "Municipal Administration & Urban Development",
-  "Drainage & Sewage": "Municipal Administration & Urban Development",
-  "Healthcare": "Health & Family Welfare (PHC / Hospital)",
-  "Agriculture & Irrigation": "Irrigation & Water Resources",
-  "Education": "School Education & Anganwadi",
-  "Revenue & Land Issues": "Revenue & Land Administration",
-  "Welfare Schemes": "Social & Tribal Welfare",
-  "Law & Order": "Police & Law Enforcement",
-  "Other": "Other Department"
+  "Electricity": "APCPDCL Electricity Board & DISCOM",
+  "Sanitation & Garbage": "Municipal Administration & Urban Development (MA&UD)",
+  "Drainage & Sewage": "Municipal Administration & Urban Development (MA&UD)",
+  "Healthcare": "Health, Medical & Family Welfare (PHC / Hospital)",
+  "Agriculture & Irrigation": "Irrigation & Water Resources Department",
+  "Education": "School Education & Anganwadi Welfare",
+  "Revenue & Land Issues": "Revenue, Survey & Land Administration (MRO / Tahsildar)",
+  "Welfare Schemes": "Social Welfare, BC & Tribal Welfare",
+  "Law & Order": "Police, Law & Order & Traffic Safety",
+  "Other": "Other Government Department"
 };
 
 const DEPARTMENTS = [
   "Roads & Buildings (R&B)",
   "Panchayat Raj & Rural Water Supply (RWS)",
-  "APCPDCL Electricity Board",
-  "Municipal Administration & Urban Development",
-  "Health & Family Welfare (PHC / Hospital)",
-  "Irrigation & Water Resources",
-  "Agriculture & Horticulture",
-  "School Education & Anganwadi",
-  "Revenue & Land Administration",
-  "Police & Law Enforcement",
-  "Social & Tribal Welfare",
-  "Other Department"
+  "APCPDCL Electricity Board & DISCOM",
+  "Municipal Administration & Urban Development (MA&UD)",
+  "Health, Medical & Family Welfare (PHC / Hospital)",
+  "Irrigation & Water Resources Department",
+  "Agriculture, Farmers Welfare & Horticulture",
+  "School Education & Anganwadi Welfare",
+  "Higher & Technical Education",
+  "Revenue, Survey & Land Administration (MRO / Tahsildar)",
+  "Police, Law & Order & Traffic Safety",
+  "Social Welfare, BC & Tribal Welfare",
+  "Civil Supplies & Consumer Protection (Ration Cards / PDS)",
+  "Housing & Urban Poverty Alleviation (YSR / PMAY Housing)",
+  "Animal Husbandry, Veterinary & Dairy Development",
+  "Forest, Environment & Sanitation",
+  "Transport & Regional Transport Office (RTO)",
+  "Employment, Training & Youth Services",
+  "Women & Child Welfare Department",
+  "Disaster Management & Emergency Fire Services",
+  "Handlooms, Textiles & Cottage Industries",
+  "Commercial Taxes & Excise Department",
+  "Other Government Department"
 ];
 
 const FIXED_MANDALS_TOWNS = [
@@ -293,11 +304,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         reporterPhone: newReporterPhone.trim(),
         reportedDate: new Date().toISOString().split("T")[0],
         assignedVolunteerId: currentUser.id,
-        assignedVolunteerName: assignedPersonName.trim() || currentUser.name,
-        assignedVolunteerPhone: assignedPersonPhone.trim() ? `+91 ${assignedPersonPhone.trim()}` : (currentUser.phone || ""),
+        assignedVolunteerName: currentUser.name,
+        assignedVolunteerPhone: currentUser.phone || "",
         directorId: currentUser.directorId || "usr-demo-director",
         directorName: currentUser.directorName || "Demo Director",
-        initialRemarks: `Reported by ${reporterType} ${reporterType === "CITIZEN" && citizenAge ? `(Age: ${citizenAge}, Gender: ${citizenGender}) ` : ""}${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${assignedPersonName}.`,
+        initialRemarks: `Reported by ${reporterType} ${reporterType === "CITIZEN" && citizenAge ? `(Age: ${citizenAge}, Gender: ${citizenGender}) ` : ""}${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${currentUser.name}.`,
         attachments: allAttachments,
         createdBy: currentUser.id,
         createdByRole: "VOLUNTEER"
@@ -314,7 +325,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           recipientRole: "DIRECTOR",
           type: "NEW_COMPLAINT",
           title: `New Ground ${newIssueType === "COMPLAINT" ? "Complaint" : "Requirement"} Logged`,
-          message: `Volunteer ${currentUser.name} logged [${newPriority}] issue: "${newTitle.trim()}" in ${mandalObj.name} (${villageWardText.trim()}). Assigned to ${assignedPersonName}.`,
+          message: `Volunteer ${currentUser.name} logged [${newPriority}] issue: "${newTitle.trim()}" in ${mandalObj.name} (${villageWardText.trim()}). Assigned to ${currentUser.name}.`,
           issueId: created.id,
           priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
         }),
@@ -1694,51 +1705,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       ))}
                     </div>
                   )}
-                </div>
-
-                {/* 12. Assigned Ticket Hierarchy Details */}
-                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
-                      <Shield className="w-3.5 h-3.5" />
-                      Assigned Ticket Hierarchy
-                    </span>
-                    <span className="text-[10px] text-[#8E9CAE] font-mono">Field Routing</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Assigned Ticket: Person Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={assignedPersonName}
-                        onChange={(e) => setAssignedPersonName(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Assigned Person Contact: Number *
-                      </label>
-                      <div className="flex items-center">
-                        <span className="px-3 py-2 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
-                          +91
-                        </span>
-                        <input
-                          type="tel"
-                          required
-                          maxLength={10}
-                          value={assignedPersonPhone}
-                          onChange={(e) => setAssignedPersonPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
