@@ -36,10 +36,12 @@ import {
   Eye,
   ClipboardList,
   Building2,
-  Sparkles
+  Sparkles,
+  MessageCircle
 } from "lucide-react";
 import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
+import { AssignComplaintModal } from "./AssignComplaintModal";
 
 interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -63,8 +65,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [operationsStream, setOperationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("ALL");
   const [isAiPdfModalOpen, setIsAiPdfModalOpen] = useState(false);
 
-  // Selected Issue for Full-Page Detail View
+  // Selected Issue for Full-Page Detail View & Assign WhatsApp Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
+  const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
 
   // Filters & Sorting State
   const [activeTab, setActiveTab] = useState<"ALL" | "OVERDUE" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANT_BE_DONE">("ALL");
@@ -1712,6 +1715,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                               ))}
                             </select>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => setAssignModalIssue(issue)}
+                            className="w-full mt-1.5 py-1.5 px-3 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                          >
+                            <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+                            Assign & Notify on WhatsApp
+                          </button>
                         </div>
                       );
                     })()}
@@ -1737,7 +1748,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   <th className="py-3 px-3 w-[13%]">Category / Dept</th>
                   <th className="py-3 px-3 w-[13%]">Mandal / Location</th>
                   <th className="py-3 px-3 w-[12%]">Reported By</th>
-                  <th className="py-3 px-3 w-[14%]">Assign Complaint</th>
+                  <th className="py-3 px-3 w-[16%]">Assign & Notify (WhatsApp)</th>
                   <th className="py-3 px-3 w-[14%]">Timeline & Duration</th>
                   <th className="py-3 px-3 w-[0%] text-right">Action</th>
                 </tr>
@@ -1841,7 +1852,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                         </div>
                       </td>
 
-                      {/* 6. Assign Complaint / Resolved Department */}
+                      {/* 6. Assign Complaint / Resolved Department & WhatsApp Action */}
                       <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                         {isAssignmentDisabled ? (
                           <div>
@@ -1856,13 +1867,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                             </div>
                           </div>
                         ) : (
-                          <div>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
-                              <span>🏛️</span> Assign Complaint
-                            </div>
-                            <div className="text-[10px] text-[#8E9CAE] mb-1 truncate">
-                              Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong>
-                            </div>
+                          <div className="space-y-1">
                             <select
                               value={issue.department || ""}
                               onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
@@ -1875,9 +1880,15 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                                 </option>
                               ))}
                             </select>
-                            <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
-                              Dept: <span className="text-[#D4A24C] font-semibold">{issue.department || "Unassigned"}</span>
-                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setAssignModalIssue(issue)}
+                              className="w-full py-1 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10.5px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20" />
+                              Assign & WhatsApp
+                            </button>
                           </div>
                         )}
                       </td>
@@ -2031,6 +2042,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           constituencyName="Banaganapalle AC (AC-140)"
         />
       )}
+      {/* Assign Complaint & WhatsApp Modal */}
+      <AssignComplaintModal
+        isOpen={!!assignModalIssue}
+        issue={assignModalIssue}
+        onClose={() => setAssignModalIssue(null)}
+        onConfirmAssign={(issueId, assignedVal) => handleAssignDepartment(issueId, assignedVal)}
+      />
     </div>
   );
 };

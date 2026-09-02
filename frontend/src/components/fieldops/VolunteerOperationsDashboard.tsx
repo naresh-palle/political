@@ -39,8 +39,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  MessageCircle
 } from "lucide-react";
+import { AssignComplaintModal } from "./AssignComplaintModal";
 
 interface VolunteerDashboardProps {
   currentUser: UserProfile;
@@ -321,6 +323,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
   // Create Complaint Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState<string>("Roads & Buildings");
   const [newDepartment, setNewDepartment] = useState<string>("8. Roads & Buildings (R&B) Department");
@@ -1321,6 +1324,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                               ))}
                             </select>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => setAssignModalIssue(issue)}
+                            className="w-full mt-1.5 py-1.5 px-3 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                          >
+                            <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+                            Assign & Notify on WhatsApp
+                          </button>
                         </div>
                       );
                     })()}
@@ -1341,7 +1352,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <th className="py-3.5 px-3 w-[13%]">Category / Dept</th>
                     <th className="py-3.5 px-3 w-[13%]">Mandal / Location</th>
                     <th className="py-3.5 px-3 w-[12%]">Reported By</th>
-                    <th className="py-3.5 px-3 w-[14%]">Assign Complaint</th>
+                    <th className="py-3.5 px-3 w-[16%]">Assign & Notify (WhatsApp)</th>
                     <th className="py-3.5 px-3 w-[14%]">Timeline & Duration</th>
                     <th className="py-3.5 px-3 w-[0%] text-right">Action</th>
                   </tr>
@@ -1404,7 +1415,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
                           </div>
                         </td>
-                        {/* Assign Complaint / Resolved Department */}
+                        {/* Assign Complaint / Resolved Department & WhatsApp Action */}
                         <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                           {isAssignmentDisabled ? (
                             <div>
@@ -1419,13 +1430,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                               </div>
                             </div>
                           ) : (
-                            <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
-                                <span>🏛️</span> Assign Complaint
-                              </div>
-                              <div className="text-[10px] text-[#8E9CAE] mb-1 truncate">
-                                Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong>
-                              </div>
+                            <div className="space-y-1">
                               <select
                                 value={issue.department || ""}
                                 onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
@@ -1438,9 +1443,15 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                   </option>
                                 ))}
                               </select>
-                              <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
-                                Dept: <span className="text-[#D4A24C] font-semibold">{issue.department || "Unassigned"}</span>
-                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => setAssignModalIssue(issue)}
+                                className="w-full py-1 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10.5px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20" />
+                                Assign & WhatsApp
+                              </button>
                             </div>
                           )}
                         </td>
@@ -2109,6 +2120,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         </div>
       )}
+      {/* Assign Complaint & Notify WhatsApp Modal */}
+      <AssignComplaintModal
+        isOpen={!!assignModalIssue}
+        issue={assignModalIssue}
+        onClose={() => setAssignModalIssue(null)}
+        onConfirmAssign={(issueId, assignedVal) => handleAssignDepartment(issueId, assignedVal)}
+      />
     </div>
   );
 };
