@@ -105,6 +105,71 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     }
   };
 
+  const getTicketTimingDetails = (item: FieldIssue) => {
+    const regDateRaw = item.createdAt || item.reportedDate;
+    const regDateObj = new Date(regDateRaw);
+    const isValidReg = !isNaN(regDateObj.getTime());
+
+    const registeredTimeFormatted = isValidReg
+      ? regDateObj.toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        })
+      : item.reportedDate;
+
+    const isClosed = item.status === "COMPLETED" || item.status === "RESOLVED";
+    const closeDateRaw = item.completedDate || item.updatedDate || item.updatedAt || item.lastStatusUpdateAt;
+    const closeDateObj = closeDateRaw ? new Date(closeDateRaw) : new Date();
+    const isValidClose = !isNaN(closeDateObj.getTime());
+
+    const closedTimeFormatted = isClosed
+      ? isValidClose
+        ? closeDateObj.toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+          })
+        : item.completedDate || "Resolved"
+      : "In Progress";
+
+    const startTime = isValidReg ? regDateObj.getTime() : new Date(item.reportedDate).getTime();
+    const endTime = isClosed
+      ? isValidClose
+        ? closeDateObj.getTime()
+        : Date.now()
+      : Date.now();
+
+    const diffMs = Math.max(0, endTime - startTime);
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    const remainingHours = diffHours % 24;
+
+    let durationText = "";
+    if (diffDays > 0) {
+      durationText = `${diffDays}d ${remainingHours}h`;
+    } else if (diffHours > 0) {
+      durationText = `${diffHours} hrs`;
+    } else {
+      const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+      durationText = `${diffMins} mins`;
+    }
+
+    return {
+      registeredTimeFormatted,
+      closedTimeFormatted,
+      isClosed,
+      durationText,
+      totalHours: diffHours
+    };
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "NEW":
@@ -227,6 +292,40 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         <h1 className="font-display text-xl sm:text-2xl lg:text-3xl text-[#F5EFE0] font-semibold leading-snug">
           {issue.title}
         </h1>
+
+        {/* Turnaround & Timestamp Intelligence Banner */}
+        {(() => {
+          const timing = getTicketTimingDetails(issue);
+          return (
+            <div className="p-3.5 rounded-xl bg-[#070D15] border border-[#D4A24C]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs">
+              <div className="flex flex-wrap items-center gap-4">
+                <div>
+                  <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold">Registered Timestamp</span>
+                  <strong className="text-[#F5EFE0]">{timing.registeredTimeFormatted}</strong>
+                </div>
+                <div className="border-l border-[#223348] pl-4">
+                  <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold">Closing Timestamp</span>
+                  {timing.isClosed ? (
+                    <strong className="text-emerald-400">{timing.closedTimeFormatted}</strong>
+                  ) : (
+                    <strong className="text-amber-400">In Progress (Open)</strong>
+                  )}
+                </div>
+              </div>
+
+              <div className={`px-3 py-1.5 rounded-xl font-bold tracking-wide uppercase border text-xs flex items-center gap-1.5 ${
+                timing.isClosed
+                  ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
+                  : issue.status === "OVERDUE"
+                  ? "bg-rose-950 text-rose-300 border-rose-500/40 animate-pulse"
+                  : "bg-blue-950 text-blue-300 border-blue-500/40"
+              }`}>
+                <span>⏱️</span>
+                <span>{timing.isClosed ? `Total Resolution Time: ${timing.durationText}` : `Time Open: ${timing.durationText}`}</span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Highlights Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-xs">

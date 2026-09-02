@@ -527,6 +527,105 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     setSortBy("NEWEST");
   };
 
+  const handleAssignVolunteer = async (issueId: string, newVolunteerId: string) => {
+    const selectedVol = volunteers.find((v) => v.id === newVolunteerId);
+    const newVolName = selectedVol ? selectedVol.name : "Unassigned";
+    const newVolPhone = selectedVol ? selectedVol.phone : undefined;
+
+    setIssues((prev) =>
+      prev.map((item) => {
+        if (item.id === issueId) {
+          return {
+            ...item,
+            assignedVolunteerId: newVolunteerId || undefined,
+            assignedVolunteerName: newVolName,
+            assignedVolunteerPhone: newVolPhone,
+            status: item.status === "NEW" && newVolunteerId ? "ASSIGNED" : item.status,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return item;
+      })
+    );
+
+    try {
+      await politicalApiService.updateFieldIssueStatus(issueId, {
+        assignedVolunteerId: newVolunteerId || undefined,
+        assignedVolunteerName: newVolName,
+        assignedVolunteerPhone: newVolPhone,
+        status: "ASSIGNED",
+        remarks: `Assigned to ${newVolName} by Campaign Manager`
+      });
+    } catch (e) {
+      console.warn("Assignment update fallback handled locally", e);
+    }
+  };
+
+  const getTicketTimingDetails = (issue: FieldIssue) => {
+    const regDateRaw = issue.createdAt || issue.reportedDate;
+    const regDateObj = new Date(regDateRaw);
+    const isValidReg = !isNaN(regDateObj.getTime());
+
+    const registeredTimeFormatted = isValidReg
+      ? regDateObj.toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        })
+      : issue.reportedDate;
+
+    const isClosed = issue.status === "COMPLETED" || issue.status === "RESOLVED";
+    const closeDateRaw = issue.completedDate || issue.updatedDate || issue.updatedAt || issue.lastStatusUpdateAt;
+    const closeDateObj = closeDateRaw ? new Date(closeDateRaw) : new Date();
+    const isValidClose = !isNaN(closeDateObj.getTime());
+
+    const closedTimeFormatted = isClosed
+      ? isValidClose
+        ? closeDateObj.toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+          })
+        : issue.completedDate || "Resolved"
+      : "In Progress";
+
+    const startTime = isValidReg ? regDateObj.getTime() : new Date(issue.reportedDate).getTime();
+    const endTime = isClosed
+      ? isValidClose
+        ? closeDateObj.getTime()
+        : Date.now()
+      : Date.now();
+
+    const diffMs = Math.max(0, endTime - startTime);
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    const remainingHours = diffHours % 24;
+
+    let durationText = "";
+    if (diffDays > 0) {
+      durationText = `${diffDays}d ${remainingHours}h`;
+    } else if (diffHours > 0) {
+      durationText = `${diffHours} hrs`;
+    } else {
+      const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+      durationText = `${diffMins} mins`;
+    }
+
+    return {
+      registeredTimeFormatted,
+      closedTimeFormatted,
+      isClosed,
+      durationText,
+      totalHours: diffHours
+    };
+  };
+
   // If an issue is selected, display the full-page dedicated IssueDetailView
   if (selectedIssue) {
     return (
@@ -963,7 +1062,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
             <Users className="w-5 h-5 text-[#D4A24C]" />
-            Assigned Volunteer Squads & Field Force
+            Assign Complaint
           </h2>
           <div className="flex items-center gap-2">
             {filterVolunteerId !== "ALL" && (
@@ -1434,121 +1533,23 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedOperations.map((issue) => (
-              <div
-                key={issue.id}
-                onClick={() => setSelectedIssue(issue)}
-                className="p-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[10px] font-mono text-[#D4A24C] bg-[#070D15] px-1.5 py-0.5 rounded border border-[#D4A24C]/30 font-bold">
-                        #{issue.id}
-                      </span>
-                      <span
-                        className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                          issue.issueType === "GRIEVANCE"
-                            ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
-                            : "bg-sky-950/70 text-sky-300 border-sky-500/40"
-                        }`}
-                      >
-                        {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                          issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                            : issue.status === "IN_PROGRESS"
-                            ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                            : issue.status === "OVERDUE"
-                            ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
-                            : "bg-blue-950/60 text-blue-300 border-blue-500/40"
-                        }`}
-                      >
-                        {issue.status}
-                      </span>
-                    </div>
+            {paginatedOperations.map((issue) => {
+              const timing = getTicketTimingDetails(issue);
 
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                        issue.priority === "URGENT"
-                          ? "text-red-400 bg-red-950/60 border border-red-500/40"
-                          : issue.priority === "HIGH"
-                          ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
-                          : "text-[#D8CFB8] bg-[#070D15]"
-                      }`}
-                    >
-                      {issue.priority}
-                    </span>
-                  </div>
-
-                  <h3 className="font-display text-[15px] font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
-                    {issue.title}
-                  </h3>
-                  <p className="text-[12px] text-[#A69B80] line-clamp-2 leading-relaxed">
-                    {issue.description}
-                  </p>
-                </div>
-
-                <div className="space-y-2 pt-3 border-t border-[#223348]/60 text-[11px]">
-                  <div className="flex items-center justify-between text-[#D8CFB8]">
-                    <span className="flex items-center gap-1 truncate">
-                      <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                      <strong>{issue.mandalName}</strong> · {issue.villageName}
-                    </span>
-                    <span className="text-[#8E9CAE] font-mono text-[10px] shrink-0">AC-140</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[#CBD5E1]">
-                    <span>Created: <strong className="font-mono text-[#F5EFE0]">{issue.reportedDate}</strong></span>
-                    <span>Complete: <strong className="font-mono text-emerald-400">{issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}</strong></span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[#8E9CAE]">
-                    <span>Reporter: <strong className="text-[#F5EFE0]">{issue.reportedBy}</strong></span>
-                    <span>Agent: <strong className="text-[#D4A24C]">{issue.assignedVolunteerName || "Unassigned"}</strong></span>
-                  </div>
-
-                  {issue.lastStatusRemarks && (
-                    <div className="p-2 rounded bg-[#070D15] text-[10px] text-[#E2DCBE] line-clamp-1 border border-[#223348]/50">
-                      <strong className="text-[#D4A24C]">Update: </strong>{issue.lastStatusRemarks}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          /* TABLE VIEW WITH WORDWRAP - ZERO HORIZONTAL SCROLL */
-          <div className="rounded-2xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-xl">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
-                  <th className="py-3 px-3 w-[11%]">ID & Type</th>
-                  <th className="py-3 px-3 w-[29%]">Issue Title & Scope</th>
-                  <th className="py-3 px-3 w-[15%]">Category / Dept</th>
-                  <th className="py-3 px-3 w-[15%]">Mandal / Location</th>
-                  <th className="py-3 px-3 w-[14%]">Reported By</th>
-                  <th className="py-3 px-3 w-[10%]">Timeline</th>
-                  <th className="py-3 px-3 w-[6%] text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#223348]/50">
-                {paginatedOperations.map((issue) => (
-                  <tr
-                    key={issue.id}
-                    onClick={() => setSelectedIssue(issue)}
-                    className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
-                  >
-                    {/* 1. ID & Type */}
-                    <td className="py-3 px-3 align-top">
-                      <div className="font-mono font-bold text-[#D4A24C] text-[11px]">
-                        #{issue.id}
-                      </div>
-                      <div className="mt-1">
+              return (
+                <div
+                  key={issue.id}
+                  onClick={() => setSelectedIssue(issue)}
+                  className="p-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] font-mono text-[#D4A24C] bg-[#070D15] px-1.5 py-0.5 rounded border border-[#D4A24C]/30 font-bold">
+                          #{issue.id}
+                        </span>
                         <span
-                          className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border inline-block ${
+                          className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                             issue.issueType === "GRIEVANCE"
                               ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
                               : "bg-sky-950/70 text-sky-300 border-sky-500/40"
@@ -1556,109 +1557,283 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                         >
                           {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
                         </span>
-                      </div>
-                      <div className="mt-1">
                         <span
-                          className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
+                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
                             issue.status === "COMPLETED" || issue.status === "RESOLVED"
                               ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
                               : issue.status === "IN_PROGRESS"
                               ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                              : issue.status === "OVERDUE" || (issue as any).status === "Can't be done"
-                              ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
+                              : issue.status === "OVERDUE"
+                              ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
                               : "bg-blue-950/60 text-blue-300 border-blue-500/40"
                           }`}
                         >
                           {issue.status}
                         </span>
                       </div>
-                    </td>
 
-                    {/* 2. Title & Scope (Word-wrapped) */}
-                    <td className="py-3 px-3 align-top">
-                      <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors break-words leading-snug">
-                        {issue.title}
-                      </div>
-                      <div className="text-[11px] text-[#8E9CAE] break-words mt-1 leading-relaxed">
-                        {issue.description}
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-1.5">
-                        <span
-                          className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded ${
-                            issue.priority === "URGENT"
-                              ? "text-red-400 bg-red-950/60 border border-red-500/40"
-                              : issue.priority === "HIGH"
-                              ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
-                              : "text-[#CBD5E1] bg-[#0B131E]"
-                          }`}
-                        >
-                          Priority: {issue.priority}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* 3. Category & Department (Word-wrapped) */}
-                    <td className="py-3 px-3 align-top">
-                      <div className="font-medium text-[#F5EFE0] break-words">{issue.category}</div>
-                      {issue.department && (
-                        <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
-                          {issue.department}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* 4. Mandal & Location (Word-wrapped) */}
-                    <td className="py-3 px-3 align-top">
-                      <div className="font-medium text-[#F5EFE0] break-words">{issue.mandalName}</div>
-                      <div className="text-[10.5px] text-[#8E9CAE] break-words mt-0.5">
-                        📍 {issue.villageName || issue.placeName || "Sector Ward"}
-                      </div>
-                    </td>
-
-                    {/* 5. Reported By (Word-wrapped) */}
-                    <td className="py-3 px-3 align-top">
-                      <div className="font-medium text-[#F5EFE0] break-words">{issue.reportedBy}</div>
-                      <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
-                        {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
-                        {issue.reporterPhone ? ` · ${issue.reporterPhone}` : ""}
-                      </div>
-                      <div className="text-[10px] text-[#8E9CAE] break-words mt-0.5">
-                        Agent: <strong className="text-[#CBD5E1]">{issue.assignedVolunteerName || "Unassigned"}</strong>
-                      </div>
-                    </td>
-
-                    {/* 6. Timeline Dates (Word-wrapped) */}
-                    <td className="py-3 px-3 align-top font-mono text-[10.5px]">
-                      <div className="text-[#CBD5E1]">
-                        <span className="text-[#8E9CAE]">Rep: </span>
-                        {issue.reportedDate}
-                      </div>
-                      <div className="mt-1">
-                        {issue.completedDate ? (
-                          <span className="text-emerald-400 font-semibold">Done: {issue.completedDate}</span>
-                        ) : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (
-                          <span className="text-emerald-400 font-semibold">Resolved</span>
-                        ) : (
-                          <span className="text-amber-400/90">Pending</span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* 7. Action */}
-                    <td className="py-3 px-3 align-top text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedIssue(issue);
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+                          issue.priority === "URGENT"
+                            ? "text-red-400 bg-red-950/60 border border-red-500/40"
+                            : issue.priority === "HIGH"
+                            ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
+                            : "text-[#D8CFB8] bg-[#070D15]"
+                        }`}
                       >
-                        <Eye className="w-3.5 h-3.5" />
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        {issue.priority}
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-[15px] font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
+                      {issue.title}
+                    </h3>
+                    <p className="text-[12px] text-[#A69B80] line-clamp-2 leading-relaxed">
+                      {issue.description}
+                    </p>
+                  </div>
+
+                  {/* Registered & Closed Timestamps + Duration Chip */}
+                  <div className="p-2 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between text-[10.5px] font-mono">
+                    <div>
+                      <span className="text-[#8E9CAE] block text-[9.5px]">Reg: {timing.registeredTimeFormatted}</span>
+                      {timing.isClosed ? (
+                        <span className="text-emerald-400 font-semibold block text-[9.5px]">Done: {timing.closedTimeFormatted}</span>
+                      ) : (
+                        <span className="text-amber-400 block font-semibold text-[9.5px]">Status: Open</span>
+                      )}
+                    </div>
+                    <div
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+                        timing.isClosed
+                          ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                          : issue.status === "OVERDUE"
+                          ? "bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse"
+                          : "bg-blue-950/80 text-blue-300 border-blue-500/40"
+                      }`}
+                    >
+                      {timing.isClosed ? `⏱️ Closed in ${timing.durationText}` : `⏱️ Open ${timing.durationText}`}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1.5 border-t border-[#223348]/60 text-[11px]">
+                    <div className="flex items-center justify-between text-[#D8CFB8]">
+                      <span className="flex items-center gap-1 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+                        <strong>{issue.mandalName}</strong> · {issue.villageName}
+                      </span>
+                      <span className="text-[#8E9CAE] font-mono text-[10px] shrink-0">AC-140</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[#8E9CAE]">
+                      <span>Reporter: <strong className="text-[#F5EFE0]">{issue.reportedBy}</strong></span>
+                      <span>Category: <strong className="text-[#D4A24C]">{issue.category}</strong></span>
+                    </div>
+
+                    {/* Direct Assign Complaint Dropdown */}
+                    <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
+                        <span>👤</span> Assign Complaint:
+                      </span>
+                      <select
+                        value={issue.assignedVolunteerId || ""}
+                        onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
+                        className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[175px]"
+                      >
+                        <option value="">-- Unassigned --</option>
+                        {volunteers.map((vol) => (
+                          <option key={vol.id} value={vol.id}>
+                            {vol.name} ({vol.assignedMandalName || "Agent"})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {issue.lastStatusRemarks && (
+                      <div className="p-2 rounded bg-[#070D15] text-[10px] text-[#E2DCBE] line-clamp-1 border border-[#223348]/50">
+                        <strong className="text-[#D4A24C]">Update: </strong>{issue.lastStatusRemarks}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* TABLE VIEW WITH WORDWRAP - ZERO HORIZONTAL SCROLL */
+          <div className="rounded-2xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-xl">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
+                  <th className="py-3 px-3 w-[10%]">ID & Type</th>
+                  <th className="py-3 px-3 w-[24%]">Issue Title & Scope</th>
+                  <th className="py-3 px-3 w-[13%]">Category / Dept</th>
+                  <th className="py-3 px-3 w-[13%]">Mandal / Location</th>
+                  <th className="py-3 px-3 w-[12%]">Reported By</th>
+                  <th className="py-3 px-3 w-[14%]">Assign Complaint</th>
+                  <th className="py-3 px-3 w-[14%]">Timeline & Duration</th>
+                  <th className="py-3 px-3 w-[0%] text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#223348]/50">
+                {paginatedOperations.map((issue) => {
+                  const timing = getTicketTimingDetails(issue);
+
+                  return (
+                    <tr
+                      key={issue.id}
+                      onClick={() => setSelectedIssue(issue)}
+                      className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
+                    >
+                      {/* 1. ID & Type */}
+                      <td className="py-3 px-3 align-top">
+                        <div className="font-mono font-bold text-[#D4A24C] text-[11px]">
+                          #{issue.id}
+                        </div>
+                        <div className="mt-1">
+                          <span
+                            className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border inline-block ${
+                              issue.issueType === "GRIEVANCE"
+                                ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
+                                : "bg-sky-950/70 text-sky-300 border-sky-500/40"
+                            }`}
+                          >
+                            {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
+                          </span>
+                        </div>
+                        <div className="mt-1">
+                          <span
+                            className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
+                              issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                                ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                                : issue.status === "IN_PROGRESS"
+                                ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                                : issue.status === "OVERDUE" || (issue as any).status === "Can't be done"
+                                ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
+                                : "bg-blue-950/60 text-blue-300 border-blue-500/40"
+                            }`}
+                          >
+                            {issue.status}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 2. Title & Scope (Word-wrapped) */}
+                      <td className="py-3 px-3 align-top">
+                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors break-words leading-snug">
+                          {issue.title}
+                        </div>
+                        <div className="text-[11px] text-[#8E9CAE] break-words mt-1 leading-relaxed">
+                          {issue.description}
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                          <span
+                            className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded ${
+                              issue.priority === "URGENT"
+                                ? "text-red-400 bg-red-950/60 border border-red-500/40"
+                                : issue.priority === "HIGH"
+                                ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
+                                : "text-[#CBD5E1] bg-[#0B131E]"
+                            }`}
+                          >
+                            Priority: {issue.priority}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 3. Category & Department (Word-wrapped) */}
+                      <td className="py-3 px-3 align-top">
+                        <div className="font-medium text-[#F5EFE0] break-words">{issue.category}</div>
+                        {issue.department && (
+                          <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
+                            {issue.department}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 4. Mandal & Location (Word-wrapped) */}
+                      <td className="py-3 px-3 align-top">
+                        <div className="font-medium text-[#F5EFE0] break-words">{issue.mandalName}</div>
+                        <div className="text-[10.5px] text-[#8E9CAE] break-words mt-0.5">
+                          📍 {issue.villageName || issue.placeName || "Sector Ward"}
+                        </div>
+                      </td>
+
+                      {/* 5. Reported By (Word-wrapped) */}
+                      <td className="py-3 px-3 align-top">
+                        <div className="font-medium text-[#F5EFE0] break-words">{issue.reportedBy}</div>
+                        <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
+                          {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                          {issue.reporterPhone ? ` · ${issue.reporterPhone}` : ""}
+                        </div>
+                      </td>
+
+                      {/* 6. Assign Complaint (Direct Dropdown) */}
+                      <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
+                          <span>👤</span> Assign Complaint
+                        </div>
+                        <select
+                          value={issue.assignedVolunteerId || ""}
+                          onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
+                          className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                        >
+                          <option value="">-- Unassigned --</option>
+                          {volunteers.map((vol) => (
+                            <option key={vol.id} value={vol.id}>
+                              {vol.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
+                          Agent: <span className="text-[#CBD5E1] font-semibold">{issue.assignedVolunteerName || "Unassigned"}</span>
+                        </div>
+                      </td>
+
+                      {/* 7. Timeline Dates & Duration (Word-wrapped) */}
+                      <td className="py-3 px-3 align-top font-mono text-[10.5px]">
+                        <div className="text-[#CBD5E1]">
+                          <span className="text-[#8E9CAE]">Reg: </span>
+                          {timing.registeredTimeFormatted}
+                        </div>
+                        <div className="mt-0.5">
+                          {timing.isClosed ? (
+                            <span className="text-emerald-400 font-semibold">Done: {timing.closedTimeFormatted}</span>
+                          ) : (
+                            <span className="text-amber-400/90 font-semibold">Status: Open</span>
+                          )}
+                        </div>
+                        <div className="mt-1">
+                          <span
+                            className={`inline-block px-1.5 py-0.2 rounded text-[9.5px] font-bold uppercase border ${
+                              timing.isClosed
+                                ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                                : issue.status === "OVERDUE"
+                                ? "bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse"
+                                : "bg-blue-950/80 text-blue-300 border-blue-500/40"
+                            }`}
+                          >
+                            ⏱️ {timing.isClosed ? `Closed in ${timing.durationText}` : `Open ${timing.durationText}`}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* 8. Action */}
+                      <td className="py-3 px-3 align-top text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedIssue(issue);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

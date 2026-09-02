@@ -231,51 +231,81 @@ export const AiTicketsPdfReportModal: React.FC<AiTicketsPdfReportModalProps> = (
         <table className="w-full text-left text-xs border-collapse border border-slate-300">
           <thead>
             <tr className="bg-slate-100 text-slate-900 border-b border-slate-300 uppercase text-[9.5px] font-bold">
-              <th className="py-2 px-2 border border-slate-300 w-[12%]">ID & Type</th>
-              <th className="py-2 px-2 border border-slate-300 w-[30%]">Issue Title & Scope</th>
-              <th className="py-2 px-2 border border-slate-300 w-[16%]">Category / Dept</th>
-              <th className="py-2 px-2 border border-slate-300 w-[15%]">Mandal / Location</th>
-              <th className="py-2 px-2 border border-slate-300 w-[15%]">Reported By</th>
-              <th className="py-2 px-2 border border-slate-300 w-[12%]">Timeline / Status</th>
+              <th className="py-2 px-2 border border-slate-300 w-[10%]">ID & Type</th>
+              <th className="py-2 px-2 border border-slate-300 w-[26%]">Issue Title & Scope</th>
+              <th className="py-2 px-2 border border-slate-300 w-[15%]">Category / Dept</th>
+              <th className="py-2 px-2 border border-slate-300 w-[14%]">Mandal / Location</th>
+              <th className="py-2 px-2 border border-slate-300 w-[13%]">Reported By</th>
+              <th className="py-2 px-2 border border-slate-300 w-[11%]">Assigned Agent</th>
+              <th className="py-2 px-2 border border-slate-300 w-[11%]">Timeline & Duration</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-300">
-            {issues.map((issue) => (
-              <tr key={issue.id} className="text-slate-800">
-                <td className="py-2 px-2 border border-slate-300 align-top font-mono text-[10px]">
-                  <strong>#{issue.id}</strong>
-                  <div className="text-[9px] uppercase mt-0.5 text-slate-600">
-                    {(issue as any).issueType || "TICKET"}
-                  </div>
-                  <div className="text-[9px] font-bold mt-0.5">
-                    {issue.status}
-                  </div>
-                </td>
-                <td className="py-2 px-2 border border-slate-300 align-top">
-                  <div className="font-bold text-slate-900 leading-snug">{issue.title}</div>
-                  <div className="text-[10px] text-slate-600 mt-0.5">{issue.description}</div>
-                  <div className="text-[9px] font-bold text-slate-700 mt-1">Priority: {issue.priority}</div>
-                </td>
-                <td className="py-2 px-2 border border-slate-300 align-top text-[10.5px]">
-                  <div className="font-semibold">{issue.category}</div>
-                  {issue.department && <div className="text-[9.5px] text-slate-600 mt-0.5">{issue.department}</div>}
-                </td>
-                <td className="py-2 px-2 border border-slate-300 align-top text-[10.5px]">
-                  <div className="font-semibold">{issue.mandalName}</div>
-                  <div className="text-[9.5px] text-slate-600">{issue.villageName || (issue as any).placeName || "Town"}</div>
-                </td>
-                <td className="py-2 px-2 border border-slate-300 align-top text-[10.5px]">
-                  <div className="font-semibold">{issue.reportedBy}</div>
-                  <div className="text-[9.5px] text-slate-600">{(issue as any).reporterType || "Citizen"} {issue.reporterPhone ? `· ${issue.reporterPhone}` : ""}</div>
-                </td>
-                <td className="py-2 px-2 border border-slate-300 align-top font-mono text-[9.5px]">
-                  <div>Rep: {issue.reportedDate}</div>
-                  <div className="mt-0.5">
-                    {(issue as any).completedDate ? `Done: ${(issue as any).completedDate}` : issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Resolved" : "Pending"}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {issues.map((issue) => {
+              const regDateRaw = issue.createdAt || issue.reportedDate;
+              const regDateObj = new Date(regDateRaw);
+              const isValidReg = !isNaN(regDateObj.getTime());
+              const registeredTimeFormatted = isValidReg
+                ? regDateObj.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                : issue.reportedDate;
+
+              const isClosed = issue.status === "COMPLETED" || issue.status === "RESOLVED";
+              const closeDateRaw = issue.completedDate || issue.updatedDate || issue.updatedAt || issue.lastStatusUpdateAt;
+              const closeDateObj = closeDateRaw ? new Date(closeDateRaw) : new Date();
+              const isValidClose = !isNaN(closeDateObj.getTime());
+
+              const startTime = isValidReg ? regDateObj.getTime() : new Date(issue.reportedDate).getTime();
+              const endTime = isClosed ? (isValidClose ? closeDateObj.getTime() : Date.now()) : Date.now();
+              const diffMs = Math.max(0, endTime - startTime);
+              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+              const diffDays = Math.floor(diffHours / 24);
+              const remainingHours = diffHours % 24;
+
+              let durationText = diffDays > 0 ? `${diffDays}d ${remainingHours}h` : diffHours > 0 ? `${diffHours} hrs` : `${Math.max(1, Math.floor(diffMs / (1000 * 60)))} mins`;
+
+              return (
+                <tr key={issue.id} className="text-slate-800">
+                  <td className="py-2 px-2 border border-slate-300 align-top font-mono text-[10px]">
+                    <strong>#{issue.id}</strong>
+                    <div className="text-[9px] uppercase mt-0.5 text-slate-600">
+                      {(issue as any).issueType || "TICKET"}
+                    </div>
+                    <div className="text-[9px] font-bold mt-0.5">
+                      {issue.status}
+                    </div>
+                  </td>
+                  <td className="py-2 px-2 border border-slate-300 align-top">
+                    <div className="font-bold text-slate-900 leading-snug">{issue.title}</div>
+                    <div className="text-[10px] text-slate-600 mt-0.5">{issue.description}</div>
+                    <div className="text-[9px] font-bold text-slate-700 mt-1">Priority: {issue.priority}</div>
+                  </td>
+                  <td className="py-2 px-2 border border-slate-300 align-top text-[10.5px]">
+                    <div className="font-semibold">{issue.category}</div>
+                    {issue.department && <div className="text-[9.5px] text-slate-600 mt-0.5">{issue.department}</div>}
+                  </td>
+                  <td className="py-2 px-2 border border-slate-300 align-top text-[10.5px]">
+                    <div className="font-semibold">{issue.mandalName}</div>
+                    <div className="text-[9.5px] text-slate-600">{issue.villageName || (issue as any).placeName || "Town"}</div>
+                  </td>
+                  <td className="py-2 px-2 border border-slate-300 align-top text-[10.5px]">
+                    <div className="font-semibold">{issue.reportedBy}</div>
+                    <div className="text-[9.5px] text-slate-600">{(issue as any).reporterType || "Citizen"} {issue.reporterPhone ? `· ${issue.reporterPhone}` : ""}</div>
+                  </td>
+                  <td className="py-2 px-2 border border-slate-300 align-top text-[10px]">
+                    <div className="font-bold text-slate-900">{issue.assignedVolunteerName || "Unassigned"}</div>
+                  </td>
+                  <td className="py-2 px-2 border border-slate-300 align-top font-mono text-[9.5px]">
+                    <div>Reg: {registeredTimeFormatted}</div>
+                    <div className="mt-0.5">
+                      {isClosed ? `Done: ${issue.completedDate || "Resolved"}` : "Status: Open"}
+                    </div>
+                    <div className="text-[9px] font-bold text-slate-900 mt-0.5">
+                      ⏱️ {isClosed ? `Closed in ${durationText}` : `Open ${durationText}`}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

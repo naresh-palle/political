@@ -1036,6 +1036,20 @@ export const politicalApiService = {
     };
   },
 
+  async updateFieldIssueStatus(issueId: string, payload: any): Promise<any> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      // Fallback
+    }
+    return { issueId, ...payload, updatedAt: new Date().toISOString() };
+  },
+
   async getFieldIssueById(issueId: string, userId?: string, userRole?: string): Promise<any> {
     try {
       const qp = new URLSearchParams();
