@@ -25,8 +25,8 @@ import {
 } from "lucide-react";
 
 interface NavbarProps {
-  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts";
-  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts") => void;
+  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets";
+  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets") => void;
   isAuditView?: boolean;
   onResetToSelect?: () => void;
   currentProfile: UserProfile;
@@ -155,25 +155,40 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Center Navigation Products */}
-          <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1">
+          {/* Center Navigation Products - Top Menu Bar */}
+          <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1.5">
+            {/* Tab 1: Ground Intake & Issues */}
             <button
               onClick={() => onProductChange("fieldops")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeProduct === "fieldops"
-                  ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
+                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
                   : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
               }`}
             >
               <ClipboardList className="w-3.5 h-3.5" />
-              {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Grievances" : "Field Operations"}
+              <span>Ground Intake & Issues</span>
             </button>
 
+            {/* Tab 2: Assign Tickets / Complaints */}
+            <button
+              onClick={() => onProductChange("assigntickets")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeProduct === "assigntickets"
+                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
+                  : "text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 text-[#D4A24C]" />
+              <span>Assign Tickets / Complaints</span>
+            </button>
+
+            {/* Tab 3: Contact Database */}
             <button
               onClick={() => onProductChange("contacts")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeProduct === "contacts"
-                  ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
+                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
                   : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
               }`}
             >

@@ -44,8 +44,9 @@ import {
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 
-interface VolunteerDashboardProps {
+export interface VolunteerDashboardProps {
   currentUser: UserProfile;
+  initialFilterStatus?: string;
 }
 
 const CATEGORIES = [
@@ -294,7 +295,8 @@ const FIXED_MANDALS_TOWNS = [
 ];
 
 export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = ({
-  currentUser
+  currentUser,
+  initialFilterStatus
 }) => {
   const [issues, setIssues] = useState<FieldIssue[]>([]);
   const [volunteers, setVolunteers] = useState<UserProfile[]>([]);
@@ -307,7 +309,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
   // Filters & Sorting State
-  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [filterStatus, setFilterStatus] = useState<string>(initialFilterStatus || "ALL");
+
+  useEffect(() => {
+    if (initialFilterStatus) {
+      setFilterStatus(initialFilterStatus);
+    }
+  }, [initialFilterStatus]);
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
@@ -924,44 +932,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             <span>Supervising Manager:</span>
             <strong className="text-[#D4A24C]">{currentUser.directorName?.replace("Director", "Manager") || "Demo Manager"}</strong>
           </div>
-        </div>
-      </div>
-
-      {/* Top Stream Navigation Tabs: 1. Ground Intake, 2. Assign Tickets, 3. Contact Database */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-2 bg-[#091422] border border-[#22354D] rounded-2xl shadow-xl">
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-          <button
-            onClick={() => {
-              setFilterStatus("ALL");
-              setSearchQuery("");
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm shadow-md cursor-pointer transition-all shrink-0"
-          >
-            <span>📋</span> Ground Intake & Issues (1)
-          </button>
-
-          <button
-            onClick={() => {
-              setFilterStatus("NEW");
-              setSearchQuery("");
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#14263B] hover:bg-[#1E3654] text-[#D4A24C] border border-[#D4A24C]/40 font-bold text-xs sm:text-sm shadow-md cursor-pointer transition-all shrink-0"
-          >
-            <span>🏛️</span> Assign Tickets / Complaints (2)
-          </button>
-
-          <button
-            onClick={() => {
-              window.location.hash = "#/contacts";
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0E1A29] hover:bg-[#16273B] text-[#8E9CAE] hover:text-[#F5EFE0] border border-[#223348] font-semibold text-xs sm:text-sm cursor-pointer transition-all shrink-0"
-          >
-            <span>👥</span> Contact Database (3)
-          </button>
-        </div>
-
-        <div className="text-xs font-mono text-[#D4A24C] font-semibold hidden lg:block px-3">
-          Banaganapalle PGRS Command Center
         </div>
       </div>
 
@@ -1785,37 +1755,15 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   <input
                     type="text"
                     required
+                    placeholder="Enter issue headline (e.g. Drinking Water Pipeline Leakage)..."
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                   />
                 </div>
 
-                {/* 2 & 3. Category & Department (Department auto-fetched from Category) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                      Category *
-                    </label>
-                    <select
-                      value={newCategory}
-                      onChange={(e) => {
-                        const cat = e.target.value;
-                        setNewCategory(cat);
-                        if (CATEGORY_TO_DEPARTMENT[cat]) {
-                          setNewDepartment(CATEGORY_TO_DEPARTMENT[cat]);
-                        }
-                      }}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
-                    >
-                      {CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
+                {/* 2. Department Selection (PGRS 17 Departments + Other) */}
+                <div className="space-y-3 p-4 rounded-xl bg-[#071322]/80 border border-[#22405E]">
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
                       Department / శాఖ (PGRS 17 Departments) *
@@ -1825,6 +1773,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       onChange={(e) => {
                         const dept = e.target.value;
                         setNewDepartment(dept);
+                        setNewCategory(dept.split(".")[1]?.trim() || dept);
                         const foundItem = PGRS_DEPARTMENTS_LIST.find((d) => d.name === dept);
                         if (foundItem && foundItem.subDetails.length > 0) {
                           setNewSchemeSubDetail(foundItem.subDetails[0]);
@@ -1832,7 +1781,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           setNewSchemeSubDetail("");
                         }
                       }}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
+                      className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
                     >
                       {DEPARTMENTS.map((dept) => (
                         <option key={dept} value={dept}>
@@ -1853,7 +1802,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             <select
                               value={newSchemeSubDetail}
                               onChange={(e) => setNewSchemeSubDetail(e.target.value)}
-                              className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-medium cursor-pointer"
+                              className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-medium cursor-pointer"
                             >
                               {foundItem.subDetails.map((sub) => (
                                 <option key={sub} value={sub}>
@@ -1878,7 +1827,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           placeholder="Enter specific department / office name in English or Telugu..."
                           value={otherDepartmentText}
                           onChange={(e) => setOtherDepartmentText(e.target.value)}
-                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                          className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
                         />
                       </div>
                     )}

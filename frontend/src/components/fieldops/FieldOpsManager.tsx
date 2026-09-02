@@ -6,10 +6,11 @@ import { VolunteerOperationsDashboard } from "./VolunteerOperationsDashboard";
 
 interface FieldOpsManagerProps {
   currentUser: UserProfile;
+  initialFilter?: string;
   onUpdateProfile?: (updated: UserProfile) => void;
 }
 
-export const FieldOpsManager: React.FC<FieldOpsManagerProps> = ({ currentUser, onUpdateProfile }) => {
+export const FieldOpsManager: React.FC<FieldOpsManagerProps> = ({ currentUser, initialFilter, onUpdateProfile }) => {
   // Determine 4-tier Primary Role
   const role = currentUser.primaryRole || (
     currentUser.roleId === "SUPER_ADMIN" || currentUser.role === "super_admin" || currentUser.isPlatformAdmin
@@ -22,11 +23,11 @@ export const FieldOpsManager: React.FC<FieldOpsManagerProps> = ({ currentUser, o
   );
 
   if (role === "VOLUNTEER") {
-    return <VolunteerOperationsDashboard currentUser={currentUser} />;
+    return <VolunteerOperationsDashboard currentUser={currentUser} initialFilterStatus={initialFilter} />;
   }
 
   if (role === "DIRECTOR") {
-    return <DirectorOperationsDashboard currentUser={currentUser} />;
+    return <DirectorOperationsDashboard currentUser={currentUser} initialFilterStatus={initialFilter} />;
   }
 
   // Renders for both Level 1 Platform Super Admin and Level 2 Political / Constituency Admin

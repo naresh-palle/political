@@ -43,8 +43,9 @@ import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 
-interface DirectorDashboardProps {
+export interface DirectorDashboardProps {
   currentUser: UserProfile;
+  initialFilterStatus?: string;
 }
 
 const DEPARTMENTS = [
@@ -53,7 +54,8 @@ const DEPARTMENTS = [
 ];
 
 export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
-  currentUser
+  currentUser,
+  initialFilterStatus
 }) => {
   const [issues, setIssues] = useState<FieldIssue[]>([]);
   const [grievances, setGrievances] = useState<GrievanceItem[]>([]);
@@ -65,12 +67,20 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [operationsStream, setOperationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("ALL");
   const [isAiPdfModalOpen, setIsAiPdfModalOpen] = useState(false);
 
+  // Active Status Tab State
+  const [activeTab, setActiveTab] = useState<string>(initialFilterStatus === "NEW" ? "PENDING" : initialFilterStatus || "ALL");
+
+  useEffect(() => {
+    if (initialFilterStatus) {
+      setActiveTab(initialFilterStatus === "NEW" ? "PENDING" : initialFilterStatus);
+    }
+  }, [initialFilterStatus]);
+
   // Selected Issue for Full-Page Detail View & Assign WhatsApp Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
   const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
 
   // Filters & Sorting State
-  const [activeTab, setActiveTab] = useState<"ALL" | "OVERDUE" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANT_BE_DONE">("ALL");
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterDepartment, setFilterDepartment] = useState<string>("ALL");
   const [filterType, setFilterType] = useState<string>("ALL");
@@ -1244,44 +1254,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             })}
           </div>
         )}
-      </div>
-
-      {/* Top Stream Navigation Tabs: 1. Ground Intake, 2. Assign Tickets, 3. Contact Database */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-2 bg-[#091422] border border-[#22354D] rounded-2xl shadow-xl">
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-          <button
-            onClick={() => {
-              setActiveTab("ALL");
-              setSearchQuery("");
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm shadow-md cursor-pointer transition-all shrink-0"
-          >
-            <span>📋</span> Ground Intake & Issues (1)
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("PENDING");
-              setSearchQuery("");
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#14263B] hover:bg-[#1E3654] text-[#D4A24C] border border-[#D4A24C]/40 font-bold text-xs sm:text-sm shadow-md cursor-pointer transition-all shrink-0"
-          >
-            <span>🏛️</span> Assign Tickets / Complaints (2)
-          </button>
-
-          <button
-            onClick={() => {
-              window.location.hash = "#/contacts";
-            }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0E1A29] hover:bg-[#16273B] text-[#8E9CAE] hover:text-[#F5EFE0] border border-[#223348] font-semibold text-xs sm:text-sm cursor-pointer transition-all shrink-0"
-          >
-            <span>👥</span> Contact Database (3)
-          </button>
-        </div>
-
-        <div className="text-xs font-mono text-[#D4A24C] font-semibold hidden lg:block px-3">
-          Banaganapalle PGRS Command Center
-        </div>
       </div>
 
       {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters) */}

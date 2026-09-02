@@ -36,10 +36,11 @@ const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
 const PRODUCT_STORAGE_KEY = "leaders_lens_active_product";
 
-type ActiveProductType = "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts";
+type ActiveProductType = "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets";
 
 const PRODUCT_TO_HASH_MAP: Record<ActiveProductType, string> = {
   fieldops: "#/field-ops",
+  assigntickets: "#/assign-tickets",
   grievances: "#/grievances",
   volunteers: "#/volunteers",
   webbuilder: "#/web-builder",
@@ -51,6 +52,8 @@ const PRODUCT_TO_HASH_MAP: Record<ActiveProductType, string> = {
 const HASH_TO_PRODUCT_MAP: Record<string, ActiveProductType> = {
   "#/field-ops": "fieldops",
   "#/fieldops": "fieldops",
+  "#/assign-tickets": "assigntickets",
+  "#/assigntickets": "assigntickets",
   "#/grievances": "grievances",
   "#/volunteers": "volunteers",
   "#/web-builder": "webbuilder",
@@ -155,6 +158,7 @@ function AppInner() {
       targetHash = PRODUCT_TO_HASH_MAP[activeProduct] || "#/field-ops";
       const titles: Record<ActiveProductType, string> = {
         fieldops: "Field Operations Command | Leader's Lens",
+        assigntickets: "Assign Tickets & Complaints | Leader's Lens",
         grievances: "Grievance Management | Leader's Lens",
         volunteers: "Volunteer Field Force | Leader's Lens",
         webbuilder: "Campaign Web Builder | Leader's Lens",
@@ -341,9 +345,14 @@ function AppInner() {
             />
 
             <main className="flex-1 w-full overflow-x-hidden">
-              {/* Module 1: FIELD OPERATIONS & RBAC (ADMIN -> DIRECTOR -> VOLUNTEER) */}
+              {/* Module 1: FIELD OPERATIONS & GROUND INTAKE */}
               {activeProduct === "fieldops" && (
                 <FieldOpsManager currentUser={currentProfile} onUpdateProfile={handleUpdateProfile} />
+              )}
+
+              {/* Module 1b: ASSIGN TICKETS / UNASSIGNED COMPLAINTS */}
+              {activeProduct === "assigntickets" && (
+                <FieldOpsManager currentUser={currentProfile} initialFilter="NEW" onUpdateProfile={handleUpdateProfile} />
               )}
 
               {/* Module 2: PITCH / CONSTITUENCY AUDIT (ADMIN ONLY) */}
