@@ -544,6 +544,8 @@ export interface FieldIssue {
   lastStatusRemarks?: string;
   lastStatusProof?: string;
   completedDate?: string;
+  completedByPerson?: string;
+  completedDepartment?: string;
   updatedDate?: string;
   createdBy: string;
   createdByRole: string;

@@ -297,31 +297,58 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         {(() => {
           const timing = getTicketTimingDetails(issue);
           return (
-            <div className="p-3.5 rounded-xl bg-[#070D15] border border-[#D4A24C]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs">
-              <div className="flex flex-wrap items-center gap-4">
-                <div>
-                  <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold">Registered Timestamp</span>
-                  <strong className="text-[#F5EFE0]">{timing.registeredTimeFormatted}</strong>
+            <div className="p-4 rounded-2xl bg-[#070D15] border border-[#D4A24C]/40 space-y-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div>
+                    <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold">Registered Timestamp</span>
+                    <strong className="text-[#F5EFE0]">{timing.registeredTimeFormatted}</strong>
+                  </div>
+                  <div className="border-l border-[#223348] pl-4">
+                    <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold font-mono">Closing Timestamp</span>
+                    {timing.isClosed ? (
+                      <strong className="text-emerald-400 font-mono">{timing.closedTimeFormatted}</strong>
+                    ) : (
+                      <strong className="text-amber-400 font-mono">In Progress (Open)</strong>
+                    )}
+                  </div>
                 </div>
-                <div className="border-l border-[#223348] pl-4">
-                  <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold">Closing Timestamp</span>
-                  {timing.isClosed ? (
-                    <strong className="text-emerald-400">{timing.closedTimeFormatted}</strong>
-                  ) : (
-                    <strong className="text-amber-400">In Progress (Open)</strong>
-                  )}
+
+                <div className={`px-3 py-1.5 rounded-xl font-bold tracking-wide uppercase border text-xs flex items-center gap-1.5 ${
+                  timing.isClosed
+                    ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
+                    : issue.status === "OVERDUE"
+                    ? "bg-rose-950 text-rose-300 border-rose-500/40 animate-pulse"
+                    : "bg-blue-950 text-blue-300 border-blue-500/40"
+                }`}>
+                  <span>⏱️</span>
+                  <span>{timing.isClosed ? `Total Resolution Time: ${timing.durationText}` : `Time Open: ${timing.durationText}`}</span>
                 </div>
               </div>
 
-              <div className={`px-3 py-1.5 rounded-xl font-bold tracking-wide uppercase border text-xs flex items-center gap-1.5 ${
-                timing.isClosed
-                  ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
-                  : issue.status === "OVERDUE"
-                  ? "bg-rose-950 text-rose-300 border-rose-500/40 animate-pulse"
-                  : "bg-blue-950 text-blue-300 border-blue-500/40"
-              }`}>
-                <span>⏱️</span>
-                <span>{timing.isClosed ? `Total Resolution Time: ${timing.durationText}` : `Time Open: ${timing.durationText}`}</span>
+              {/* Explicit Completed/Resolved Person & Department Banner */}
+              <div className="p-3 rounded-xl bg-[#0E1B2B] border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏛️</span>
+                  <div>
+                    <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Assigned / Resolving Department</span>
+                    <strong className="text-[#D4A24C] font-semibold text-sm">
+                      {issue.completedDepartment || issue.department || "General Administration"}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 border-t sm:border-t-0 sm:border-l border-[#223348] pt-2 sm:pt-0 sm:pl-4">
+                  <span className="text-base">👤</span>
+                  <div>
+                    <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">
+                      {timing.isClosed ? "Completed / Resolved By Person" : "Assigned Official / Agent"}
+                    </span>
+                    <strong className="text-[#F5EFE0] font-semibold text-sm">
+                      {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
+                    </strong>
+                  </div>
+                </div>
               </div>
             </div>
           );
@@ -331,8 +358,8 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-xs">
           <div className="space-y-1">
             <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">Category & Dept</span>
-            <span className="font-medium text-[#F5EFE0] block truncate">
-              {issue.category} {issue.department ? `· ${issue.department.split("(")[0]}` : ""}
+            <span className="font-medium text-[#D4A24C] block truncate">
+              {issue.department || issue.category}
             </span>
           </div>
 
@@ -353,10 +380,12 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">Completion Date</span>
+            <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">
+              {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed By Person" : "Assigned Person"}
+            </span>
             <span className="font-mono text-emerald-400 flex items-center gap-1.5 font-semibold truncate">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              {issue.completedDate || (issue.status === "COMPLETED" || issue.status === "RESOLVED" ? (issue.updatedDate || issue.reportedDate) : "In Progress")}
+              {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
             </span>
           </div>
         </div>
@@ -465,8 +494,19 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
 
             <div className="space-y-3 text-xs">
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[#8E9CAE]">Assigned Field Agent:</span>
-                <strong className="text-[#F5EFE0]">{issue.assignedVolunteerName || "Demo Volunteer"}</strong>
+                <span className="text-[#8E9CAE]">Assigned Department:</span>
+                <strong className="text-[#D4A24C] text-right truncate max-w-[200px]">
+                  {issue.completedDepartment || issue.department || "General Administration"}
+                </strong>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                <span className="text-[#8E9CAE]">
+                  {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By:" : "Assigned Field Agent:"}
+                </span>
+                <strong className="text-[#F5EFE0] text-right">
+                  {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
+                </strong>
               </div>
 
               {issue.assignedVolunteerPhone && (
