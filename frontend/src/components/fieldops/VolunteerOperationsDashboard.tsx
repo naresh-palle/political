@@ -568,6 +568,38 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     }
   };
 
+  const handleAssignDepartment = async (issueId: string, newDept: string) => {
+    let finalDept = newDept;
+    if (newDept === "Other Government Department") {
+      const customText = prompt("Specify custom Government Department details:");
+      if (customText && customText.trim()) {
+        finalDept = `Other: ${customText.trim()}`;
+      }
+    }
+
+    setIssues((prev) =>
+      prev.map((item) => {
+        if (item.id === issueId) {
+          return {
+            ...item,
+            department: finalDept,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return item;
+      })
+    );
+
+    try {
+      await politicalApiService.updateFieldIssueStatus(issueId, {
+        department: finalDept,
+        remarks: `Department assigned to ${finalDept}`
+      });
+    } catch (e) {
+      console.warn("Department update error", e);
+    }
+  };
+
   const getTicketTimingDetails = (issue: FieldIssue) => {
     const regDateRaw = issue.createdAt || issue.reportedDate;
     const regDateObj = new Date(regDateRaw);
@@ -1049,7 +1081,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       )}
                     </div>
 
-                    {/* Direct Assign Complaint Dropdown */}
+                    {/* Direct Assign Complaint (Government Department) Dropdown */}
                     {(() => {
                       const isAssignmentDisabled =
                         issue.status === "IN_PROGRESS" ||
@@ -1061,19 +1093,19 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       return (
                         <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
                           <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
-                            <span>👤</span> Assign Complaint:
+                            <span>🏛️</span> Assign Complaint:
                           </span>
                           <select
-                            value={issue.assignedVolunteerId || ""}
+                            value={issue.department || ""}
                             disabled={isAssignmentDisabled}
-                            onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
-                            title={isAssignmentDisabled ? "Assignment is locked for tickets in progress or completed" : "Select volunteer agent"}
-                            className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[175px]"
+                            onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
+                            title={isAssignmentDisabled ? "Department assignment is locked for tickets in progress or completed" : "Assign to Government Department"}
+                            className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[190px]"
                           >
-                            <option value="">-- Unassigned --</option>
-                            {volunteers.map((vol) => (
-                              <option key={vol.id} value={vol.id}>
-                                {vol.name} {vol.id === currentUser.id ? "(Me)" : ""}
+                            <option value="">-- Select Department --</option>
+                            {DEPARTMENTS.map((dept) => (
+                              <option key={dept} value={dept}>
+                                {dept}
                               </option>
                             ))}
                           </select>
@@ -1160,27 +1192,27 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
                           </div>
                         </td>
-                        {/* Assign Complaint Dropdown */}
+                        {/* Assign Complaint Dropdown (Government Department) */}
                         <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                           <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1 flex items-center gap-1">
-                            <span>👤</span> Assign Complaint {isAssignmentDisabled && <span className="text-[9px] text-[#8E9CAE]">🔒 Locked</span>}
+                            <span>🏛️</span> Assign Complaint {isAssignmentDisabled && <span className="text-[9px] text-[#8E9CAE]">🔒 Locked</span>}
                           </div>
                           <select
-                            value={issue.assignedVolunteerId || ""}
+                            value={issue.department || ""}
                             disabled={isAssignmentDisabled}
-                            onChange={(e) => handleAssignVolunteer(issue.id, e.target.value)}
-                            title={isAssignmentDisabled ? "Assignment is locked for tickets in progress or completed" : "Select volunteer agent"}
+                            onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
+                            title={isAssignmentDisabled ? "Department assignment is locked for tickets in progress or completed" : "Assign to Government Department"}
                             className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#070D15]/60 disabled:border-[#1E2E42] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
                           >
-                            <option value="">-- Unassigned --</option>
-                            {volunteers.map((vol) => (
-                              <option key={vol.id} value={vol.id}>
-                                {vol.name} {vol.id === currentUser.id ? "(Me)" : ""}
+                            <option value="">-- Select Department --</option>
+                            {DEPARTMENTS.map((dept) => (
+                              <option key={dept} value={dept}>
+                                {dept}
                               </option>
                             ))}
                           </select>
                           <div className="text-[10px] text-[#8E9CAE] mt-1 truncate">
-                            Agent: <span className="text-[#CBD5E1] font-semibold">{issue.assignedVolunteerName || "Unassigned"}</span>
+                            Dept: <span className="text-[#D4A24C] font-semibold">{issue.department || "Unassigned"}</span>
                           </div>
                         </td>
                         {/* Timeline & Duration */}
