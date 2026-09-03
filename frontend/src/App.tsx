@@ -89,7 +89,7 @@ function AppInner() {
   const [viewState, setViewState] = useState<"select" | "loading" | "audit">("select");
   
   const [activeProduct, setActiveProduct] = useState<ActiveProductType>(() => {
-    const currentHash = window.location.hash.toLowerCase();
+    const currentHash = window.location.hash.toLowerCase().split("?")[0];
     if (HASH_TO_PRODUCT_MAP[currentHash]) {
       return HASH_TO_PRODUCT_MAP[currentHash];
     }
@@ -169,7 +169,8 @@ function AppInner() {
       document.title = titles[activeProduct] || "Leader's Lens";
     }
 
-    if (window.location.hash !== targetHash) {
+    const currentBaseHash = window.location.hash.split("?")[0];
+    if (currentBaseHash !== targetHash && !window.location.hash.includes("?status=")) {
       window.history.replaceState(null, "", targetHash);
     }
   }, [route, activeProduct]);
@@ -177,7 +178,8 @@ function AppInner() {
   // Listen to browser Back/Forward navigation (`hashchange` event)
   useEffect(() => {
     const handleHashChange = () => {
-      const currentHash = window.location.hash.toLowerCase();
+      const rawHash = window.location.hash.toLowerCase();
+      const currentHash = rawHash.split("?")[0];
       if (currentHash === "#/login" || currentHash === "#/auth") {
         setRoute("auth");
       } else if (HASH_TO_PRODUCT_MAP[currentHash]) {

@@ -67,8 +67,32 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [operationsStream, setOperationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("ALL");
   const [isAiPdfModalOpen, setIsAiPdfModalOpen] = useState(false);
 
+  const getStatusFromUrl = (): string => {
+    const hash = window.location.hash;
+    if (hash.includes("status=")) {
+      const match = hash.match(/status=([A-Z_]+)/i);
+      if (match && match[1]) {
+        const val = match[1].toUpperCase();
+        return val === "UNRESOLVED" ? "PENDING" : val === "RESOLVED" ? "COMPLETED" : val;
+      }
+    }
+    return "ALL";
+  };
+
   // Active Status Tab State
-  const [activeTab, setActiveTab] = useState<string>(initialFilterStatus === "NEW" ? "PENDING" : initialFilterStatus || "ALL");
+  const [activeTab, setActiveTab] = useState<string>(() => getStatusFromUrl() || (initialFilterStatus === "NEW" ? "PENDING" : initialFilterStatus || "ALL"));
+
+  useEffect(() => {
+    const syncStatus = () => {
+      const fromUrl = getStatusFromUrl();
+      if (fromUrl) {
+        setActiveTab(fromUrl);
+      }
+    };
+    syncStatus();
+    window.addEventListener("hashchange", syncStatus);
+    return () => window.removeEventListener("hashchange", syncStatus);
+  }, []);
 
   // Selected Issue for Full-Page Detail View & Assign WhatsApp Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
@@ -1260,7 +1284,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             setFilterPriority("ALL");
             setFilterMandalId("ALL");
             setActiveTab("ALL");
-            window.location.hash = "#/assign-tickets";
+            window.location.hash = "#/assign-tickets?status=ALL";
           }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "ALL"
@@ -1287,7 +1311,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             setFilterPriority("ALL");
             setFilterMandalId("ALL");
             setActiveTab("PENDING");
-            window.location.hash = "#/assign-tickets";
+            window.location.hash = "#/assign-tickets?status=UNRESOLVED";
           }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "PENDING"
@@ -1314,7 +1338,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             setFilterPriority("ALL");
             setFilterMandalId("ALL");
             setActiveTab("NEW");
-            window.location.hash = "#/assign-tickets";
+            window.location.hash = "#/assign-tickets?status=NEW";
           }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "NEW"
@@ -1341,7 +1365,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             setFilterPriority("ALL");
             setFilterMandalId("ALL");
             setActiveTab("IN_PROGRESS");
-            window.location.hash = "#/assign-tickets";
+            window.location.hash = "#/assign-tickets?status=IN_PROGRESS";
           }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "IN_PROGRESS"
@@ -1368,7 +1392,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             setFilterPriority("ALL");
             setFilterMandalId("ALL");
             setActiveTab("OVERDUE");
-            window.location.hash = "#/assign-tickets";
+            window.location.hash = "#/assign-tickets?status=OVERDUE";
           }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "OVERDUE"
@@ -1395,7 +1419,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             setFilterPriority("ALL");
             setFilterMandalId("ALL");
             setActiveTab("COMPLETED");
-            window.location.hash = "#/assign-tickets";
+            window.location.hash = "#/assign-tickets?status=RESOLVED";
           }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
             activeTab === "COMPLETED"

@@ -308,8 +308,32 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   // View Mode: GRID vs TABLE
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
+  const getStatusFromUrl = (): string => {
+    const hash = window.location.hash;
+    if (hash.includes("status=")) {
+      const match = hash.match(/status=([A-Z_]+)/i);
+      if (match && match[1]) {
+        return match[1].toUpperCase();
+      }
+    }
+    return "ALL";
+  };
+
   // Filters & Sorting State
-  const [filterStatus, setFilterStatus] = useState<string>(initialFilterStatus || "ALL");
+  const [filterStatus, setFilterStatus] = useState<string>(() => getStatusFromUrl() || initialFilterStatus || "ALL");
+
+  useEffect(() => {
+    const syncStatus = () => {
+      const fromUrl = getStatusFromUrl();
+      if (fromUrl) {
+        setFilterStatus(fromUrl);
+      }
+    };
+    syncStatus();
+    window.addEventListener("hashchange", syncStatus);
+    return () => window.removeEventListener("hashchange", syncStatus);
+  }, []);
+
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
@@ -945,7 +969,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterReporterType("ALL");
                 setDateFilter("ALL");
                 setFilterStatus("ALL");
-                window.location.hash = "#/assign-tickets";
+                window.location.hash = "#/assign-tickets?status=ALL";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-[#D4A24C]/60 cursor-pointer space-y-1 transition-all"
             >
@@ -966,7 +990,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterReporterType("ALL");
                 setDateFilter("ALL");
                 setFilterStatus("UNRESOLVED");
-                window.location.hash = "#/assign-tickets";
+                window.location.hash = "#/assign-tickets?status=UNRESOLVED";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-amber-500/60 cursor-pointer space-y-1 transition-all"
             >
@@ -989,7 +1013,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterReporterType("ALL");
                 setDateFilter("ALL");
                 setFilterStatus("NEW");
-                window.location.hash = "#/assign-tickets";
+                window.location.hash = "#/assign-tickets?status=NEW";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-yellow-500/60 cursor-pointer space-y-1 transition-all"
             >
@@ -1012,7 +1036,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterReporterType("ALL");
                 setDateFilter("ALL");
                 setFilterStatus("IN_PROGRESS");
-                window.location.hash = "#/assign-tickets";
+                window.location.hash = "#/assign-tickets?status=IN_PROGRESS";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-sky-500/60 cursor-pointer space-y-1 transition-all"
             >
@@ -1035,7 +1059,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterReporterType("ALL");
                 setDateFilter("ALL");
                 setFilterStatus("OVERDUE");
-                window.location.hash = "#/assign-tickets";
+                window.location.hash = "#/assign-tickets?status=OVERDUE";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-rose-500/60 cursor-pointer space-y-1 transition-all"
             >
@@ -1058,7 +1082,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterReporterType("ALL");
                 setDateFilter("ALL");
                 setFilterStatus("RESOLVED");
-                window.location.hash = "#/assign-tickets";
+                window.location.hash = "#/assign-tickets?status=RESOLVED";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-emerald-500/60 cursor-pointer space-y-1 transition-all"
             >
@@ -1185,7 +1209,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <div>
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFilterStatus(val);
+                if (isAssignTicketsMode) {
+                  window.location.hash = `#/assign-tickets?status=${val}`;
+                }
+              }}
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Status: All (Total Records)</option>
