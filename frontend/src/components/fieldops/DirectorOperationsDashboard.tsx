@@ -1265,7 +1265,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       </div>
 
       {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
         <div
           onClick={() => {
             setSearchQuery("");
@@ -1282,14 +1282,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               : "bg-[#0F1E30] border-[#22354D] hover:border-[#D4A24C]/60"
           }`}
         >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block">
-            Total Tickets Assigned
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block truncate">
+            Total Tickets
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-[#D4A24C]">
               {issues.length}
             </span>
-            <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">Assigned</span>
+            <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">All</span>
           </div>
         </div>
 
@@ -1309,14 +1309,41 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               : "bg-[#0F1E30] border-[#22354D] hover:border-amber-500/60"
           }`}
         >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block truncate">
             Unresolved / Pending
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-amber-300">
-              {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "ACKNOWLEDGED" || i.status === "OVERDUE").length}
+              {issues.filter((i) => ["NEW", "ASSIGNED", "ACKNOWLEDGED", "OVERDUE"].includes(i.status)).length}
             </span>
-            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action Required</span>
+            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
+            setActiveTab("NEW");
+            window.location.hash = "#/assign-tickets";
+          }}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            activeTab === "NEW"
+              ? "bg-[#14263B] border-yellow-400 shadow-md ring-1 ring-yellow-400/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-yellow-500/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-yellow-400 block truncate">
+            🟡 New Complaints
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-yellow-300">
+              {issues.filter((i) => i.status === "NEW").length}
+            </span>
+            <span className="text-[10px] text-yellow-400/80 font-mono font-semibold">New</span>
           </div>
         </div>
 
@@ -1336,14 +1363,41 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               : "bg-[#0F1E30] border-[#22354D] hover:border-sky-500/60"
           }`}
         >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block">
-            In Progress
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block truncate">
+            🔵 In Progress
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-sky-300">
               {issues.filter((i) => i.status === "IN_PROGRESS").length}
             </span>
-            <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground Work</span>
+            <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
+            setActiveTab("OVERDUE");
+            window.location.hash = "#/assign-tickets";
+          }}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            activeTab === "OVERDUE"
+              ? "bg-[#14263B] border-rose-400 shadow-md ring-1 ring-rose-400/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-rose-500/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block truncate">
+            🔴 Overdue Alerts
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-rose-300">
+              {issues.filter((i) => i.status === "OVERDUE").length}
+            </span>
+            <span className="text-[10px] text-rose-400/80 font-mono font-semibold">Urgent</span>
           </div>
         </div>
 
@@ -1363,8 +1417,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               : "bg-[#0F1E30] border-[#22354D] hover:border-emerald-500/60"
           }`}
         >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block">
-            Resolved / Completed
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block truncate">
+            🟢 Resolved / Closed
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-emerald-300">

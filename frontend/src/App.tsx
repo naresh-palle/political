@@ -352,7 +352,7 @@ function AppInner() {
 
               {/* Module 1b: ASSIGN TICKETS / UNASSIGNED COMPLAINTS */}
               {activeProduct === "assigntickets" && (
-                <FieldOpsManager currentUser={currentProfile} initialFilter="NEW" onUpdateProfile={handleUpdateProfile} />
+                <FieldOpsManager currentUser={currentProfile} initialFilter="ALL" onUpdateProfile={handleUpdateProfile} />
               )}
 
               {/* Module 2: PITCH / CONSTITUENCY AUDIT (ADMIN ONLY) */}
