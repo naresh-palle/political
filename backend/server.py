@@ -20,11 +20,8 @@ load_dotenv(ROOT_DIR / '.env')
 
 try:
     from services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
-except Exception:
-    try:
-        from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
-    except Exception:
-        from whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
+except ImportError:
+    from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
 
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'political_intelligence')

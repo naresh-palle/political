@@ -1,8 +1,18 @@
 import os
 import logging
-import httpx
+import json
 from typing import Dict, Any, Optional
 from datetime import datetime, timezone
+
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
+try:
+    import requests
+except ImportError:
+    requests = None
 
 logger = logging.getLogger(__name__)
 
@@ -177,34 +187,52 @@ class WhatsAppCloudApiClient:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                res = await client.post(url, headers=headers, json=request_body)
+            status_code = 500
+            res_json = {}
+            error_msg_fallback = ""
+
+            if httpx is not None:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    res = await client.post(url, headers=headers, json=request_body)
+                    res_json = res.json()
+                    status_code = res.status_code
+                    error_msg_fallback = res.text
+            elif requests is not None:
+                res = requests.post(url, headers=headers, json=request_body, timeout=10.0)
                 res_json = res.json()
+                status_code = res.status_code
+                error_msg_fallback = res.text
+            else:
+                import urllib.request
+                req = urllib.request.Request(url, data=json.dumps(request_body).encode("utf-8"), headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=10.0) as response:
+                    res_json = json.loads(response.read().decode("utf-8"))
+                    status_code = response.status
                 
-                if res.status_code == 200 and "messages" in res_json:
-                    msg_id = res_json["messages"][0].get("id")
-                    return {
-                        "success": True,
-                        "status": "DELIVERED",
-                        "providerMessageId": msg_id,
-                        "sentAt": datetime.now(timezone.utc).isoformat(),
-                        "recipientPhone": phone,
-                        "messageContent": payload.get("textMessage")
-                    }
-                else:
-                    error_data = res_json.get("error", {})
-                    error_msg = error_data.get("message") or res.text
-                    logger.error(f"WhatsApp Cloud API error: {error_msg}")
-                    return {
-                        "success": False,
-                        "status": "FAILED",
-                        "errorCode": str(error_data.get("code") or res.status_code),
-                        "errorMessage": error_msg,
-                        "providerMessageId": None,
-                        "sentAt": datetime.now(timezone.utc).isoformat(),
-                        "recipientPhone": phone,
-                        "messageContent": payload.get("textMessage")
-                    }
+            if status_code == 200 and "messages" in res_json:
+                msg_id = res_json["messages"][0].get("id")
+                return {
+                    "success": True,
+                    "status": "DELIVERED",
+                    "providerMessageId": msg_id,
+                    "sentAt": datetime.now(timezone.utc).isoformat(),
+                    "recipientPhone": phone,
+                    "messageContent": payload.get("textMessage")
+                }
+            else:
+                error_data = res_json.get("error", {})
+                error_msg = error_data.get("message") or error_msg_fallback
+                logger.error(f"WhatsApp Cloud API error: {error_msg}")
+                return {
+                    "success": False,
+                    "status": "FAILED",
+                    "errorCode": str(error_data.get("code") or status_code),
+                    "errorMessage": error_msg,
+                    "providerMessageId": None,
+                    "sentAt": datetime.now(timezone.utc).isoformat(),
+                    "recipientPhone": phone,
+                    "messageContent": payload.get("textMessage")
+                }
         except Exception as e:
             logger.error(f"WhatsApp Cloud API connection failure: {e}")
             return {
