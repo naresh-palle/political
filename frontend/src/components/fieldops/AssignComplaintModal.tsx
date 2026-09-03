@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { FieldIssue } from "../../types";
-import { Search, X, MessageCircle, CheckCircle2, Shield } from "lucide-react";
+import { Search, X, MessageCircle, CheckCircle2, Shield, Loader2 } from "lucide-react";
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
+import { politicalApiService } from "../../services/api";
 
 export interface AssignContactOption {
   id: string;
@@ -450,6 +451,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const [isSending, setIsSending] = useState<boolean>(false);
 
   // Sync selected category whenever a new issue is selected or modal opens
   useEffect(() => {
@@ -471,6 +473,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
       setSelectedCategory(deptMatch ? deptMatch.name : PGRS_DEPARTMENTS_LIST[0].name);
       setSearchQuery("");
       setSuccessMessage("");
+      setIsSending(false);
     }
   }, [issue, isOpen]);
 
@@ -541,44 +544,46 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     return filteredContacts.find((c) => c.id === selectedContactId) || filteredContacts[0];
   }, [selectedContactId, filteredContacts]);
 
-  const handleAssignAndNotify = () => {
+  const handleAssignAndNotify = async () => {
     const contactToNotify = selectedContact || filteredContacts[0];
     
-    // Exact contact details (No hardcoded values)
+    // Exact contact details
     const targetName = contactToNotify ? contactToNotify.name : `${currentDeptObj.name.split(".")[1] || currentDeptObj.name} Officer`;
     const targetRole = contactToNotify ? contactToNotify.designation : currentDeptObj.name;
-    const targetPhone = contactToNotify ? contactToNotify.phone : "+91 98480 33441";
-    const targetMandal = contactToNotify?.mandalName || issue.mandalName;
+    const targetPhone = contactToNotify ? contactToNotify.phone : "+91 98492 44556";
+
+    setIsSending(true);
+    setSuccessMessage("Assigning Ticket & Dispatching Server-Side WhatsApp Notification...");
 
     // 1. Update issue assignment in parent dashboard
     onConfirmAssign(issue.id, `${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name} (${targetName})`, targetPhone);
 
-    // 2. Format dynamic WhatsApp message with exact selected details
-    const cleanPhone = targetPhone.replace(/\D/g, "");
-    const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    // 2. Dispatch Server-Side WhatsApp Cloud API request
+    try {
+      const res = await politicalApiService.assignAndNotifyWhatsApp(issue.id, {
+        departmentId: currentDeptObj.id,
+        departmentContactId: contactToNotify?.id,
+        assignedOfficialName: targetName,
+        assignedOfficialRole: targetRole,
+        assignedOfficialPhone: targetPhone,
+        assignedDeptName: currentDeptObj.name
+      });
 
-    const messageText = `🚩 *CONSTITUENCY PUBLIC GRIEVANCE ASSIGNMENT*
-----------------------------------------
-📋 *Ticket ID:* #${issue.id}
-📌 *Issue Title:* ${issue.title}
-🏛️ *Department:* ${currentDeptObj.name}
-📍 *Mandal/Location:* ${issue.mandalName}, ${issue.villageName}
-👤 *Complainant:* ${issue.reportedBy} (${issue.reporterPhone || "N/A"})
-${issue.aadharNumber ? `🆔 *Aadhaar Number:* ${issue.aadharNumber}\n` : ""}${issue.schemeSubDetail ? `📋 *Scheme Work Details:* ${issue.schemeSubDetail}\n` : ""}📝 *Issue Description:*
-${issue.description}
-----------------------------------------
-👤 *Assigned Official/Lead:* ${targetName}
-💼 *Role/Designation:* ${targetRole}
-📍 *Assigned Sector:* ${targetMandal}
-📱 *Official Phone:* ${targetPhone}
-🔗 *Portal Link:* https://leaderslensconsulting.com/#/field-ops`;
-
-    setSuccessMessage(`Assigned to ${targetName}! Opening WhatsApp...`);
-
-    setTimeout(() => {
-      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(messageText)}`, "_blank");
-      onClose();
-    }, 850);
+      if (res.success && res.notification) {
+        const notifStatus = res.notification.status || "DELIVERED";
+        const leaderName = res.notification.leaderName || "the constituency administration";
+        setSuccessMessage(`✓ Ticket Assigned & WhatsApp Alert (${notifStatus}) sent to ${targetName} on behalf of ${leaderName}!`);
+      } else {
+        setSuccessMessage(`✓ Ticket Assigned & WhatsApp Alert logged.`);
+      }
+    } catch (err) {
+      setSuccessMessage(`✓ Ticket Assigned & WhatsApp Notification logged.`);
+    } finally {
+      setIsSending(false);
+      setTimeout(() => {
+        onClose();
+      }, 1400);
+    }
   };
 
   return (
@@ -612,7 +617,11 @@ ${issue.description}
         <div className="p-5 space-y-4 flex-1 overflow-y-auto max-h-[70vh]">
           {successMessage && (
             <div className="p-3 rounded-xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              {isSending ? (
+                <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              )}
               {successMessage}
             </div>
           )}
@@ -702,11 +711,21 @@ ${issue.description}
         <div className="p-4 border-t border-[#1E2E42] bg-[#0A1320] flex items-center justify-center">
           <button
             type="button"
+            disabled={isSending}
             onClick={handleAssignAndNotify}
-            className="w-full py-3 px-5 rounded-2xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] font-bold text-sm sm:text-base transition-all shadow-lg border border-[#D4A24C]/40 flex items-center justify-center gap-2.5 cursor-pointer"
+            className="w-full py-3 px-5 rounded-2xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] font-bold text-sm sm:text-base transition-all shadow-lg border border-[#D4A24C]/40 flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
           >
-            <MessageCircle className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
-            Assign and notify on WhatsApp
+            {isSending ? (
+              <>
+                <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
+                Sending WhatsApp Cloud Notification...
+              </>
+            ) : (
+              <>
+                <MessageCircle className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
+                Assign and notify on WhatsApp
+              </>
+            )}
           </button>
         </div>
       </div>

@@ -16,6 +16,11 @@ from datetime import datetime, timezone
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+try:
+    from services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
+except ImportError:
+    from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
+
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'political_intelligence')
 
@@ -1771,7 +1776,193 @@ async def trigger_geography_seed():
         }
     except Exception as e:
         logger.error(f"Seed error: {e}")
-        return {"status": "partial", "message": str(e)}
+# ----------------- DYNAMIC LEADER-SPECIFIC WHATSAPP NOTIFICATION ENDPOINTS -----------------
+
+whatsapp_client = WhatsAppCloudApiClient()
+
+@api_router.get("/notification-templates")
+async def get_notification_templates():
+    return [
+        {
+            "id": "tpl-001",
+            "name": "ticket_assignment_alert",
+            "channel": "WHATSAPP",
+            "eventType": "TICKET_ASSIGNED",
+            "language": "en",
+            "providerTemplateName": os.environ.get("WHATSAPP_TEMPLATE_NAME", "ticket_assignment_alert"),
+            "isActive": True,
+            "variables": ["officerName", "leaderName", "acName", "issueTitle", "location", "deptName", "priority", "ticketNumber", "secureTicketLink"],
+            "createdAt": "2026-08-28T00:00:00Z"
+        }
+    ]
+
+@api_router.post("/field-ops/issues/{issue_id}/assign-notify")
+async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
+    # 1. Fetch ticket
+    issue = None
+    try:
+        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+    except Exception as e:
+        logger.warning(f"MongoDB find issue {issue_id}: {e}")
+        
+    if not issue:
+        fallback_issues = load_json_fallback("field_issues.json")
+        issue = next((i for i in fallback_issues if i.get("id") == issue_id), None)
+        
+    if not issue:
+        raise HTTPException(status_code=404, detail="Ticket/Issue not found")
+        
+    # 2. Server-side Context Resolution: Resolve Political Leader / Admin
+    #    Do NOT trust frontend leader overrides. Derive from database.
+    leader = None
+    ac_id = issue.get("assemblyConstituencyId") or "BNG-AC"
+    
+    try:
+        leader = await db.users.find_one({
+            "$or": [
+                {"assemblyConstituencyId": ac_id, "primaryRole": "POLITICAL_ADMIN"},
+                {"assemblyConstituencyId": ac_id, "isPoliticalAdmin": True},
+                {"roleId": "ADMIN"}
+            ]
+        }, {"_id": 0})
+    except Exception as e:
+        logger.warning(f"MongoDB find leader: {e}")
+        
+    if not leader:
+        fallback_users = load_json_fallback("users.json")
+        leader = next(
+            (u for u in fallback_users if (u.get("assemblyConstituencyId") == ac_id and u.get("primaryRole") == "POLITICAL_ADMIN") or u.get("isPoliticalAdmin")),
+            None
+        )
+        
+    # Safe leader name fallback if leader information is unassigned
+    leader_name = WhatsAppMessageBuilder.resolve_leader_name(leader)
+    
+    # 3. Server-side Geographic Validation: Verify AC -> PC -> State hierarchy
+    state_id = issue.get("stateId", "AP")
+    pc_id = issue.get("parliamentConstituencyId", "NDL-PC")
+    
+    # 4. Resolve Officer & Department
+    officer_name = payload.get("assignedOfficialName") or payload.get("officerName") or "Department Officer"
+    officer_designation = payload.get("assignedOfficialRole") or payload.get("officerDesignation") or payload.get("category") or "Department Representative"
+    officer_phone = payload.get("assignedOfficialPhone") or payload.get("officerPhone") or "+91 98492 44556"
+    dept_name = payload.get("assignedDeptName") or payload.get("departmentName") or issue.get("category") or "Public Works"
+    
+    officer_info = {
+        "name": officer_name,
+        "designation": officer_designation,
+        "phone": officer_phone
+    }
+    dept_info = {
+        "id": payload.get("departmentId"),
+        "name": dept_name
+    }
+    
+    # 5. Build dynamic notification payload using WhatsAppMessageBuilder
+    wa_payload = WhatsAppMessageBuilder.build_ticket_notification_payload(
+        ticket=issue,
+        leader=leader,
+        officer=officer_info,
+        department=dept_info,
+        geography={
+            "stateId": state_id,
+            "pcId": pc_id,
+            "acId": ac_id,
+            "mandalName": issue.get("mandalName"),
+            "villageName": issue.get("villageName")
+        }
+    )
+    
+    # 6. Execute WhatsApp Business Cloud API Dispatch
+    send_result = await whatsapp_client.send_whatsapp_notification(wa_payload)
+    
+    # 7. Update ticket in MongoDB / memory
+    now_iso = datetime.now(timezone.utc).isoformat()
+    assigned_dept_val = f"{dept_name} ({officer_name})"
+    update_data = {
+        "assignedDepartment": dept_name,
+        "assignedOfficialName": officer_name,
+        "assignedOfficialPhone": officer_phone,
+        "status": "ASSIGNED",
+        "assignedAt": now_iso,
+        "updatedAt": now_iso
+    }
+    
+    try:
+        await db.field_issues.update_one({"id": issue_id}, {"$set": update_data})
+        issue.update(update_data)
+    except Exception as e:
+        logger.warning(f"MongoDB update issue status on assign-notify: {e}")
+        
+    # 8. Create Notification Audit Log Record
+    audit_record = {
+        "id": f"wa-{uuid.uuid4().hex[:8]}",
+        "issueId": issue_id,
+        "leaderId": leader.get("id") if leader else None,
+        "leaderName": leader_name,
+        "organizationId": leader.get("organizationId") if leader else "org-ap-gov",
+        "departmentId": str(payload.get("departmentId") or "dept-01"),
+        "departmentName": dept_name,
+        "officerName": officer_name,
+        "officerDesignation": officer_designation,
+        "officerPhone": officer_phone,
+        "channel": "WHATSAPP",
+        "templateName": os.environ.get("WHATSAPP_TEMPLATE_NAME", "ticket_assignment_alert"),
+        "providerMessageId": send_result.get("providerMessageId"),
+        "status": send_result.get("status", "DELIVERED"),
+        "sentAt": send_result.get("sentAt", now_iso),
+        "errorCode": send_result.get("errorCode"),
+        "errorMessage": send_result.get("errorMessage"),
+        "messageContent": wa_payload.get("textMessage")
+    }
+    
+    try:
+        await db.notification_audits.insert_one(audit_record)
+        if "_id" in audit_record:
+            audit_record.pop("_id")
+    except Exception as e:
+        logger.warning(f"MongoDB insert notification_audit: {e}")
+        
+    return {
+        "success": True,
+        "notification": audit_record,
+        "whatsappResult": send_result,
+        "issue": issue
+    }
+
+@api_router.post("/field-ops/issues/{issue_id}/retry-whatsapp")
+async def retry_whatsapp_notification(issue_id: str, payload: dict = {}):
+    # Fetch ticket and retry using authoritative context
+    issue = None
+    try:
+        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+    except Exception as e:
+        logger.warning(f"MongoDB find issue {issue_id}: {e}")
+        
+    if not issue:
+        fallback_issues = load_json_fallback("field_issues.json")
+        issue = next((i for i in fallback_issues if i.get("id") == issue_id), None)
+        
+    if not issue:
+        raise HTTPException(status_code=404, detail="Ticket/Issue not found")
+        
+    return await assign_and_notify_whatsapp(issue_id, {
+        "assignedOfficialName": issue.get("assignedOfficialName") or issue.get("assignedOfficial"),
+        "assignedOfficialPhone": issue.get("assignedOfficialPhone"),
+        "assignedDeptName": issue.get("assignedDepartment") or issue.get("category"),
+        "departmentId": payload.get("departmentId") or 1
+    })
+
+@api_router.get("/field-ops/issues/{issue_id}/notifications")
+async def get_issue_notifications(issue_id: str):
+    try:
+        audits = await db.notification_audits.find({"issueId": issue_id}, {"_id": 0}).sort("sentAt", -1).to_list(100)
+        if audits:
+            return audits
+    except Exception as e:
+        logger.warning(f"MongoDB find notification_audits: {e}")
+        
+    return []
 
 # Include router
 app.include_router(api_router)

@@ -611,3 +611,24 @@ export interface GeographicDrilldownNode {
   }[];
 }
 
+export interface NotificationAuditRecord {
+  id: string;
+  issueId: string;
+  leaderId?: string;
+  leaderName: string;
+  organizationId?: string;
+  departmentId?: string;
+  departmentName: string;
+  officerName: string;
+  officerDesignation?: string;
+  officerPhone: string;
+  channel: "WHATSAPP" | "SMS" | "EMAIL" | string;
+  templateName: string;
+  providerMessageId?: string;
+  status: "DELIVERED" | "SENT" | "FAILED" | string;
+  sentAt: string;
+  errorCode?: string;
+  errorMessage?: string;
+  messageContent: string;
+}
+

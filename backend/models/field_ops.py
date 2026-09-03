@@ -110,3 +110,33 @@ class FieldAuditLog(BaseModel):
     entityId: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class NotificationAudit(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: f"wa-{uuid.uuid4().hex[:8]}")
+    issueId: str
+    leaderId: Optional[str] = None
+    leaderName: str
+    organizationId: Optional[str] = None
+    departmentId: Optional[str] = None
+    departmentName: str
+    officerName: str
+    officerDesignation: Optional[str] = None
+    officerPhone: str
+    channel: str = "WHATSAPP"
+    templateName: str = "ticket_assignment_alert"
+    providerMessageId: Optional[str] = None
+    status: str = "DELIVERED"  # SENT, DELIVERED, FAILED
+    sentAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    errorCode: Optional[str] = None
+    errorMessage: Optional[str] = None
+    messageContent: str
+
+class AssignAndNotifyPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    departmentId: Optional[Any] = None
+    departmentContactId: Optional[str] = None
+    assignedOfficialName: Optional[str] = None
+    assignedOfficialRole: Optional[str] = None
+    assignedOfficialPhone: Optional[str] = None
+

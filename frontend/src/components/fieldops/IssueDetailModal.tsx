@@ -3,7 +3,8 @@ import {
   FieldIssue,
   WorkUpdateRecord,
   UserProfile,
-  IssueStatus
+  IssueStatus,
+  NotificationAuditRecord
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import {
@@ -19,7 +20,10 @@ import {
   Send,
   Paperclip,
   Eye,
-  Tag
+  Tag,
+  MessageCircle,
+  RotateCw,
+  ShieldCheck
 } from "lucide-react";
 
 interface IssueDetailModalProps {
@@ -39,6 +43,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 }) => {
   const [history, setHistory] = useState<WorkUpdateRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [notificationAudits, setNotificationAudits] = useState<NotificationAuditRecord[]>([]);
+  const [loadingAudits, setLoadingAudits] = useState(false);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   // Update Form State
@@ -66,6 +73,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   useEffect(() => {
     if (isOpen && issue?.id) {
       loadTimeline();
+      loadNotificationHistory();
     }
   }, [isOpen, issue?.id]);
 
@@ -78,6 +86,30 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       console.error(e);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const loadNotificationHistory = async () => {
+    setLoadingAudits(true);
+    try {
+      const audits = await politicalApiService.getIssueNotificationHistory(issue.id);
+      setNotificationAudits(audits);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAudits(false);
+    }
+  };
+
+  const handleRetryWhatsApp = async (auditId: string) => {
+    setRetryingId(auditId);
+    try {
+      await politicalApiService.retryWhatsAppNotification(issue.id, auditId);
+      await loadNotificationHistory();
+    } catch (e) {
+      console.error("Retry error:", e);
+    } finally {
+      setRetryingId(null);
     }
   };
 
@@ -410,6 +442,69 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                         {record.volunteerName && (
                           <div className="text-[9.5px] text-[#8E9CAE] pt-1 border-t border-[#223348]/40">
                             Logged by: <span className="text-[#D4A24C]">{record.volunteerName}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* WhatsApp Notification Audit History */}
+              <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-3">
+                <div className="flex items-center justify-between border-b border-[#223348]/60 pb-2">
+                  <h4 className="text-xs font-semibold text-[#F5EFE0] flex items-center gap-1.5">
+                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    WhatsApp Cloud API History
+                  </h4>
+                  <span className="text-[10px] text-emerald-400 font-mono">
+                    {notificationAudits.length} sent
+                  </span>
+                </div>
+
+                {loadingAudits ? (
+                  <div className="p-3 text-center text-xs text-[#8E9CAE]">Loading WhatsApp history...</div>
+                ) : notificationAudits.length === 0 ? (
+                  <div className="p-3 rounded-lg bg-[#070D15] text-center text-xs text-[#8E9CAE]">
+                    No server-side WhatsApp dispatches recorded yet.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {notificationAudits.map((audit) => (
+                      <div
+                        key={audit.id}
+                        className="p-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-xs space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-emerald-300 text-[11px] flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                            {audit.officerName} ({audit.officerPhone})
+                          </span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
+                            audit.status === "DELIVERED" || audit.status === "SENT"
+                              ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                              : "bg-rose-950/80 text-rose-300 border-rose-500/40"
+                          }`}>
+                            {audit.status}
+                          </span>
+                        </div>
+                        <div className="text-[10.5px] text-[#CBD5E1]">
+                          <span className="text-[#8E9CAE]">Leader: </span>
+                          <strong className="text-[#D4A24C]">{audit.leaderName}</strong>
+                          <span className="text-[#8E9CAE]"> · Dept: </span>
+                          <span>{audit.departmentName}</span>
+                        </div>
+                        {audit.status === "FAILED" && (
+                          <div className="pt-1 flex items-center justify-between text-[10px]">
+                            <span className="text-rose-400 truncate max-w-[170px]">{audit.errorMessage || "Dispatch failed"}</span>
+                            <button
+                              disabled={retryingId === audit.id}
+                              onClick={() => handleRetryWhatsApp(audit.id)}
+                              className="px-2 py-0.5 rounded bg-rose-900/80 hover:bg-rose-800 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <RotateCw className={`w-2.5 h-2.5 ${retryingId === audit.id ? "animate-spin" : ""}`} />
+                              Retry WhatsApp
+                            </button>
                           </div>
                         )}
                       </div>
