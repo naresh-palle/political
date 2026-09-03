@@ -7,19 +7,24 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import json
 import logging
+import sys
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
-import uuid
-from datetime import datetime, timezone
 
 ROOT_DIR = Path(__file__).parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+if str(ROOT_DIR.parent) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR.parent))
+
 load_dotenv(ROOT_DIR / '.env')
 
 try:
     from services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
-except ImportError:
-    from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
+except Exception:
+    try:
+        from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
+    except Exception:
+        from whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
 
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'political_intelligence')
