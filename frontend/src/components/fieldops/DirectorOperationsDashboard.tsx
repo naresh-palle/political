@@ -1268,6 +1268,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
         <div
           onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
             setActiveTab("ALL");
             window.location.hash = "#/assign-tickets";
           }}
@@ -1290,6 +1295,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
         <div
           onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
             setActiveTab("PENDING");
             window.location.hash = "#/assign-tickets";
           }}
@@ -1304,7 +1314,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-amber-300">
-              {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "OVERDUE").length}
+              {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "ACKNOWLEDGED" || i.status === "OVERDUE").length}
             </span>
             <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action Required</span>
           </div>
@@ -1312,6 +1322,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
         <div
           onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
             setActiveTab("IN_PROGRESS");
             window.location.hash = "#/assign-tickets";
           }}
@@ -1334,6 +1349,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
         <div
           onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
             setActiveTab("COMPLETED");
             window.location.hash = "#/assign-tickets";
           }}

@@ -626,6 +626,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     let list = issues.filter((item) => {
       // Status filter
       if (filterStatus === "OVERDUE" && item.status !== "OVERDUE") return false;
+      if ((filterStatus === "UNRESOLVED" || filterStatus === "PENDING") && ["COMPLETED", "RESOLVED"].includes(item.status)) return false;
       if (filterStatus === "NEW" && item.status !== "NEW") return false;
       if (filterStatus === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
       if (filterStatus === "RESOLVED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
@@ -950,6 +951,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
             <div
               onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
                 setFilterStatus("ALL");
                 window.location.hash = "#/assign-tickets";
               }}
@@ -966,7 +972,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
             <div
               onClick={() => {
-                setFilterStatus("NEW");
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("UNRESOLVED");
                 window.location.hash = "#/assign-tickets";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-amber-500/60 cursor-pointer space-y-1 transition-all"
@@ -976,7 +987,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               </span>
               <div className="flex items-baseline justify-between">
                 <span className="text-2xl font-bold font-mono text-amber-300">
-                  {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "OVERDUE").length}
+                  {issues.filter((i) => i.status === "NEW" || i.status === "ASSIGNED" || i.status === "ACKNOWLEDGED" || i.status === "OVERDUE").length}
                 </span>
                 <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action Required</span>
               </div>
@@ -984,6 +995,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
             <div
               onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
                 setFilterStatus("IN_PROGRESS");
                 window.location.hash = "#/assign-tickets";
               }}
@@ -1002,6 +1018,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
             <div
               onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
                 setFilterStatus("RESOLVED");
                 window.location.hash = "#/assign-tickets";
               }}
@@ -1133,10 +1154,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
-              <option value="ALL">Status: All</option>
-              <option value="NEW">Status: 🟡 New</option>
+              <option value="ALL">Status: All (Total Records)</option>
+              <option value="UNRESOLVED">Status: 🟠 Unresolved / Pending</option>
+              <option value="NEW">Status: 🟡 New Only</option>
               <option value="IN_PROGRESS">Status: 🔵 In Progress</option>
-              <option value="RESOLVED">Status: 🟢 Resolved</option>
+              <option value="RESOLVED">Status: 🟢 Resolved / Completed</option>
               <option value="OVERDUE">Status: 🔴 Overdue</option>
             </select>
           </div>
