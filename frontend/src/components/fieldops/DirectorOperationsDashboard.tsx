@@ -70,12 +70,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   // Active Status Tab State
   const [activeTab, setActiveTab] = useState<string>(initialFilterStatus === "NEW" ? "PENDING" : initialFilterStatus || "ALL");
 
-  useEffect(() => {
-    if (initialFilterStatus) {
-      setActiveTab(initialFilterStatus === "NEW" ? "PENDING" : initialFilterStatus);
-    }
-  }, [initialFilterStatus]);
-
   // Selected Issue for Full-Page Detail View & Assign WhatsApp Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
   const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
@@ -100,14 +94,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   useEffect(() => {
     loadDirectorData();
   }, [currentUser.id]);
-
-  useEffect(() => {
-    if (initialFilterStatus === "NEW") {
-      setActiveTab("PENDING");
-    } else if (initialFilterStatus) {
-      setActiveTab(initialFilterStatus as any);
-    }
-  }, [initialFilterStatus]);
 
   // Reset pagination to Page 1 when any filter or sort changes
   useEffect(() => {

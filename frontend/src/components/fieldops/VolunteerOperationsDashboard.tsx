@@ -310,12 +310,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
   // Filters & Sorting State
   const [filterStatus, setFilterStatus] = useState<string>(initialFilterStatus || "ALL");
-
-  useEffect(() => {
-    if (initialFilterStatus) {
-      setFilterStatus(initialFilterStatus);
-    }
-  }, [initialFilterStatus]);
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
@@ -378,12 +372,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   useEffect(() => {
     loadVolunteerData();
   }, [currentUser.id]);
-
-  useEffect(() => {
-    if (initialFilterStatus) {
-      setFilterStatus(initialFilterStatus);
-    }
-  }, [initialFilterStatus]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
