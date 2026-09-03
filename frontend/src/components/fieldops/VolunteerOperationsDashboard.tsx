@@ -1376,11 +1376,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           Reported by: <strong className="text-[#D8CFB8]">{issue.reportedBy}</strong>
                           {issue.reporterDesignation ? ` (${issue.reporterDesignation})` : ""}
                         </span>
-                        {issue.aadharNumber && (
-                          <span className="text-[10px] text-[#8E9CAE] font-mono block mt-0.5">
-                            🆔 Aadhaar: <strong className="text-[#D4A24C]">{issue.aadharNumber}</strong>
-                          </span>
-                        )}
                       </div>
                       {issue.attachments && issue.attachments.length > 0 && (
                         <span className="inline-flex items-center gap-1 text-[#D4A24C] font-mono shrink-0">
@@ -2091,20 +2086,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
                         />
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Aadhaar Number / ఆధార్ సంఖ్య (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={12}
-                        placeholder="12 Digits..."
-                        value={newAadharNumber}
-                        onChange={(e) => setNewAadharNumber(e.target.value.replace(/\D/g, "").slice(0, 12))}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
-                      />
                     </div>
                   </div>
 
