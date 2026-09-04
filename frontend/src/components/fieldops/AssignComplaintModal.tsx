@@ -591,20 +591,21 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         assignedDeptName: currentDeptObj.name
       });
 
-      if (res.success && res.notification) {
+      if (res.success && res.notification?.status === "DELIVERED") {
         const notifStatus = res.notification.status || "DELIVERED";
         const leaderName = res.notification.leaderName || "the constituency administration";
-        setSuccessMessage(`✓ Ticket Assigned & WhatsApp Alert (${notifStatus}) sent to ${targetName} on behalf of ${leaderName}!`);
+        setSuccessMessage(`✓ Ticket Assigned & Live WhatsApp Alert (${notifStatus}) sent to ${targetName} (${targetPhone})!`);
       } else {
-        setSuccessMessage(`✓ Ticket Assigned & WhatsApp Alert logged.`);
+        const errMsg = (res as any).error || res.notification?.errorMessage || "Meta Graph API verification required";
+        setSuccessMessage(`⚠️ Ticket Assigned to ${targetName}. WhatsApp API Status: ${errMsg}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       setSuccessMessage(`✓ Ticket Assigned & WhatsApp Notification logged.`);
     } finally {
       setIsSending(false);
       setTimeout(() => {
         onClose();
-      }, 1400);
+      }, 2000);
     }
   };
 

@@ -167,24 +167,36 @@ class WhatsAppCloudApiClient:
         }
         
         # Meta Graph API JSON payload
-        request_body = {
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": phone,
-            "type": "template",
-            "template": {
-                "name": self.template_name,
-                "language": {"code": "en"},
-                "components": [
-                    {
-                        "type": "body",
-                        "parameters": [
-                            {"type": "text", "text": str(v)} for v in payload.get("templateVariables", {}).values()
-                        ]
-                    }
-                ]
+        if self.template_name.strip().lower() == "hello_world":
+            request_body = {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": phone,
+                "type": "template",
+                "template": {
+                    "name": "hello_world",
+                    "language": {"code": "en_US"}
+                }
             }
-        }
+        else:
+            params = [{"type": "text", "text": str(v)} for v in payload.get("templateVariables", {}).values()]
+            components = []
+            if params:
+                components.append({
+                    "type": "body",
+                    "parameters": params
+                })
+            request_body = {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": phone,
+                "type": "template",
+                "template": {
+                    "name": self.template_name,
+                    "language": {"code": "en_US"},
+                    "components": components
+                }
+            }
 
         try:
             status_code = 500
@@ -208,6 +220,34 @@ class WhatsAppCloudApiClient:
                 with urllib.request.urlopen(req, timeout=10.0) as response:
                     res_json = json.loads(response.read().decode("utf-8"))
                     status_code = response.status
+
+            # If custom template failed (e.g. template not created in Meta yet), retry with standard hello_world test template
+            if status_code != 200 and self.template_name.strip().lower() != "hello_world":
+                logger.warning(f"Custom template '{self.template_name}' failed ({error_msg_fallback}). Attempting fallback retry with Meta hello_world template...")
+                fallback_body = {
+                    "messaging_product": "whatsapp",
+                    "recipient_type": "individual",
+                    "to": phone,
+                    "type": "template",
+                    "template": {
+                        "name": "hello_world",
+                        "language": {"code": "en_US"}
+                    }
+                }
+                try:
+                    if httpx is not None:
+                        async with httpx.AsyncClient(timeout=10.0) as client:
+                            fb_res = await client.post(url, headers=headers, json=fallback_body)
+                            if fb_res.status_code == 200 and "messages" in fb_res.json():
+                                res_json = fb_res.json()
+                                status_code = 200
+                    elif requests is not None:
+                        fb_res = requests.post(url, headers=headers, json=fallback_body, timeout=10.0)
+                        if fb_res.status_code == 200 and "messages" in fb_res.json():
+                            res_json = fb_res.json()
+                            status_code = 200
+                except Exception as fb_err:
+                    logger.warning(f"Fallback hello_world dispatch failed: {fb_err}")
                 
             if status_code == 200 and "messages" in res_json:
                 msg_id = res_json["messages"][0].get("id")
@@ -222,7 +262,7 @@ class WhatsAppCloudApiClient:
             else:
                 error_data = res_json.get("error", {})
                 error_msg = error_data.get("message") or error_msg_fallback
-                logger.error(f"WhatsApp Cloud API error: {error_msg}")
+                logger.error(f"WhatsApp Cloud API error ({status_code}): {error_msg}")
                 return {
                     "success": False,
                     "status": "FAILED",

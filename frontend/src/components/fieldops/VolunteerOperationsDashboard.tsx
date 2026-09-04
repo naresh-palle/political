@@ -604,7 +604,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         setCitizenGender("Male");
         setProofFiles([]);
         setNewAttachmentUrl("");
-      }, 2000);
+
+        // Automatically open Assign & WhatsApp Notify modal for the newly created complaint!
+        setAssignModalIssue(created);
+      }, 1200);
     } catch (err: any) {
       setFormError(err?.message || "Failed to submit complaint.");
     } finally {
