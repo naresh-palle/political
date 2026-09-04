@@ -9,6 +9,7 @@ import {
 import { politicalApiService } from "../../services/api";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { EditProfileModal } from "../common/EditProfileModal";
+import { AssignComplaintModal } from "./AssignComplaintModal";
 import {
   ShieldCheck,
   Users,
@@ -30,7 +31,8 @@ import {
   FileText,
   Phone,
   Calendar,
-  Edit3
+  Edit3,
+  MessageCircle
 } from "lucide-react";
 
 interface AdminDashboardProps {
@@ -60,6 +62,38 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
   // Selected Issue for Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
+  const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
+
+  const handleAssignDepartment = async (issueId: string, newDept: string, officialName?: string, officialPhone?: string) => {
+    setIssues((prev: FieldIssue[]) =>
+      prev.map((item: FieldIssue) => {
+        if (item.id === issueId) {
+          return {
+            ...item,
+            department: newDept,
+            assignedDepartment: newDept,
+            assignedOfficialName: officialName || item.assignedOfficialName || "",
+            assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
+            status: "ASSIGNED",
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return item;
+      })
+    );
+
+    try {
+      await politicalApiService.updateFieldIssueStatus(issueId, {
+        department: newDept,
+        status: "ASSIGNED",
+        assignedOfficialName: officialName,
+        assignedOfficialPhone: officialPhone,
+        remarks: `Department assigned to ${newDept}`
+      });
+    } catch (e) {
+      console.warn("Department update error", e);
+    }
+  };
 
   // Expanded Nodes in Geographic Tree
   const [expandedMandals, setExpandedMandals] = useState<Record<string, boolean>>({
@@ -964,6 +998,18 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             if (onUpdateProfile) {
               onUpdateProfile(updated);
             }
+          }}
+        />
+      )}
+      {/* Assign Complaint & WhatsApp Modal */}
+      {assignModalIssue && (
+        <AssignComplaintModal
+          isOpen={!!assignModalIssue}
+          issue={assignModalIssue}
+          onClose={() => setAssignModalIssue(null)}
+          onConfirmAssign={(issueId, deptName, officialName, officialPhone) => {
+            handleAssignDepartment(issueId, deptName, officialName, officialPhone);
+            setAssignModalIssue(null);
           }}
         />
       )}

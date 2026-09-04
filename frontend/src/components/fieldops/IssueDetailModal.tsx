@@ -25,6 +25,7 @@ import {
   RotateCw,
   ShieldCheck
 } from "lucide-react";
+import { AssignComplaintModal } from "./AssignComplaintModal";
 
 interface IssueDetailModalProps {
   issue: FieldIssue;
@@ -47,6 +48,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   const [loadingAudits, setLoadingAudits] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
 
   // Update Form State
   const [updateStatus, setUpdateStatus] = useState<IssueStatus>(
@@ -245,14 +247,24 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#131E2D] hover:bg-rose-950/80 border border-[#223348] hover:border-rose-500 text-[#CBD5E1] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 ml-2"
-            title="Close (Esc)"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <button
+              type="button"
+              onClick={() => setAssignModalIssue(issue)}
+              className="px-3 py-1.5 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-xs font-bold border border-[#D4A24C]/40 flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+              <span className="hidden sm:inline">Assign & WhatsApp</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl bg-[#131E2D] hover:bg-rose-950/80 border border-[#223348] hover:border-rose-500 text-[#CBD5E1] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+              title="Close (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Quick Highlights Strip */}
@@ -616,6 +628,19 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Assign Complaint & WhatsApp Modal */}
+      {assignModalIssue && (
+        <AssignComplaintModal
+          isOpen={!!assignModalIssue}
+          issue={assignModalIssue}
+          onClose={() => setAssignModalIssue(null)}
+          onConfirmAssign={() => {
+            if (onIssueUpdated) onIssueUpdated();
+            setAssignModalIssue(null);
+          }}
+        />
       )}
     </div>
   );
