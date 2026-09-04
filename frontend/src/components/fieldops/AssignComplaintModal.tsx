@@ -588,10 +588,11 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     const targetRole = contactToNotify ? contactToNotify.designation : currentDeptObj.name;
     const targetPhone = contactToNotify ? contactToNotify.phone : "+91 98492 44556";
 
-    // Direct WhatsApp web link fallback
+    // Direct WhatsApp web link fallback with interactive Officer Portal URL
     const rawDigits = targetPhone.replace(/[^0-9]/g, "");
     const formattedPhone = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
-    const waText = encodeURIComponent(`🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${targetName},\n\nYou have been assigned Grievance Ticket *#${issue.id}*.\n*Title:* ${issue.title}\n*Department:* ${currentDeptObj.name}\n*Mandal:* ${issue.mandalName || "Banaganapalle"}\n\nPlease review and take action.`);
+    const actionUrl = `${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issue.id}`;
+    const waText = encodeURIComponent(`🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${targetName},\n\nYou have been assigned Grievance Ticket *#${issue.id}*.\n*Title:* ${issue.title}\n*Department:* ${currentDeptObj.name}\n*Mandal:* ${issue.mandalName || "Banaganapalle"}\n\n🔗 *Click link below to view full ticket info & update resolution status:*\n${actionUrl}`);
     setDirectWaLink(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${waText}`);
 
     setIsSending(true);
@@ -608,8 +609,9 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         assignedOfficialName: targetName,
         assignedOfficialRole: targetRole,
         assignedOfficialPhone: targetPhone,
-        assignedDeptName: currentDeptObj.name
-      });
+        assignedDeptName: currentDeptObj.name,
+        actionUrl: actionUrl
+      } as any);
 
       if (res.success && res.notification?.status === "DELIVERED") {
         const notifStatus = res.notification.status || "DELIVERED";

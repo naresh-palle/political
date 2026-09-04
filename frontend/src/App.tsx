@@ -32,6 +32,8 @@ const RoleManagement = lazy(() => import("./components/governance/RoleManagement
 const ContactDatabase = lazy(() => import("./components/contacts/ContactDatabase").then(m => ({ default: m.ContactDatabase })));
 const ExportModal = lazy(() => import("./components/audit/ExportModal").then(m => ({ default: m.ExportModal })));
 
+import { OfficerTicketPortal } from "./components/fieldops/OfficerTicketPortal";
+
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
 const PRODUCT_STORAGE_KEY = "leaders_lens_active_product";
@@ -70,6 +72,20 @@ export function App() {
 }
 
 function AppInner() {
+  const [isOfficerPortal, setIsOfficerPortal] = useState<boolean>(() => {
+    const currentHash = window.location.hash.toLowerCase();
+    return currentHash.includes("#/officer-portal") || currentHash.includes("#/ticket-action");
+  });
+
+  useEffect(() => {
+    const handleHashCheck = () => {
+      const currentHash = window.location.hash.toLowerCase();
+      setIsOfficerPortal(currentHash.includes("#/officer-portal") || currentHash.includes("#/ticket-action"));
+    };
+    window.addEventListener("hashchange", handleHashCheck);
+    return () => window.removeEventListener("hashchange", handleHashCheck);
+  }, []);
+
   const [route, setRoute] = useState<"auth" | "app">(() => {
     const currentHash = window.location.hash.toLowerCase();
     if (currentHash === "#/login" || currentHash === "#/auth") {
@@ -323,6 +339,10 @@ function AppInner() {
     setViewState("select");
     setAuditData(null);
   };
+
+  if (isOfficerPortal) {
+    return <OfficerTicketPortal />;
+  }
 
   return (
     <PartyThemeProvider authenticatedUser={currentProfile}>
