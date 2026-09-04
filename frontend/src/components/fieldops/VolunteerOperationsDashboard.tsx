@@ -1570,7 +1570,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           </div>
                           <button
                             type="button"
-                            onClick={() => setAssignModalIssue(issue)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAssignModalIssue(issue);
+                            }}
                             className="w-full mt-1.5 py-1.5 px-3 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
                           >
                             <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
@@ -1705,7 +1708,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
                                 <button
                                   type="button"
-                                  onClick={() => setAssignModalIssue(issue)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAssignModalIssue(issue);
+                                  }}
                                   className="w-full py-1 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10.5px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
                                 >
                                   <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20" />
