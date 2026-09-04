@@ -476,6 +476,15 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
 
+  // Meta Token Config State
+  const [showTokenConfig, setShowTokenConfig] = useState<boolean>(false);
+  const [tokenInput, setTokenInput] = useState<string>(
+    localStorage.getItem("WHATSAPP_ACCESS_TOKEN") || ""
+  );
+  const [phoneIdInput, setPhoneIdInput] = useState<string>(
+    localStorage.getItem("WHATSAPP_PHONE_NUMBER_ID") || "105654069273754"
+  );
+
   // Sync selected category whenever a new issue is selected or modal opens
   useEffect(() => {
     if (issue && isOpen) {
@@ -679,6 +688,70 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
               </span>
             </div>
           )}
+
+          {/* Meta Cloud API Credentials Quick Config Bar */}
+          <div className="p-3 rounded-2xl bg-[#071424] border border-[#1E3048] space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-semibold text-[#D4A24C] flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-amber-400" />
+                Meta WhatsApp API Credentials Config
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowTokenConfig(!showTokenConfig)}
+                className="text-[10.5px] font-mono text-[#4E80B4] hover:text-[#D4A24C] underline cursor-pointer"
+              >
+                {showTokenConfig ? "Hide Config" : tokenInput ? "✓ Configured (Click to edit)" : "+ Enter Meta Access Token"}
+              </button>
+            </div>
+
+            {showTokenConfig && (
+              <div className="space-y-2.5 pt-2 border-t border-[#1E3048] text-xs animate-fadeIn">
+                <div>
+                  <label className="block text-[10.5px] font-mono text-zinc-400 mb-1">
+                    Meta Temporary / System Access Token (starts with EAAG...):
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Paste Meta Token (EAAG...)"
+                    value={tokenInput}
+                    onChange={(e) => {
+                      setTokenInput(e.target.value);
+                      localStorage.setItem("WHATSAPP_ACCESS_TOKEN", e.target.value.trim());
+                    }}
+                    className="w-full bg-[#09182A] border border-[#223B59] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs font-mono text-[#F5EFE0] outline-none select-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10.5px] font-mono text-zinc-400 mb-1">
+                    Meta Phone Number ID (Default: 105654069273754):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Meta Phone Number ID"
+                    value={phoneIdInput}
+                    onChange={(e) => {
+                      setPhoneIdInput(e.target.value);
+                      localStorage.setItem("WHATSAPP_PHONE_NUMBER_ID", e.target.value.trim());
+                    }}
+                    className="w-full bg-[#09182A] border border-[#223B59] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs font-mono text-[#F5EFE0] outline-none select-all"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-[10.5px] font-mono text-emerald-400 pt-0.5">
+                  <span>✓ Saved to local session automatically.</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowTokenConfig(false)}
+                    className="px-2.5 py-1 rounded bg-[#142B45] hover:bg-[#1C3A5E] text-[#F5EFE0] font-bold cursor-pointer"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* 1. Category / Department Dropdown (All 17 Departments) */}
           <div>
