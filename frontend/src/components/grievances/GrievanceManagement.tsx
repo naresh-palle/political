@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
+  FieldIssue,
   GrievanceItem,
   GrievanceContact,
   DesignatedVolunteer,
@@ -8,6 +9,7 @@ import {
   GrievanceCitizenType,
   UserProfile
 } from "../../types";
+import { AssignComplaintModal } from "../fieldops/AssignComplaintModal";
 import {
   MOCK_GRIEVANCES,
   MOCK_GRIEVANCE_CONTACTS,
@@ -43,7 +45,8 @@ import {
   Trash2,
   Briefcase,
   Eye,
-  Info
+  Info,
+  MessageCircle
 } from "lucide-react";
 
 export interface MlaMinisterialInfo {
@@ -321,6 +324,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
   const [assigneeContact, setAssigneeContact] = useState<string>("");
   const [assigneeDesignation, setAssigneeDesignation] = useState<string>("");
   const [autoMatchedPoC, setAutoMatchedPoC] = useState<GrievanceContact | null>(null);
+  const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
 
   // Volunteer Submission Receipt Modal
   const [submittedReceipt, setSubmittedReceipt] = useState<GrievanceItem | null>(null);
@@ -2194,23 +2198,61 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             <span className="text-xs text-[#8E9CAE] block">{activeTicket.assigneeDesignation} · {activeTicket.assigneeContact}</span>
                           </div>
 
-                          {/* Reassign dropdown */}
-                          <div className="text-right">
-                            <label className="text-[10px] uppercase font-bold text-[#8E9CAE] block mb-1">Reassign PoC</label>
-                            <select
-                              onChange={(e) => {
-                                const selected = contacts.find((c) => c.id === e.target.value);
-                                if (selected) handleReassignTicket(activeTicket.id, selected);
+                          {/* Reassign dropdown & WhatsApp Action */}
+                          <div className="flex flex-col items-end gap-2">
+                            <div>
+                              <label className="text-[10px] uppercase font-bold text-[#8E9CAE] block mb-1 text-right">Reassign PoC</label>
+                              <select
+                                onChange={(e) => {
+                                  const selected = contacts.find((c) => c.id === e.target.value);
+                                  if (selected) handleReassignTicket(activeTicket.id, selected);
+                                }}
+                                className="bg-[#0B1A2C] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:border-[#D4A24C]"
+                              >
+                                <option value="">Choose new PoC...</option>
+                                {contacts.map((c) => (
+                                  <option key={c.id} value={c.id}>
+                                    {c.pocName} ({c.department} - {c.mandal})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const converted: FieldIssue = {
+                                  id: activeTicket.id,
+                                  title: activeTicket.subject || `Grievance Petition #${activeTicket.id}`,
+                                  description: activeTicket.description || activeTicket.subject || "",
+                                  category: activeTicket.category || "General Grievance",
+                                  department: activeTicket.department || activeTicket.category || "Panchayat Raj",
+                                  priority: (activeTicket.priority?.toUpperCase() as any) || "HIGH",
+                                  status: (activeTicket.status?.toUpperCase() as any) || "NEW",
+                                  issueType: "GRIEVANCE",
+                                  stateId: "AP",
+                                  assemblyConstituencyId: "BNG-AC",
+                                  mandalId: "MDL-BNG-TWN",
+                                  mandalName: activeTicket.address?.townMandal || "Banaganapalle Mandal",
+                                  villageId: "VIL-BNG-TWN-01",
+                                  villageName: activeTicket.address?.wardVillage || "Banaganapalle Town",
+                                  reportedBy: activeTicket.citizenName || "Citizen Petitioner",
+                                  reporterPhone: activeTicket.citizenPhone || "+91 98850 00000",
+                                  assignedOfficialName: activeTicket.assignee,
+                                  assignedOfficialPhone: activeTicket.assigneeContact,
+                                  reportedDate: activeTicket.submittedDate || new Date().toISOString().split("T")[0],
+                                  attachments: [],
+                                  createdBy: activeTicket.submittedByVolunteer?.name || "Volunteer",
+                                  createdByRole: "VOLUNTEER",
+                                  createdAt: activeTicket.timestamp || new Date().toISOString(),
+                                  updatedAt: new Date().toISOString()
+                                };
+                                setAssignModalIssue(converted);
                               }}
-                              className="bg-[#0B1A2C] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:border-[#D4A24C]"
+                              className="py-1 px-2.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
                             >
-                              <option value="">Choose new PoC...</option>
-                              {contacts.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                  {c.pocName} ({c.department} - {c.mandal})
-                                </option>
-                              ))}
-                            </select>
+                              <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20" />
+                              Assign & Notify on WhatsApp
+                            </button>
                           </div>
                         </div>
 
@@ -2644,6 +2686,29 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
             </div>
           )}
         </div>
+      )}
+      {/* Assign Complaint & WhatsApp Modal */}
+      {assignModalIssue && (
+        <AssignComplaintModal
+          isOpen={!!assignModalIssue}
+          issue={assignModalIssue}
+          onClose={() => setAssignModalIssue(null)}
+          onConfirmAssign={(issueId, deptName, officialName, officialPhone) => {
+            if (activeTicket && activeTicket.id === issueId) {
+              setActiveTicket((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      department: deptName,
+                      assignee: officialName || prev.assignee,
+                      assigneeContact: officialPhone || prev.assigneeContact,
+                      status: "Assigned"
+                    }
+                  : null
+              );
+            }
+          }}
+        />
       )}
     </div>
   );

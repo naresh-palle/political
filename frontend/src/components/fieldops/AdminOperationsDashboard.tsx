@@ -761,6 +761,18 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                       <strong className="text-[#D4A24C]">Update: </strong>{iss.lastStatusRemarks}
                     </div>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAssignModalIssue(iss);
+                    }}
+                    className="w-full mt-2 py-1.5 px-3 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                  >
+                    <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+                    Assign & Notify on WhatsApp
+                  </button>
                 </div>
               </div>
             ))}
