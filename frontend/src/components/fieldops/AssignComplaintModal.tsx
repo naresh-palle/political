@@ -451,18 +451,19 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   const initialDeptObj = useMemo(() => {
     if (!issue) return PGRS_DEPARTMENTS_LIST[0];
 
-    // 1. Check user selected department explicitly:
-    if (issue.department) {
+    const deptStr = String(issue.department || "").toLowerCase();
+    const catStr = String(issue.category || "").toLowerCase();
+
+    if (deptStr) {
       const matchByDept = PGRS_DEPARTMENTS_LIST.find(
-        (d) => d.name.toLowerCase().includes(issue.department!.toLowerCase()) || issue.department!.toLowerCase().includes(d.name.toLowerCase())
+        (d) => d && d.name && (d.name.toLowerCase().includes(deptStr) || deptStr.includes(d.name.toLowerCase()))
       );
       if (matchByDept) return matchByDept;
     }
 
-    // 2. Check ticket category:
-    if (issue.category) {
+    if (catStr) {
       const matchByCat = PGRS_DEPARTMENTS_LIST.find(
-        (d) => d.name.toLowerCase().includes(issue.category.toLowerCase()) || issue.category.toLowerCase().includes(d.name.toLowerCase())
+        (d) => d && d.name && (d.name.toLowerCase().includes(catStr) || catStr.includes(d.name.toLowerCase()))
       );
       if (matchByCat) return matchByCat;
     }
@@ -470,7 +471,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     return PGRS_DEPARTMENTS_LIST[0];
   }, [issue]);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialDeptObj.name);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialDeptObj ? initialDeptObj.name : "");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -479,21 +480,24 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   // Sync selected category whenever a new issue is selected or modal opens
   useEffect(() => {
     if (issue && isOpen) {
+      const deptStr = String(issue.department || "").toLowerCase();
+      const catStr = String(issue.category || "").toLowerCase();
+
       let deptMatch: typeof PGRS_DEPARTMENTS_LIST[0] | undefined;
 
-      if (issue.department) {
+      if (deptStr) {
         deptMatch = PGRS_DEPARTMENTS_LIST.find(
-          (d) => d.name.toLowerCase().includes(issue.department!.toLowerCase()) || issue.department!.toLowerCase().includes(d.name.toLowerCase())
+          (d) => d && d.name && (d.name.toLowerCase().includes(deptStr) || deptStr.includes(d.name.toLowerCase()))
         );
       }
 
-      if (!deptMatch && issue.category) {
+      if (!deptMatch && catStr) {
         deptMatch = PGRS_DEPARTMENTS_LIST.find(
-          (d) => d.name.toLowerCase().includes(issue.category.toLowerCase()) || issue.category.toLowerCase().includes(d.name.toLowerCase())
+          (d) => d && d.name && (d.name.toLowerCase().includes(catStr) || catStr.includes(d.name.toLowerCase()))
         );
       }
 
-      setSelectedCategory(deptMatch ? deptMatch.name : PGRS_DEPARTMENTS_LIST[0].name);
+      setSelectedCategory(deptMatch ? deptMatch.name : (PGRS_DEPARTMENTS_LIST[0] ? PGRS_DEPARTMENTS_LIST[0].name : ""));
       setSearchQuery("");
       setSuccessMessage("");
       setIsSending(false);
@@ -502,29 +506,37 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
 
   // Get selected PGRS department object
   const currentDeptObj = useMemo(() => {
-    return PGRS_DEPARTMENTS_LIST.find((d) => d.name === selectedCategory) || initialDeptObj;
+    return PGRS_DEPARTMENTS_LIST.find((d) => d && d.name === selectedCategory) || initialDeptObj || PGRS_DEPARTMENTS_LIST[0];
   }, [selectedCategory, initialDeptObj]);
 
   // Filter contacts strict by selected category deptId & search query
   const filteredContacts = useMemo(() => {
+    if (!currentDeptObj) return PGRS_CONTACT_DATABASE;
     const list = PGRS_CONTACT_DATABASE.filter((c) => {
+      if (!c) return false;
+      const cCat = String(c.category || "").toLowerCase();
+      const cName = String(c.name || "").toLowerCase();
+      const cDesig = String(c.designation || "").toLowerCase();
+      const cMandal = String(c.mandalName || "").toLowerCase();
+      const deptName = String(currentDeptObj.name || "").toLowerCase();
+      const query = searchQuery.trim().toLowerCase();
+
       // Strict department matching:
       const matchesDept =
         c.deptId === currentDeptObj.id ||
-        c.category.toLowerCase().includes(currentDeptObj.name.toLowerCase()) ||
-        currentDeptObj.name.toLowerCase().includes(c.category.toLowerCase());
+        (cCat && deptName && (cCat.includes(deptName) || deptName.includes(cCat)));
 
       // Optional text search in name/role/mandal:
       const matchesSearch =
-        !searchQuery.trim() ||
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.mandalName && c.mandalName.toLowerCase().includes(searchQuery.toLowerCase()));
+        !query ||
+        cName.includes(query) ||
+        cDesig.includes(query) ||
+        cMandal.includes(query);
 
       return matchesDept && matchesSearch;
     });
 
-    // Fallback: If 0 contacts found for a custom department, generate nodal officer contacts dynamically
+    // Fallback: If no contact matches the specific sub-category filter, show officers for department
     if (list.length === 0) {
       const deptShortName = currentDeptObj.name.split(".")[1]?.split("(")[0]?.trim() || "Department";
       return [
