@@ -18,8 +18,10 @@ import {
   Send,
   Eye,
   ChevronRight,
-  X
+  X,
+  MessageCircle
 } from "lucide-react";
+import { AssignComplaintModal } from "./AssignComplaintModal";
 
 interface IssueDetailViewProps {
   issue: FieldIssue;
@@ -37,6 +39,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
   const [history, setHistory] = useState<WorkUpdateRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
   // Update Form State
   const [updateStatus, setUpdateStatus] = useState<IssueStatus>(
@@ -239,15 +242,24 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {canUpdateWork && (
-            <button
-              onClick={() => setIsUpdateModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Update Status & Proof</span>
-            </button>
+            <>
+              <button
+                onClick={() => setIsAssignModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 fill-white/20" />
+                <span>Assign & Notify via WhatsApp</span>
+              </button>
+              <button
+                onClick={() => setIsUpdateModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Update Status & Proof</span>
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -684,6 +696,16 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Assign Complaint & WhatsApp Modal */}
+      <AssignComplaintModal
+        isOpen={isAssignModalOpen}
+        issue={issue}
+        onClose={() => setIsAssignModalOpen(false)}
+        onConfirmAssign={() => {
+          if (onIssueUpdated) onIssueUpdated();
+        }}
+      />
     </div>
   );
 };
