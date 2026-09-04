@@ -253,6 +253,11 @@ export const OfficerTicketPortal: React.FC = () => {
 
       setSubmitSuccess(true);
       setIssue((prev) => (prev ? { ...prev, status: newStatus, lastStatusRemarks: remarks.trim(), lastStatusProof: proofUrl.trim() } : prev));
+
+      // Revert back to ticket dashboard after 3.5 seconds so status is updated live
+      setTimeout(() => {
+        window.location.hash = `#/assign-tickets?status=${newStatus}`;
+      }, 3500);
     } catch (err: any) {
       setError("Failed to submit resolution update: " + (err?.message || "Server connection error"));
     } finally {
@@ -578,7 +583,7 @@ export const OfficerTicketPortal: React.FC = () => {
               </div>
 
               {submitSuccess ? (
-                <div className="p-5 rounded-xl bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 text-xs space-y-2 animate-fadeIn">
+                <div className="p-5 rounded-xl bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 text-xs space-y-2.5 animate-fadeIn">
                   <div className="flex items-center gap-2 font-bold text-sm text-emerald-300">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                     Resolution Update Successfully Submitted & Synced!
@@ -586,13 +591,28 @@ export const OfficerTicketPortal: React.FC = () => {
                   <p>• Grievance Status updated to: <strong className="text-white">{newStatus}</strong></p>
                   <p>• Official Remarks: "{remarks}"</p>
                   <p>• Automated notification dispatched to Field Volunteer & Campaign Director.</p>
-                  <button
-                    type="button"
-                    onClick={() => setSubmitSuccess(false)}
-                    className="mt-3 px-4 py-2 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-emerald-100 text-xs font-bold cursor-pointer"
-                  >
-                    Submit Follow-up Update
-                  </button>
+                  <p className="text-[11px] text-emerald-300/80 font-mono italic">
+                    ⏳ Auto-reverting to Grievance Dashboard in 3.5 seconds...
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.location.hash = `#/assign-tickets?status=${newStatus}`;
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                      Return to Grievance Dashboard ({newStatus})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSubmitSuccess(false)}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 text-xs font-bold cursor-pointer"
+                    >
+                      Submit Follow-up Update
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmitResolution} className="space-y-4 text-xs">

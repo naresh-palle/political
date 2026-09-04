@@ -647,7 +647,10 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              window.location.hash = "#/assign-tickets?status=ALL";
+              onClose();
+            }}
             className="w-8 h-8 rounded-full bg-[#142233] hover:bg-rose-950/80 border border-[#22354D] text-[#8E9CAE] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 ml-2"
           >
             <X className="w-4 h-4" />
@@ -712,7 +715,10 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={onClose}
+                      onClick={() => {
+                        window.location.hash = "#/assign-tickets?status=ALL";
+                        onClose();
+                      }}
                       className="px-4 py-2.5 rounded-xl bg-[#1E2E42] hover:bg-[#2A3E58] text-[#F5EFE0] text-xs font-bold transition-all cursor-pointer border border-[#334A66]"
                     >
                       Done / Close
