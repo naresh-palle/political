@@ -621,9 +621,6 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
       setSuccessMessage(`✓ Ticket Assigned & WhatsApp Notification logged.`);
     } finally {
       setIsSending(false);
-      setTimeout(() => {
-        onClose();
-      }, 3500);
     }
   };
 
@@ -657,7 +654,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         {/* Modal Body */}
         <div className="p-5 space-y-4 flex-1 overflow-y-auto max-h-[70vh]">
           {successMessage && (
-            <div className="p-3 rounded-xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex flex-col gap-2 animate-fadeIn">
+            <div className="p-3.5 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex flex-col gap-2.5 animate-fadeIn">
               <div className="flex items-center gap-2">
                 {isSending ? (
                   <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0" />
@@ -667,15 +664,24 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                 <span>{successMessage}</span>
               </div>
               {directWaLink && !isSending && (
-                <a
-                  href={directWaLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
-                >
-                  <MessageCircle className="w-4 h-4 fill-white" />
-                  Launch Direct WhatsApp Chat with Officer
-                </a>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <a
+                    href={directWaLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 min-w-[200px] inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white" />
+                    Launch Direct WhatsApp Chat with Officer
+                  </a>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2.5 rounded-xl bg-[#1E2E42] hover:bg-[#2A3E58] text-[#F5EFE0] text-xs font-bold transition-all cursor-pointer border border-[#334A66]"
+                  >
+                    Done / Close
+                  </button>
+                </div>
               )}
             </div>
           )}

@@ -638,7 +638,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           onClose={() => setAssignModalIssue(null)}
           onConfirmAssign={() => {
             if (onIssueUpdated) onIssueUpdated();
-            setAssignModalIssue(null);
           }}
         />
       )}

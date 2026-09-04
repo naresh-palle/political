@@ -40,7 +40,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
-import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
+import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 
 export interface DirectorDashboardProps {
@@ -1945,7 +1945,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                               <span>🏛️</span> Assign Complaint:
                             </span>
                             <select
-                              value={issue.department || ""}
+                              value={resolveDeptValue(issue.department)}
                               onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
                               className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[190px]"
                             >
@@ -2129,7 +2129,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                           return (
                             <div className="space-y-1">
                               <select
-                                value={issue.department || ""}
+                                value={resolveDeptValue(issue.department)}
                                 onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
                                 className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
                               >

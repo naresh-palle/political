@@ -284,6 +284,18 @@ const DEPARTMENTS = [
   "Other Government Department (ఇతర ప్రభుత్వ శాఖ)"
 ];
 
+export const resolveDeptValue = (deptStr?: string) => {
+  if (!deptStr) return "";
+  const dLower = deptStr.toLowerCase().trim();
+  const match = DEPARTMENTS.find(
+    (dept) =>
+      dept.toLowerCase() === dLower ||
+      dept.toLowerCase().includes(dLower) ||
+      (dept.split(".")[1] && dLower.includes(dept.split(".")[1].split("(")[0].trim().toLowerCase()))
+  );
+  return match || deptStr;
+};
+
 const FIXED_MANDALS_TOWNS = [
   { id: "MDL-BNG-TWN", name: "Banaganapalle Town (Town)", type: "TOWN" },
   { id: "MDL-KKL-TWN", name: "Koilakuntla Town (Town)", type: "TOWN" },
@@ -1556,7 +1568,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                               <span>🏛️</span> Assign Complaint:
                             </span>
                             <select
-                              value={issue.department || ""}
+                              value={resolveDeptValue(issue.department)}
                               onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
                               className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[190px]"
                             >
@@ -1694,7 +1706,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             return (
                               <div className="space-y-1">
                                 <select
-                                  value={issue.department || ""}
+                                  value={resolveDeptValue(issue.department)}
                                   onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
                                   className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
                                 >

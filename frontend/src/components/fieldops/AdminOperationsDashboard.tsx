@@ -1009,7 +1009,6 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           onClose={() => setAssignModalIssue(null)}
           onConfirmAssign={(issueId, deptName, officialName, officialPhone) => {
             handleAssignDepartment(issueId, deptName, officialName, officialPhone);
-            setAssignModalIssue(null);
           }}
         />
       )}
