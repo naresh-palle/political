@@ -1782,6 +1782,109 @@ async def trigger_geography_seed():
         }
     except Exception as e:
         logger.error(f"Seed error: {e}")
+# ----------------- FIELD OPS ISSUES ENDPOINTS -----------------
+
+@api_router.get("/field-ops/issues")
+async def get_field_issues(
+    userId: Optional[str] = None,
+    userRole: Optional[str] = None,
+    directorId: Optional[str] = None,
+    mandalId: Optional[str] = None,
+    villageId: Optional[str] = None,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    q: Optional[str] = None
+):
+    issues = []
+    try:
+        query = {}
+        if userRole == "VOLUNTEER" and userId:
+            query["assignedVolunteerId"] = userId
+        elif userRole == "DIRECTOR" and (userId or directorId):
+            query["directorId"] = directorId or userId
+        if mandalId and mandalId != "ALL":
+            query["mandalId"] = mandalId
+        if villageId and villageId != "ALL":
+            query["villageId"] = villageId
+        if status and status != "ALL":
+            query["status"] = status
+        if priority and priority != "ALL":
+            query["priority"] = priority
+            
+        cursor = db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1)
+        issues = await cursor.to_list(length=500)
+    except Exception as e:
+        logger.warning(f"MongoDB field_issues fetch error: {e}")
+        
+    if not issues:
+        fallback = load_json_fallback("field_issues.json")
+        if userRole == "VOLUNTEER" and userId:
+            fallback = [i for i in fallback if i.get("assignedVolunteerId") == userId]
+        elif userRole == "DIRECTOR" and (userId or directorId):
+            d_id = directorId or userId
+            fallback = [i for i in fallback if i.get("directorId") == d_id]
+        if mandalId and mandalId != "ALL":
+            fallback = [i for i in fallback if i.get("mandalId") == mandalId]
+        if villageId and villageId != "ALL":
+            fallback = [i for i in fallback if i.get("villageId") == villageId]
+        if status and status != "ALL":
+            fallback = [i for i in fallback if i.get("status") == status]
+        if priority and priority != "ALL":
+            fallback = [i for i in fallback if i.get("priority") == priority]
+        issues = fallback
+
+    if q and q.strip():
+        ql = q.lower()
+        issues = [
+            i for i in issues 
+            if ql in i.get("id", "").lower() 
+            or ql in i.get("title", "").lower() 
+            or ql in i.get("description", "").lower()
+            or ql in i.get("reportedBy", "").lower()
+            or ql in i.get("department", "").lower()
+        ]
+    return issues
+
+
+@api_router.post("/field-ops/issues")
+async def create_field_issue(payload: dict):
+    now_str = datetime.now(timezone.utc).isoformat()
+    issue_id = payload.get("id") or f"iss-{uuid.uuid4().hex[:8]}"
+    
+    issue_doc = {
+        **payload,
+        "id": issue_id,
+        "status": payload.get("status", "NEW"),
+        "createdAt": payload.get("createdAt") or now_str,
+        "updatedAt": now_str
+    }
+    
+    try:
+        await db.field_issues.update_one({"id": issue_id}, {"$set": issue_doc}, upsert=True)
+    except Exception as e:
+        logger.error(f"Failed to persist field_issue to MongoDB: {e}")
+        
+    return issue_doc
+
+
+@api_router.put("/field-ops/issues/{issue_id}/status")
+async def update_field_issue_status(issue_id: str, payload: dict):
+    now_str = datetime.now(timezone.utc).isoformat()
+    new_status = payload.get("status")
+    remarks = payload.get("remarks")
+    
+    update_doc = {"status": new_status, "updatedAt": now_str}
+    if remarks:
+        update_doc["statusRemarks"] = remarks
+        
+    try:
+        await db.field_issues.update_one({"id": issue_id}, {"$set": update_doc})
+    except Exception as e:
+        logger.error(f"Failed to update status for issue {issue_id}: {e}")
+        
+    return {"issueId": issue_id, "status": new_status, "updatedAt": now_str}
+
+
 # ----------------- DYNAMIC LEADER-SPECIFIC WHATSAPP NOTIFICATION ENDPOINTS -----------------
 
 whatsapp_client = WhatsAppCloudApiClient()

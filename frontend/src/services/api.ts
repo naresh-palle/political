@@ -968,6 +968,7 @@ export const politicalApiService = {
     priority?: string;
     q?: string;
   }): Promise<any[]> {
+    let list: any[] = [];
     try {
       const qp = new URLSearchParams();
       if (params?.userId) qp.append("userId", params.userId);
@@ -982,58 +983,88 @@ export const politicalApiService = {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues?${qp.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) return data;
+        if (Array.isArray(data)) list = data;
       }
     } catch (e) {
       // Fallback
     }
+
+    if (!list || list.length === 0) {
+      try {
+        const res = await fetch("./data/field_issues.json");
+        if (res.ok) {
+          list = await res.json();
+        }
+      } catch (e) {}
+    }
+
+    // Merge with locally created issues from localStorage so newly submitted tickets NEVER disappear after refresh
     try {
-      const res = await fetch("./data/field_issues.json");
-      if (res.ok) {
-        let list = await res.json();
-        if (params?.userRole === "VOLUNTEER" && params?.userId) {
-          list = list.filter((i: any) => i.assignedVolunteerId === params.userId);
-        } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
-          const dId = params.directorId || params.userId;
-          list = list.filter((i: any) => i.directorId === dId);
+      const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+      if (savedRaw) {
+        const savedList = JSON.parse(savedRaw);
+        if (Array.isArray(savedList) && savedList.length > 0) {
+          const existingIds = new Set(list.map((i: any) => i.id));
+          const uniqueNew = savedList.filter((i: any) => !existingIds.has(i.id));
+          list = [...uniqueNew, ...list];
         }
-        if (params?.mandalId && params.mandalId !== "ALL") {
-          list = list.filter((i: any) => i.mandalId === params.mandalId);
-        }
-        if (params?.villageId && params.villageId !== "ALL") {
-          list = list.filter((i: any) => i.villageId === params.villageId);
-        }
-        if (params?.status && params.status !== "ALL") {
-          list = list.filter((i: any) => i.status === params.status);
-        }
-        if (params?.priority && params.priority !== "ALL") {
-          list = list.filter((i: any) => i.priority === params.priority);
-        }
-        return list;
       }
     } catch (e) {}
-    return [];
+
+    // Apply filtering
+    if (params?.userRole === "VOLUNTEER" && params?.userId) {
+      list = list.filter((i: any) => i.assignedVolunteerId === params.userId);
+    } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
+      const dId = params.directorId || params.userId;
+      list = list.filter((i: any) => i.directorId === dId);
+    }
+    if (params?.mandalId && params.mandalId !== "ALL") {
+      list = list.filter((i: any) => i.mandalId === params.mandalId);
+    }
+    if (params?.villageId && params.villageId !== "ALL") {
+      list = list.filter((i: any) => i.villageId === params.villageId);
+    }
+    if (params?.status && params.status !== "ALL") {
+      list = list.filter((i: any) => i.status === params.status);
+    }
+    if (params?.priority && params.priority !== "ALL") {
+      list = list.filter((i: any) => i.priority === params.priority);
+    }
+
+    return list;
   },
 
   async createFieldIssue(payload: any): Promise<any> {
+    let createdDoc = null;
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      if (res.ok) return await res.json();
+      if (res.ok) createdDoc = await res.json();
     } catch (e) {
       // Fallback
     }
-    return {
-      ...payload,
-      id: `iss-${Date.now().toString(16)}`,
-      status: payload.status || "NEW",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isImmutable: true
-    };
+
+    if (!createdDoc) {
+      createdDoc = {
+        ...payload,
+        id: payload.id || `iss-${Date.now().toString(16)}`,
+        status: payload.status || "NEW",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    try {
+      const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+      const savedList = savedRaw ? JSON.parse(savedRaw) : [];
+      const updated = [createdDoc, ...savedList.filter((i: any) => i.id !== createdDoc.id)];
+      localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(updated));
+    } catch (e) {}
+
+    return createdDoc;
   },
 
   async updateFieldIssueStatus(issueId: string, payload: any): Promise<any> {
