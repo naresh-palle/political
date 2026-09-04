@@ -1437,9 +1437,8 @@ export const politicalApiService = {
 
     if (metaToken && formattedPhone) {
       try {
-        console.log(`[Meta WhatsApp API] Dispatching Cloud API alert to recipient: ${formattedPhone} (PhoneNumberID: ${phoneNumberId})`);
-        
-        const templateRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+        // Attempt custom ticket_assignment_alert template first
+        const customTemplateRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${metaToken}`,
@@ -1451,13 +1450,47 @@ export const politicalApiService = {
             to: formattedPhone,
             type: "template",
             template: {
-              name: "hello_world",
-              language: { code: "en_US" }
+              name: "ticket_assignment_alert",
+              language: { code: "en_US" },
+              components: [
+                {
+                  type: "body",
+                  parameters: [
+                    { type: "text", text: payload.assignedOfficialName || "Officer" },
+                    { type: "text", text: `#${issueId}` },
+                    { type: "text", text: payload.assignedDeptName || "Department" },
+                    { type: "text", text: "Banaganapalle Constituency" },
+                    { type: "text", text: actionUrl }
+                  ]
+                }
+              ]
             }
           })
         });
-        const templateData = await templateRes.json();
-        console.log("[Meta WhatsApp API] Template Response:", templateData);
+        const customData = await customTemplateRes.json();
+        console.log("[Meta WhatsApp API] Custom Template Response:", customData);
+
+        // Fallback to hello_world test template if custom template is not yet approved
+        if (customData.error) {
+          console.warn("[Meta WhatsApp API] Custom template pending approval. Sending fallback hello_world...");
+          await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${metaToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              recipient_type: "individual",
+              to: formattedPhone,
+              type: "template",
+              template: {
+                name: "hello_world",
+                language: { code: "en_US" }
+              }
+            })
+          });
+        }
 
         const textRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
           method: "POST",
