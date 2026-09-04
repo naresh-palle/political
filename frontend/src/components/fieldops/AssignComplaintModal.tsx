@@ -16,6 +16,28 @@ export interface AssignContactOption {
 }
 
 export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
+  // Primary Verified Live Testing Officers
+  {
+    id: "cnt-pr-live-01",
+    deptId: 1,
+    name: "N. Palle (Senior Executive Officer)",
+    designation: "Senior Executive Engineer - Panchayat Raj",
+    phone: "+91 98857 65672",
+    category: "1. Panchayat Raj – Engineering Department",
+    mandalName: "Banaganapalle Mandal",
+    isOfficer: true
+  },
+  {
+    id: "cnt-rws-live-02",
+    deptId: 2,
+    name: "K. Reddy (RWS Executive Engineer)",
+    designation: "RWS Chief Operations Engineer",
+    phone: "+91 89852 16765",
+    category: "2. Rural Water Supply Scheme Department (RWS)",
+    mandalName: "Banaganapalle Town",
+    isOfficer: true
+  },
+
   // 1. Panchayat Raj – Engineering Department
   {
     id: "cnt-pr-01",
