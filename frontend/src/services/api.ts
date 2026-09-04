@@ -1420,19 +1420,20 @@ export const politicalApiService = {
       templateName: "hello_world"
     };
 
-    // Direct Meta WhatsApp Cloud API call if token exists in localStorage, window, or env
+    // Direct Meta WhatsApp Cloud API call if token exists in localStorage, window, env, or fallback
     const metaToken =
       localStorage.getItem("WHATSAPP_ACCESS_TOKEN") ||
       localStorage.getItem("META_WHATSAPP_TOKEN") ||
       localStorage.getItem("VITE_WHATSAPP_TOKEN") ||
       (window as any).WHATSAPP_ACCESS_TOKEN ||
       (import.meta as any).env?.VITE_WHATSAPP_TOKEN ||
-      (import.meta as any).env?.VITE_META_WHATSAPP_TOKEN;
+      (import.meta as any).env?.VITE_META_WHATSAPP_TOKEN ||
+      "EAAPfoO339fkBSd9oLe22856BrHpr4ElizabMiMmrdIZCPc3t6FZCH9DApNZAs67B293IpoHVyji1sREgFZBlukigboVneQAfaBR2uJwwsescPgCDP2ALHKIjzxx0HmA80kDBq727VXssKbwqXjhYekkXmQruPnlc2Fgouc1RLZBewBxNBCN0uy9FIZBM4SMZBvXDKShdlQiTFtXF6nZBB66Vv6ZAZB04zwfVuDBWwKMUAZBYr0iw9iNlZBWq8YY5MqpR7TkQT7R7f5qQL840gizw60hiKDP1jmAtpPLLHVZBZAHQZDZD";
 
     const phoneNumberId =
       localStorage.getItem("WHATSAPP_PHONE_NUMBER_ID") ||
       (import.meta as any).env?.VITE_WHATSAPP_PHONE_NUMBER_ID ||
-      "105654069273754";
+      "1326513833874482";
 
     if (metaToken && formattedPhone) {
       try {

@@ -125,12 +125,12 @@ class WhatsAppCloudApiClient:
     Sends template or text messages and handles errors gracefully.
     """
     def __init__(self):
-        self.enabled = os.environ.get("WHATSAPP_ENABLED", "false").lower() == "true"
-        self.phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")
-        self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "")
-        self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
-        self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v18.0")
-        self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "ticket_assignment_alert")
+        self.enabled = os.environ.get("WHATSAPP_ENABLED", "true").lower() == "true"
+        self.phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "1326513833874482")
+        self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "EAAPfoO339fkBSd9oLe22856BrHpr4ElizabMiMmrdIZCPc3t6FZCH9DApNZAs67B293IpoHVyji1sREgFZBlukigboVneQAfaBR2uJwwsescPgCDP2ALHKIjzxx0HmA80kDBq727VXssKbwqXjhYekkXmQruPnlc2Fgouc1RLZBewBxNBCN0uy9FIZBM4SMZBvXDKShdlQiTFtXF6nZBB66Vv6ZAZB04zwfVuDBWwKMUAZBYr0iw9iNlZBWq8YY5MqpR7TkQT7R7f5qQL840gizw60hiKDP1jmAtpPLLHVZBZAHQZDZD")
+        self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "1439753914880297")
+        self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v21.0")
+        self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "hello_world")
 
     async def send_whatsapp_notification(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         phone = payload.get("recipientPhone", "").replace("+", "").replace(" ", "").replace("-", "")
