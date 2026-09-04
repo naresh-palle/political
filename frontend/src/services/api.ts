@@ -1454,6 +1454,12 @@ export const politicalApiService = {
               language: { code: "en_US" },
               components: [
                 {
+                  type: "header",
+                  parameters: [
+                    { type: "text", text: "Hon. B. C. Janardhan Reddy (MLA)" }
+                  ]
+                },
+                {
                   type: "body",
                   parameters: [
                     { type: "text", text: payload.assignedOfficialName || "Officer" },
