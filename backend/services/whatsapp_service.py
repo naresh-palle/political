@@ -127,7 +127,7 @@ class WhatsAppCloudApiClient:
     def __init__(self):
         self.enabled = os.environ.get("WHATSAPP_ENABLED", "true").lower() == "true"
         self.phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "1326513833874482")
-        self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "EAAPfoO339fkBSd9oLe22856BrHpr4ElizabMiMmrdIZCPc3t6FZCH9DApNZAs67B293IpoHVyji1sREgFZBlukigboVneQAfaBR2uJwwsescPgCDP2ALHKIjzxx0HmA80kDBq727VXssKbwqXjhYekkXmQruPnlc2Fgouc1RLZBewBxNBCN0uy9FIZBM4SMZBvXDKShdlQiTFtXF6nZBB66Vv6ZAZB04zwfVuDBWwKMUAZBYr0iw9iNlZBWq8YY5MqpR7TkQT7R7f5qQL840gizw60hiKDP1jmAtpPLLHVZBZAHQZDZD")
+        self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "EAAPfoO339fkBSerKDXs1dhvenNkaxhO6oRbDbfB8XGMzZAx8vv2HBPcQnPNjCo5tkUsZArIbj1sZAkC9wlZCJZApHBzPEbAZA4qiWhzzRZAfDTFsmZAQg2ZCZAlpZCpKyFjEfJF2W5dY0naIK2GZCVgDKbdyOnFmqpRZBmzHyaKWIycfF2QaExXZB6zrbyayyMzMgg0ZAclGgZDZD")
         self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "1439753914880297")
         self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v21.0")
         self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "hello_world")

@@ -1428,7 +1428,7 @@ export const politicalApiService = {
       (window as any).WHATSAPP_ACCESS_TOKEN ||
       (import.meta as any).env?.VITE_WHATSAPP_TOKEN ||
       (import.meta as any).env?.VITE_META_WHATSAPP_TOKEN ||
-      "EAAPfoO339fkBSd9oLe22856BrHpr4ElizabMiMmrdIZCPc3t6FZCH9DApNZAs67B293IpoHVyji1sREgFZBlukigboVneQAfaBR2uJwwsescPgCDP2ALHKIjzxx0HmA80kDBq727VXssKbwqXjhYekkXmQruPnlc2Fgouc1RLZBewBxNBCN0uy9FIZBM4SMZBvXDKShdlQiTFtXF6nZBB66Vv6ZAZB04zwfVuDBWwKMUAZBYr0iw9iNlZBWq8YY5MqpR7TkQT7R7f5qQL840gizw60hiKDP1jmAtpPLLHVZBZAHQZDZD";
+      "EAAPfoO339fkBSerKDXs1dhvenNkaxhO6oRbDbfB8XGMzZAx8vv2HBPcQnPNjCo5tkUsZArIbj1sZAkC9wlZCJZApHBzPEbAZA4qiWhzzRZAfDTFsmZAQg2ZCZAlpZCpKyFjEfJF2W5dY0naIK2GZCVgDKbdyOnFmqpRZBmzHyaKWIycfF2QaExXZB6zrbyayyMzMgg0ZAclGgZDZD";
 
     const phoneNumberId =
       localStorage.getItem("WHATSAPP_PHONE_NUMBER_ID") ||
