@@ -23,16 +23,21 @@ function copyDir(src, dest) {
   }
 }
 
-// 1. Create 404.html and CNAME in dist
+// 1. Create 404.html, CNAME, and .nojekyll in dist & public
 const distIndex = path.join(distDir, 'index.html');
 const dist404 = path.join(distDir, '404.html');
 const distCname = path.join(distDir, 'CNAME');
+const distNojekyll = path.join(distDir, '.nojekyll');
+const publicDir = path.join(frontendDir, 'public');
+const public404 = path.join(publicDir, '404.html');
 const domainName = 'leaderslensconsulting.com';
 
 if (fs.existsSync(distIndex)) {
   fs.copyFileSync(distIndex, dist404);
+  fs.copyFileSync(distIndex, public404);
 }
 fs.writeFileSync(distCname, domainName, 'utf-8');
+fs.writeFileSync(distNojekyll, '', 'utf-8');
 
 // 2. Sync dist to docs/
 if (fs.existsSync(distDir)) {
