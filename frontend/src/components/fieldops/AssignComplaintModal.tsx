@@ -435,7 +435,7 @@ interface AssignComplaintModalProps {
   isOpen: boolean;
   issue: FieldIssue | null;
   onClose: () => void;
-  onConfirmAssign: (issueId: string, assignedDeptOrName: string, contactPhone?: string) => void;
+  onConfirmAssign: (issueId: string, assignedDeptName: string, officialName?: string, officialPhone?: string) => void;
 }
 
 export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
@@ -444,6 +444,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   onClose,
   onConfirmAssign
 }) => {
+  const [directWaLink, setDirectWaLink] = useState<string>("");
   if (!isOpen || !issue) return null;
 
   // Determine user-selected department FIRST
@@ -574,11 +575,17 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     const targetRole = contactToNotify ? contactToNotify.designation : currentDeptObj.name;
     const targetPhone = contactToNotify ? contactToNotify.phone : "+91 98492 44556";
 
+    // Direct WhatsApp web link fallback
+    const rawDigits = targetPhone.replace(/[^0-9]/g, "");
+    const formattedPhone = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
+    const waText = encodeURIComponent(`🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${targetName},\n\nYou have been assigned Grievance Ticket *#${issue.id}*.\n*Title:* ${issue.title}\n*Department:* ${currentDeptObj.name}\n*Mandal:* ${issue.mandalName || "Banaganapalle"}\n\nPlease review and take action.`);
+    setDirectWaLink(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${waText}`);
+
     setIsSending(true);
     setSuccessMessage("Assigning Ticket & Dispatching Server-Side WhatsApp Notification...");
 
     // 1. Update issue assignment in parent dashboard
-    onConfirmAssign(issue.id, `${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name} (${targetName})`, targetPhone);
+    onConfirmAssign(issue.id, currentDeptObj.name, targetName, targetPhone);
 
     // 2. Dispatch Server-Side WhatsApp Cloud API request
     try {
@@ -593,10 +600,9 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
 
       if (res.success && res.notification?.status === "DELIVERED") {
         const notifStatus = res.notification.status || "DELIVERED";
-        const leaderName = res.notification.leaderName || "the constituency administration";
         setSuccessMessage(`✓ Ticket Assigned & Live WhatsApp Alert (${notifStatus}) sent to ${targetName} (${targetPhone})!`);
       } else {
-        const errMsg = (res as any).error || res.notification?.errorMessage || "Meta Graph API verification required";
+        const errMsg = (res as any).error || res.notification?.errorMessage || "Meta Sandbox restriction (verify number in Meta Console)";
         setSuccessMessage(`⚠️ Ticket Assigned to ${targetName}. WhatsApp API Status: ${errMsg}`);
       }
     } catch (err: any) {
@@ -605,7 +611,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
       setIsSending(false);
       setTimeout(() => {
         onClose();
-      }, 2000);
+      }, 3500);
     }
   };
 
@@ -639,13 +645,26 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         {/* Modal Body */}
         <div className="p-5 space-y-4 flex-1 overflow-y-auto max-h-[70vh]">
           {successMessage && (
-            <div className="p-3 rounded-xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
-              {isSending ? (
-                <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="p-3 rounded-xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex flex-col gap-2 animate-fadeIn">
+              <div className="flex items-center gap-2">
+                {isSending ? (
+                  <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                )}
+                <span>{successMessage}</span>
+              </div>
+              {directWaLink && !isSending && (
+                <a
+                  href={directWaLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white" />
+                  Launch Direct WhatsApp Chat with Officer
+                </a>
               )}
-              {successMessage}
             </div>
           )}
 

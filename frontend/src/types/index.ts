@@ -532,6 +532,9 @@ export interface FieldIssue {
   citizenAge?: number;
   reportedDate: string;
   dueDate?: string;
+  assignedDepartment?: string;
+  assignedOfficialName?: string;
+  assignedOfficialPhone?: string;
   assignedVolunteerId?: string;
   assignedVolunteerName?: string;
   assignedVolunteerPhone?: string;

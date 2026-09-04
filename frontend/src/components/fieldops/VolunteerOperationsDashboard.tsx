@@ -784,7 +784,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     }
   };
 
-  const handleAssignDepartment = async (issueId: string, newDept: string) => {
+  const handleAssignDepartment = async (issueId: string, newDept: string, officialName?: string, officialPhone?: string) => {
     let finalDept = newDept;
     if (newDept === "Other Government Department") {
       const customText = prompt("Specify custom Government Department details:");
@@ -793,12 +793,23 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       }
     }
 
-    setIssues((prev) =>
-      prev.map((item) => {
+    const baseDeptObj = PGRS_DEPARTMENTS_LIST.find((d: any) =>
+      typeof d === "string"
+        ? d.toLowerCase().includes(finalDept.toLowerCase())
+        : (d.name || "").toLowerCase().includes(finalDept.toLowerCase()) || finalDept.toLowerCase().includes((d.name || "").split("(")[0].trim().toLowerCase())
+    );
+    const baseDept = baseDeptObj ? (typeof baseDeptObj === "string" ? baseDeptObj : baseDeptObj.name) : finalDept;
+
+    setIssues((prev: FieldIssue[]) =>
+      prev.map((item: FieldIssue) => {
         if (item.id === issueId) {
           return {
             ...item,
-            department: finalDept,
+            department: baseDept,
+            assignedDepartment: baseDept,
+            assignedOfficialName: officialName || item.assignedOfficialName || "",
+            assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
+            status: "ASSIGNED",
             updatedAt: new Date().toISOString()
           };
         }
@@ -807,9 +818,34 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     );
 
     try {
+      const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+      if (savedRaw) {
+        const savedList = JSON.parse(savedRaw);
+        const updated = savedList.map((i: any) => {
+          if (i.id === issueId) {
+            return {
+              ...i,
+              department: baseDept,
+              assignedDepartment: baseDept,
+              assignedOfficialName: officialName || i.assignedOfficialName || "",
+              assignedOfficialPhone: officialPhone || i.assignedOfficialPhone || "",
+              status: "ASSIGNED",
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return i;
+        });
+        localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(updated));
+      }
+    } catch (e) {}
+
+    try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
-        department: finalDept,
-        remarks: `Department assigned to ${finalDept}`
+        department: baseDept,
+        status: "ASSIGNED",
+        assignedOfficialName: officialName,
+        assignedOfficialPhone: officialPhone,
+        remarks: `Department assigned to ${baseDept}`
       });
     } catch (e) {
       console.warn("Department update error", e);
@@ -2316,7 +2352,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         isOpen={!!assignModalIssue}
         issue={assignModalIssue}
         onClose={() => setAssignModalIssue(null)}
-        onConfirmAssign={(issueId, assignedVal) => handleAssignDepartment(issueId, assignedVal)}
+        onConfirmAssign={(issueId, deptName, officialName, officialPhone) => handleAssignDepartment(issueId, deptName, officialName, officialPhone)}
       />
     </div>
   );
