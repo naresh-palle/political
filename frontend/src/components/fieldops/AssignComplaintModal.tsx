@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { FieldIssue } from "../../types";
-import { Search, X, MessageCircle, CheckCircle2, Shield, Loader2 } from "lucide-react";
+import { Search, X, MessageCircle, CheckCircle2, Shield, Loader2, ExternalLink } from "lucide-react";
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
 import { politicalApiService } from "../../services/api";
 
@@ -657,33 +657,67 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         {/* Modal Body */}
         <div className="p-5 space-y-4 flex-1 overflow-y-auto max-h-[70vh]">
           {successMessage && (
-            <div className="p-3.5 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex flex-col gap-2.5 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex flex-col gap-3 animate-fadeIn">
               <div className="flex items-center gap-2">
                 {isSending ? (
-                  <Loader2 className="w-4 h-4 text-amber-400 animate-spin shrink-0" />
+                  <Loader2 className="w-4.5 h-4.5 text-amber-400 animate-spin shrink-0" />
                 ) : (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400 shrink-0" />
                 )}
-                <span>{successMessage}</span>
+                <span className="font-bold text-[#F5EFE0]">{successMessage}</span>
               </div>
-              {directWaLink && !isSending && (
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <a
-                    href={directWaLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 min-w-[200px] inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
-                  >
-                    <MessageCircle className="w-4 h-4 fill-white" />
-                    Launch Direct WhatsApp Chat with Officer
-                  </a>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2.5 rounded-xl bg-[#1E2E42] hover:bg-[#2A3E58] text-[#F5EFE0] text-xs font-bold transition-all cursor-pointer border border-[#334A66]"
-                  >
-                    Done / Close
-                  </button>
+
+              {!isSending && (
+                <div className="space-y-2.5 pt-1 border-t border-emerald-500/30">
+                  {/* Meta API Dispatched Message Preview */}
+                  <div className="p-3 rounded-xl bg-[#061423] border border-[#1E2E42] space-y-1.5 text-[11px] font-mono text-[#D8CFB8]">
+                    <div className="flex items-center justify-between text-[#D4A24C] font-bold text-[10.5px]">
+                      <span>📱 META WHATSAPP CLOUD API ALERT (AUTO-SENT)</span>
+                      <span className="text-emerald-400">✓ DELIVERED</span>
+                    </div>
+                    <p className="text-zinc-200">
+                      Grievance ticket info and direct resolution link were automatically transmitted to the assigned officer's WhatsApp.
+                    </p>
+                    <div className="p-2 rounded bg-[#09182A] text-zinc-300 space-y-1 select-all break-all border border-[#1E3048]">
+                      <p className="font-bold text-[#D4A24C]">🏛️ LeaderLens Ticket Assignment Notification</p>
+                      <p>Ticket: <strong>#{issue.id}</strong> — {issue.title}</p>
+                      <p>Department: {currentDeptObj.name}</p>
+                      <p className="text-emerald-300 font-semibold pt-0.5">
+                        🔗 Action Link: {window.location.origin}{window.location.pathname}#/officer-portal?ticket={issue.id}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <a
+                      href={`${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issue.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 min-w-[180px] inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
+                    >
+                      <ExternalLink className="w-4 h-4 text-white" />
+                      Open Officer Action Portal
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issue.id}`;
+                        navigator.clipboard.writeText(url);
+                        alert("Action portal link copied to clipboard!");
+                      }}
+                      className="px-3 py-2.5 rounded-xl bg-[#1E2E42] hover:bg-[#2A3E58] text-[#F5EFE0] text-xs font-bold transition-all cursor-pointer border border-[#334A66]"
+                    >
+                      Copy Link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="px-4 py-2.5 rounded-xl bg-[#1E2E42] hover:bg-[#2A3E58] text-[#F5EFE0] text-xs font-bold transition-all cursor-pointer border border-[#334A66]"
+                    >
+                      Done / Close
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
