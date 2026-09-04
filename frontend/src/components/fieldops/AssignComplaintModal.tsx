@@ -445,7 +445,6 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   onConfirmAssign
 }) => {
   const [directWaLink, setDirectWaLink] = useState<string>("");
-  if (!isOpen || !issue) return null;
 
   // Determine user-selected department FIRST
   const initialDeptObj = useMemo(() => {
@@ -547,7 +546,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
           designation: `Department Nodal Officer, ${deptShortName}`,
           phone: "+91 98480 33441",
           category: currentDeptObj.name,
-          mandalName: issue.mandalName || "Banaganapalle Mandal",
+          mandalName: issue?.mandalName || "Banaganapalle Mandal",
           isOfficer: true
         },
         {
@@ -557,13 +556,13 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
           designation: "Constituency Field Operations Lead",
           phone: "+91 98480 12345",
           category: currentDeptObj.name,
-          mandalName: issue.mandalName || "Banaganapalle Town"
+          mandalName: issue?.mandalName || "Banaganapalle Town"
         }
       ];
     }
 
     return list;
-  }, [currentDeptObj, searchQuery, issue.mandalName]);
+  }, [currentDeptObj, searchQuery, issue?.mandalName]);
 
   // Reset selected contact whenever category or filtered contacts change
   useEffect(() => {
@@ -578,6 +577,8 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   const selectedContact = useMemo(() => {
     return filteredContacts.find((c) => c.id === selectedContactId) || filteredContacts[0];
   }, [selectedContactId, filteredContacts]);
+
+  if (!isOpen || !issue) return null;
 
   const handleAssignAndNotify = async () => {
     const contactToNotify = selectedContact || filteredContacts[0];
