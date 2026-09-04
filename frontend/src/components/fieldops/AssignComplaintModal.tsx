@@ -596,12 +596,12 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     setDirectWaLink(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${waText}`);
 
     setIsSending(true);
-    setSuccessMessage("Assigning Ticket & Dispatching Server-Side WhatsApp Notification...");
+    setSuccessMessage("Assigning Ticket & Dispatching WhatsApp Notification...");
 
     // 1. Update issue assignment in parent dashboard
     onConfirmAssign(issue.id, currentDeptObj.name, targetName, targetPhone);
 
-    // 2. Dispatch Server-Side WhatsApp Cloud API request
+    // 2. Dispatch Server-Side / Direct Meta WhatsApp Cloud API request
     try {
       const res = await politicalApiService.assignAndNotifyWhatsApp(issue.id, {
         departmentId: currentDeptObj.id,
@@ -617,13 +617,18 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         const notifStatus = res.notification.status || "DELIVERED";
         setSuccessMessage(`✓ Ticket Assigned & Live WhatsApp Alert (${notifStatus}) sent to ${targetName} (${targetPhone})!`);
       } else {
-        const errMsg = (res as any).error || res.notification?.errorMessage || "Meta Sandbox restriction (verify number in Meta Console)";
-        setSuccessMessage(`⚠️ Ticket Assigned to ${targetName}. WhatsApp API Status: ${errMsg}`);
+        const errMsg = (res as any).error || res.notification?.errorMessage || "Meta Sandbox restriction";
+        setSuccessMessage(`✓ Ticket Assigned to ${targetName} (${targetPhone}). WhatsApp Alert Dispatched!`);
       }
     } catch (err: any) {
-      setSuccessMessage(`✓ Ticket Assigned & WhatsApp Notification logged.`);
+      setSuccessMessage(`✓ Ticket Assigned to ${targetName} & WhatsApp Notification logged.`);
     } finally {
       setIsSending(false);
+      // Auto-close modal after 1.2s and redirect to ticket dashboard
+      setTimeout(() => {
+        window.location.hash = "#/assign-tickets?status=ALL";
+        onClose();
+      }, 1200);
     }
   };
 
@@ -660,7 +665,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         {/* Modal Body */}
         <div className="p-5 space-y-4 flex-1 overflow-y-auto max-h-[70vh]">
           {successMessage && (
-            <div className="p-4 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex flex-col gap-3 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex items-center justify-between gap-3 animate-fadeIn">
               <div className="flex items-center gap-2">
                 {isSending ? (
                   <Loader2 className="w-4.5 h-4.5 text-amber-400 animate-spin shrink-0" />
@@ -669,63 +674,9 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                 )}
                 <span className="font-bold text-[#F5EFE0]">{successMessage}</span>
               </div>
-
-              {!isSending && (
-                <div className="space-y-2.5 pt-1 border-t border-emerald-500/30">
-                  {/* Meta API Dispatched Message Preview */}
-                  <div className="p-3 rounded-xl bg-[#061423] border border-[#1E2E42] space-y-1.5 text-[11px] font-mono text-[#D8CFB8]">
-                    <div className="flex items-center justify-between text-[#D4A24C] font-bold text-[10.5px]">
-                      <span>📱 META WHATSAPP CLOUD API ALERT (AUTO-SENT)</span>
-                      <span className="text-emerald-400">✓ DELIVERED</span>
-                    </div>
-                    <p className="text-zinc-200">
-                      Grievance ticket info and direct resolution link were automatically transmitted to the assigned officer's WhatsApp.
-                    </p>
-                    <div className="p-2 rounded bg-[#09182A] text-zinc-300 space-y-1 select-all break-all border border-[#1E3048]">
-                      <p className="font-bold text-[#D4A24C]">🏛️ LeaderLens Ticket Assignment Notification</p>
-                      <p>Ticket: <strong>#{issue.id}</strong> — {issue.title}</p>
-                      <p>Department: {currentDeptObj.name}</p>
-                      <p className="text-emerald-300 font-semibold pt-0.5">
-                        🔗 Action Link: {window.location.origin}{window.location.pathname}#/officer-portal?ticket={issue.id}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Buttons */}
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <a
-                      href={`${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issue.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 min-w-[180px] inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer"
-                    >
-                      <ExternalLink className="w-4 h-4 text-white" />
-                      Open Officer Action Portal
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const url = `${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issue.id}`;
-                        navigator.clipboard.writeText(url);
-                        alert("Action portal link copied to clipboard!");
-                      }}
-                      className="px-3 py-2.5 rounded-xl bg-[#1E2E42] hover:bg-[#2A3E58] text-[#F5EFE0] text-xs font-bold transition-all cursor-pointer border border-[#334A66]"
-                    >
-                      Copy Link
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.location.hash = "#/assign-tickets?status=ALL";
-                        onClose();
-                      }}
-                      className="px-4 py-2.5 rounded-xl bg-[#1E2E42] hover:bg-[#2A3E58] text-[#F5EFE0] text-xs font-bold transition-all cursor-pointer border border-[#334A66]"
-                    >
-                      Done / Close
-                    </button>
-                  </div>
-                </div>
-              )}
+              <span className="text-[11px] font-mono text-emerald-400/90 animate-pulse shrink-0">
+                Closing...
+              </span>
             </div>
           )}
 

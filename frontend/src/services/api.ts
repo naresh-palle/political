@@ -1403,13 +1403,92 @@ export const politicalApiService = {
       assignedOfficialRole?: string;
       assignedOfficialPhone?: string;
       assignedDeptName?: string;
+      actionUrl?: string;
     }
   ): Promise<{ success: boolean; notification: any; issue?: any }> {
+    const cleanDigits = (payload.assignedOfficialPhone || "").replace(/\D/g, "");
+    const formattedPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+    const actionUrl = payload.actionUrl || `${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issueId}`;
+
+    const backendPayload = {
+      ...payload,
+      issueId,
+      officerPhone: formattedPhone,
+      to: formattedPhone,
+      phone: formattedPhone,
+      actionUrl,
+      templateName: "hello_world"
+    };
+
+    // Direct Meta WhatsApp Cloud API call if token exists in localStorage, window, or env
+    const metaToken =
+      localStorage.getItem("WHATSAPP_ACCESS_TOKEN") ||
+      localStorage.getItem("META_WHATSAPP_TOKEN") ||
+      localStorage.getItem("VITE_WHATSAPP_TOKEN") ||
+      (window as any).WHATSAPP_ACCESS_TOKEN ||
+      (import.meta as any).env?.VITE_WHATSAPP_TOKEN ||
+      (import.meta as any).env?.VITE_META_WHATSAPP_TOKEN;
+
+    const phoneNumberId =
+      localStorage.getItem("WHATSAPP_PHONE_NUMBER_ID") ||
+      (import.meta as any).env?.VITE_WHATSAPP_PHONE_NUMBER_ID ||
+      "105654069273754";
+
+    if (metaToken && formattedPhone) {
+      try {
+        console.log(`[Meta WhatsApp API] Dispatching Cloud API alert to recipient: ${formattedPhone} (PhoneNumberID: ${phoneNumberId})`);
+        
+        const templateRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${metaToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: formattedPhone,
+            type: "template",
+            template: {
+              name: "hello_world",
+              language: { code: "en_US" }
+            }
+          })
+        });
+        const templateData = await templateRes.json();
+        console.log("[Meta WhatsApp API] Template Response:", templateData);
+
+        const textRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${metaToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: formattedPhone,
+            type: "text",
+            text: {
+              preview_url: true,
+              body: `🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${payload.assignedOfficialName || "Officer"},\n\nYou have been assigned Grievance Ticket *#${issueId}*.\n*Department:* ${payload.assignedDeptName || "Department"}\n\n🔗 *Click link below to view ticket info & update status:*\n${actionUrl}`
+            }
+          })
+        });
+        const textData = await textRes.json();
+        console.log("[Meta WhatsApp API] Text Response:", textData);
+      } catch (err) {
+        console.warn("[Meta WhatsApp API] Cloud API dispatch exception:", err);
+      }
+    } else {
+      console.info("[Meta WhatsApp API] No WHATSAPP_ACCESS_TOKEN found in localStorage. To enable live Meta delivery, set localStorage.setItem('WHATSAPP_ACCESS_TOKEN', 'YOUR_TOKEN').");
+    }
+
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${issueId}/assign-notify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(backendPayload)
       }, 6000);
       if (res.ok) {
         return await res.json();

@@ -254,10 +254,10 @@ export const OfficerTicketPortal: React.FC = () => {
       setSubmitSuccess(true);
       setIssue((prev) => (prev ? { ...prev, status: newStatus, lastStatusRemarks: remarks.trim(), lastStatusProof: proofUrl.trim() } : prev));
 
-      // Revert back to ticket dashboard after 3.5 seconds so status is updated live
+      // Revert back to ticket dashboard after 1.2 seconds so status is updated live
       setTimeout(() => {
         window.location.hash = `#/assign-tickets?status=${newStatus}`;
-      }, 3500);
+      }, 1200);
     } catch (err: any) {
       setError("Failed to submit resolution update: " + (err?.message || "Server connection error"));
     } finally {
