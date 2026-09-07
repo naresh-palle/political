@@ -101,13 +101,22 @@ class _OfflineCollection:
     async def update_one(self, *args, **kwargs):
         raise MongoUnavailable("MongoDB is not configured")
 
+    async def update_many(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
     async def insert_one(self, *args, **kwargs):
         raise MongoUnavailable("MongoDB is not configured")
 
     async def delete_one(self, *args, **kwargs):
         raise MongoUnavailable("MongoDB is not configured")
 
+    async def delete_many(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
     async def count_documents(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
+    async def create_index(self, *args, **kwargs):
         raise MongoUnavailable("MongoDB is not configured")
 
 
@@ -195,9 +204,15 @@ def sanitize_doc(obj):
         pass
     return obj
 
+def _close_unawaited(awaitable):
+    if asyncio.iscoroutine(awaitable):
+        awaitable.close()
+
+
 async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = "mongo"):
     """Never let a Mongo round-trip block alert/ticket APIs for minutes."""
     if _mongo_circuit_open:
+        _close_unawaited(awaitable)
         return fallback
     try:
         return await asyncio.wait_for(awaitable, timeout=timeout)
@@ -209,6 +224,7 @@ async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = 
 async def mongo_write(awaitable, timeout: float = 8.0, tag: str = "mongo_write"):
     """Persist when Mongo is configured. Fail immediately if the circuit is open."""
     if _mongo_circuit_open:
+        _close_unawaited(awaitable)
         raise MongoUnavailable("MongoDB is not configured")
     try:
         return await asyncio.wait_for(awaitable, timeout=timeout)
@@ -217,26 +233,55 @@ async def mongo_write(awaitable, timeout: float = 8.0, tag: str = "mongo_write")
         raise
 
 
+_MONGO_OFFLINE_TYPE_NAMES = {
+    "MongoUnavailable",
+    "ServerSelectionTimeoutError",
+    "AutoReconnect",
+    "NetworkTimeout",
+    "ConnectionFailure",
+    "ConnectionRefusedError",
+    "TimeoutError",
+    "CancelledError",
+}
+
+_MONGO_OFFLINE_NEEDLES = (
+    "Connection refused",
+    "[Errno 111]",
+    "timed out",
+    "Timeout",
+    "No servers found",
+    "not reachable",
+    "MongoDB is not configured",
+    "localhost:27017",
+    "127.0.0.1:27017",
+    "Topology Description",
+    "ServerSelectionTimeoutError",
+    "AutoReconnect",
+)
+
+
 def _is_mongo_offline_error(exc: Exception) -> bool:
-    if isinstance(exc, MongoUnavailable):
+    if isinstance(exc, (MongoUnavailable, TimeoutError, asyncio.TimeoutError, asyncio.CancelledError)):
+        return True
+    if type(exc).__name__ in _MONGO_OFFLINE_TYPE_NAMES:
         return True
     err_str = str(exc)
-    return (
-        isinstance(exc, MongoUnavailable)
-        or "Connection refused" in err_str
-        or "[Errno 111]" in err_str
-        or "ServerSelectionTimeoutError" in type(exc).__name__
-        or "AutoReconnect" in type(exc).__name__
-        or "MongoDB is not configured" in err_str
-    )
+    return any(needle in err_str for needle in _MONGO_OFFLINE_NEEDLES)
 
 
 def trip_mongo_circuit(exc: Optional[Exception] = None):
-    global db, _mongo_circuit_open, _mongo_offline_logged
+    global db, _mongo_circuit_open, _mongo_offline_logged, client
     if _mongo_circuit_open:
         return
     _mongo_circuit_open = True
     db = _OfflineDB()
+    live = client
+    client = None
+    if live is not None:
+        try:
+            live.close()
+        except Exception:
+            pass
     if not _mongo_offline_logged:
         _mongo_offline_logged = True
         logger.info(
@@ -246,12 +291,9 @@ def trip_mongo_circuit(exc: Optional[Exception] = None):
 
 
 def log_mongo_notice(tag: str, exc: Exception):
-    """One quiet fallback path. Connection-refused dumps do not fill Render logs."""
+    """Swallow localhost/timeout dumps. Render should see at most one INFO line."""
     if _is_mongo_offline_error(exc):
         trip_mongo_circuit(exc)
-        if not _mongo_offline_logged:
-            # trip_mongo_circuit already logged once
-            pass
         logger.debug("MongoDB offline (%s): %s", tag, type(exc).__name__)
         return
     logger.warning("MongoDB warning (%s): %s", tag, type(exc).__name__)
@@ -1644,7 +1686,12 @@ async def get_field_issues(
 @api_router.get("/field-ops/issues/{issue_id}")
 async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        issue = await mongo_wait(
+            db.field_issues.find_one({"id": issue_id}, {"_id": 0}),
+            timeout=2.0,
+            fallback=None,
+            tag="get issue by id",
+        )
         if issue:
             mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
             if mem:
@@ -1777,7 +1824,12 @@ async def create_field_issue(payload: dict):
 @api_router.get("/field-ops/issues/{issue_id}")
 async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        issue = await mongo_wait(
+            db.field_issues.find_one({"id": issue_id}, {"_id": 0}),
+            timeout=2.0,
+            fallback=None,
+            tag="get issue by id",
+        )
         if issue:
             # RBAC verification
             if userRole == "VOLUNTEER" and userId and issue.get("assignedVolunteerId") != userId:
@@ -1834,7 +1886,12 @@ async def add_work_update(issue_id: str, payload: dict):
     director_id = None
     issue_title = ""
     try:
-        issue = await db.field_issues.find_one({"id": issue_id})
+        issue = await mongo_wait(
+            db.field_issues.find_one({"id": issue_id}),
+            timeout=2.0,
+            fallback=None,
+            tag="get issue by id",
+        )
         if issue:
             prev_status = issue.get("status", "NEW")
             director_id = issue.get("directorId")
@@ -2164,7 +2221,7 @@ async def trigger_geography_seed():
             "fieldIssuesImported": imported_issues
         }
     except Exception as e:
-        logger.error(f"Seed error: {e}")
+        log_mongo_notice("startup seed", e)
 # ----------------- FIELD OPS ISSUES ENDPOINTS -----------------
 
 @api_router.get("/field-ops/issues")
@@ -2197,8 +2254,12 @@ async def get_field_issues(
         if priority and priority != "ALL":
             query["priority"] = priority
             
-        cursor = db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1)
-        issues = await cursor.to_list(length=500)
+        issues = await mongo_wait(
+            db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(500),
+            timeout=2.5,
+            fallback=[],
+            tag="get_field_issues",
+        )
     except Exception as e:
         log_mongo_notice("field_issues fetch error", e)
         
@@ -2254,7 +2315,12 @@ async def get_field_issues(
 async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
     issue = None
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        issue = await mongo_wait(
+            db.field_issues.find_one({"id": issue_id}, {"_id": 0}),
+            timeout=2.0,
+            fallback=None,
+            tag="get issue by id",
+        )
     except Exception as e:
         log_mongo_notice("get issue by id", e)
         
@@ -2339,7 +2405,12 @@ async def update_field_issue_status(issue_id: str, payload: dict):
 
     mongo_issue = None
     try:
-        mongo_issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        mongo_issue = await mongo_wait(
+            db.field_issues.find_one({"id": issue_id}, {"_id": 0}),
+            timeout=2.0,
+            fallback=None,
+            tag="find issue for officer status",
+        )
     except Exception as e:
         log_mongo_notice("find issue for officer status", e)
 
@@ -2675,7 +2746,12 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     # 1. Fetch ticket
     issue = None
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        issue = await mongo_wait(
+            db.field_issues.find_one({"id": issue_id}, {"_id": 0}),
+            timeout=2.0,
+            fallback=None,
+            tag="get issue by id",
+        )
     except Exception as e:
         log_mongo_notice("find issue {issue_id}", e)
         
@@ -2782,13 +2858,15 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     if not should_preserve_progress_status(issue.get("status"), "ASSIGNED"):
         update_data["status"] = "ASSIGNED"
     
-    try:
-        await db.field_issues.update_one({"id": issue_id}, {"$set": update_data})
-        issue.update(update_data)
-        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
-    except Exception as e:
-        log_mongo_notice("update issue status on assign-notify", e)
-        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
+    if not _mongo_circuit_open:
+        await mongo_wait(
+            db.field_issues.update_one({"id": issue_id}, {"$set": update_data}),
+            timeout=2.5,
+            fallback=None,
+            tag="update issue status on assign-notify",
+        )
+    issue.update(update_data)
+    IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
         
     # 8. Create Notification Audit Log Record
     audit_record = {
@@ -2812,12 +2890,14 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
         "messageContent": wa_payload.get("textMessage")
     }
     
-    try:
-        await db.notification_audits.insert_one(audit_record)
-    except Exception as e:
-        log_mongo_notice("insert notification_audit", e)
-    finally:
-        sanitize_doc(audit_record)
+    if not _mongo_circuit_open:
+        await mongo_wait(
+            db.notification_audits.insert_one(audit_record),
+            timeout=2.5,
+            fallback=None,
+            tag="insert notification_audit",
+        )
+    sanitize_doc(audit_record)
         
     return sanitize_doc({
         "success": True,
@@ -2831,7 +2911,12 @@ async def retry_whatsapp_notification(issue_id: str, payload: dict = {}):
     # Fetch ticket and retry using authoritative context
     issue = None
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        issue = await mongo_wait(
+            db.field_issues.find_one({"id": issue_id}, {"_id": 0}),
+            timeout=2.0,
+            fallback=None,
+            tag="get issue by id",
+        )
     except Exception as e:
         log_mongo_notice("find issue {issue_id}", e)
         
