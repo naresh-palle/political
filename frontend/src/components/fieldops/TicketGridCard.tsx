@@ -46,9 +46,9 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
   return (
     <article
       onClick={onOpen}
-      className={`min-w-0 p-4 sm:p-5 pb-5 rounded-2xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-3 shadow-lg group ${surface.card}`}
+      className={`min-w-0 p-3.5 rounded-2xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-2 shadow-lg group ${surface.card}`}
     >
-      <header className="flex items-start justify-between gap-3 min-w-0">
+      <header className="flex items-start justify-between gap-2 min-w-0">
         <span className="min-w-0 truncate text-[11px] font-mono text-[#D4A24C] font-semibold" title={`#${issue.id}`}>
           #{issue.id}
         </span>
@@ -63,7 +63,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         </span>
       </header>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5 min-w-0">
+      <div className="flex flex-wrap items-center gap-1.5 min-w-0">
         {extraBadges}
         <span className="max-w-full truncate text-[10px] font-semibold px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
           {issue.category}
@@ -78,23 +78,23 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         )}
       </div>
 
-      <div className="mt-3 min-w-0">
-        <h3 className="font-display text-base font-semibold text-[#F5EFE0] line-clamp-1 min-h-[1.5rem] group-hover:text-[#D4A24C] transition-colors">
+      <div className="min-w-0">
+        <h3 className="font-display text-base font-semibold text-[#F5EFE0] line-clamp-2 group-hover:text-[#D4A24C] transition-colors">
           {issue.title}
         </h3>
-        <p className="text-xs text-[#A69B80] line-clamp-2 mt-1 leading-relaxed min-h-[2.5rem]">
-          {issue.description}
-        </p>
-        <div className="min-h-[1.5rem] mt-1.5">
-          {issue.schemeSubDetail ? (
-            <div className="text-[11px] font-semibold text-[#D4A24C] bg-[#142B45]/80 border border-[#D4A24C]/30 px-2.5 py-0.5 rounded-md inline-block max-w-full truncate">
-              Scheme Details: {issue.schemeSubDetail}
-            </div>
-          ) : null}
-        </div>
+        {issue.description ? (
+          <p className="text-xs text-[#A69B80] line-clamp-2 mt-0.5 leading-snug">
+            {issue.description}
+          </p>
+        ) : null}
+        {issue.schemeSubDetail ? (
+          <div className="mt-1 text-[11px] font-semibold text-[#D4A24C] bg-[#142B45]/80 border border-[#D4A24C]/30 px-2.5 py-0.5 rounded-md inline-block max-w-full truncate">
+            Scheme Details: {issue.schemeSubDetail}
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-3 p-2 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between gap-2 min-w-0 text-[10.5px] font-mono">
+      <div className="p-2 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between gap-2 min-w-0 text-[10.5px] font-mono">
         <div className="min-w-0">
           <span className="text-[#8E9CAE] block text-[9.5px] truncate">Reg: {timing.registeredTimeFormatted}</span>
           {timing.isClosed ? (
@@ -116,7 +116,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         </div>
       </div>
 
-      <div className="mt-3 pt-2 border-t border-[#223348]/60 space-y-2 text-xs min-w-0">
+      <div className="space-y-1 text-xs min-w-0">
         <div className="flex items-center justify-between gap-2 text-[#8E9CAE] min-w-0">
           <span className="flex items-center gap-1.5 text-[#F5EFE0] min-w-0 truncate">
             <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
@@ -148,24 +148,25 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         )}
       </div>
 
-      <div className="mt-0 p-2.5 rounded-xl bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
+      {(issue.lastStatusRemarks?.trim() || (issue as any).rejectionReason || (issue as any).notes) && (
+      <div className="p-2 rounded-xl bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
         <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]">
           Officer status comment · {formatIssueStatus(issue.status)}
         </div>
-        <p className="mt-1 text-[12px] text-[#F5EFE0] leading-snug break-words line-clamp-3">
+        <p className="mt-0.5 text-[12px] text-[#F5EFE0] leading-snug break-words line-clamp-3">
           {issue.lastStatusRemarks?.trim()
             || (issue as any).rejectionReason
-            || (issue as any).notes
-            || "No officer comment on this status yet."}
+            || (issue as any).notes}
         </p>
         {issue.lastStatusUpdateAt && (
-          <div className="mt-1 text-[10px] font-mono text-[#8E9CAE]">
+          <div className="mt-0.5 text-[10px] font-mono text-[#8E9CAE]">
             Updated {issue.lastStatusUpdateAt.replace("T", " ").slice(0, 16)}
           </div>
         )}
       </div>
+      )}
 
-      <div className="pt-3 mt-1 border-t border-[#223348]/60 space-y-2 min-w-0" onClick={(e) => e.stopPropagation()}>
+      <div className="pt-2 border-t border-[#223348]/60 space-y-1.5 min-w-0" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-2 text-[11px] min-w-0">
           <span className="min-w-0 truncate text-[#8E9CAE]">
             Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong>
