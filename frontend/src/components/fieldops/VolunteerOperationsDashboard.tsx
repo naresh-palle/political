@@ -583,7 +583,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         assignedVolunteerName: currentUser.name,
         assignedVolunteerPhone: currentUser.phone || "",
         directorId: currentUser.directorId || "usr-demo-director",
-        directorName: currentUser.directorName || "Demo Director",
+        directorName: currentUser.directorName || "Manager1",
         initialRemarks: `Reported by ${reporterType} ${reporterType === "CITIZEN" && citizenAge ? `(Age: ${citizenAge}, Gender: ${citizenGender}) ` : ""}${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${currentUser.name}.`,
         attachments: allAttachments,
         createdBy: currentUser.id,
@@ -629,7 +629,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
       await Promise.allSettled(notifTasks);
       setDispatchedNotifs([
-        `Campaign Director (${currentUser.directorName || "Demo Director"})`,
+        `Campaign Director (${currentUser.directorName || "Manager1"})`,
         "Political Admin / MLA Office (B. C. Janardhan Reddy)",
         `Department Authority (${newDepartment})`
       ]);
@@ -1809,7 +1809,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </div>
                     <div className="text-[11px] text-emerald-300/90 pl-6 space-y-0.5">
                       <p className="font-semibold text-[#D4A24C]">🔔 Instant Notifications Dispatched To:</p>
-                      <p>• Campaign Director ({currentUser.directorName || "Demo Director"})</p>
+                      <p>• Campaign Director ({currentUser.directorName || "Manager1"})</p>
                       <p>• MLA & Political Admin (B. C. Janardhan Reddy)</p>
                       <p>• Relevant Department Authority ({newDepartment})</p>
                     </div>

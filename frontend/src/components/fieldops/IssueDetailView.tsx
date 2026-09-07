@@ -295,7 +295,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
   const isVolunteer =
     currentUser.primaryRole === "VOLUNTEER" || currentUser.role === "volunteer";
   const assignedAgentName =
-    issue.assignedVolunteerName && issue.assignedVolunteerName !== "Demo Volunteer"
+    issue.assignedVolunteerName && !["Demo Volunteer", "Demo Volunteer (Field Agent)"].includes(issue.assignedVolunteerName)
       ? issue.assignedVolunteerName
       : currentUser.name;
   const isDirector =

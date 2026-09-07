@@ -74,7 +74,7 @@
   },
   {
     "id": "usr-demo-director",
-    "name": "Demo Director",
+    "name": "Manager1",
     "email": "demo.director@leaderslens.ai",
     "phone": "+91 98850 44002",
     "primaryRole": "DIRECTOR",
@@ -122,7 +122,7 @@
   },
   {
     "id": "usr-demo-volunteer",
-    "name": "Demo Volunteer",
+    "name": "Volunteer1",
     "email": "demo.volunteer@leaderslens.ai",
     "phone": "+91 98850 44003",
     "primaryRole": "VOLUNTEER",
@@ -141,7 +141,7 @@
     "partyColor": "#D4A24C",
     "partyEmoji": "🏛️",
     "directorId": "usr-demo-director",
-    "directorName": "Demo Director",
+    "directorName": "Manager1",
     "stateId": "AP",
     "stateName": "Andhra Pradesh",
     "parliamentConstituencyId": "NDL-PC",

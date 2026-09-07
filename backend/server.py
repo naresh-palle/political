@@ -271,6 +271,32 @@ def load_json_fallback(filename: str):
         by_id[iid] = merge_issue_docs(by_id.get(iid), doc)
     return [i for i in by_id.values() if i.get("id") not in RETIRED_MOCK_ISSUE_IDS]
 
+def apply_canonical_demo_names(doc: dict) -> dict:
+    """Keep demo actor display names consistent across JSON, Mongo, and API responses."""
+    if not isinstance(doc, dict):
+        return doc
+    uid = str(doc.get("id") or "")
+    if uid == "usr-demo-volunteer":
+        doc["name"] = "Volunteer1"
+        if doc.get("directorName") in (None, "", "Demo Director", "Demo Manager"):
+            doc["directorName"] = "Manager1"
+    elif uid == "usr-demo-director":
+        doc["name"] = "Manager1"
+    if doc.get("name") == "Demo Volunteer":
+        doc["name"] = "Volunteer1"
+    if doc.get("name") in ("Demo Director", "Demo Manager"):
+        doc["name"] = "Manager1"
+    if doc.get("assignedVolunteerName") == "Demo Volunteer":
+        doc["assignedVolunteerName"] = "Volunteer1"
+    if doc.get("assignedVolunteerName") == "Demo Volunteer (Field Agent)":
+        doc["assignedVolunteerName"] = "Volunteer1"
+    if doc.get("directorName") in ("Demo Director", "Demo Manager"):
+        doc["directorName"] = "Manager1"
+    if doc.get("assignedVolunteerId") == "usr-demo-volunteer" and doc.get("assignedVolunteerName") in (None, "", "Demo Volunteer"):
+        doc["assignedVolunteerName"] = "Volunteer1"
+    return doc
+
+
 def sanitize_doc(obj):
     """
     Recursively strips Mongo '_id' and converts ObjectId instances to string
@@ -284,7 +310,7 @@ def sanitize_doc(obj):
             if k == "_id":
                 continue
             cleaned[k] = sanitize_doc(v)
-        return cleaned
+        return apply_canonical_demo_names(cleaned)
     elif isinstance(obj, list):
         return [sanitize_doc(item) for item in obj]
     try:
@@ -962,7 +988,7 @@ def sanitize_user(user: dict) -> dict:
     u.pop("passwordHash", None)
     u.pop("demoPassword", None)
     u.pop("_id", None)
-    return u
+    return apply_canonical_demo_names(u)
 
 async def record_audit_log(actor_user_id: str, actor_name: str, action: str, target_user_id: Optional[str] = None, target_user_name: Optional[str] = None, metadata: Optional[dict] = None):
     log_doc = {
@@ -1032,7 +1058,7 @@ async def get_system_users():
     try:
         users = await db.users.find({}, {"passwordHash": 0, "demoPassword": 0, "_id": 0}).to_list(200)
         if users:
-            return users
+            return [sanitize_user(u) for u in users]
     except Exception as e:
         log_mongo_notice("get_system_users", e)
     raw_users = load_json_fallback("users.json")
@@ -1076,7 +1102,7 @@ async def get_admin_users(
             cursor = db.users.find(query, {"passwordHash": 0, "demoPassword": 0, "_id": 0}).sort("createdAt", -1).skip(skip).limit(limit)
             users_list = await cursor.to_list(limit)
             return {
-                "users": users_list,
+                "users": [sanitize_user(u) for u in users_list],
                 "total": total,
                 "page": page,
                 "totalPages": (total + limit - 1) // limit,
@@ -1783,7 +1809,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
         "assignedVolunteerName": "Assigned Volunteer",
         "assignedVolunteerPhone": "+91 98850 44003",
         "directorId": "usr-demo-director",
-        "directorName": "Demo Director",
+        "directorName": "Manager1",
         "initialRemarks": "Ticket registered for field ops tracking.",
         "attachments": [],
         "createdAt": datetime.now(timezone.utc).isoformat(),
@@ -3104,8 +3130,39 @@ async def startup_db_seed():
         if count == 0 or user_count == 0:
             logger.info("MongoDB collections empty, executing comprehensive auto-seed...")
             await trigger_geography_seed()
+        await apply_demo_display_name_fixes()
     except Exception as e:
         log_mongo_notice("startup seed", e)
+
+
+async def apply_demo_display_name_fixes():
+    """Rewrite leftover Demo Volunteer / Demo Director labels in live Mongo collections."""
+    try:
+        await db.users.update_one(
+            {"id": "usr-demo-volunteer"},
+            {"$set": {"name": "Volunteer1", "directorName": "Manager1"}},
+        )
+        await db.users.update_one(
+            {"id": "usr-demo-director"},
+            {"$set": {"name": "Manager1"}},
+        )
+        await db.users.update_many({"name": "Demo Volunteer"}, {"$set": {"name": "Volunteer1"}})
+        await db.users.update_many({"name": {"$in": ["Demo Director", "Demo Manager"]}}, {"$set": {"name": "Manager1"}})
+        await db.users.update_many({"directorName": {"$in": ["Demo Director", "Demo Manager"]}}, {"$set": {"directorName": "Manager1"}})
+        await db.field_issues.update_many(
+            {"assignedVolunteerName": "Demo Volunteer"},
+            {"$set": {"assignedVolunteerName": "Volunteer1"}},
+        )
+        await db.field_issues.update_many(
+            {"directorName": {"$in": ["Demo Director", "Demo Manager"]}},
+            {"$set": {"directorName": "Manager1"}},
+        )
+        await db.villages.update_many(
+            {"assignedVolunteerName": "Demo Volunteer"},
+            {"$set": {"assignedVolunteerName": "Volunteer1"}},
+        )
+    except Exception as e:
+        log_mongo_notice("demo display name fix", e)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
