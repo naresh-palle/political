@@ -1500,7 +1500,7 @@ export const politicalApiService = {
             type: "template",
             template: {
               name: "officer_ticket_alert_v1",
-              language: { code: "en_US" },
+              language: { code: "en" },
               components: [
                 {
                   type: "header",
