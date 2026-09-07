@@ -8,6 +8,8 @@ description: >-
 
 # Smart Deployment Protocol
 
+When implementation is **complete**, also run `.cursor/skills/complete-commit-deploy/SKILL.md` (commit, GitHub Pages, Render).
+
 ## Target Assessment Rules
 
 When code modifications occur:
