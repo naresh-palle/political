@@ -282,9 +282,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     return () => window.removeEventListener("hashchange", openTicketFromHash);
   }, [issues]);
 
-  const goAssignTickets = (status: string) => {
+  const goAssignTickets = (status: string, volunteerId?: string) => {
     setFilterStatus(status);
     setCurrentPage(1);
+    if (volunteerId) setFilterVolunteer(volunteerId);
     window.location.hash = `#/assign-tickets?status=${status}`;
   };
 
@@ -354,7 +355,13 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
       if (filterMandal !== "ALL" && item.mandalId !== filterMandal) return false;
       if (filterDepartment !== "ALL" && getItemDepartment(item) !== filterDepartment) return false;
-      if (filterVolunteer !== "ALL" && item.assignedVolunteerId !== filterVolunteer) return false;
+      if (
+        filterVolunteer !== "ALL" &&
+        item.assignedVolunteerId !== filterVolunteer &&
+        item.assignedVolunteerName !== volunteers.find((v) => v.id === filterVolunteer)?.name
+      ) {
+        return false;
+      }
       if (filterType !== "ALL" && getItemType(item) !== filterType) return false;
       if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
       if (filterGender !== "ALL") {
@@ -416,7 +423,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     filterGender,
     filterAgeGroup,
     searchQuery,
-    sortBy
+    sortBy,
+    volunteers
   ]);
 
   const totalPages = Math.ceil(filteredIssues.length / pageSize) || 1;
@@ -1456,6 +1464,71 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {!isPlatformSuperAdmin && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-base text-[#F5EFE0] flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#D4A24C]" />
+              Squad Volunteers
+            </h2>
+            <span className="text-xs text-[#CBD5E1]">{volunteers.length} in constituency</span>
+          </div>
+          {volunteers.length === 0 ? (
+            <div className="p-4 rounded-xl border border-[#22405E] bg-[#0F2338] text-sm text-[#8E9CAE]">
+              No volunteers are assigned in this constituency.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {volunteers.map((vol) => {
+                const volIssues = issues.filter(
+                  (i) => i.assignedVolunteerId === vol.id || i.assignedVolunteerName === vol.name
+                );
+                const volCompleted = volIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
+                const volOverdue = volIssues.filter((i) => i.status === "OVERDUE").length;
+                return (
+                  <button
+                    type="button"
+                    key={vol.id}
+                    onClick={() => goAssignTickets("ALL", vol.id)}
+                    className="p-4 rounded-2xl bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 space-y-3 text-left cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-sm text-[#F5EFE0] truncate">{vol.name}</h4>
+                      <span className="text-[11px] text-[#D4A24C] block truncate">
+                        {vol.assignedMandalName || vol.assignedConstituency || "Unassigned area"}
+                      </span>
+                      <span className="text-[10px] text-[#8E9CAE] block truncate">
+                        {vol.assignedVillageNames?.join(", ") || ""}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] pt-2 border-t border-[#22405E]">
+                      <div className="p-1.5 rounded bg-[#071322]">
+                        <span className="text-[#8E9CAE] block">Assigned</span>
+                        <strong className="text-xs text-[#F5EFE0]">{volIssues.length}</strong>
+                      </div>
+                      <div className="p-1.5 rounded bg-[#071322]">
+                        <span className="text-emerald-300 block">Done</span>
+                        <strong className="text-xs text-emerald-400">{volCompleted}</strong>
+                      </div>
+                      <div className="p-1.5 rounded bg-[#071322]">
+                        <span className="text-rose-300 block">Overdue</span>
+                        <strong className={`text-xs ${volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}`}>
+                          {volOverdue}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-[#22405E] flex items-center justify-between text-[11px] text-[#8E9CAE]">
+                      <span>{vol.phone || "No phone"}</span>
+                      <span className="text-[#D8CFB8] text-[10px]">Supervisor: {vol.directorName || "Director"}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

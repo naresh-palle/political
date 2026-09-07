@@ -46,7 +46,7 @@ import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
-import { assignmentSafeStatus, countByKpi, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, hasAssignee, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -89,6 +89,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
   // Active Status Tab State
   const [activeTab, setActiveTab] = useState<string>(() => getStatusFromUrl() || (initialFilterStatus === "NEW" ? "OPEN_UNASSIGNED" : initialFilterStatus || "ALL"));
+  const getAssignedOnlyFromUrl = () => {
+    const hash = window.location.hash.toLowerCase();
+    return hash.includes("assigned=1") || hash.includes("assigned=true");
+  };
+  const [assignedOnly, setAssignedOnly] = useState(() => getAssignedOnlyFromUrl());
 
   useEffect(() => {
     const syncStatus = () => {
@@ -96,6 +101,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       if (fromUrl) {
         setActiveTab(fromUrl);
       }
+      setAssignedOnly(getAssignedOnlyFromUrl());
     };
     syncStatus();
     window.addEventListener("hashchange", syncStatus);
@@ -185,7 +191,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         politicalApiService.getGrievances(),
         politicalApiService.getMandals(currentUser.assemblyConstituencyId, currentUser.stateId),
         politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId),
-        politicalApiService.getManagerDashboard(currentUser.id).catch(() => null)
+        politicalApiService.getManagerDashboard(currentUser.id).catch((err) => {
+          console.warn("Manager dashboard API unavailable; using scoped ticket fallback.", err);
+          return null;
+        })
       ]);
 
       const assignedVols = allUsers.filter(
@@ -341,11 +350,27 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const kpiCounts = countByKpi(allOperationsList);
   const dashStats = roleDashboard?.stats;
   const assignedTicketIds = new Set<string>(roleDashboard?.assignedTicketIds || []);
-  const assignedTickets = allOperationsList.filter((item) =>
-    assignedTicketIds.size > 0
-      ? assignedTicketIds.has(item.id)
-      : Boolean(item.assignedVolunteerId && volunteers.some((v) => v.id === item.assignedVolunteerId))
-  );
+  const assignedTickets = allOperationsList.filter((item) => {
+    if (assignedTicketIds.size > 0) return assignedTicketIds.has(item.id);
+    return volunteers.some(
+      (v) =>
+        (item.assignedVolunteerId && v.id === item.assignedVolunteerId) ||
+        (item.assignedVolunteerName && v.name === item.assignedVolunteerName)
+    );
+  });
+  const assignedKpi = countByKpi(assignedTickets);
+  const pendingAssignedCount = assignedKpi.openUnassigned + assignedKpi.assigned;
+  const assignedToDeptCount = allOperationsList.filter((item) => hasAssignee(item)).length;
+
+  const goAssignTickets = (status = "ALL", volunteerId?: string, volunteerAssignedOnly = false) => {
+    if (volunteerId) setFilterVolunteerId(volunteerId);
+    else setFilterVolunteerId("ALL");
+    setAssignedOnly(volunteerAssignedOnly);
+    const params = new URLSearchParams();
+    params.set("status", status);
+    if (volunteerAssignedOnly) params.set("assigned", "1");
+    window.location.hash = `#/assign-tickets?${params.toString()}`;
+  };
   const volunteerSummaries = roleDashboard?.volunteers || [];
   const totalOperationsCount = dashStats?.totalTickets ?? kpiCounts.total;
   const pendingCount = kpiCounts.openUnassigned;
@@ -478,7 +503,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       if (filterType !== "ALL" && getItemType(item) !== filterType) return false;
       if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
       if (filterReporterType !== "ALL" && item.reporterType !== filterReporterType) return false;
-      if (filterVolunteerId !== "ALL" && item.assignedVolunteerId !== filterVolunteerId) return false;
+      if (assignedOnly && !assignedTickets.some((ticket) => ticket.id === item.id)) return false;
+      if (
+        filterVolunteerId !== "ALL" &&
+        item.assignedVolunteerId !== filterVolunteerId &&
+        item.assignedVolunteerName !== volunteers.find((v) => v.id === filterVolunteerId)?.name
+      ) {
+        return false;
+      }
       if (filterMandalId !== "ALL" && item.mandalId !== filterMandalId && !item.mandalName?.toLowerCase().includes(filterMandalId.toLowerCase())) return false;
 
       // Gender Filter
@@ -549,7 +581,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     filterGender,
     filterAgeGroup,
     searchQuery,
-    sortBy
+    sortBy,
+    assignedOnly,
+    assignedTickets,
+    volunteers
   ]);
 
   // Paginated Slicing
@@ -1322,22 +1357,22 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block">Active Volunteers</span>
           <span className="text-2xl font-bold font-mono text-emerald-300">{dashStats?.activeVolunteers ?? volunteers.filter((v) => !v.status || v.status === "ACTIVE").length}</span>
         </div>
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-violet-500/40">
+        <button type="button" onClick={() => goAssignTickets("ALL", undefined, true)} className="p-3.5 rounded-xl bg-[#0F1E30] border border-violet-500/40 text-left hover:border-violet-400/70 cursor-pointer">
           <span className="text-[10.5px] font-mono font-semibold uppercase text-violet-300 block">Assigned Tickets</span>
           <span className="text-2xl font-bold font-mono text-violet-200">{dashStats?.totalAssignedTickets ?? assignedTickets.length}</span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-amber-500/40">
+        </button>
+        <button type="button" onClick={() => goAssignTickets("ASSIGNED", undefined, true)} className="p-3.5 rounded-xl bg-[#0F1E30] border border-amber-500/40 text-left hover:border-amber-400/70 cursor-pointer">
           <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">Pending Tickets</span>
-          <span className="text-2xl font-bold font-mono text-amber-300">{dashStats?.pendingTickets ?? 0}</span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-sky-500/40">
+          <span className="text-2xl font-bold font-mono text-amber-300">{dashStats?.pendingTickets ?? pendingAssignedCount}</span>
+        </button>
+        <button type="button" onClick={() => goAssignTickets("ASSIGNED")} className="p-3.5 rounded-xl bg-[#0F1E30] border border-sky-500/40 text-left hover:border-sky-400/70 cursor-pointer">
           <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block">Assigned to Dept</span>
-          <span className="text-2xl font-bold font-mono text-sky-300">{dashStats?.assignedToDepartment ?? 0}</span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-rose-500/40">
+          <span className="text-2xl font-bold font-mono text-sky-300">{dashStats?.assignedToDepartment ?? assignedToDeptCount}</span>
+        </button>
+        <button type="button" onClick={() => goAssignTickets("OVERDUE")} className="p-3.5 rounded-xl bg-[#0F1E30] border border-rose-500/40 text-left hover:border-rose-400/70 cursor-pointer">
           <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block">Overdue</span>
           <span className="text-2xl font-bold font-mono text-rose-300">{dashStats?.overdue ?? kpiCounts.overdue}</span>
-        </div>
+        </button>
       </div>
 
       {dashboardError && (
@@ -1374,7 +1409,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               return (
                 <div
                   key={vol.id}
-                  className="h-full p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => goAssignTickets("ALL", vol.id, true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") goAssignTickets("ALL", vol.id, true);
+                  }}
+                  className="h-full p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2 cursor-pointer"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-3">
@@ -1405,6 +1446,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                       {email ? (
                         <a
                           href={`mailto:${email}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="flex items-center gap-1.5 text-[#CBD5E1] hover:text-[#D4A24C] truncate"
                         >
                           <Mail className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
@@ -1440,6 +1482,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                           href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(vol.name)}%20garu,%20greetings%20from%20Leader%27s%20Lens%20Office.`}
                           target="_blank"
                           rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
                           className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
                           title="Send WhatsApp Message"
                         >
@@ -1448,6 +1491,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                         </a>
                         <a
                           href={`tel:${phone}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="p-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
                           title="Direct Phone Call"
                         >
@@ -1460,6 +1504,57 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                     )}
                   </div>
                 </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-[#D4A24C]" />
+            Assigned Tickets
+          </h2>
+          <button
+            type="button"
+            onClick={() => goAssignTickets("ALL", undefined, true)}
+            className="text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] cursor-pointer"
+          >
+            View all ({dashStats?.totalAssignedTickets ?? assignedTickets.length})
+          </button>
+        </div>
+        {assignedTickets.length === 0 ? (
+          <div className="p-4 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
+            No tickets are assigned to your volunteers.
+          </div>
+        ) : (
+          <div className={TICKET_GRID_CLASS}>
+            {assignedTickets.slice(0, 8).map((issue) => {
+              const timing = getTicketTimingDetails(issue);
+              return (
+                <TicketGridCard
+                  key={issue.id}
+                  issue={issue}
+                  timing={timing}
+                  showAssignControls={false}
+                  volunteerName={issue.assignedVolunteerName || volunteers.find((v) => v.id === issue.assignedVolunteerId)?.name || "Assigned volunteer"}
+                  extraBadges={
+                    <span
+                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                        issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                          ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                          : issue.status === "OVERDUE"
+                          ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
+                          : "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                      }`}
+                    >
+                      {formatIssueStatus(issue.status)}
+                    </span>
+                  }
+                  onOpen={() => setSelectedIssue(issue)}
+                  onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
+                />
               );
             })}
           </div>
