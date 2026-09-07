@@ -216,6 +216,8 @@ def test_resolved_and_rejected_propagate(monkeypatch):
 
     srv.IN_MEMORY_STATUS_IDEMPOTENCY.clear()
     srv.IN_MEMORY_FIELD_ISSUES.clear()
+    if getattr(srv, "RUNTIME_FIELD_ISSUES_PATH", None) and srv.RUNTIME_FIELD_ISSUES_PATH.exists():
+        srv.RUNTIME_FIELD_ISSUES_PATH.unlink()
     mock_issues.find_one = AsyncMock(return_value=_issue(status="IN_PROGRESS"))
     rejected = asyncio.run(
         srv.update_field_issue_status("iss-e2e-1", {"status": "REJECTED", "remarks": "Out of jurisdiction."})

@@ -10,7 +10,7 @@ import {
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
-import { countByKpi, kpiBucket } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, kpiBucket, ticketStatusSurface } from "../../utils/ticketKpi";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import {
@@ -836,7 +836,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       await politicalApiService.updateFieldIssueStatus(issueId, {
         assignedVolunteerId: newVolunteerId || undefined,
         assignedVolunteerName: newVolName,
-        status: "ASSIGNED",
+        status: assignmentSafeStatus(issues.find((i) => i.id === issueId)?.status),
         remarks: `Assigned to ${newVolName}`
       });
     } catch (e) {
@@ -869,7 +869,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             assignedDepartment: baseDept,
             assignedOfficialName: officialName || item.assignedOfficialName || "",
             assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: "ASSIGNED",
+            status: assignmentSafeStatus(item.status),
             updatedAt: new Date().toISOString()
           };
         }
@@ -889,7 +889,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               assignedDepartment: baseDept,
               assignedOfficialName: officialName || i.assignedOfficialName || "",
               assignedOfficialPhone: officialPhone || i.assignedOfficialPhone || "",
-              status: "ASSIGNED",
+              status: assignmentSafeStatus(i.status),
               updatedAt: new Date().toISOString()
             };
           }
@@ -902,7 +902,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
         department: baseDept,
-        status: "ASSIGNED",
+        status: assignmentSafeStatus(issues.find((i) => i.id === issueId)?.status),
         assignedOfficialName: officialName,
         assignedOfficialPhone: officialPhone,
         remarks: `Department assigned to ${baseDept}`
@@ -998,11 +998,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
   return (
           <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
+        {!isAssignTicketsMode && (
         <div className="space-y-5">
-          {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
+          {/* Volunteer home: identity strip without name title, plus KPI cards */}
           <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-              {/* Volunteer Avatar & Main Name */}
               <div className="flex items-start sm:items-center gap-4">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -1013,9 +1013,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       Banaganapalle AC (AC-140) · Nandyala PC
                     </span>
                   </div>
-                  <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal leading-tight">
-                    {currentUser.name}
-                  </h1>
                 </div>
               </div>
 
@@ -1066,7 +1063,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("ALL");
                 window.location.hash = "#/assign-tickets?status=ALL";
               }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-[#D4A24C]/60 cursor-pointer space-y-1 transition-all"
+              className="p-3.5 rounded-xl border border-[#D4A24C]/35 bg-[#142B45]/70 hover:border-[#D4A24C]/80 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block truncate">
                 Total Tickets
@@ -1087,7 +1084,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("OPEN_UNASSIGNED");
                 window.location.hash = "#/assign-tickets?status=OPEN_UNASSIGNED";
               }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-amber-500/60 cursor-pointer space-y-1 transition-all"
+              className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-950/40 hover:border-amber-400/70 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block truncate">
                 Open / Unassigned
@@ -1108,7 +1105,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("ASSIGNED");
                 window.location.hash = "#/assign-tickets?status=ASSIGNED";
               }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-violet-500/60 cursor-pointer space-y-1 transition-all"
+              className="p-3.5 rounded-xl border border-violet-500/40 bg-violet-950/40 hover:border-violet-400/70 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-violet-300 block truncate">
                 Assigned
@@ -1129,7 +1126,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("IN_PROGRESS");
                 window.location.hash = "#/assign-tickets?status=IN_PROGRESS";
               }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-sky-500/60 cursor-pointer space-y-1 transition-all"
+              className="p-3.5 rounded-xl border border-sky-500/40 bg-sky-950/40 hover:border-sky-400/70 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block truncate">
                 In Progress
@@ -1150,7 +1147,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("OVERDUE");
                 window.location.hash = "#/assign-tickets?status=OVERDUE";
               }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-rose-500/60 cursor-pointer space-y-1 transition-all"
+              className="p-3.5 rounded-xl border border-rose-500/45 bg-rose-950/40 hover:border-rose-400/80 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block truncate">
                 Overdue Alerts
@@ -1171,7 +1168,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("RESOLVED");
                 window.location.hash = "#/assign-tickets?status=RESOLVED";
               }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-emerald-500/60 cursor-pointer space-y-1 transition-all"
+              className="p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 hover:border-emerald-400/70 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block truncate">
                 Resolved / Closed
@@ -1192,7 +1189,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("REJECTED");
                 window.location.hash = "#/assign-tickets?status=REJECTED";
               }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-slate-500/60 cursor-pointer space-y-1 transition-all"
+              className="p-3.5 rounded-xl border border-slate-500/40 bg-slate-800/50 hover:border-slate-400/70 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-slate-300 block truncate">
                 Rejected
@@ -1202,6 +1199,24 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 <span className="text-[10px] text-slate-400/80 font-mono font-semibold">Closed</span>
               </div>
             </div>
+          </div>
+        </div>
+        )}
+
+        {isAssignTicketsMode && (
+        <div className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-xs text-[#8E9CAE]">
+              Assign departments, inspect tickets, and review officer status updates.
+            </p>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              data-testid="add-complaint-btn-assign"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start sm:self-center"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>Add Complaint / Requirement</span>
+            </button>
           </div>
 
           {issues.filter(
@@ -1247,9 +1262,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               </div>
             </div>
           )}
-        </div>
 
-        <div className="space-y-5">
           {issues.some((i) => i.lastStatusRemarks) && (
             <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40">
               <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C] mb-2">
@@ -1557,12 +1570,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 <tbody className="divide-y divide-[#223348]/50">
                   {paginatedIssues.map((issue) => {
                     const timing = getTicketTimingDetails(issue);
+                    const surface = ticketStatusSurface(issue);
 
                     return (
                       <tr
                         key={issue.id}
                         onClick={() => setSelectedIssue(issue)}
-                        className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
+                        className={`${surface.row} transition-colors cursor-pointer group`}
                       >
                         <td className="py-3 px-3 align-top font-mono">
                           <div className="font-bold text-[#D4A24C]">#{issue.id}</div>
@@ -1799,6 +1813,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         )}
       </div>
       </div>
+        )}
 
       {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
       {isAddModalOpen && (

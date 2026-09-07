@@ -10,6 +10,7 @@ import logging
 import sys
 import uuid
 import asyncio
+import threading
 from datetime import datetime, timezone
 from typing import List, Optional
 from pathlib import Path
@@ -163,13 +164,62 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
-# Helper to load fallback JSON data
-def load_json_fallback(filename: str):
+RUNTIME_FIELD_ISSUES_PATH = ROOT_DIR / "data" / ".runtime_field_issues.json"
+_RUNTIME_FIELD_ISSUES_LOCK = threading.Lock()
+
+
+def _load_packaged_json(filename: str):
     data_path = ROOT_DIR / "data" / filename
     if data_path.exists():
         with open(data_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+            return data if isinstance(data, list) else []
     return []
+
+
+def load_runtime_field_issues() -> list:
+    if not RUNTIME_FIELD_ISSUES_PATH.exists():
+        return []
+    try:
+        with open(RUNTIME_FIELD_ISSUES_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def persist_field_issue(issue: Optional[dict]) -> None:
+    """Keep officer status on disk so seed JSON cannot reopen In Progress tickets."""
+    if not isinstance(issue, dict) or not issue.get("id"):
+        return
+    try:
+        clean = sanitize_doc(dict(issue))
+        with _RUNTIME_FIELD_ISSUES_LOCK:
+            items = load_runtime_field_issues()
+            by_id = {i.get("id"): dict(i) for i in items if isinstance(i, dict) and i.get("id")}
+            existing = by_id.get(clean["id"])
+            by_id[clean["id"]] = merge_issue_docs(existing, clean) if existing else dict(clean)
+            RUNTIME_FIELD_ISSUES_PATH.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = RUNTIME_FIELD_ISSUES_PATH.with_suffix(".tmp")
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(list(by_id.values()), f, indent=2, ensure_ascii=False, default=str)
+            tmp_path.replace(RUNTIME_FIELD_ISSUES_PATH)
+    except Exception as e:
+        logger.warning("Could not persist ticket %s to runtime JSON: %s", issue.get("id"), type(e).__name__)
+
+
+# Helper to load fallback JSON data
+def load_json_fallback(filename: str):
+    packaged = _load_packaged_json(filename)
+    if filename != "field_issues.json":
+        return packaged
+    by_id = {i.get("id"): dict(i) for i in packaged if isinstance(i, dict) and i.get("id")}
+    for doc in load_runtime_field_issues():
+        iid = doc.get("id") if isinstance(doc, dict) else None
+        if not iid:
+            continue
+        by_id[iid] = merge_issue_docs(by_id.get(iid), doc)
+    return list(by_id.values())
 
 def sanitize_doc(obj):
     """
@@ -269,22 +319,17 @@ def overlay_in_memory_issues(issues: list) -> list:
     return list(merged.values())
 
 def resolve_stored_issue(issue_id: str, mongo_doc: Optional[dict] = None) -> Optional[dict]:
-    if mongo_doc:
-        base = dict(mongo_doc)
-        mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
-        if mem:
-            base = merge_issue_docs(base, mem)
-        return sanitize_doc(base)
-    if issue_id in IN_MEMORY_FIELD_ISSUES:
-        return sanitize_doc(dict(IN_MEMORY_FIELD_ISSUES[issue_id]))
     fallback = load_json_fallback("field_issues.json")
     found = next((i for i in fallback if i.get("id") == issue_id), None)
-    if found:
-        mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
-        if mem:
-            found = merge_issue_docs(found, mem)
-        return sanitize_doc(found)
-    return None
+    base = dict(found) if found else {}
+    if mongo_doc:
+        base = merge_issue_docs(base, mongo_doc) if base else dict(mongo_doc)
+    mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
+    if mem:
+        base = merge_issue_docs(base, mem) if base else dict(mem)
+    if not base.get("id"):
+        return None
+    return sanitize_doc(base)
 
 # Base routes
 @api_router.get("/")
@@ -1581,7 +1626,7 @@ async def get_field_issues(
             
         issues = await mongo_wait(
             db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(500),
-            timeout=2.5,
+            timeout=8.0,
             fallback=[],
             tag="get_field_issues",
         )
@@ -1591,7 +1636,7 @@ async def get_field_issues(
                 if not iid:
                     continue
                 existing = IN_MEMORY_FIELD_ISSUES.get(iid)
-                IN_MEMORY_FIELD_ISSUES[iid] = merge_issue_docs(doc, existing) if existing else dict(doc)
+                IN_MEMORY_FIELD_ISSUES[iid] = merge_issue_docs(existing, doc) if existing else merge_issue_docs(None, doc)
     except Exception as e:
         log_mongo_notice("get_field_issues", e)
     
@@ -1643,32 +1688,22 @@ async def get_field_issues(
 
 @api_router.get("/field-ops/issues/{issue_id}")
 async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
+    mongo_issue = None
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
-        if issue:
-            mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
-            if mem:
-                issue = merge_issue_docs(issue, mem)
-            if userRole == "VOLUNTEER" and userId:
-                if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
-                    raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-            if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
-                raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
-            return sanitize_doc(issue)
+        mongo_issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
     except HTTPException:
         raise
     except Exception as e:
         log_mongo_notice("get issue by id", e)
 
-    if issue_id in IN_MEMORY_FIELD_ISSUES:
-        return sanitize_doc(IN_MEMORY_FIELD_ISSUES[issue_id])
-        
-    fallback = load_json_fallback("field_issues.json")
-    found = next((i for i in fallback if i.get("id") == issue_id), None)
-    if found:
-        if userRole == "VOLUNTEER" and userId and found.get("assignedVolunteerId") != userId:
-            raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-        return sanitize_doc(found)
+    issue = resolve_stored_issue(issue_id, mongo_issue)
+    if issue:
+        if userRole == "VOLUNTEER" and userId:
+            if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
+                raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+        if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
+            raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
+        return sanitize_doc(issue)
         
     # Dynamic fallback item so dynamic ticket IDs never 404
     found = {
@@ -2323,6 +2358,7 @@ async def create_field_issue(payload: dict):
     if "_id" in issue_doc:
         issue_doc.pop("_id")
     IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(dict(issue_doc))
+    persist_field_issue(IN_MEMORY_FIELD_ISSUES[issue_id])
     return issue_doc
 
 
@@ -2359,6 +2395,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         issue["updatedAt"] = now_str
         persisted = sanitize_doc(dict(issue))
         IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
+        persist_field_issue(persisted)
         persist_error = None
         if not _mongo_circuit_open:
             try:
@@ -2447,6 +2484,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         issue["assignedVolunteerId"] = volunteer_id
     persisted = sanitize_doc(dict(issue))
     IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
+    persist_field_issue(persisted)
 
     persist_error = None
     if not _mongo_circuit_open:
@@ -2786,9 +2824,11 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
         await db.field_issues.update_one({"id": issue_id}, {"$set": update_data})
         issue.update(update_data)
         IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
+        persist_field_issue(IN_MEMORY_FIELD_ISSUES[issue_id])
     except Exception as e:
         log_mongo_notice("update issue status on assign-notify", e)
         IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
+        persist_field_issue(IN_MEMORY_FIELD_ISSUES[issue_id])
         
     # 8. Create Notification Audit Log Record
     audit_record = {

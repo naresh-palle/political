@@ -11,7 +11,7 @@ import { IssueDetailModal } from "./IssueDetailModal";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
-import { countByKpi } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi } from "../../utils/ticketKpi";
 import {
   ShieldCheck,
   Users,
@@ -76,7 +76,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             assignedDepartment: newDept,
             assignedOfficialName: officialName || item.assignedOfficialName || "",
             assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: "ASSIGNED",
+            status: assignmentSafeStatus(item.status),
             updatedAt: new Date().toISOString()
           };
         }
@@ -87,7 +87,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
         department: newDept,
-        status: "ASSIGNED",
+        status: assignmentSafeStatus(issues.find((i) => i.id === issueId)?.status),
         assignedOfficialName: officialName,
         assignedOfficialPhone: officialPhone,
         remarks: `Department assigned to ${newDept}`

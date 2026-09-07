@@ -141,6 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               data-testid="brand-home"
               className="flex items-center space-x-3 cursor-pointer group min-w-0"
               onClick={() => {
+                window.location.hash = isVolunteer ? "#/field-ops" : "#/field-ops";
                 onProductChange("fieldops");
                 if (onResetToSelect) onResetToSelect();
               }}

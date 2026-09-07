@@ -2,6 +2,7 @@ import React from "react";
 import { MapPin, MessageCircle, Paperclip } from "lucide-react";
 import { FieldIssue } from "../../types";
 import { formatIssueStatus } from "../../utils/statusLabels";
+import { ticketStatusSurface } from "../../utils/ticketKpi";
 
 export type TicketTiming = {
   registeredTimeFormatted: string;
@@ -40,11 +41,12 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
   onOpenWhatsAppAssign
 }) => {
   const departmentLabel = issue.department?.split("(")[0]?.trim() || issue.category;
+  const surface = ticketStatusSurface(issue);
 
   return (
     <article
       onClick={onOpen}
-      className="min-w-0 p-4 sm:p-5 pb-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all cursor-pointer flex flex-col gap-3 shadow-lg group"
+      className={`min-w-0 p-4 sm:p-5 pb-5 rounded-2xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-3 shadow-lg group ${surface.card}`}
     >
       <header className="flex items-start justify-between gap-3 min-w-0">
         <span className="min-w-0 truncate text-[11px] font-mono text-[#D4A24C] font-semibold" title={`#${issue.id}`}>

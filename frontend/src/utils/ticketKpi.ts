@@ -103,3 +103,63 @@ export function countByKpi<T extends AssigneeFields>(issues: T[]) {
   }
   return counts;
 }
+
+export function assignmentSafeStatus(current?: string | null): string {
+  const status = normalizeIssueStatus(current);
+  if (["IN_PROGRESS", "OVERDUE", "RESOLVED", "COMPLETED", "REJECTED", "CLOSED"].includes(status)) {
+    return status;
+  }
+  return "ASSIGNED";
+}
+
+export function ticketStatusSurface(issue: AssigneeFields): {
+  card: string;
+  row: string;
+  kpi: string;
+} {
+  const bucket = kpiBucket(issue);
+  switch (bucket) {
+    case "OPEN_UNASSIGNED":
+      return {
+        card: "bg-amber-950/35 border-amber-500/40 hover:border-amber-400/70 hover:bg-amber-950/50",
+        row: "bg-amber-950/20 hover:bg-amber-950/35",
+        kpi: "bg-amber-950/40 border-amber-500/40 hover:border-amber-400/70"
+      };
+    case "ASSIGNED":
+      return {
+        card: "bg-violet-950/35 border-violet-500/40 hover:border-violet-400/70 hover:bg-violet-950/50",
+        row: "bg-violet-950/20 hover:bg-violet-950/35",
+        kpi: "bg-violet-950/40 border-violet-500/40 hover:border-violet-400/70"
+      };
+    case "IN_PROGRESS":
+      return {
+        card: "bg-sky-950/40 border-sky-500/45 hover:border-sky-400/70 hover:bg-sky-950/55",
+        row: "bg-sky-950/20 hover:bg-sky-950/35",
+        kpi: "bg-sky-950/40 border-sky-500/40 hover:border-sky-400/70"
+      };
+    case "OVERDUE":
+      return {
+        card: "bg-rose-950/45 border-rose-500/50 hover:border-rose-400/80 hover:bg-rose-950/60",
+        row: "bg-rose-950/25 hover:bg-rose-950/40",
+        kpi: "bg-rose-950/45 border-rose-500/50 hover:border-rose-400/80"
+      };
+    case "RESOLVED":
+      return {
+        card: "bg-emerald-950/35 border-emerald-500/40 hover:border-emerald-400/70 hover:bg-emerald-950/50",
+        row: "bg-emerald-950/20 hover:bg-emerald-950/35",
+        kpi: "bg-emerald-950/40 border-emerald-500/40 hover:border-emerald-400/70"
+      };
+    case "REJECTED":
+      return {
+        card: "bg-slate-800/50 border-slate-500/40 hover:border-slate-400/70 hover:bg-slate-800/70",
+        row: "bg-slate-800/30 hover:bg-slate-800/50",
+        kpi: "bg-slate-800/50 border-slate-500/40 hover:border-slate-400/70"
+      };
+    default:
+      return {
+        card: "bg-[#0E1724] border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D]",
+        row: "hover:bg-[#131E2D]/70",
+        kpi: "bg-[#0F1E30] border-[#22354D] hover:border-[#D4A24C]/60"
+      };
+  }
+}

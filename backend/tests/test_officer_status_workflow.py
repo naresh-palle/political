@@ -91,3 +91,45 @@ def test_preserve_in_progress_against_open():
     assert assigned["department"] == "R&B"
     assert ticket_display_number({"id": "iss-ab12"}).startswith("LL-")
     assert normalize_status(" in_progress ") == "IN_PROGRESS"
+
+
+def test_merge_keeps_officer_remarks_when_assignment_overlay_has_text():
+    from backend.services.officer_status_workflow import merge_issue_docs
+
+    merged = merge_issue_docs(
+        {
+            "id": "iss-1",
+            "status": "IN_PROGRESS",
+            "lastStatusRemarks": "crew on site",
+            "lastStatusUpdateAt": "2026-09-07T10:00:00Z",
+        },
+        {
+            "id": "iss-1",
+            "status": "ASSIGNED",
+            "lastStatusRemarks": "Department assigned to R&B",
+            "title": "Pothole",
+        },
+    )
+    assert merged["status"] == "IN_PROGRESS"
+    assert merged["lastStatusRemarks"] == "crew on site"
+    assert merged["title"] == "Pothole"
+
+
+def test_runtime_persist_prevents_seed_assigned_from_winning(tmp_path, monkeypatch):
+    from backend import server as srv
+
+    runtime_path = tmp_path / ".runtime_field_issues.json"
+    monkeypatch.setattr(srv, "RUNTIME_FIELD_ISSUES_PATH", runtime_path)
+    srv.persist_field_issue(
+        {
+            "id": "iss-ll-open-04",
+            "status": "IN_PROGRESS",
+            "lastStatusRemarks": "Cleaning started at Ward 4",
+            "lastStatusUpdateAt": "2026-09-07T16:00:00Z",
+        }
+    )
+    loaded = srv.load_json_fallback("field_issues.json")
+    found = next((i for i in loaded if i.get("id") == "iss-ll-open-04"), None)
+    assert found is not None
+    assert found["status"] == "IN_PROGRESS"
+    assert found["lastStatusRemarks"] == "Cleaning started at Ward 4"

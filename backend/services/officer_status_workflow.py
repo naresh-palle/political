@@ -270,14 +270,11 @@ def merge_issue_docs(base: Optional[Dict[str, Any]], overlay: Optional[Dict[str,
         merged["attachments"] = list(dict.fromkeys([*base_atts, *over_atts]))
     base_st = normalize_status(base.get("status"))
     over_st = normalize_status(overlay.get("status"))
-    if STATUS_RANK.get(base_st, 0) > STATUS_RANK.get(over_st, 0):
+    if STATUS_RANK.get(base_st, 0) > STATUS_RANK.get(over_st, 0) or should_preserve_progress_status(base_st, over_st):
         merged["status"] = base.get("status")
-        if _has_value(base.get("lastStatusRemarks")) and not _has_value(overlay.get("lastStatusRemarks")):
-            merged["lastStatusRemarks"] = base.get("lastStatusRemarks")
-        if _has_value(base.get("lastStatusUpdateAt")) and not _has_value(overlay.get("lastStatusUpdateAt")):
-            merged["lastStatusUpdateAt"] = base.get("lastStatusUpdateAt")
-        if _has_value(base.get("lastStatusProof")) and not _has_value(overlay.get("lastStatusProof")):
-            merged["lastStatusProof"] = base.get("lastStatusProof")
+        for key in ("lastStatusRemarks", "lastStatusUpdateAt", "lastStatusProof"):
+            if _has_value(base.get(key)):
+                merged[key] = base.get(key)
     return merged
 
 

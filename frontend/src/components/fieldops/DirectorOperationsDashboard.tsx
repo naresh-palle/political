@@ -46,7 +46,7 @@ import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
-import { countByKpi, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -623,7 +623,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         assignedVolunteerId: newVolunteerId || undefined,
         assignedVolunteerName: newVolName,
         assignedVolunteerPhone: newVolPhone,
-        status: "ASSIGNED",
+        status: assignmentSafeStatus(issues.find((i) => i.id === issueId)?.status),
         remarks: `Assigned to ${newVolName} by Campaign Manager`
       });
     } catch (e) {
@@ -656,7 +656,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             assignedDepartment: baseDept,
             assignedOfficialName: officialName || item.assignedOfficialName || "",
             assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: "ASSIGNED",
+            status: assignmentSafeStatus(item.status),
             updatedAt: new Date().toISOString()
           };
         }
@@ -676,7 +676,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               assignedDepartment: baseDept,
               assignedOfficialName: officialName || i.assignedOfficialName || "",
               assignedOfficialPhone: officialPhone || i.assignedOfficialPhone || "",
-              status: "ASSIGNED",
+              status: assignmentSafeStatus(i.status),
               updatedAt: new Date().toISOString()
             };
           }
@@ -689,7 +689,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
         department: baseDept,
-        status: "ASSIGNED",
+        status: assignmentSafeStatus(issues.find((i) => i.id === issueId)?.status),
         assignedOfficialName: officialName,
         assignedOfficialPhone: officialPhone,
         remarks: `Department assigned to ${baseDept}`

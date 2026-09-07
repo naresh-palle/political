@@ -292,6 +292,10 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
 
   const isVolunteer =
     currentUser.primaryRole === "VOLUNTEER" || currentUser.role === "volunteer";
+  const assignedAgentName =
+    issue.assignedVolunteerName && issue.assignedVolunteerName !== "Demo Volunteer"
+      ? issue.assignedVolunteerName
+      : currentUser.name;
   const isDirector =
     currentUser.primaryRole === "DIRECTOR" ||
     currentUser.role === "campaign_manager" ||
@@ -407,7 +411,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     {timing.isClosed ? (
                       <strong className="text-emerald-400 font-mono">{timing.closedTimeFormatted}</strong>
                     ) : (
-                      <strong className="text-amber-400 font-mono">In Progress (Open)</strong>
+                      <strong className="text-amber-400 font-mono">{formatIssueStatus(issue.status) || "Open"}</strong>
                     )}
                   </div>
                 </div>
@@ -443,7 +447,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                       {timing.isClosed ? "Completed / Resolved By Person" : "Assigned Official / Agent"}
                     </span>
                     <strong className="text-[#F5EFE0] font-semibold text-sm">
-                      {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
+                      {issue.completedByPerson || assignedAgentName}
                     </strong>
                   </div>
                 </div>
@@ -499,16 +503,15 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
             </span>
             <span className="font-mono text-emerald-400 flex items-center gap-1.5 font-semibold truncate">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
+              {issue.completedByPerson || assignedAgentName}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Static facts stay top-aligned; growing audit sits full-width below */}
-      <div className="flex flex-col gap-5">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          <div className="lg:col-span-7 space-y-5 min-w-0">
+      {/* Two aligned columns: scope/reporter left, assignment + timeline fill the right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <div className="lg:col-span-7 space-y-5 min-w-0 flex flex-col">
             <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
               <div className="flex items-start justify-between gap-3 border-b border-[#223348]/70 pb-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
@@ -592,8 +595,8 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
             )}
           </div>
 
-          <div className="lg:col-span-5 min-w-0">
-            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg h-fit">
+          <div className="lg:col-span-5 min-w-0 flex flex-col gap-5">
+            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg flex-1">
               <div className="flex items-center justify-between gap-2 border-b border-[#223348]/70 pb-2">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
                   Field Squad Assignment
@@ -614,7 +617,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By:" : "Assigned Field Agent:"}
                   </span>
                   <strong className="text-[#F5EFE0] text-right break-words min-w-0">
-                    {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
+                    {issue.completedByPerson || assignedAgentName}
                   </strong>
                 </div>
 
@@ -645,10 +648,8 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                 </button>
               )}
             </div>
-          </div>
-        </div>
 
-        <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
+            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg flex-1 min-h-0">
           <div className="flex items-center justify-between border-b border-[#223348]/70 pb-2">
             <h3 className="text-sm font-semibold text-[#F5EFE0] flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#D4A24C]" />
@@ -667,7 +668,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
             </div>
           ) : (
             <div
-              className={`space-y-3 ${history.length > 6 ? "max-h-[70vh] overflow-y-auto pr-1" : ""}`}
+              className={`space-y-3 ${history.length > 6 ? "max-h-[50vh] overflow-y-auto pr-1" : ""}`}
             >
               {history.map((record) => (
                 <div
@@ -692,8 +693,9 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
               ))}
             </div>
           )}
+            </div>
+          </div>
         </div>
-      </div>
 
       {/* Submodal: Submit Work Update & Upload Proof */}
       {isUpdateModalOpen && (

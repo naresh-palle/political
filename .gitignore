@@ -86,3 +86,7 @@ android-sdk/
 credentials.json
 *.key
 .credentials
+
+# Ephemeral officer/ticket status overlay (Render runtime; do not commit)
+backend/data/.runtime_field_issues.json
+backend/data/.runtime_field_issues.tmp

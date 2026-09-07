@@ -24,7 +24,7 @@ import {
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
 const BASE_URL = (import.meta as any).env?.BASE_URL || "/";
-const ISSUES_API_TIMEOUT_MS = 12000;
+const ISSUES_API_TIMEOUT_MS = 25000;
 const LIST_API_TIMEOUT_MS = 2500;
 const RETIRED_MOCK_IDS = new Set([
   "iss-bng-101",
@@ -36,6 +36,7 @@ const RETIRED_MOCK_IDS = new Set([
   "iss-104"
 ]);
 const TICKET_SEED = "ll-open-tickets-v2-2026-09-07";
+const REMOTE_ISSUES_CACHE_KEY = "leaders_lens_remote_field_issues";
 
 let cachedSeedIssues: any[] | null = null;
 let seedIssuesPromise: Promise<any[]> | null = null;
@@ -127,43 +128,60 @@ function mergeIssueRecords(base: any, overlay: any): any {
   }
   const current = String(base.status || "").toUpperCase();
   const incoming = String(overlay.status || "").toUpperCase();
-  if ((STATUS_RANK[current] || 0) > (STATUS_RANK[incoming] || 0)) {
+  if (
+    (STATUS_RANK[current] || 0) > (STATUS_RANK[incoming] || 0) ||
+    (OFFICER_LOCKED_STATUSES.has(current) && !OFFICER_LOCKED_STATUSES.has(incoming))
+  ) {
     merged.status = base.status;
-    if (hasFieldValue(base.lastStatusRemarks) && !hasFieldValue(overlay.lastStatusRemarks)) {
-      merged.lastStatusRemarks = base.lastStatusRemarks;
-    }
-    if (hasFieldValue(base.lastStatusUpdateAt) && !hasFieldValue(overlay.lastStatusUpdateAt)) {
-      merged.lastStatusUpdateAt = base.lastStatusUpdateAt;
-    }
+    if (hasFieldValue(base.lastStatusRemarks)) merged.lastStatusRemarks = base.lastStatusRemarks;
+    if (hasFieldValue(base.lastStatusUpdateAt)) merged.lastStatusUpdateAt = base.lastStatusUpdateAt;
+    if (hasFieldValue(base.lastStatusProof)) merged.lastStatusProof = base.lastStatusProof;
   }
   return merged;
 }
 
+function readCachedIssueList(key: string): any[] {
+  try {
+    const savedRaw = localStorage.getItem(key);
+    if (!savedRaw) return [];
+    const savedList = JSON.parse(savedRaw);
+    return Array.isArray(savedList) ? savedList : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCachedIssueList(key: string, list: any[]): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch {}
+}
+
+function upsertCachedIssue(key: string, issue: any): void {
+  if (!issue?.id) return;
+  const list = readCachedIssueList(key);
+  const idx = list.findIndex((i: any) => i?.id === issue.id);
+  const merged = idx === -1 ? issue : mergeIssueRecords(list[idx], issue);
+  if (idx === -1) list.unshift(merged);
+  else list[idx] = merged;
+  writeCachedIssueList(key, list);
+}
+
 function mergeFieldIssueLists(seedList: any[], remoteList: any[]): any[] {
   const byId = new Map<string, any>();
-  seedList.forEach((i: any) => {
-    if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, i);
-  });
-  remoteList.forEach((i: any) => {
-    if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, mergeIssueRecords(byId.get(i.id), i));
-  });
-  try {
-    const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
-    if (savedRaw) {
-      const savedList = JSON.parse(savedRaw);
-      if (Array.isArray(savedList)) {
-        savedList.forEach((local: any) => {
-          if (!local?.id || RETIRED_MOCK_IDS.has(local.id)) return;
-          const current = byId.get(local.id);
-          if (!current) {
-            byId.set(local.id, local);
-            return;
-          }
-          byId.set(local.id, mergeIssueRecords(local, current));
-        });
-      }
-    }
-  } catch (e) {}
+  const overlay = (items: any[]) => {
+    items.forEach((i: any) => {
+      if (!i?.id || RETIRED_MOCK_IDS.has(i.id)) return;
+      byId.set(i.id, mergeIssueRecords(byId.get(i.id), i));
+    });
+  };
+  overlay(seedList);
+  overlay(readCachedIssueList(REMOTE_ISSUES_CACHE_KEY));
+  overlay(remoteList);
+  overlay(readCachedIssueList("leaders_lens_created_field_issues"));
+  if (remoteList.length > 0) {
+    writeCachedIssueList(REMOTE_ISSUES_CACHE_KEY, Array.from(byId.values()));
+  }
   return Array.from(byId.values());
 }
 
@@ -1114,7 +1132,10 @@ export const politicalApiService = {
   }): Promise<any[]> {
     try {
       if (localStorage.getItem("leaders_lens_ticket_seed") !== TICKET_SEED) {
-        localStorage.removeItem("leaders_lens_created_field_issues");
+        const preserved = readCachedIssueList("leaders_lens_created_field_issues").filter((i: any) =>
+          OFFICER_LOCKED_STATUSES.has(String(i?.status || "").toUpperCase())
+        );
+        writeCachedIssueList("leaders_lens_created_field_issues", preserved);
         localStorage.setItem("leaders_lens_ticket_seed", TICKET_SEED);
       }
     } catch (e) {}
@@ -1257,31 +1278,25 @@ export const politicalApiService = {
         throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
       }
       const data = await res.json();
-      const authoritativeStatus = data?.ticket?.status || data?.status || payload.status;
-      try {
-        const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
-        const savedList = savedRaw ? JSON.parse(savedRaw) : [];
-        const idx = savedList.findIndex((i: any) => i.id === issueId);
-        const merged = {
-          ...(idx !== -1 ? savedList[idx] : { id: issueId }),
-          status: authoritativeStatus,
-          lastStatusRemarks: payload.remarks,
-          lastStatusProof: compactProof(payload.proofUrl),
-          department: payload.department || (idx !== -1 ? savedList[idx].department : undefined),
-          assignedDepartment:
-            payload.assignedDepartment ||
-            payload.department ||
-            (idx !== -1 ? savedList[idx].assignedDepartment : undefined),
-          assignedVolunteerId: payload.assignedVolunteerId || (idx !== -1 ? savedList[idx].assignedVolunteerId : undefined),
-          assignedVolunteerName: payload.assignedVolunteerName || (idx !== -1 ? savedList[idx].assignedVolunteerName : undefined),
-          assignedOfficialName: payload.assignedOfficialName || (idx !== -1 ? savedList[idx].assignedOfficialName : undefined),
-          assignedOfficialPhone: payload.assignedOfficialPhone || (idx !== -1 ? savedList[idx].assignedOfficialPhone : undefined),
-          updatedAt: data?.ticket?.updatedAt || new Date().toISOString()
-        };
-        if (idx !== -1) savedList[idx] = { ...savedList[idx], ...merged };
-        else savedList.push(merged);
-        localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(savedList));
-      } catch (e) {}
+      const ticket = data?.ticket || data;
+      const authoritativeStatus = ticket?.status || payload.status;
+      const mergedLocal = {
+        ...(findLocalCreatedIssue(issueId) || { id: issueId }),
+        ...ticket,
+        status: authoritativeStatus,
+        lastStatusRemarks: ticket?.lastStatusRemarks || payload.remarks,
+        lastStatusProof: ticket?.lastStatusProof || compactProof(payload.proofUrl),
+        lastStatusUpdateAt: ticket?.lastStatusUpdateAt || new Date().toISOString(),
+        department: payload.department || ticket?.department,
+        assignedDepartment: payload.assignedDepartment || payload.department || ticket?.assignedDepartment,
+        assignedVolunteerId: payload.assignedVolunteerId || ticket?.assignedVolunteerId,
+        assignedVolunteerName: payload.assignedVolunteerName || ticket?.assignedVolunteerName,
+        assignedOfficialName: payload.assignedOfficialName || ticket?.assignedOfficialName,
+        assignedOfficialPhone: payload.assignedOfficialPhone || ticket?.assignedOfficialPhone,
+        updatedAt: ticket?.updatedAt || new Date().toISOString()
+      };
+      upsertCachedIssue("leaders_lens_created_field_issues", mergedLocal);
+      upsertCachedIssue(REMOTE_ISSUES_CACHE_KEY, mergedLocal);
       return data;
     } catch (error: any) {
       const msg = String(error?.message || error || "");
@@ -1328,20 +1343,19 @@ export const politicalApiService = {
   },
 
   async getFieldIssueById(issueId: string, _userId?: string, _userRole?: string): Promise<any> {
-    const local = findLocalCreatedIssue(issueId);
-    if (local) return local;
+    let remote: any = null;
     try {
       const res = await fetchWithTimeout(
         `${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}`
       );
-      if (res.ok) return await res.json();
+      if (res.ok) remote = await res.json();
     } catch (e) {
       // Fallback
     }
     const seedList = await loadSeedIssues();
-    const merged = mergeFieldIssueLists(seedList, []);
-    const fromLocal = merged.find((i: any) => i.id === issueId);
-    if (fromLocal) return fromLocal;
+    const mergedList = mergeFieldIssueLists(seedList, remote ? [remote] : []);
+    const merged = mergedList.find((i: any) => i.id === issueId);
+    if (merged) return merged;
     const issues = await this.getFieldIssues();
     const found = issues.find((i: any) => i.id === issueId);
     if (found) return found;
