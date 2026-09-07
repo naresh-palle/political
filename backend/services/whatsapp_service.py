@@ -150,6 +150,10 @@ class WhatsAppCloudApiClient:
         self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
         self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v25.0")
         self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "officer_ticket_alert_v1")
+        self.complainant_template_name = os.environ.get(
+            "WHATSAPP_COMPLAINANT_TEMPLATE_NAME",
+            os.environ.get("WHATSAPP_STATUS_TEMPLATE_NAME", "officer_ticket_alert_v1"),
+        )
 
     def _graph_url(self) -> str:
         return f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
@@ -313,6 +317,40 @@ class WhatsAppCloudApiClient:
                 "type": "text",
                 "text": {"preview_url": False, "body": payload.get("textMessage")},
             }
+        elif message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE"):
+            status_label = payload.get("statusLabel") or payload.get("newStatus") or "UPDATED"
+            remarks = (payload.get("remarks") or "Status updated")[:60] or "Status updated"
+            citizen_name = payload.get("complainantName") or payload.get("officerName") or "Citizen"
+            clean_ticket_id = (payload.get("rawTicketId") or payload.get("ticketNumber") or "ticket").replace("#", "")
+            request_body = {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": phone,
+                "type": "template",
+                "template": {
+                    "name": self.complainant_template_name,
+                    "language": {"code": "en"},
+                    "components": [
+                        {"type": "header", "parameters": [{"type": "text", "text": "LeaderLens"}]},
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {"type": "text", "text": citizen_name[:60]},
+                                {"type": "text", "text": clean_ticket_id[:60]},
+                                {"type": "text", "text": (payload.get("deptName") or status_label)[:60]},
+                                {"type": "text", "text": (payload.get("mandalName") or remarks)[:60]},
+                            ],
+                        },
+                        {
+                            "type": "button",
+                            "sub_type": "url",
+                            "index": "0",
+                            "parameters": [{"type": "text", "text": clean_ticket_id[:60]}],
+                        },
+                    ],
+                },
+            }
+            template_for_log = self.complainant_template_name
         else:
             request_body = self._template_request_body(phone, payload)
 
@@ -338,7 +376,18 @@ class WhatsAppCloudApiClient:
                     "correlationId": correlation_id,
                     "metaHttpStatus": status_code,
                     "apiVersion": self.api_version,
+                    "templateName": template_for_log,
                 }
+
+            # Session text messages are often rejected; retry with the approved Cloud template.
+            if message_kind == "TEXT":
+                logger.warning(
+                    "[WhatsApp] text failed ticket=%s metaHttp=%s; retrying approved template %s",
+                    ticket_ref, status_code, self.complainant_template_name,
+                )
+                retry_payload = dict(payload)
+                retry_payload["messageKind"] = "COMPLAINANT_STATUS"
+                return await self.send_whatsapp_notification(retry_payload)
 
             safe = _safe_provider_error(res_json, error_msg_fallback)
             return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)

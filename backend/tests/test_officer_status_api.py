@@ -87,7 +87,7 @@ def test_officer_status_creates_volunteer_notification_and_audit(monkeypatch):
     assert result["ticket"]["status"] == "IN_PROGRESS"
     assert result["volunteerNotification"]["status"] == "CREATED"
     assert result["volunteerNotification"]["resourceId"] == "iss-e2e-1"
-    assert result["complainantNotification"]["status"] == "PENDING"
+    assert result["complainantNotification"]["status"] == "FAILED"
     assert srv.IN_MEMORY_NOTIFICATIONS[0]["recipientUserId"] == "vol-a"
     assert srv.IN_MEMORY_NOTIFICATIONS[0]["resourceType"] == "ISSUE"
     assert srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"]["status"] == "IN_PROGRESS"
@@ -144,7 +144,7 @@ def test_resolved_and_rejected_propagate(monkeypatch):
         srv.update_field_issue_status("iss-e2e-1", {"status": "RESOLVED", "remarks": "Work finished."})
     )
     assert resolved["ticket"]["status"] == "RESOLVED"
-    assert resolved["complainantNotification"]["status"] == "PENDING"
+    assert resolved["complainantNotification"]["status"] == "SENT"
     assert "Ticket Resolved" in srv.IN_MEMORY_NOTIFICATIONS[0]["title"]
 
     srv.IN_MEMORY_STATUS_IDEMPOTENCY.clear()

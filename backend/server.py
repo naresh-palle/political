@@ -1958,7 +1958,10 @@ async def get_field_issues(
     try:
         query = {}
         if userRole == "VOLUNTEER" and userId:
-            query["assignedVolunteerId"] = userId
+            query["$or"] = [
+                {"assignedVolunteerId": userId},
+                {"createdBy": userId},
+            ]
         elif userRole == "DIRECTOR" and (userId or directorId):
             query["directorId"] = directorId or userId
         if mandalId and mandalId != "ALL":
@@ -1994,10 +1997,13 @@ async def get_field_issues(
 
     issues = overlay_in_memory_issues(issues)
     if userRole == "VOLUNTEER" and userId:
-        issues = [i for i in issues if i.get("assignedVolunteerId") == userId]
+        issues = [
+            i for i in issues
+            if i.get("assignedVolunteerId") == userId or i.get("createdBy") == userId
+        ]
     elif userRole == "DIRECTOR" and (userId or directorId):
         d_id = directorId or userId
-        issues = [i for i in issues if i.get("directorId") == d_id]
+        issues = [i for i in issues if i.get("directorId") == d_id or not i.get("directorId")]
     if status and status != "ALL":
         issues = [i for i in issues if i.get("status") == status]
 
@@ -2132,7 +2138,11 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     if prior and current_status == new_status:
         return sanitize_doc(prior)
 
-    volunteer_id = issue.get("assignedVolunteerId")
+    volunteer_id = (
+        issue.get("assignedVolunteerId")
+        or (issue.get("createdBy") if (issue.get("createdByRole") or "").upper() == "VOLUNTEER" else None)
+        or issue.get("createdBy")
+    )
     volunteer_notif_status = "SKIPPED_NO_ASSIGNEE"
     volunteer_notif = None
 
@@ -2173,14 +2183,15 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     }
 
     issue.update(update_doc)
-    IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(dict(issue))
+    if volunteer_id and not issue.get("assignedVolunteerId"):
+        issue["assignedVolunteerId"] = volunteer_id
+    persisted = sanitize_doc(dict(issue))
+    IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
 
     try:
-        result = await db.field_issues.update_one({"id": issue_id}, {"$set": update_doc}, upsert=True)
-        if result.matched_count == 0 and not result.upserted_id:
-            await db.field_issues.update_one({"id": issue_id}, {"$set": sanitize_doc(dict(issue))}, upsert=True)
-        await db.issue_history.insert_one(dict(history_record))
-        await db.work_updates.insert_one(dict(history_record))
+        await db.field_issues.update_one({"id": issue_id}, {"$set": persisted}, upsert=True)
+        await db.issue_history.insert_one(sanitize_doc(dict(history_record)))
+        await db.work_updates.insert_one(sanitize_doc(dict(history_record)))
     except Exception as e:
         log_mongo_notice("atomic officer status persist", e)
 
@@ -2209,8 +2220,8 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         }
         volunteer_notif_status = "CREATED"
         try:
-            await db.notifications.insert_one(dict(volunteer_notif))
-            await db.field_notifications.insert_one(dict(volunteer_notif))
+            await db.notifications.insert_one(sanitize_doc(dict(volunteer_notif)))
+            await db.field_notifications.insert_one(sanitize_doc(dict(volunteer_notif)))
         except Exception as e:
             log_mongo_notice("insert volunteer notification", e)
             volunteer_notif_status = "CREATED_IN_MEMORY"
@@ -2259,41 +2270,38 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "issueId": issue_id,
         "textMessage": wa_text,
         "correlationId": correlation_id,
+        "complainantName": complainant_name,
+        "officerName": complainant_name,
+        "statusLabel": new_status.replace("_", " "),
+        "newStatus": new_status,
+        "remarks": remarks,
+        "deptName": completed_dept,
+        "mandalName": issue.get("mandalName") or new_status.replace("_", " "),
     }
 
-    async def _dispatch_complainant_whatsapp():
-        try:
-            whatsapp_result = await whatsapp_client.send_whatsapp_notification(wa_payload)
-            wa_status = whatsapp_result.get("status") or "FAILED"
-            if wa_status not in ("SENT", "DELIVERED", "FAILED", "PENDING"):
-                wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
-            patch = {
-                "status": wa_status,
-                "providerMessageId": whatsapp_result.get("providerMessageId"),
-                "sentAt": whatsapp_result.get("sentAt") if wa_status in ("SENT", "DELIVERED") else None,
-                "failedAt": whatsapp_result.get("sentAt") if wa_status == "FAILED" else None,
-                "errorCode": whatsapp_result.get("errorCode"),
-                "errorMessage": whatsapp_result.get("errorMessage"),
-                "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
-                "apiVersion": whatsapp_result.get("apiVersion"),
-            }
-            try:
-                await db.notification_audits.update_one({"id": audit_id}, {"$set": patch})
-            except Exception as inner:
-                log_mongo_notice("update notification_audit", inner)
-            for rec in IN_MEMORY_NOTIFICATION_AUDITS:
-                if rec.get("id") == audit_id:
-                    rec.update(patch)
-                    break
-        except Exception as dispatch_err:
-            logger.warning(f"Background complainant WhatsApp failed: {dispatch_err}")
-
+    whatsapp_result = await whatsapp_client.send_whatsapp_notification(wa_payload)
+    wa_status = whatsapp_result.get("status") or "FAILED"
+    if wa_status not in ("SENT", "DELIVERED", "FAILED", "PENDING"):
+        wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
+    patch = {
+        "status": wa_status,
+        "providerMessageId": whatsapp_result.get("providerMessageId"),
+        "sentAt": whatsapp_result.get("sentAt") if wa_status in ("SENT", "DELIVERED") else None,
+        "failedAt": whatsapp_result.get("sentAt") if wa_status == "FAILED" else None,
+        "errorCode": whatsapp_result.get("errorCode"),
+        "errorMessage": whatsapp_result.get("errorMessage"),
+        "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
+        "apiVersion": whatsapp_result.get("apiVersion"),
+        "templateName": whatsapp_result.get("templateName") or "complainant_status_update",
+    }
     try:
-        asyncio.create_task(_dispatch_complainant_whatsapp())
-    except Exception:
-        await _dispatch_complainant_whatsapp()
-
-    wa_status = "PENDING"
+        await db.notification_audits.update_one({"id": audit_id}, {"$set": patch}, upsert=True)
+    except Exception as inner:
+        log_mongo_notice("update notification_audit", inner)
+    for rec in IN_MEMORY_NOTIFICATION_AUDITS:
+        if rec.get("id") == audit_id:
+            rec.update(patch)
+            break
 
     response = {
         "success": True,
@@ -2314,25 +2322,23 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "complainantNotification": {
             "channel": "WHATSAPP",
             "status": wa_status,
-            "providerMessageId": None,
-            "errorCode": None,
-            "errorMessage": None,
+            "providerMessageId": whatsapp_result.get("providerMessageId"),
+            "errorCode": whatsapp_result.get("errorCode"),
+            "errorMessage": whatsapp_result.get("errorMessage"),
         },
         "whatsappResult": {
             "status": wa_status,
-            "providerMessageId": None,
-            "errorCode": None,
-            "errorMessage": None,
-            "metaHttpStatus": None,
+            "providerMessageId": whatsapp_result.get("providerMessageId"),
+            "errorCode": whatsapp_result.get("errorCode"),
+            "errorMessage": whatsapp_result.get("errorMessage"),
+            "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
         },
         "status": new_status,
         "issueId": issue_id,
         "message": (
             "Ticket updated successfully. Volunteer notified."
             + (
-                " Complaint Person WhatsApp dispatch started."
-                if wa_status == "PENDING"
-                else " Complaint Person WhatsApp sent."
+                " Complaint Person WhatsApp sent."
                 if wa_status in ("SENT", "DELIVERED")
                 else " Complaint Person WhatsApp failed."
             )

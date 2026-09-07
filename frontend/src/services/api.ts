@@ -969,6 +969,7 @@ export const politicalApiService = {
     q?: string;
   }): Promise<any[]> {
     let list: any[] = [];
+    let fetchOk = false;
     try {
       const qp = new URLSearchParams();
       if (params?.userId) qp.append("userId", params.userId);
@@ -980,8 +981,9 @@ export const politicalApiService = {
       if (params?.priority) qp.append("priority", params.priority);
       if (params?.q) qp.append("q", params.q);
 
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues?${qp.toString()}`);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues?${qp.toString()}`, {}, 15000);
       if (res.ok) {
+        fetchOk = true;
         const data = await res.json();
         if (Array.isArray(data)) list = data;
       }
@@ -989,7 +991,7 @@ export const politicalApiService = {
       // Fallback
     }
 
-    if (!list || list.length === 0) {
+    if (!fetchOk && (!list || list.length === 0)) {
       try {
         const res = await fetch("./data/field_issues.json");
         if (res.ok) {
@@ -1297,7 +1299,7 @@ export const politicalApiService = {
       const qp = new URLSearchParams();
       if (recipientUserId) qp.append("recipientUserId", recipientUserId);
       if (recipientRole) qp.append("recipientRole", recipientRole);
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications?${qp.toString()}`);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications?${qp.toString()}`, {}, 15000);
       if (res.ok) {
         fetchOk = true;
         const data = await res.json();
