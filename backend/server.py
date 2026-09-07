@@ -1698,7 +1698,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
         "assignedVolunteerName": "Assigned Volunteer",
         "assignedVolunteerPhone": "+91 98850 44003",
         "directorId": "usr-demo-director",
-        "directorName": "Demo Director",
+        "directorName": "Demo Manager",
         "initialRemarks": "Ticket registered for field ops tracking.",
         "attachments": [],
         "createdAt": datetime.now(timezone.utc).isoformat(),

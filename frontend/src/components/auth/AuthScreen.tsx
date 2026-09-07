@@ -39,7 +39,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 
       // 3. Dynamic resolution for custom credentials with proper role deduction
       const isVolunteerEmail = cleanEmail.startsWith("volunteer.") || cleanEmail.includes(".vol");
-      const isDirectorEmail = cleanEmail.startsWith("director.") || cleanEmail.includes(".dir") || cleanEmail.startsWith("manager.") || cleanEmail.includes(".man") || cleanEmail.includes("demo.manager") || cleanEmail.includes("demo.director");
+      const isDirectorEmail = cleanEmail.startsWith("director.") || cleanEmail.includes(".dir") || cleanEmail.startsWith("manager.") || cleanEmail.includes(".man") || cleanEmail.includes("demo.manager");
       const isMlaEmail = cleanEmail.startsWith("mla.") || cleanEmail.includes(".mla");
       const isSuperAdminEmail = cleanEmail === "admin@leaderslens.ai" || cleanEmail === "support@leaderslens.ai";
 
