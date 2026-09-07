@@ -395,7 +395,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-[#8E9CAE]">Field Agent:</span>
-                    <strong className="text-[#F5EFE0]">{issue.assignedVolunteerName || "Volunteer"}</strong>
+                    <strong className="text-[#F5EFE0]">{issue.assignedVolunteerName || "Volunteer1"}</strong>
                   </div>
                   {issue.assignedVolunteerPhone && (
                     <div className="flex items-center justify-between">

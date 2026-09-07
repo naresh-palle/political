@@ -561,7 +561,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         {
           id: "usr-vol-01",
           deptId: currentDeptObj.id,
-          name: "Volunteer (Field Agent)",
+          name: "Volunteer1 (Field Agent)",
           designation: "Constituency Field Operations Lead",
           phone: "+91 98480 12345",
           category: currentDeptObj.name,

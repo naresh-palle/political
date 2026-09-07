@@ -2241,7 +2241,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                                   assignedOfficialPhone: activeTicket.assigneeContact,
                                   reportedDate: activeTicket.submittedDate || new Date().toISOString().split("T")[0],
                                   attachments: [],
-                                  createdBy: activeTicket.submittedByVolunteer?.name || "Volunteer",
+                                  createdBy: activeTicket.submittedByVolunteer?.name || "Volunteer1",
                                   createdByRole: "VOLUNTEER",
                                   createdAt: activeTicket.timestamp || new Date().toISOString(),
                                   updatedAt: new Date().toISOString()
