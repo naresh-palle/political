@@ -9,3 +9,5 @@ pm run build in rontend/ to confirm zero TypeScript and Vite bundle errors befo
 - **Frontend Changes** -> Deploy to GitHub Pages (gh-pages, docs/, root).
 - **Backend / MongoDB Changes** -> Deploy to Render via origin main.
 - **Full-Stack Changes** -> Execute both deployment pipelines.
+
+When code is complete, follow `.cursor/skills/complete-commit-deploy/SKILL.md`: commit, GitHub Pages, then Render via `origin/main`.
