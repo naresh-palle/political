@@ -9,7 +9,7 @@ import {
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
-import { isTicketOpenForAssign } from "../../utils/ticketActions";
+import { isTicketOpenForAssign, statusAfterAssignment } from "../../utils/ticketActions";
 import { countByKpi, kpiBucket } from "../../utils/ticketKpi";
 import { IssueDetailView } from "./IssueDetailView";
 import {
@@ -816,11 +816,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     );
 
     try {
+      const nextStatus = statusAfterAssignment(issues.find((i) => i.id === issueId)?.status);
       await politicalApiService.updateFieldIssueStatus(issueId, {
         assignedVolunteerId: newVolunteerId || undefined,
         assignedVolunteerName: newVolName,
-        status: "ASSIGNED",
-        remarks: `Assigned to ${newVolName}`
+        remarks: `Assigned to ${newVolName}`,
+        ...(nextStatus === "ASSIGNED" ? { status: nextStatus } : {}),
       });
     } catch (e) {
       console.warn("Assignment update fallback handled locally", e);
@@ -852,7 +853,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             assignedDepartment: baseDept,
             assignedOfficialName: officialName || item.assignedOfficialName || "",
             assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: "ASSIGNED",
+            status: statusAfterAssignment(item.status),
             updatedAt: new Date().toISOString()
           };
         }
@@ -872,7 +873,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               assignedDepartment: baseDept,
               assignedOfficialName: officialName || i.assignedOfficialName || "",
               assignedOfficialPhone: officialPhone || i.assignedOfficialPhone || "",
-              status: "ASSIGNED",
+              status: statusAfterAssignment(i.status),
               updatedAt: new Date().toISOString()
             };
           }
@@ -885,10 +886,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
         department: baseDept,
-        status: "ASSIGNED",
         assignedOfficialName: officialName,
         assignedOfficialPhone: officialPhone,
-        remarks: `Department assigned to ${baseDept}`
+        remarks: `Department assigned to ${baseDept}`,
+        ...(statusAfterAssignment(issues.find((i) => i.id === issueId)?.status) === "ASSIGNED"
+          ? { status: "ASSIGNED" }
+          : {})
       });
     } catch (e) {
       console.warn("Department update error", e);

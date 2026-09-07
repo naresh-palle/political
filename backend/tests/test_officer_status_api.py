@@ -241,3 +241,54 @@ def test_status_notifies_created_by_when_assignee_is_demo(monkeypatch):
     recipients = {n.get("recipientUserId") for n in srv.IN_MEMORY_NOTIFICATIONS}
     assert "vol-real" in recipients
     assert "vol-b" not in recipients
+
+
+def test_assign_notify_does_not_downgrade_in_progress(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    issue = _issue(status="IN_PROGRESS")
+    captured = {}
+
+    mock_issues = MagicMock()
+    mock_issues.find_one = AsyncMock(return_value=dict(issue))
+
+    async def capture_update(query, update, **kwargs):
+        captured["set"] = update.get("$set", {})
+        return MagicMock(matched_count=1)
+
+    mock_issues.update_one = AsyncMock(side_effect=capture_update)
+    mock_users = MagicMock()
+    mock_users.find_one = AsyncMock(return_value=None)
+    mock_col = MagicMock()
+    mock_col.insert_one = AsyncMock(return_value=None)
+
+    class _DB:
+        field_issues = mock_issues
+        users = mock_users
+        notification_audits = mock_col
+
+    monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(
+        srv.whatsapp_client,
+        "send_whatsapp_notification",
+        AsyncMock(return_value={"success": False, "status": "FAILED"}),
+    )
+    asyncio.run(
+        srv.assign_and_notify_whatsapp(
+            "iss-e2e-1",
+            {"assignedOfficialName": "Officer A", "assignedOfficialPhone": "9848012345", "assignedDeptName": "R&B"},
+        )
+    )
+    assert captured["set"].get("status") != "ASSIGNED"
+    assert srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"]["status"] == "IN_PROGRESS"
+
+
+def test_memory_overlay_does_not_downgrade_mongo_progress():
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"] = {"id": "iss-e2e-1", "status": "ASSIGNED", "title": "stale"}
+    merged = srv.resolve_stored_issue("iss-e2e-1", {"id": "iss-e2e-1", "status": "IN_PROGRESS", "title": "live"})
+    assert merged["status"] == "IN_PROGRESS"

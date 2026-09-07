@@ -31,6 +31,7 @@ try:
         complainant_whatsapp_text,
         mask_phone,
         normalize_status,
+        should_preserve_progress_status,
         ticket_display_number,
         validate_officer_status,
         validate_transition,
@@ -46,6 +47,7 @@ except ImportError:
         complainant_whatsapp_text,
         mask_phone,
         normalize_status,
+        should_preserve_progress_status,
         ticket_display_number,
         validate_officer_status,
         validate_transition,
@@ -126,6 +128,17 @@ def log_mongo_notice(tag: str, exc: Exception):
     else:
         logger.warning(f"MongoDB warning ({tag}): {exc}")
 
+def _merge_issue_memory(base: dict, mem: Optional[dict]) -> dict:
+    """Apply in-memory overlay without downgrading officer progress status."""
+    if not mem:
+        return base
+    overlay = dict(mem)
+    if should_preserve_progress_status(base.get("status"), overlay.get("status")):
+        overlay.pop("status", None)
+    base.update(overlay)
+    return base
+
+
 def overlay_in_memory_issues(issues: list) -> list:
     """Merge authoritative in-memory officer updates onto a ticket list."""
     if not IN_MEMORY_FIELD_ISSUES:
@@ -133,27 +146,21 @@ def overlay_in_memory_issues(issues: list) -> list:
     merged = {i.get("id"): dict(i) for i in issues if isinstance(i, dict) and i.get("id")}
     for issue_id, mem in IN_MEMORY_FIELD_ISSUES.items():
         if issue_id in merged:
-            merged[issue_id].update(mem)
+            merged[issue_id] = _merge_issue_memory(merged[issue_id], mem)
         else:
             merged[issue_id] = dict(mem)
     return list(merged.values())
 
 def resolve_stored_issue(issue_id: str, mongo_doc: Optional[dict] = None) -> Optional[dict]:
+    mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
     if mongo_doc:
-        base = dict(mongo_doc)
-        mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
-        if mem:
-            base.update(mem)
-        return sanitize_doc(base)
-    if issue_id in IN_MEMORY_FIELD_ISSUES:
-        return sanitize_doc(dict(IN_MEMORY_FIELD_ISSUES[issue_id]))
+        return sanitize_doc(_merge_issue_memory(dict(mongo_doc), mem))
     fallback = load_json_fallback("field_issues.json")
     found = next((i for i in fallback if i.get("id") == issue_id), None)
     if found:
-        mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
-        if mem:
-            found = {**found, **mem}
-        return sanitize_doc(found)
+        return sanitize_doc(_merge_issue_memory(dict(found), mem))
+    if mem:
+        return sanitize_doc(dict(mem))
     return None
 
 # Base routes
@@ -1489,68 +1496,23 @@ async def get_field_issues(
 
 @api_router.get("/field-ops/issues/{issue_id}")
 async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
+    mongo_issue = None
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
-        if issue:
-            mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
-            if mem:
-                issue = {**issue, **mem}
-            if userRole == "VOLUNTEER" and userId:
-                if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
-                    raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-            if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
-                raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
-            return sanitize_doc(issue)
-    except HTTPException:
-        raise
+        mongo_issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
     except Exception as e:
-        logger.warning(f"MongoDB get issue by id: {e}")
+        log_mongo_notice("get issue by id", e)
 
-    if issue_id in IN_MEMORY_FIELD_ISSUES:
-        return sanitize_doc(IN_MEMORY_FIELD_ISSUES[issue_id])
-        
-    fallback = load_json_fallback("field_issues.json")
-    found = next((i for i in fallback if i.get("id") == issue_id), None)
-    if found:
-        if userRole == "VOLUNTEER" and userId and found.get("assignedVolunteerId") != userId:
+    issue = resolve_stored_issue(issue_id, mongo_issue)
+    if not issue:
+        raise HTTPException(status_code=404, detail="Issue not found")
+
+    if userRole == "VOLUNTEER" and userId:
+        if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
             raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-        return sanitize_doc(found)
-        
-    # Dynamic fallback item so dynamic ticket IDs never 404
-    found = {
-        "id": issue_id,
-        "title": f"Public Grievance Ticket #{issue_id}",
-        "description": "Ground grievance ticket assigned for department resolution and tracking.",
-        "category": "Panchayat Raj & Rural Water Supply",
-        "department": "Panchayat Raj",
-        "priority": "HIGH",
-        "status": "ASSIGNED",
-        "issueType": "COMPLAINT",
-        "reporterType": "CITIZEN",
-        "reporterDesignation": "Resident Citizen",
-        "stateId": "AP",
-        "assemblyConstituencyId": "BNG-AC",
-        "assemblyConstituencyName": "Banaganapalle Assembly (AC-140)",
-        "mandalId": "MDL-BNG-TWN",
-        "mandalName": "Banaganapalle Town",
-        "villageId": "VIL-BNG-TWN-01",
-        "villageName": "Banaganapalle Town Wards 1-10",
-        "placeName": "Main Town Area",
-        "reportedBy": "Citizen Reporter",
-        "reporterPhone": "9885765672",
-        "reportedDate": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "dueDate": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "assignedVolunteerId": userId or "usr-demo-volunteer",
-        "assignedVolunteerName": "Assigned Volunteer",
-        "assignedVolunteerPhone": "+91 98850 44003",
-        "directorId": "usr-demo-director",
-        "directorName": "Demo Director",
-        "initialRemarks": "Ticket registered for field ops tracking.",
-        "attachments": [],
-        "createdAt": datetime.now(timezone.utc).isoformat(),
-        "updatedAt": datetime.now(timezone.utc).isoformat()
-    }
-    return sanitize_doc(found)
+    if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
+        raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
+    return sanitize_doc(issue)
+
 
 @api_router.post("/field-ops/issues")
 async def create_field_issue(payload: dict):
@@ -1620,30 +1582,6 @@ async def create_field_issue(payload: dict):
         
     return new_issue
 
-@api_router.get("/field-ops/issues/{issue_id}")
-async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
-    try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
-        if issue:
-            # RBAC verification
-            if userRole == "VOLUNTEER" and userId and issue.get("assignedVolunteerId") != userId:
-                raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-            if userRole == "DIRECTOR" and userId and issue.get("directorId") != userId:
-                raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
-            return issue
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.warning(f"MongoDB get issue by id: {e}")
-        
-    fallback = load_json_fallback("field_issues.json")
-    found = next((i for i in fallback if i.get("id") == issue_id), None)
-    if found:
-        if userRole == "VOLUNTEER" and userId and found.get("assignedVolunteerId") != userId:
-            raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-        return found
-    raise HTTPException(status_code=404, detail="Issue not found")
-
 @api_router.put("/field-ops/issues/{issue_id}")
 async def update_field_issue(issue_id: str, payload: dict, userRole: Optional[str] = None):
     # IMMUTABILITY ENFORCEMENT: Volunteer cannot edit original complaint
@@ -1654,6 +1592,15 @@ async def update_field_issue(issue_id: str, payload: dict, userRole: Optional[st
         )
     
     payload["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    current = None
+    try:
+        current = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+    except Exception:
+        current = IN_MEMORY_FIELD_ISSUES.get(issue_id)
+    if not current:
+        current = IN_MEMORY_FIELD_ISSUES.get(issue_id)
+    if current and should_preserve_progress_status(current.get("status"), payload.get("status")):
+        payload = {k: v for k, v in payload.items() if k != "status"}
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": payload})
         updated = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
@@ -2081,27 +2028,6 @@ async def get_field_issues(
     return issues
 
 
-@api_router.get("/field-ops/issues/{issue_id}")
-async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
-    issue = None
-    try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
-    except Exception as e:
-        logger.warning(f"MongoDB get issue by id: {e}")
-        
-    issue = resolve_stored_issue(issue_id, issue)
-        
-    if not issue:
-        raise HTTPException(status_code=404, detail="Issue not found")
-
-    if userRole == "VOLUNTEER" and userId:
-        if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
-            raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-    if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
-        raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
-    return sanitize_doc(issue)
-
-
 @api_router.post("/field-ops/send-whatsapp-otp")
 async def send_whatsapp_otp(payload: dict):
     phone = payload.get("phone", "").replace("+", "").replace(" ", "").replace("-", "")
@@ -2450,12 +2376,13 @@ async def get_notification_templates():
 @api_router.post("/field-ops/issues/{issue_id}/assign-notify")
 async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     # 1. Fetch ticket
-    issue = None
+    mongo_issue = None
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        mongo_issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
     except Exception as e:
         logger.warning(f"MongoDB find issue {issue_id}: {e}")
-        
+
+    issue = resolve_stored_issue(issue_id, mongo_issue)
     if not issue:
         issue = {
             "id": issue_id,
@@ -2470,7 +2397,7 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
             "assignedVolunteerId": payload.get("assignedVolunteerId") or "usr-demo-volunteer",
             "assignedVolunteerName": payload.get("assignedVolunteerName") or "Assigned Volunteer",
             "priority": payload.get("priority") or "MEDIUM",
-            "status": "ASSIGNED"
+            "status": payload.get("status") or "ASSIGNED",
         }
 
     if isinstance(issue, dict) and "_id" in issue:
@@ -2543,14 +2470,16 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     # 7. Update ticket in MongoDB / memory
     now_iso = datetime.now(timezone.utc).isoformat()
     assigned_dept_val = f"{dept_name} ({officer_name})"
+    current_status = (issue or {}).get("status")
     update_data = {
         "assignedDepartment": dept_name,
         "assignedOfficialName": officer_name,
         "assignedOfficialPhone": officer_phone,
-        "status": "ASSIGNED",
         "assignedAt": now_iso,
         "updatedAt": now_iso
     }
+    if not should_preserve_progress_status(current_status, "ASSIGNED"):
+        update_data["status"] = "ASSIGNED"
     
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": update_data})
