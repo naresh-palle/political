@@ -11,7 +11,7 @@ import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHa
 import { IssueDetailView } from "./IssueDetailView";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
-import { TicketGridCard } from "./TicketGridCard";
+import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
 import { assignmentSafeStatus, countByKpi, kpiBucket } from "../../utils/ticketKpi";
 import {
@@ -844,7 +844,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+          <div className={TICKET_GRID_CLASS}>
             {filteredIssues.map((iss) => {
               const isClosed = iss.status === "COMPLETED" || iss.status === "RESOLVED";
               return (

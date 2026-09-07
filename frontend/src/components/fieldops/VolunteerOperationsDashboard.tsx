@@ -46,7 +46,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
-import { TicketGridCard } from "./TicketGridCard";
+import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 
 export interface VolunteerDashboardProps {
   currentUser: UserProfile;
@@ -1485,7 +1485,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 items-start">
+          <div className={TICKET_GRID_CLASS}>
             {paginatedIssues.map((issue) => {
               const timing = getTicketTimingDetails(issue);
               const showAssign = isTicketOpenForAssign(issue.status);

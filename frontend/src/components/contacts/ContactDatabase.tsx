@@ -635,11 +635,11 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
       {/* 4. Main Contact Grid / Table List */}
       {viewMode === "GRID" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {filteredContacts.map((contact) => (
             <div
               key={contact.id}
-              className="p-4 rounded-2xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-lg backdrop-blur-xl flex flex-col justify-between space-y-3.5 group"
+              className="h-full p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2 group"
             >
               {/* Top: Avatar, Name & Category */}
               <div>

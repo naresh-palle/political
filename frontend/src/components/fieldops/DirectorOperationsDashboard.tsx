@@ -43,7 +43,7 @@ import {
 import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
-import { TicketGridCard } from "./TicketGridCard";
+import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
@@ -1817,7 +1817,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+          <div className={TICKET_GRID_CLASS}>
             {paginatedOperations.map((issue) => {
               const timing = getTicketTimingDetails(issue);
               const showAssign = isTicketOpenForAssign(issue.status);
