@@ -384,14 +384,27 @@ function AppInner() {
   };
 
   const handleUpdateProfile = (updated: UserProfile) => {
-    setCurrentProfile(updated);
+    const actor = currentProfile;
+    const actorIsSuperAdmin =
+      actor?.email === "admin@leaderslens.ai" ||
+      actor?.email === "support@leaderslens.ai" ||
+      (actor?.primaryRole === "SUPER_ADMIN" && !!actor?.isPlatformAdmin);
+    const nextProfile = actorIsSuperAdmin
+      ? updated
+      : {
+          ...updated,
+          email: actor?.email || updated.email,
+          phone: actor?.phone || updated.phone,
+          designation: actor?.designation || updated.designation,
+          roleTitle: actor?.roleTitle || updated.roleTitle
+        };
+    setCurrentProfile(nextProfile);
     try {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextProfile));
     } catch {}
-    // Update USER_PROFILES in memory
-    const idx = USER_PROFILES.findIndex((u) => u.id === updated.id);
+    const idx = USER_PROFILES.findIndex((u) => u.id === nextProfile.id);
     if (idx !== -1) {
-      USER_PROFILES[idx] = { ...USER_PROFILES[idx], ...updated };
+      USER_PROFILES[idx] = { ...USER_PROFILES[idx], ...nextProfile };
     }
   };
 

@@ -73,6 +73,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const canEditIdentity =
+    currentUser.email === "admin@leaderslens.ai" ||
+    currentUser.email === "support@leaderslens.ai" ||
+    (currentUser.primaryRole === "SUPER_ADMIN" && !!currentUser.isPlatformAdmin);
 
   if (!isOpen) return null;
 
@@ -103,11 +107,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     const updatedProfile: UserProfile = {
       ...currentUser,
       name: name.trim() || currentUser.name,
-      email: email.trim().toLowerCase() || currentUser.email,
-      phone: phone.trim() || currentUser.phone,
+      email: canEditIdentity ? (email.trim().toLowerCase() || currentUser.email) : currentUser.email,
+      phone: canEditIdentity ? (phone.trim() || currentUser.phone) : currentUser.phone,
       avatar: avatar.trim() || currentUser.avatar,
-      designation: designation.trim() || currentUser.designation,
-      roleTitle: designation.trim() || currentUser.roleTitle
+      designation: canEditIdentity ? (designation.trim() || currentUser.designation) : currentUser.designation,
+      roleTitle: canEditIdentity ? (designation.trim() || currentUser.roleTitle) : currentUser.roleTitle
     };
 
     setTimeout(() => {
@@ -144,7 +148,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </span>
               </h2>
               <p className="text-[11.5px] text-[#B9AF95]">
-                Update your official display photo, email address, and mobile hotline
+                {canEditIdentity
+                  ? "Update official display photo, email, mobile, and designation"
+                  : "Update your official display photo. Email, mobile, and designation are Super Admin only."}
               </p>
             </div>
           </div>
@@ -286,9 +292,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                readOnly={!canEditIdentity}
+                onChange={(e) => canEditIdentity && setEmail(e.target.value)}
                 placeholder="demo.admin@leaderslens.ai"
-                className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
+                  canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
+                }`}
               />
             </div>
 
@@ -301,9 +310,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                readOnly={!canEditIdentity}
+                onChange={(e) => canEditIdentity && setPhone(e.target.value)}
                 placeholder="+91 98850 44001"
-                className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
+                  canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
+                }`}
               />
             </div>
 
@@ -316,9 +328,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <input
                 type="text"
                 value={designation}
-                onChange={(e) => setDesignation(e.target.value)}
+                readOnly={!canEditIdentity}
+                onChange={(e) => canEditIdentity && setDesignation(e.target.value)}
                 placeholder="e.g. Poddutur Constituency Political Admin (MLA Office)"
-                className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
+                  canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
+                }`}
               />
             </div>
           </div>

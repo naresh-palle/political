@@ -271,18 +271,25 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
     e.preventDefault();
     setUserSaveSuccess(true);
 
+    if (isPoliticalAdmin && !editingUser) {
+      setUserFormPrimaryRole("DIRECTOR");
+      setUserFormRole("campaign_manager");
+    }
+
     if (editingUser) {
+      const nextPrimaryRole = isPoliticalAdmin ? editingUser.primaryRole : userFormPrimaryRole;
+      const nextRole = isPoliticalAdmin ? editingUser.role : userFormRole;
       // Update existing user
       const updated: UserProfile = {
         ...editingUser,
         name: userFormName,
-        email: userFormEmail,
-        phone: userFormPhone,
-        primaryRole: userFormPrimaryRole,
-        isPlatformAdmin: userFormPrimaryRole === "SUPER_ADMIN",
-        isPoliticalAdmin: userFormPrimaryRole === "POLITICAL_ADMIN",
-        role: userFormRole,
-        roleTitle: userFormRoleTitle,
+        email: isSuperAdmin ? userFormEmail : editingUser.email,
+        phone: isSuperAdmin ? userFormPhone : editingUser.phone,
+        primaryRole: nextPrimaryRole,
+        isPlatformAdmin: nextPrimaryRole === "SUPER_ADMIN",
+        isPoliticalAdmin: nextPrimaryRole === "POLITICAL_ADMIN",
+        role: nextRole,
+        roleTitle: isSuperAdmin ? userFormRoleTitle : editingUser.roleTitle,
         department: userFormDepartment,
         assignedConstituency: userFormConstituency,
         clearanceLevel: userFormClearance,
@@ -299,17 +306,27 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
       setProfiles((prev) => prev.map((u) => u.id === editingUser.id ? updated : u));
     } else {
+      const createPrimaryRole = isPoliticalAdmin ? "DIRECTOR" : userFormPrimaryRole;
+      const createRole = isPoliticalAdmin ? "campaign_manager" : userFormRole;
+      const createRoleId =
+        createPrimaryRole === "SUPER_ADMIN"
+          ? "SUPER_ADMIN"
+          : createPrimaryRole === "POLITICAL_ADMIN"
+          ? "ADMIN"
+          : createPrimaryRole === "DIRECTOR"
+          ? "CAMPAIGN_MANAGER"
+          : "VOLUNTEER";
       // Create new user
       const newUser: UserProfile = {
         id: `usr_${Date.now()}`,
         name: userFormName,
         email: userFormEmail,
         phone: userFormPhone,
-        primaryRole: userFormPrimaryRole,
-        isPlatformAdmin: userFormPrimaryRole === "SUPER_ADMIN",
-        isPoliticalAdmin: userFormPrimaryRole === "POLITICAL_ADMIN",
-        role: userFormRole,
-        roleId: userFormPrimaryRole === "SUPER_ADMIN" ? "SUPER_ADMIN" : userFormPrimaryRole === "POLITICAL_ADMIN" ? "ADMIN" : userFormPrimaryRole === "DIRECTOR" ? "CAMPAIGN_MANAGER" : "VOLUNTEER",
+        primaryRole: createPrimaryRole,
+        isPlatformAdmin: createPrimaryRole === "SUPER_ADMIN",
+        isPoliticalAdmin: createPrimaryRole === "POLITICAL_ADMIN",
+        role: createRole,
+        roleId: createRoleId,
         roleTitle: userFormRoleTitle,
         department: userFormDepartment,
         assignedConstituency: userFormConstituency,
@@ -465,20 +482,14 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           </div>
         </div>
 
-        {canCreateUsers && (
+        {canCreateUsers && !isPoliticalAdmin && (
           <button
             type="button"
             onClick={handleOpenAddUser}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>
-              {isSuperAdmin
-                ? "Add System User"
-                : isPoliticalAdmin
-                ? "Add Director"
-                : "Add Volunteer"}
-            </span>
+            <span>{isSuperAdmin ? "Add System User" : "Add Volunteer"}</span>
           </button>
         )}
       </div>
@@ -1019,7 +1030,10 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                           setUserFormPartyId("TDP");
                         }
                       }}
-                      className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                      disabled={isPoliticalAdmin}
+                      className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                        isPoliticalAdmin ? "opacity-80 cursor-not-allowed" : ""
+                      }`}
                     >
                       {isSuperAdmin && (
                         <>
@@ -1030,10 +1044,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         </>
                       )}
                       {isPoliticalAdmin && (
-                        <>
-                          <option value="DIRECTOR">Level 3: Director (Volunteer Manager)</option>
-                          <option value="VOLUNTEER">Level 4: Field Volunteer</option>
-                        </>
+                        <option value="DIRECTOR">Level 3: Director (Volunteer Manager)</option>
                       )}
                       {isDirector && (
                         <option value="VOLUNTEER">Level 4: Field Volunteer</option>
@@ -1059,9 +1070,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         type="email"
                         required
                         value={userFormEmail}
+                        readOnly={!!editingUser && !isSuperAdmin}
                         onChange={(e) => setUserFormEmail(e.target.value)}
                         placeholder="e.g. ramesh.vol@leaderslens.ai"
-                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                          editingUser && !isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
                       />
                     </div>
                   </div>
@@ -1072,9 +1086,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                       <input
                         type="text"
                         value={userFormPhone}
+                        readOnly={!!editingUser && !isSuperAdmin}
                         onChange={(e) => setUserFormPhone(e.target.value)}
                         placeholder="+91 98850 00000"
-                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                          editingUser && !isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
                       />
                     </div>
                     <div>
@@ -1096,8 +1113,11 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         type="text"
                         required
                         value={userFormRoleTitle}
+                        readOnly={!!editingUser && !isSuperAdmin}
                         onChange={(e) => setUserFormRoleTitle(e.target.value)}
-                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                          editingUser && !isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
                       />
                     </div>
                     <div>

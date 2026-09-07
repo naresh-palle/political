@@ -384,8 +384,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
 
-                  {/* Edit Profile Action - ONLY for Political Admin and Super Admin */}
-                  {(isPoliticalAdmin || isPlatformAdmin) && (
+                  {isPlatformAdmin && (
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
