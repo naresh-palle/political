@@ -11,6 +11,7 @@ import { IssueDetailModal } from "./IssueDetailModal";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
+import { countByKpi } from "../../utils/ticketKpi";
 import {
   ShieldCheck,
   Users,
@@ -157,11 +158,13 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   // Metrics
   const directors = users.filter((u) => u.primaryRole === "DIRECTOR");
   const volunteers = users.filter((u) => u.primaryRole === "VOLUNTEER");
-  const totalIssues = issues.length;
-  const pendingCount = issues.filter((i) => ["NEW", "ASSIGNED"].includes(i.status)).length;
-  const inProgressCount = issues.filter((i) => i.status === "IN_PROGRESS").length;
-  const completedCount = issues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-  const overdueCount = issues.filter((i) => i.status === "OVERDUE").length;
+  const kpiCounts = countByKpi(issues);
+  const totalIssues = kpiCounts.total;
+  const pendingCount = kpiCounts.pendingOpen;
+  const inProgressCount = kpiCounts.inProgress;
+  const completedCount = kpiCounts.resolvedClosed;
+  const overdueCount = kpiCounts.overdue;
+  const rejectedCount = kpiCounts.rejected;
 
   const filteredIssues = useMemo(() => {
     return issues.filter((item) => {
@@ -407,37 +410,43 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* KPI Overview Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
-          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Issues</span>
+          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Tickets</span>
           <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-1">{totalIssues}</div>
-          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">{mandals.length} Mandals covered</span>
+          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">All</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
-          <span className="text-[10px] uppercase tracking-wider text-blue-300 block font-semibold">Pending Intake</span>
-          <div className="font-display text-2xl font-bold text-blue-400 mt-1">{pendingCount}</div>
+          <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">Pending / Open</span>
+          <div className="font-display text-2xl font-bold text-amber-400 mt-1">{pendingCount}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Awaiting action</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
-          <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">In Progress</span>
-          <div className="font-display text-2xl font-bold text-amber-400 mt-1">{inProgressCount}</div>
-          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Field work active</span>
+          <span className="text-[10px] uppercase tracking-wider text-sky-300 block font-semibold">In Progress</span>
+          <div className="font-display text-2xl font-bold text-sky-400 mt-1">{inProgressCount}</div>
+          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Ground</span>
+        </div>
+
+        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40">
+          <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" /> Overdue Alerts
+          </span>
+          <div className="font-display text-2xl font-bold text-rose-400 mt-1">{overdueCount}</div>
+          <span className="text-[10px] text-rose-300 mt-0.5 block">Urgent</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Verified Resolved</span>
+          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Resolved / Closed</span>
           <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{completedCount}</div>
-          <span className="text-[10px] text-emerald-400 mt-0.5 block">With proof photos</span>
+          <span className="text-[10px] text-emerald-400 mt-0.5 block">Closed</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40 col-span-2 sm:col-span-1">
-          <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" /> Overdue Work
-          </span>
-          <div className="font-display text-2xl font-bold text-rose-400 mt-1">{overdueCount}</div>
-          <span className="text-[10px] text-rose-300 mt-0.5 block">Needs MLA review</span>
+        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+          <span className="text-[10px] uppercase tracking-wider text-slate-300 block font-semibold">Rejected</span>
+          <div className="font-display text-2xl font-bold text-slate-200 mt-1">{rejectedCount}</div>
+          <span className="text-[10px] text-slate-400 mt-0.5 block">Closed</span>
         </div>
       </div>
 

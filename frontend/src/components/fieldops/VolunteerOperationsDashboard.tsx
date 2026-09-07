@@ -10,6 +10,14 @@ import {
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
+import {
+  countByKpi,
+  isInProgressStatus,
+  isOverdueStatus,
+  isPendingOpenStatus,
+  isRejectedStatus,
+  isResolvedClosedStatus
+} from "../../utils/ticketKpi";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Plus,
@@ -670,13 +678,17 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     const thisMonthPrefix = todayStr.slice(0, 7); // "YYYY-MM"
 
     let list = issues.filter((item) => {
-      // Status filter
-      if (filterStatus === "OVERDUE" && item.status !== "OVERDUE") return false;
-      if ((filterStatus === "UNRESOLVED" || filterStatus === "PENDING") && ["COMPLETED", "RESOLVED"].includes(item.status)) return false;
+      // Status filter — buckets are exclusive (pending does not include in progress / overdue)
+      if (filterStatus === "OVERDUE" && !isOverdueStatus(item.status)) return false;
+      if (
+        (filterStatus === "UNRESOLVED" || filterStatus === "PENDING") &&
+        !isPendingOpenStatus(item.status)
+      )
+        return false;
       if (filterStatus === "NEW" && item.status !== "NEW") return false;
-      if (filterStatus === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
-      if (filterStatus === "RESOLVED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
-      if (filterStatus === "REJECTED" && item.status !== "REJECTED") return false;
+      if (filterStatus === "IN_PROGRESS" && !isInProgressStatus(item.status)) return false;
+      if (filterStatus === "RESOLVED" && !isResolvedClosedStatus(item.status)) return false;
+      if (filterStatus === "REJECTED" && !isRejectedStatus(item.status)) return false;
 
       // Category filter
       if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
@@ -764,6 +776,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     const start = (currentPage - 1) * pageSize;
     return sortedAndFilteredIssues.slice(start, start + pageSize);
   }, [sortedAndFilteredIssues, currentPage, pageSize]);
+
+  const kpiCounts = useMemo(() => countByKpi(issues), [issues]);
 
   const hasActiveFilters =
     filterStatus !== "ALL" ||
@@ -1093,7 +1107,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 Total Tickets
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{issues.length}</span>
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.total}</span>
                 <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">All</span>
               </div>
             </div>
@@ -1111,36 +1125,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-amber-500/60 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block truncate">
-                Unresolved / Pending
+                Pending / Open
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-amber-300">
-                  {issues.filter((i) => ["NEW", "ASSIGNED", "ACKNOWLEDGED", "OVERDUE"].includes(i.status)).length}
-                </span>
-                <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action</span>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("NEW");
-                window.location.hash = "#/assign-tickets?status=NEW";
-              }}
-              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-yellow-500/60 cursor-pointer space-y-1 transition-all"
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-yellow-400 block truncate">
-                🟡 New Complaints
-              </span>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-yellow-300">
-                  {issues.filter((i) => i.status === "NEW").length}
-                </span>
-                <span className="text-[10px] text-yellow-400/80 font-mono font-semibold">New</span>
+                <span className="text-2xl font-bold font-mono text-amber-300">{kpiCounts.pendingOpen}</span>
+                <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Open</span>
               </div>
             </div>
 
@@ -1157,12 +1146,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-sky-500/60 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block truncate">
-                🔵 In Progress
+                In Progress
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-sky-300">
-                  {issues.filter((i) => i.status === "IN_PROGRESS").length}
-                </span>
+                <span className="text-2xl font-bold font-mono text-sky-300">{kpiCounts.inProgress}</span>
                 <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground</span>
               </div>
             </div>
@@ -1180,12 +1167,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-rose-500/60 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block truncate">
-                🔴 Overdue Alerts
+                Overdue Alerts
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-rose-300">
-                  {issues.filter((i) => i.status === "OVERDUE").length}
-                </span>
+                <span className="text-2xl font-bold font-mono text-rose-300">{kpiCounts.overdue}</span>
                 <span className="text-[10px] text-rose-400/80 font-mono font-semibold">Urgent</span>
               </div>
             </div>
@@ -1203,13 +1188,32 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-emerald-500/60 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block truncate">
-                🟢 Resolved / Closed
+                Resolved / Closed
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-emerald-300">
-                  {issues.filter((i) => i.status === "COMPLETED" || i.status === "RESOLVED").length}
-                </span>
+                <span className="text-2xl font-bold font-mono text-emerald-300">{kpiCounts.resolvedClosed}</span>
                 <span className="text-[10px] text-emerald-400/80 font-mono font-semibold">Closed</span>
+              </div>
+            </div>
+
+            <div
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("REJECTED");
+                window.location.hash = "#/assign-tickets?status=REJECTED";
+              }}
+              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-slate-500/60 cursor-pointer space-y-1 transition-all"
+            >
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-slate-300 block truncate">
+                Rejected
+              </span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-bold font-mono text-slate-200">{kpiCounts.rejected}</span>
+                <span className="text-[10px] text-slate-400/80 font-mono font-semibold">Closed</span>
               </div>
             </div>
           </div>
@@ -1346,12 +1350,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Status: All (Total Records)</option>
-              <option value="UNRESOLVED">Status: 🟠 Unresolved / Pending</option>
-              <option value="NEW">Status: 🟡 New Only</option>
-              <option value="IN_PROGRESS">Status: 🔵 In Progress</option>
-              <option value="RESOLVED">Status: 🟢 Resolved / Completed</option>
-              <option value="REJECTED">Status: ⛔ Rejected</option>
-              <option value="OVERDUE">Status: 🔴 Overdue</option>
+              <option value="UNRESOLVED">Status: Pending / Open</option>
+              <option value="IN_PROGRESS">Status: In Progress</option>
+              <option value="OVERDUE">Status: Overdue</option>
+              <option value="RESOLVED">Status: Resolved / Closed</option>
+              <option value="REJECTED">Status: Rejected</option>
             </select>
           </div>
 

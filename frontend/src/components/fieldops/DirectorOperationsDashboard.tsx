@@ -44,6 +44,14 @@ import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDa
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
+import {
+  countByKpi,
+  isInProgressStatus,
+  isOverdueStatus,
+  isPendingOpenStatus,
+  isRejectedStatus,
+  isResolvedClosedStatus
+} from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -308,13 +316,15 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     return Array.from(set).sort();
   }, [allOperationsList]);
 
-  // Top Tickets Metrics
-  const totalOperationsCount = allOperationsList.length;
-  const pendingCount = allOperationsList.filter((i) => ["NEW", "ASSIGNED", "IN_PROGRESS"].includes(i.status)).length;
-  const inProgressCount = allOperationsList.filter((i) => i.status === "IN_PROGRESS").length;
-  const completedCount = allOperationsList.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-  const cantBeDoneCount = allOperationsList.filter((i) => i.status === "OVERDUE" || (i as any).status === "Can't be done").length;
-  const overdueCount = cantBeDoneCount;
+  // Top Tickets Metrics (pending/open does not include in progress)
+  const kpiCounts = countByKpi(allOperationsList);
+  const totalOperationsCount = kpiCounts.total;
+  const pendingCount = kpiCounts.pendingOpen;
+  const completedCount = kpiCounts.resolvedClosed;
+  const cantBeDoneCount = allOperationsList.filter(
+    (i) => isOverdueStatus(i.status) || (i as any).status === "Can't be done"
+  ).length;
+  const overdueCount = kpiCounts.overdue;
 
   // Granular Breakdown Metrics (Exact match for the handwritten schema)
   const analyticsMatrix = useMemo(() => {
@@ -444,11 +454,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const sortedAndFilteredOperations = useMemo(() => {
     let list = allOperationsList.filter((item) => {
       // Status Tabs
-      if (activeTab === "OVERDUE" && item.status !== "OVERDUE") return false;
-      if (activeTab === "CANT_BE_DONE" && item.status !== "OVERDUE" && (item as any).status !== "Can't be done") return false;
-      if (activeTab === "PENDING" && !["NEW", "ASSIGNED"].includes(item.status)) return false;
-      if (activeTab === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
-      if (activeTab === "COMPLETED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
+      if (activeTab === "OVERDUE" && !isOverdueStatus(item.status)) return false;
+      if (activeTab === "CANT_BE_DONE" && !isOverdueStatus(item.status) && (item as any).status !== "Can't be done") return false;
+      if (activeTab === "PENDING" && !isPendingOpenStatus(item.status)) return false;
+      if (activeTab === "IN_PROGRESS" && !isInProgressStatus(item.status)) return false;
+      if (activeTab === "COMPLETED" && !isResolvedClosedStatus(item.status)) return false;
+      if (activeTab === "REJECTED" && !isRejectedStatus(item.status)) return false;
 
       // Category, Department, Type Filters
       if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
@@ -888,12 +899,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             }`}
           >
             <span className="text-[10.5px] uppercase tracking-wider text-blue-300 block font-semibold">
-              Pending / In Progress
+              Pending / Open
             </span>
             <div className="font-display text-2xl sm:text-3xl font-bold text-blue-400 mt-1">
               {pendingCount}
             </div>
-            <span className="text-[10px] text-blue-300/80 block mt-0.5">Active on Ground</span>
+            <span className="text-[10px] text-blue-300/80 block mt-0.5">Awaiting action</span>
           </div>
 
           <div
@@ -1358,40 +1369,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           }`}
         >
           <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block truncate">
-            Unresolved / Pending
+            Pending / Open
           </span>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-amber-300">
-              {issues.filter((i) => ["NEW", "ASSIGNED", "ACKNOWLEDGED", "OVERDUE"].includes(i.status)).length}
-            </span>
-            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Action</span>
-          </div>
-        </div>
-
-        <div
-          onClick={() => {
-            setSearchQuery("");
-            setFilterCategory("ALL");
-            setFilterDepartment("ALL");
-            setFilterPriority("ALL");
-            setFilterMandalId("ALL");
-            setActiveTab("NEW");
-            window.location.hash = "#/assign-tickets?status=NEW";
-          }}
-          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
-            activeTab === "NEW"
-              ? "bg-[#14263B] border-yellow-400 shadow-md ring-1 ring-yellow-400/40"
-              : "bg-[#0F1E30] border-[#22354D] hover:border-yellow-500/60"
-          }`}
-        >
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-yellow-400 block truncate">
-            🟡 New Complaints
-          </span>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-yellow-300">
-              {issues.filter((i) => i.status === "NEW").length}
-            </span>
-            <span className="text-[10px] text-yellow-400/80 font-mono font-semibold">New</span>
+            <span className="text-2xl font-bold font-mono text-amber-300">{kpiCounts.pendingOpen}</span>
+            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Open</span>
           </div>
         </div>
 
@@ -1412,12 +1394,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           }`}
         >
           <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block truncate">
-            🔵 In Progress
+            In Progress
           </span>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-sky-300">
-              {issues.filter((i) => i.status === "IN_PROGRESS").length}
-            </span>
+            <span className="text-2xl font-bold font-mono text-sky-300">{kpiCounts.inProgress}</span>
             <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground</span>
           </div>
         </div>
@@ -1439,12 +1419,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           }`}
         >
           <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block truncate">
-            🔴 Overdue Alerts
+            Overdue Alerts
           </span>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-rose-300">
-              {issues.filter((i) => i.status === "OVERDUE").length}
-            </span>
+            <span className="text-2xl font-bold font-mono text-rose-300">{kpiCounts.overdue}</span>
             <span className="text-[10px] text-rose-400/80 font-mono font-semibold">Urgent</span>
           </div>
         </div>
@@ -1466,13 +1444,36 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           }`}
         >
           <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block truncate">
-            🟢 Resolved / Closed
+            Resolved / Closed
           </span>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-emerald-300">
-              {issues.filter((i) => i.status === "COMPLETED" || i.status === "RESOLVED").length}
-            </span>
+            <span className="text-2xl font-bold font-mono text-emerald-300">{kpiCounts.resolvedClosed}</span>
             <span className="text-[10px] text-emerald-400/80 font-mono font-semibold">Closed</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
+            setActiveTab("REJECTED");
+            window.location.hash = "#/assign-tickets?status=REJECTED";
+          }}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            activeTab === "REJECTED"
+              ? "bg-[#14263B] border-slate-400 shadow-md ring-1 ring-slate-400/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-slate-500/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-slate-300 block truncate">
+            Rejected
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-slate-200">{kpiCounts.rejected}</span>
+            <span className="text-[10px] text-slate-400/80 font-mono font-semibold">Closed</span>
           </div>
         </div>
       </div>
@@ -1583,11 +1584,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Status: All</option>
-              <option value="PENDING">Status: 🟡 Pending</option>
-              <option value="IN_PROGRESS">Status: 🔵 In Progress</option>
-              <option value="COMPLETED">Status: 🟢 Resolved</option>
-              <option value="CANT_BE_DONE">Status: 🔴 Can't be done</option>
-              <option value="OVERDUE">Status: ⚠️ Overdue</option>
+              <option value="PENDING">Status: Pending / Open</option>
+              <option value="IN_PROGRESS">Status: In Progress</option>
+              <option value="OVERDUE">Status: Overdue</option>
+              <option value="COMPLETED">Status: Resolved / Closed</option>
+              <option value="REJECTED">Status: Rejected</option>
+              <option value="CANT_BE_DONE">Status: Can't be done</option>
             </select>
           </div>
 
