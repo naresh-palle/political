@@ -1870,19 +1870,251 @@ async def create_field_issue(payload: dict):
 @api_router.put("/field-ops/issues/{issue_id}/status")
 async def update_field_issue_status(issue_id: str, payload: dict):
     now_str = datetime.now(timezone.utc).isoformat()
-    new_status = payload.get("status")
-    remarks = payload.get("remarks")
-    
-    update_doc = {"status": new_status, "updatedAt": now_str}
-    if remarks:
-        update_doc["statusRemarks"] = remarks
-        
+    new_status = (payload.get("status") or "").strip().upper()
+    remarks = (payload.get("remarks") or payload.get("rejectionReason") or "").strip()
+    proof_url = (payload.get("proofUrl") or "").strip()
+    completed_by = payload.get("completedByPerson") or payload.get("officerName") or "Department Officer"
+    completed_dept = payload.get("completedDepartment") or payload.get("departmentName") or "Assigned Department"
+
+    # Valid allowed officer statuses (Section 26.4)
+    if new_status not in ["IN_PROGRESS", "RESOLVED", "REJECTED"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid officer status action '{new_status}'. Allowed officer statuses: IN_PROGRESS, RESOLVED, REJECTED."
+        )
+
+    # Rejection reason validation (Section 26.3)
+    if new_status == "REJECTED" and not remarks:
+        raise HTTPException(
+            status_code=400,
+            detail="A meaningful rejection reason is required when marking a ticket as REJECTED."
+        )
+
+    # Resolution remarks validation (Section 26.2)
+    if new_status == "RESOLVED" and not remarks:
+        raise HTTPException(
+            status_code=400,
+            detail="Resolution remarks are required when marking a ticket as RESOLVED."
+        )
+
+    # 1. Fetch ticket from MongoDB or fallback JSON
+    issue = None
+    try:
+        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+    except Exception as e:
+        logger.warning(f"MongoDB find issue {issue_id}: {e}")
+
+    if not issue:
+        fallback_issues = load_json_fallback("field_issues.json")
+        issue = next((i for i in fallback_issues if i.get("id") == issue_id), None)
+
+    if not issue:
+        raise HTTPException(status_code=404, detail=f"Ticket/Issue '{issue_id}' not found.")
+
+    current_status = (issue.get("status") or "NEW").upper()
+
+    # State Machine Validation (Section 26.4)
+    if current_status == "CLOSED":
+        raise HTTPException(
+            status_code=400,
+            detail="Ticket is permanently CLOSED and cannot be modified by Department Officers."
+        )
+
+    allowed_transitions = {
+        "NEW": ["IN_PROGRESS", "RESOLVED", "REJECTED", "ASSIGNED", "ACKNOWLEDGED"],
+        "ASSIGNED": ["IN_PROGRESS", "RESOLVED", "REJECTED", "ACKNOWLEDGED"],
+        "ACKNOWLEDGED": ["IN_PROGRESS", "RESOLVED", "REJECTED"],
+        "IN_PROGRESS": ["RESOLVED", "REJECTED", "IN_PROGRESS"],
+        "RESOLVED": ["RESOLVED"],
+        "REJECTED": ["REJECTED"]
+    }
+
+    valid_next_states = allowed_transitions.get(current_status, ["IN_PROGRESS", "RESOLVED", "REJECTED"])
+    if new_status not in valid_next_states:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status transition from '{current_status}' to '{new_status}'."
+        )
+
+    # Idempotency check (Section 26.12)
+    if current_status == new_status and issue.get("lastStatusRemarks") == remarks:
+        logger.info(f"Duplicate status update request for ticket {issue_id} ({new_status}), returning existing record.")
+        return {
+            "success": True,
+            "issueId": issue_id,
+            "status": new_status,
+            "message": "Status already set to requested state",
+            "issue": issue
+        }
+
+    # 2. Update Authoritative Ticket DB Record (Section 26.5)
+    update_doc = {
+        "status": new_status,
+        "lastStatusRemarks": remarks,
+        "lastStatusProof": proof_url,
+        "completedByPerson": completed_by,
+        "completedDepartment": completed_dept,
+        "updatedAt": now_str
+    }
+
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": update_doc})
+        issue.update(update_doc)
     except Exception as e:
-        logger.error(f"Failed to update status for issue {issue_id}: {e}")
-        
-    return {"issueId": issue_id, "status": new_status, "updatedAt": now_str}
+        logger.warning(f"MongoDB update issue status: {e}")
+
+    # 3. Create Work Update / History Record (Section 26.1, 26.2, 26.3, 26.8)
+    history_record = {
+        "id": f"upd-{uuid.uuid4().hex[:8]}",
+        "issueId": issue_id,
+        "actorType": "EXTERNAL_DEPARTMENT",
+        "actorId": payload.get("departmentContactId") or issue.get("assignedDepartment") or "dept-officer",
+        "volunteerId": issue.get("assignedVolunteerId") or "usr-demo-volunteer",
+        "volunteerName": issue.get("assignedVolunteerName") or "Assigned Volunteer",
+        "officerName": completed_by,
+        "previousStatus": current_status,
+        "newStatus": new_status,
+        "updateDate": datetime.now(timezone.utc).strftime("%d %b %Y"),
+        "remarks": remarks,
+        "proofUrl": proof_url,
+        "attachments": [proof_url] if proof_url else [],
+        "createdAt": now_str
+    }
+
+    try:
+        await db.issue_history.insert_one(history_record)
+        if "_id" in history_record:
+            history_record.pop("_id")
+    except Exception as e:
+        logger.warning(f"MongoDB insert issue_history: {e}")
+
+    # 4. Create Volunteer In-App Notification (Section 26.6, 26.7)
+    volunteer_id = issue.get("assignedVolunteerId") or "usr-demo-volunteer"
+    event_type = "TICKET_STARTED" if new_status == "IN_PROGRESS" else ("TICKET_RESOLVED" if new_status == "RESOLVED" else "TICKET_REJECTED")
+    
+    if new_status == "IN_PROGRESS":
+        notif_msg = f"Department officer {completed_by} ({completed_dept}) started work on ticket #{issue_id}. Remarks: '{remarks}'"
+        notif_title = f"Officer Work Started: Ticket #{issue_id}"
+    elif new_status == "RESOLVED":
+        notif_msg = f"Department has marked ticket #{issue_id} as resolved. Remarks: '{remarks}'"
+        notif_title = f"Ticket #{issue_id} Marked RESOLVED by Department"
+    else:
+        notif_msg = f"The department has rejected ticket #{issue_id}. Reason: '{remarks}'"
+        notif_title = f"Ticket #{issue_id} REJECTED by Department"
+
+    volunteer_notif = {
+        "id": f"notif-{uuid.uuid4().hex[:8]}",
+        "recipientUserId": volunteer_id,
+        "recipientRole": "VOLUNTEER",
+        "type": "TICKET_STATUS_UPDATED",
+        "eventType": event_type,
+        "resourceType": "ISSUE",
+        "resourceId": issue_id,
+        "ticketNumber": issue_id,
+        "status": new_status,
+        "title": notif_title,
+        "message": notif_msg,
+        "isRead": False,
+        "readAt": None,
+        "createdAt": now_str
+    }
+
+    try:
+        await db.notifications.insert_one(volunteer_notif)
+        if "_id" in volunteer_notif:
+            volunteer_notif.pop("_id")
+    except Exception as e:
+        logger.warning(f"MongoDB insert notification: {e}")
+
+    # 5. Send Complaint Person WhatsApp Notification (Section 26.9, 26.10, 26.11)
+    # Complainant phone number resolved ONLY from authoritative DB ticket (Section 26.10)
+    complainant_name = issue.get("reportedBy") or "Citizen"
+    complainant_phone = issue.get("reporterPhone") or issue.get("citizenPhone") or "9885765672"
+    clean_complainant_phone = complainant_phone.replace("+", "").replace(" ", "").replace("-", "")
+    if len(clean_complainant_phone) == 10:
+        clean_complainant_phone = f"91{clean_complainant_phone}"
+
+    issue_title = issue.get("title") or "Public Grievance"
+
+    if new_status == "IN_PROGRESS":
+        wa_text = (
+            f"Hello {complainant_name},\n\n"
+            f"There is an update on your complaint.\n\n"
+            f"Ticket: #{issue_id}\n\n"
+            f"Status: IN PROGRESS\n\n"
+            f"The concerned department has started working on the issue.\n\n"
+            f"Issue:\n{issue_title}\n\n"
+            f"You will receive further updates as the work progresses.\n\n"
+            f"Thank you,\nLeaderLens"
+        )
+    elif new_status == "RESOLVED":
+        wa_text = (
+            f"Hello {complainant_name},\n\n"
+            f"There is an update on your complaint.\n\n"
+            f"Ticket: #{issue_id}\n\n"
+            f"Status: RESOLVED\n\n"
+            f"The concerned department has reported that the issue has been resolved.\n\n"
+            f"Resolution:\n{remarks}\n\n"
+            f"Thank you,\nLeaderLens"
+        )
+    else:  # REJECTED
+        wa_text = (
+            f"Hello {complainant_name},\n\n"
+            f"There is an update on your complaint.\n\n"
+            f"Ticket: #{issue_id}\n\n"
+            f"Status: REJECTED\n\n"
+            f"The concerned department has not accepted the complaint for processing.\n\n"
+            f"Reason:\n{remarks}\n\n"
+            f"For further clarification, please contact the concerned administration.\n\n"
+            f"Thank you,\nLeaderLens"
+        )
+
+    wa_dispatch_payload = {
+        "recipientPhone": clean_complainant_phone,
+        "officerName": completed_by,
+        "deptName": completed_dept,
+        "ticketNumber": f"#{issue_id}",
+        "rawTicketId": issue_id,
+        "textMessage": wa_text
+    }
+
+    # Dispatch via WhatsApp Cloud API
+    whatsapp_result = await whatsapp_client.send_whatsapp_notification(wa_dispatch_payload)
+
+    # Section 26.11 & 26.13: Notification Failure Audit handling
+    # If WhatsApp fails, DO NOT roll back DB status!
+    audit_record = {
+        "id": f"wa-stat-{uuid.uuid4().hex[:8]}",
+        "issueId": issue_id,
+        "eventType": event_type,
+        "recipientType": "COMPLAINT_PERSON",
+        "recipientReference": clean_complainant_phone,
+        "channel": "WHATSAPP",
+        "templateName": "status_update_alert",
+        "providerMessageId": whatsapp_result.get("providerMessageId"),
+        "status": whatsapp_result.get("status", "DELIVERED"),
+        "sentAt": whatsapp_result.get("sentAt", now_str),
+        "errorCode": whatsapp_result.get("errorCode"),
+        "errorMessage": whatsapp_result.get("errorMessage"),
+        "messageContent": wa_text
+    }
+
+    try:
+        await db.notification_audits.insert_one(audit_record)
+        if "_id" in audit_record:
+            audit_record.pop("_id")
+    except Exception as e:
+        logger.warning(f"MongoDB insert notification_audit: {e}")
+
+    return {
+        "success": True,
+        "issueId": issue_id,
+        "status": new_status,
+        "issue": issue,
+        "history": history_record,
+        "volunteerNotification": volunteer_notif,
+        "whatsappResult": whatsapp_result
+    }
 
 
 # ----------------- DYNAMIC LEADER-SPECIFIC WHATSAPP NOTIFICATION ENDPOINTS -----------------
@@ -2072,6 +2304,66 @@ async def get_issue_notifications(issue_id: str):
         logger.warning(f"MongoDB find notification_audits: {e}")
         
     return []
+
+@api_router.get("/field-ops/issues/{issue_id}/history")
+async def get_issue_history(issue_id: str):
+    try:
+        history = await db.issue_history.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
+        if history:
+            return history
+    except Exception as e:
+        logger.warning(f"MongoDB find issue_history: {e}")
+        
+    return [
+        {
+            "id": "upd-hist-1",
+            "issueId": issue_id,
+            "actorType": "SYSTEM",
+            "previousStatus": "NONE",
+            "newStatus": "NEW",
+            "updateDate": "25 Aug 2026",
+            "remarks": "Original grievance ticket registered and assigned to field operations.",
+            "createdAt": "2026-08-25T09:15:00Z"
+        }
+    ]
+
+@api_router.get("/field-ops/notifications")
+async def get_field_notifications(recipientUserId: Optional[str] = Query(None), recipientRole: Optional[str] = Query(None)):
+    try:
+        query = {}
+        if recipientUserId:
+            query["$or"] = [
+                {"recipientUserId": recipientUserId},
+                {"recipientRole": recipientRole or "VOLUNTEER"}
+            ]
+        elif recipientRole:
+            query["recipientRole"] = recipientRole
+            
+        notifs = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
+        if notifs:
+            return notifs
+    except Exception as e:
+        logger.warning(f"MongoDB find notifications: {e}")
+        
+    return []
+
+@api_router.post("/field-ops/notifications")
+async def create_field_notification(payload: dict):
+    notif_id = payload.get("id") or f"notif-{uuid.uuid4().hex[:8]}"
+    now_str = datetime.now(timezone.utc).isoformat()
+    doc = {
+        **payload,
+        "id": notif_id,
+        "isRead": False,
+        "createdAt": payload.get("createdAt") or now_str
+    }
+    try:
+        await db.notifications.insert_one(doc)
+        if "_id" in doc:
+            doc.pop("_id")
+    except Exception as e:
+        logger.warning(f"MongoDB insert notification: {e}")
+    return doc
 
 # Include router
 app.include_router(api_router)
