@@ -407,6 +407,17 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
   useEffect(() => {
     loadVolunteerData();
+    const interval = setInterval(() => {
+      loadVolunteerData();
+    }, 5000);
+    const handleFocus = () => {
+      loadVolunteerData();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [currentUser.id]);
 
   useEffect(() => {

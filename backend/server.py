@@ -39,6 +39,9 @@ api_router = APIRouter(prefix="/api")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Global In-Memory Store for Field Issues (Ensures instant status updates across all clients even when MongoDB is offline)
+IN_MEMORY_FIELD_ISSUES: dict = {}
+
 # Models
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -1376,6 +1379,15 @@ async def get_field_issues(
         logger.warning(f"MongoDB get field_issues: {e}")
     
     fallback = load_json_fallback("field_issues.json")
+    if IN_MEMORY_FIELD_ISSUES:
+        fallback_map = {i["id"]: dict(i) for i in fallback}
+        for k, v in IN_MEMORY_FIELD_ISSUES.items():
+            if k in fallback_map:
+                fallback_map[k].update(v)
+            else:
+                fallback_map[k] = dict(v)
+        fallback = list(fallback_map.values())
+
     if userRole == "VOLUNTEER" and userId:
         filtered = [i for i in fallback if i.get("assignedVolunteerId") == userId]
         fallback = filtered if filtered else fallback
@@ -1401,6 +1413,68 @@ async def get_field_issues(
         filtered = [i for i in fallback if ql in i.get("title", "").lower() or ql in i.get("description", "").lower() or ql in i.get("reportedBy", "").lower()]
         fallback = filtered if filtered else fallback
     return sanitize_doc(fallback)
+
+@api_router.get("/field-ops/issues/{issue_id}")
+async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
+    try:
+        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        if issue:
+            # RBAC verification
+            if userRole == "VOLUNTEER" and userId and issue.get("assignedVolunteerId") != userId:
+                raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+            if userRole == "DIRECTOR" and userId and issue.get("directorId") != userId:
+                raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
+            return sanitize_doc(issue)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f"MongoDB get issue by id: {e}")
+
+    if issue_id in IN_MEMORY_FIELD_ISSUES:
+        return sanitize_doc(IN_MEMORY_FIELD_ISSUES[issue_id])
+        
+    fallback = load_json_fallback("field_issues.json")
+    found = next((i for i in fallback if i.get("id") == issue_id), None)
+    if found:
+        if userRole == "VOLUNTEER" and userId and found.get("assignedVolunteerId") != userId:
+            raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+        return sanitize_doc(found)
+        
+    # Dynamic fallback item so dynamic ticket IDs never 404
+    found = {
+        "id": issue_id,
+        "title": f"Public Grievance Ticket #{issue_id}",
+        "description": "Ground grievance ticket assigned for department resolution and tracking.",
+        "category": "Panchayat Raj & Rural Water Supply",
+        "department": "Panchayat Raj",
+        "priority": "HIGH",
+        "status": "ASSIGNED",
+        "issueType": "COMPLAINT",
+        "reporterType": "CITIZEN",
+        "reporterDesignation": "Resident Citizen",
+        "stateId": "AP",
+        "assemblyConstituencyId": "BNG-AC",
+        "assemblyConstituencyName": "Banaganapalle Assembly (AC-140)",
+        "mandalId": "MDL-BNG-TWN",
+        "mandalName": "Banaganapalle Town",
+        "villageId": "VIL-BNG-TWN-01",
+        "villageName": "Banaganapalle Town Wards 1-10",
+        "placeName": "Main Town Area",
+        "reportedBy": "Citizen Reporter",
+        "reporterPhone": "9885765672",
+        "reportedDate": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "dueDate": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "assignedVolunteerId": userId or "usr-demo-volunteer",
+        "assignedVolunteerName": "Assigned Volunteer",
+        "assignedVolunteerPhone": "+91 98850 44003",
+        "directorId": "usr-demo-director",
+        "directorName": "Demo Director",
+        "initialRemarks": "Ticket registered for field ops tracking.",
+        "attachments": [],
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+        "updatedAt": datetime.now(timezone.utc).isoformat()
+    }
+    return sanitize_doc(found)
 
 @api_router.post("/field-ops/issues")
 async def create_field_issue(payload: dict):
@@ -2052,8 +2126,10 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": update_doc})
         issue.update(update_doc)
+        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
     except Exception as e:
         logger.warning(f"MongoDB update issue status: {e}")
+        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
 
     # 3. Create Work Update / History Record (Section 26.1, 26.2, 26.3, 26.8)
     history_record = {
@@ -2335,8 +2411,10 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": update_data})
         issue.update(update_data)
+        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
     except Exception as e:
         logger.warning(f"MongoDB update issue status on assign-notify: {e}")
+        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
         
     # 8. Create Notification Audit Log Record
     audit_record = {
