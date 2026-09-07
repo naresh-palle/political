@@ -235,6 +235,7 @@ export const OfficerTicketPortal: React.FC = () => {
       proofUrl: proofUrl.trim(),
       completedByPerson: officerInfo?.name || "Official Department Officer",
       completedDepartment: issue?.department || "Assigned Department",
+      reporterPhone: issue?.reporterPhone || (issue as any)?.citizenPhone,
       updatedAt: new Date().toISOString()
     };
 

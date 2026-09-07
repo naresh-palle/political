@@ -998,25 +998,29 @@ export const politicalApiService = {
       } catch (e) {}
     }
 
-    // Merge with locally created issues from localStorage so newly submitted tickets NEVER disappear after refresh
+    // Merge with locally created/updated issues from localStorage so status updates (IN_PROGRESS, RESOLVED, etc.) take precedence
     try {
       const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
       if (savedRaw) {
         const savedList = JSON.parse(savedRaw);
         if (Array.isArray(savedList) && savedList.length > 0) {
+          const savedMap = new Map(savedList.map((i: any) => [i.id, i]));
+          // Override existing list items with saved versions if present
+          list = list.map((item: any) => ({ ...item, ...(savedMap.get(item.id) || {}) }));
+          // Add any brand new items in savedList that weren't in list
           const existingIds = new Set(list.map((i: any) => i.id));
-          const uniqueNew = savedList.filter((i: any) => !existingIds.has(i.id));
-          list = [...uniqueNew, ...list];
+          const brandNew = savedList.filter((i: any) => !existingIds.has(i.id));
+          list = [...brandNew, ...list];
         }
       }
     } catch (e) {}
 
     // Apply filtering
     if (params?.userRole === "VOLUNTEER" && params?.userId) {
-      list = list.filter((i: any) => i.assignedVolunteerId === params.userId);
+      list = list.filter((i: any) => i.assignedVolunteerId === params.userId || !i.assignedVolunteerId);
     } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
       const dId = params.directorId || params.userId;
-      list = list.filter((i: any) => i.directorId === dId);
+      list = list.filter((i: any) => i.directorId === dId || !i.directorId);
     }
     if (params?.mandalId && params.mandalId !== "ALL") {
       list = list.filter((i: any) => i.mandalId === params.mandalId);
@@ -1070,21 +1074,28 @@ export const politicalApiService = {
   async updateFieldIssueStatus(issueId: string, payload: any): Promise<any> {
     try {
       const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
-      if (savedRaw) {
-        const savedList = JSON.parse(savedRaw);
-        const idx = savedList.findIndex((i: any) => i.id === issueId);
-        if (idx !== -1) {
-          savedList[idx] = {
-            ...savedList[idx],
-            ...payload,
-            status: payload.status || savedList[idx].status,
-            lastStatusRemarks: payload.remarks || payload.lastStatusRemarks || savedList[idx].lastStatusRemarks,
-            lastStatusProof: payload.proofUrl || payload.lastStatusProof || savedList[idx].lastStatusProof,
-            updatedAt: new Date().toISOString()
-          };
-          localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(savedList));
-        }
+      const savedList = savedRaw ? JSON.parse(savedRaw) : [];
+      const idx = savedList.findIndex((i: any) => i.id === issueId);
+      if (idx !== -1) {
+        savedList[idx] = {
+          ...savedList[idx],
+          ...payload,
+          status: payload.status || savedList[idx].status,
+          lastStatusRemarks: payload.remarks || payload.lastStatusRemarks || savedList[idx].lastStatusRemarks,
+          lastStatusProof: payload.proofUrl || payload.lastStatusProof || savedList[idx].lastStatusProof,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        savedList.push({
+          id: issueId,
+          ...payload,
+          status: payload.status || "IN_PROGRESS",
+          lastStatusRemarks: payload.remarks,
+          lastStatusProof: payload.proofUrl,
+          updatedAt: new Date().toISOString()
+        });
       }
+      localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(savedList));
     } catch (e) {}
 
     // Dispatch live WhatsApp status update alert to Customer / Citizen

@@ -619,7 +619,9 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         assignedOfficialRole: targetRole,
         assignedOfficialPhone: targetPhone,
         assignedDeptName: currentDeptObj.name,
-        actionUrl: actionUrl
+        actionUrl: actionUrl,
+        reporterPhone: issue.reporterPhone || (issue as any)?.citizenPhone,
+        mandalName: issue.mandalName || "Banaganapalle"
       } as any);
 
       if (res.success && res.notification?.status === "DELIVERED") {
