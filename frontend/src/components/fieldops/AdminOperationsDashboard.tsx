@@ -102,13 +102,9 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  // Expanded Nodes in Geographic Tree
-  const [expandedMandals, setExpandedMandals] = useState<Record<string, boolean>>({
-    "MDL-BNG-TWN": true
-  });
-  const [expandedVillages, setExpandedVillages] = useState<Record<string, boolean>>({
-    "VIL-BNG-TWN-01": true
-  });
+  // Constituency operational tree starts fully collapsed.
+  const [expandedMandals, setExpandedMandals] = useState<Record<string, boolean>>({});
+  const [expandedVillages, setExpandedVillages] = useState<Record<string, boolean>>({});
 
   // View Mode: Geographic Tree vs Master Table vs Director Command vs Political Admins
   const [viewMode, setViewMode] = useState<"DRILLDOWN" | "ALL_ISSUES" | "DIRECTORS" | "VOLUNTEERS" | "POLITICAL_ADMINS">("DRILLDOWN");
@@ -629,8 +625,6 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           {dashboardError}
         </div>
       )}
-
-      <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
 
       {viewMode === "DRILLDOWN" && (
         <div className="space-y-4">
@@ -1181,6 +1175,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           })}
         </div>
       )}
+
+      <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
 
       </>
       )}

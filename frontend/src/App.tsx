@@ -297,7 +297,8 @@ function AppInner() {
 
   // Role routing enforcement:
   // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
-  // - Political Admin & Manager: Home (fieldops), Assign Tickets, Contact Database; User Management via profile menu
+  // - Political Admin: Home (fieldops), Assign Tickets, Contact Database, Director User Management
+  // - Manager: Home (fieldops), Assign Tickets, Contact Database; User Management via profile menu
   // - Volunteer: Home (fieldops), Assign Tickets, Contact Database
   useEffect(() => {
     if (isVolunteer && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
