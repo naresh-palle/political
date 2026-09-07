@@ -420,8 +420,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10.5px] font-bold uppercase tracking-widest px-3 py-0.5 rounded-full bg-[#D4A24C] text-[#071322] font-mono">
-                    LEVEL 2: POLITICAL ADMIN (MLA)
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                    POLITICAL ADMIN
                   </span>
                   {currentUser.partyName && (
                     <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1.5">
@@ -454,25 +454,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   {currentUser.email && <span>✉️ {currentUser.email}</span>}
                   {currentUser.phone && <span>📞 {currentUser.phone}</span>}
                 </p>
-
-                {/* Portfolios Strip */}
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  <span className="text-[10.5px] text-[#8E9CAE] font-semibold uppercase tracking-wider">
-                    Portfolios:
-                  </span>
-                  {["Roads & Buildings", "Infrastructure & Investments", "AP State Assembly"].map((dept) => (
-                    <span
-                      key={dept}
-                      className="text-[10.5px] px-2.5 py-0.5 rounded-full bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/20 font-medium"
-                    >
-                      {dept}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
 
-            {/* View Switcher Tabs (Level 2 MLA) */}
+            {isPlatformSuperAdmin && (
             <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
               <button
                 onClick={() => setViewMode("DRILLDOWN")}
@@ -511,12 +496,13 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 Squad Volunteers ({volunteers.length})
               </button>
             </div>
+            )}
           </div>
         </div>
       )}
 
       {/* KPI Overview Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
         <div
           onClick={() => goAssignTickets("ALL")}
           className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/35 hover:border-[#D4A24C]/80 cursor-pointer transition-all"
@@ -585,8 +571,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
       <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
 
-      {/* VIEW 1: INTERACTIVE GEOGRAPHIC DRILLDOWN TREE */}
-      {viewMode === "DRILLDOWN" && (
+      {/* VIEW 1: INTERACTIVE GEOGRAPHIC DRILLDOWN TREE (Super Admin only) */}
+      {isPlatformSuperAdmin && viewMode === "DRILLDOWN" && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#0F2338]/80 border border-[#22405E]">
             <div>
@@ -988,8 +974,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* VIEW 3: DIRECTORS MANAGEMENT */}
-      {viewMode === "DIRECTORS" && (
+      {/* VIEW 3: DIRECTORS MANAGEMENT (Super Admin only) */}
+      {isPlatformSuperAdmin && viewMode === "DIRECTORS" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {directors.map((dir) => {
             const dirVolunteers = volunteers.filter((v) => v.directorId === dir.id);
@@ -1048,8 +1034,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* VIEW 4: VOLUNTEERS MASTER GRID */}
-      {viewMode === "VOLUNTEERS" && (
+      {/* VIEW 4: VOLUNTEERS MASTER GRID (Super Admin only) */}
+      {isPlatformSuperAdmin && viewMode === "VOLUNTEERS" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {volunteers.map((vol) => {
             const volIssues = issues.filter((i) => i.assignedVolunteerId === vol.id);

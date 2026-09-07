@@ -297,7 +297,7 @@ function AppInner() {
 
   // Role routing enforcement:
   // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
-  // - Political Admin & Director: Field Operations, Grievances, User Management (governance), Contact Database (contacts)
+  // - Political Admin & Manager: Home (fieldops), Assign Tickets, Contact Database; User Management via profile menu
   // - Volunteer: Home (fieldops), Assign Tickets, Contact Database
   useEffect(() => {
     if (isVolunteer && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
@@ -333,17 +333,13 @@ function AppInner() {
 
   const handleAuthenticated = (user: UserProfile) => {
     setCurrentProfile(user);
-    const role = user.primaryRole || user.roleId || user.role;
-    const isVol = role === "VOLUNTEER" || role === "volunteer";
-    const defaultProd: ActiveProductType = isVol ? "fieldops" : "fieldops";
+    const defaultProd: ActiveProductType = "fieldops";
     setActiveProduct(defaultProd);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, defaultProd);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     } catch {}
-    if (isVol) {
-      window.location.hash = "#/field-ops";
-    }
+    window.location.hash = "#/field-ops";
     setRoute("app");
   };
 

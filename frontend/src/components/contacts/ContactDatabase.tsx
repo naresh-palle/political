@@ -343,10 +343,17 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     return Array.from(map.entries()).map(([name, id]) => ({ name, id }));
   }, [contacts]);
 
+  const matchesSearchCategory = (category: ContactRecord["category"], selected: string) => {
+    if (selected === "ALL") return true;
+    if (selected === "CADRE" || selected === "GOVT_OFFICIAL") return category === selected;
+    if (selected === "OTHER") return category !== "CADRE" && category !== "GOVT_OFFICIAL";
+    return category === selected;
+  };
+
   // Filtered Contacts
   const filteredContacts = useMemo(() => {
     return contacts.filter((c) => {
-      if (filterCategory !== "ALL" && c.category !== filterCategory) return false;
+      if (!matchesSearchCategory(c.category, filterCategory)) return false;
       if (filterMandal !== "ALL" && c.mandalName !== filterMandal && c.mandalId !== filterMandal) return false;
       if (filterGender !== "ALL" && c.gender !== filterGender) return false;
 
@@ -591,12 +598,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Category: All Types</option>
-              <option value="INFLUENCER">Community Influencer</option>
               <option value="CADRE">Party Cadre</option>
-              <option value="GOVT_OFFICIAL">Govt Nodal Officer</option>
-              <option value="DWCRA_LEAD">DWCRA Leader</option>
-              <option value="YOUTH_LEADER">Youth Wing</option>
-              <option value="CITIZEN">Citizen Petitioner</option>
+              <option value="GOVT_OFFICIAL">Govt Officer</option>
               <option value="OTHER">Other</option>
             </select>
           </div>

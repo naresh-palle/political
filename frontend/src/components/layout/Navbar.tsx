@@ -72,7 +72,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isPlatformAdmin = currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin);
   const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
   const isDirector = !isPlatformAdmin && !isPoliticalAdmin && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
-  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER");
   const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
 
   useEffect(() => {
@@ -141,7 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               data-testid="brand-home"
               className="flex items-center space-x-3 cursor-pointer group min-w-0"
               onClick={() => {
-                window.location.hash = isVolunteer ? "#/field-ops" : "#/field-ops";
+                window.location.hash = "#/field-ops";
                 onProductChange("fieldops");
                 if (onResetToSelect) onResetToSelect();
               }}
@@ -182,7 +181,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Products - Top Menu Bar */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center flex-wrap justify-center gap-1.5 max-w-full">
-            {!isVolunteer && (
+            {isPlatformAdmin && (
             <button
               onClick={() => {
                 window.location.hash = "#/field-ops";
@@ -244,7 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {!isVolunteer && !isDirector && (
+            {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("grievances")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
@@ -282,7 +281,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
 
-            {(isPlatformAdmin || isPoliticalAdmin) && (
+            {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("governance")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
@@ -291,7 +290,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
                 }`}
               >
-                {isPlatformAdmin ? "Admin & Users" : "User Management"}
+                Admin & Users
               </button>
             )}
           </nav>
@@ -396,14 +395,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Horizontal Navigation Tabs */}
         <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
-          {!isVolunteer && (
+          {isPlatformAdmin && (
           <button
             onClick={() => onProductChange("fieldops")}
             className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
               activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
             }`}
           >
-            {isDirector ? "Grievances" : "Field Ops"}
+            Field Ops
           </button>
           )}
 
@@ -439,7 +438,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {!isVolunteer && !isDirector && (
+          {isPlatformAdmin && (
             <button
               onClick={() => onProductChange("grievances")}
               className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
@@ -471,14 +470,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
           )}
 
-          {(isPlatformAdmin || isPoliticalAdmin) && (
+          {isPlatformAdmin && (
             <button
               onClick={() => onProductChange("governance")}
               className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
                 activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
               }`}
             >
-              {isPlatformAdmin ? "Admin & Users" : "User Management"}
+              Admin & Users
             </button>
           )}
         </div>

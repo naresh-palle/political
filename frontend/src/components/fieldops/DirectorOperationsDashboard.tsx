@@ -70,7 +70,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [villages, setVillages] = useState<VillageInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
-  const [operationsStream, setOperationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("ALL");
+  const [operationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("FIELD_ISSUES");
   const [isAiPdfModalOpen, setIsAiPdfModalOpen] = useState(false);
 
   const getStatusFromUrl = (): string => {
@@ -449,26 +449,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     };
   }, [allOperationsList, availableCategories]);
 
-  // Inactivity / "No Work Done" Detection
-  const inactiveVolunteerWarnings = useMemo(() => {
-    const warnings: { volunteer: UserProfile; pendingCount: number; overdueCount: number; reason: string }[] = [];
-    volunteers.forEach((vol) => {
-      const volIssues = issues.filter((i) => i.assignedVolunteerId === vol.id);
-      const volOverdue = volIssues.filter((i) => i.status === "OVERDUE").length;
-      const volPending = volIssues.filter((i) => ["NEW", "ASSIGNED", "IN_PROGRESS"].includes(i.status)).length;
-
-      if (volOverdue > 0) {
-        warnings.push({
-          volunteer: vol,
-          pendingCount: volPending,
-          overdueCount: volOverdue,
-          reason: `Has ${volOverdue} overdue work item${volOverdue > 1 ? "s" : ""} pending urgent field follow-up.`
-        });
-      }
-    });
-    return warnings;
-  }, [volunteers, issues]);
-
   // Filtered & Sorted Operations
   const sortedAndFilteredOperations = useMemo(() => {
     let list = allOperationsList.filter((item) => {
@@ -807,57 +787,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               {currentUser.name}
             </h1>
             <p className="text-xs text-[#8E9CAE] mt-0.5 flex flex-wrap items-center gap-x-3">
-              <span>{currentUser.designation || currentUser.roleTitle || `Supervising Ground Intake across ${mandals.length} Mandals`}</span>
+              <span>{currentUser.designation || currentUser.roleTitle || "Campaign Manager"}</span>
               {currentUser.email && <span>✉️ {currentUser.email}</span>}
               {currentUser.phone && <span>📞 {currentUser.phone}</span>}
             </p>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="px-4 py-2 rounded-xl bg-[#070D15] border border-[#223348] text-right">
-            <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Cadre Strength</span>
-            <span className="font-display text-lg font-bold text-[#D4A24C]">
-              {volunteers.length} Active Field Agents
-            </span>
-          </div>
-          <div className="px-4 py-2 rounded-xl bg-[#070D15] border border-[#223348] text-right">
-            <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Resolution Rate</span>
-            <span className="font-display text-lg font-bold text-emerald-400">
-              {totalOperationsCount > 0 ? Math.round((completedCount / totalOperationsCount) * 100) : 0}%
-            </span>
-          </div>
-        </div>
       </div>
-
-      {/* "No Work Done" Inactivity Alert Banner */}
-      {inactiveVolunteerWarnings.length > 0 && (
-        <div className="p-4 rounded-xl bg-rose-950/90 border border-rose-500/50 space-y-2">
-          <div className="flex items-center gap-2 text-rose-400 font-semibold text-xs uppercase tracking-wider">
-            <AlertTriangle className="w-4 h-4 text-rose-400 animate-pulse" />
-            <span>Grievance Alert: Overdue Issues Require Manager Intervention</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            {inactiveVolunteerWarnings.map((w, idx) => (
-              <div
-                key={idx}
-                className="p-2.5 rounded-lg bg-[#0B131E] border border-rose-500/30 flex items-center justify-between text-[11px]"
-              >
-                <div>
-                  <strong className="text-[#F5EFE0] block">{w.volunteer.name}</strong>
-                  <span className="text-rose-300 text-[10px]">{w.reason}</span>
-                </div>
-                <button
-                  onClick={() => setFilterVolunteerId(w.volunteer.id)}
-                  className="px-2.5 py-1 rounded bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 text-[10px] font-semibold cursor-pointer"
-                >
-                  View Tasks
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       </>
       )}
@@ -867,6 +803,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       <p className="text-xs text-[#8E9CAE]">
         Assign departments and inspect tickets.
       </p>
+      {false && (
+      <>
       {/* 1. Official Tickets Master Summary Header Strip */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#223348]/70 pb-3">
@@ -1360,6 +1298,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         )}
       </div>
+      </>
+      )}
 
       </>
       )}
@@ -1389,7 +1329,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </span>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold font-mono text-[#D4A24C]">
-              {issues.length}
+              {kpiCounts.total}
             </span>
             <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">All</span>
           </div>
