@@ -1698,7 +1698,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
         "assignedVolunteerName": "Assigned Volunteer",
         "assignedVolunteerPhone": "+91 98850 44003",
         "directorId": "usr-demo-director",
-        "directorName": "Demo Director",
+        "directorName": "Manager1",
         "initialRemarks": "Ticket registered for field ops tracking.",
         "attachments": [],
         "createdAt": datetime.now(timezone.utc).isoformat(),
@@ -1738,7 +1738,7 @@ async def create_field_issue(payload: dict):
         "id": f"upd-{uuid.uuid4().hex[:8]}",
         "issueId": issue_id,
         "volunteerId": new_issue["createdBy"],
-        "volunteerName": new_issue.get("assignedVolunteerName", "Volunteer"),
+        "volunteerName": new_issue.get("assignedVolunteerName", "Volunteer1"),
         "previousStatus": "NONE",
         "newStatus": new_issue["status"],
         "updateDate": datetime.now(timezone.utc).strftime("%d %b %Y"),
@@ -2578,7 +2578,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     if volunteer_phone and volunteer_phone != complainant_phone:
         volunteer_wa_payload = dict(wa_payload)
         volunteer_wa_payload["recipientPhone"] = volunteer_phone
-        volunteer_wa_payload["officerName"] = issue.get("assignedVolunteerName") or "Volunteer"
+        volunteer_wa_payload["officerName"] = issue.get("assignedVolunteerName") or "Volunteer1"
         volunteer_wa_payload["correlationId"] = f"{correlation_id}:volunteer"
         try:
             await whatsapp_client.send_whatsapp_notification(volunteer_wa_payload)

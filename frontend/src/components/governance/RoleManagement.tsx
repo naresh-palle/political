@@ -1324,7 +1324,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         <p className="text-[#F5EFE0]">
                           Profile Provisioned into LeaderLens Master Active Directory
                         </p>
-                        <span className="text-[10px] text-[#8E9CAE] block">Actor: Platform Admin Srikar Varma</span>
+                        <span className="text-[10px] text-[#8E9CAE] block">Actor: Platform Admin Naresh Palle</span>
                       </div>
                     </div>
                   </div>
@@ -1416,7 +1416,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 <p className="text-[#F5EFE0] font-semibold mt-0.5">
                   Super Admin created Level 2 Political Admin (MLA Kadapa AC)
                 </p>
-                <span className="text-[11px] text-[#D4A24C]">Actor: Srikar Varma (Platform Super Admin)</span>
+                <span className="text-[11px] text-[#D4A24C]">Actor: Naresh Palle (Platform Super Admin)</span>
               </div>
               <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px]">
                 Authorized

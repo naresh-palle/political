@@ -57,7 +57,7 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     grievanceCount: 5,
     lastContactedDate: "2026-09-04",
     notes: "Verified Live Department Contact for Panchayat Raj dispatches.",
-    assignedVolunteerName: "Demo Manager"
+    assignedVolunteerName: "Manager1"
   },
   {
     id: "cnt-live-002",
@@ -78,7 +78,7 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     grievanceCount: 3,
     lastContactedDate: "2026-09-04",
     notes: "Verified Live Department Contact for Rural Water Supply Scheme dispatches.",
-    assignedVolunteerName: "Demo Manager"
+    assignedVolunteerName: "Manager1"
   },
   {
     id: "cnt-bng-001",
@@ -100,7 +100,7 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     grievanceCount: 2,
     lastContactedDate: "2026-08-29",
     notes: "Key opinion leader in Town Sector. Influences 250+ farmer households.",
-    assignedVolunteerName: "Demo Volunteer"
+    assignedVolunteerName: "Volunteer1"
   },
   {
     id: "cnt-bng-002",
@@ -121,7 +121,7 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     grievanceCount: 3,
     lastContactedDate: "2026-08-30",
     notes: "Heads 18 DWCRA self-help groups. Actively coordinates welfare schemes.",
-    assignedVolunteerName: "Demo Volunteer"
+    assignedVolunteerName: "Volunteer1"
   },
   {
     id: "cnt-bng-003",
@@ -201,7 +201,7 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     grievanceCount: 1,
     lastContactedDate: "2026-08-31",
     notes: "Widow pension beneficiary. Grateful for quick resolution of e-KYC issue.",
-    assignedVolunteerName: "Demo Volunteer"
+    assignedVolunteerName: "Volunteer1"
   },
   {
     id: "cnt-bng-007",

@@ -21,7 +21,7 @@ import { DataConfidenceSection } from "./components/audit/DataConfidenceSection"
 import { PresentationMode } from "./components/audit/PresentationMode";
 import { FieldOpsManager } from "./components/fieldops/FieldOpsManager";
 import { AuditReport, UserProfile } from "./types";
-import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
+import { buildCompleteAudit, USER_PROFILES, hydrateStoredUserProfile } from "./services/mockData";
 import { PartyThemeProvider, usePartyTheme } from "./context/PartyThemeContext";
 
 // Lazy-loaded heavy route chunks for instant initial render
@@ -190,11 +190,24 @@ function AppInner() {
     try {
       const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
       if (savedUser) {
-        return JSON.parse(savedUser);
+        return hydrateStoredUserProfile(JSON.parse(savedUser));
       }
     } catch {}
     return USER_PROFILES[0];
   });
+
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (!savedUser) return;
+      const parsed = JSON.parse(savedUser) as UserProfile;
+      const hydrated = hydrateStoredUserProfile(parsed);
+      if (hydrated.name !== parsed.name || hydrated.directorName !== parsed.directorName) {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(hydrated));
+        setCurrentProfile(hydrated);
+      }
+    } catch {}
+  }, []);
 
   const [auditData, setAuditData] = useState<AuditReport | null>(null);
 
