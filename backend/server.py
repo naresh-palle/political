@@ -39,8 +39,11 @@ api_router = APIRouter(prefix="/api")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global In-Memory Store for Field Issues (Ensures instant status updates across all clients even when MongoDB is offline)
+# Global In-Memory Stores (Ensures instant status updates, notifications, and history sync across all clients even when MongoDB is offline)
 IN_MEMORY_FIELD_ISSUES: dict = {}
+IN_MEMORY_NOTIFICATIONS: list = []
+IN_MEMORY_ISSUE_HISTORY: list = []
+IN_MEMORY_NOTIFICATION_AUDITS: list = []
 
 # Models
 class StatusCheck(BaseModel):
@@ -2163,9 +2166,10 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     try:
         await db.issue_history.insert_one(history_record)
     except Exception as e:
-        logger.warning(f"MongoDB insert issue_history: {e}")
+        log_mongo_notice("insert issue_history", e)
     finally:
         sanitize_doc(history_record)
+        IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(history_record))
 
     # 4. Create Volunteer In-App Notification (Section 26.6, 26.7)
     volunteer_id = issue.get("assignedVolunteerId") or "usr-demo-volunteer"
@@ -2201,9 +2205,10 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     try:
         await db.notifications.insert_one(volunteer_notif)
     except Exception as e:
-        logger.warning(f"MongoDB insert notification: {e}")
+        log_mongo_notice("insert notification", e)
     finally:
         sanitize_doc(volunteer_notif)
+        IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(volunteer_notif))
 
     # 5. Send Complaint Person WhatsApp Notification (Section 26.9, 26.10, 26.11)
     complainant_name = issue.get("reportedBy") or "Citizen"
@@ -2488,25 +2493,47 @@ async def retry_whatsapp_notification(issue_id: str, payload: dict = {}):
 
 @api_router.get("/field-ops/issues/{issue_id}/notifications")
 async def get_issue_notifications(issue_id: str):
+    audits = []
     try:
-        audits = await db.notification_audits.find({"issueId": issue_id}, {"_id": 0}).sort("sentAt", -1).to_list(100)
-        if audits:
-            return audits
+        res = await db.notification_audits.find({"issueId": issue_id}, {"_id": 0}).sort("sentAt", -1).to_list(100)
+        if res:
+            audits = res
     except Exception as e:
-        logger.warning(f"MongoDB find notification_audits: {e}")
+        log_mongo_notice("get_issue_notifications", e)
         
-    return []
+    in_mem = [a for a in IN_MEMORY_NOTIFICATION_AUDITS if a.get("issueId") == issue_id]
+    combined = audits + in_mem
+    seen = set()
+    deduped = []
+    for a in combined:
+        if a.get("id") not in seen:
+            seen.add(a.get("id"))
+            deduped.append(a)
+    return sanitize_doc(deduped)
 
 @api_router.get("/field-ops/issues/{issue_id}/history")
 async def get_issue_history(issue_id: str):
+    db_history = []
     try:
-        history = await db.issue_history.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
-        if history:
-            return history
+        res = await db.issue_history.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
+        if res:
+            db_history = res
     except Exception as e:
-        logger.warning(f"MongoDB find issue_history: {e}")
+        log_mongo_notice("get_issue_history", e)
         
-    return [
+    in_mem = [h for h in IN_MEMORY_ISSUE_HISTORY if h.get("issueId") == issue_id]
+    combined = in_mem + db_history
+    seen = set()
+    deduped = []
+    for h in combined:
+        if h.get("id") not in seen:
+            seen.add(h.get("id"))
+            deduped.append(h)
+            
+    if deduped:
+        return sanitize_doc(deduped)
+        
+    fallback = [
         {
             "id": "upd-hist-1",
             "issueId": issue_id,
@@ -2518,9 +2545,11 @@ async def get_issue_history(issue_id: str):
             "createdAt": "2026-08-25T09:15:00Z"
         }
     ]
+    return sanitize_doc(fallback)
 
 @api_router.get("/field-ops/notifications")
 async def get_field_notifications(recipientUserId: Optional[str] = Query(None), recipientRole: Optional[str] = Query(None)):
+    db_notifs = []
     try:
         query = {}
         if recipientUserId:
@@ -2531,13 +2560,30 @@ async def get_field_notifications(recipientUserId: Optional[str] = Query(None), 
         elif recipientRole:
             query["recipientRole"] = recipientRole
             
-        notifs = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
-        if notifs:
-            return notifs
+        res = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
+        if res:
+            db_notifs = res
     except Exception as e:
-        logger.warning(f"MongoDB find notifications: {e}")
+        log_mongo_notice("get_field_notifications", e)
+
+    combined = list(IN_MEMORY_NOTIFICATIONS) + db_notifs
+    if recipientUserId:
+        combined = [n for n in combined if n.get("recipientUserId") == recipientUserId or n.get("recipientRole") == (recipientRole or "VOLUNTEER") or not n.get("recipientUserId")]
+    elif recipientRole:
+        combined = [n for n in combined if n.get("recipientRole") == recipientRole]
+
+    seen = set()
+    deduped = []
+    for n in combined:
+        if n.get("id") not in seen:
+            seen.add(n.get("id"))
+            deduped.append(n)
+            
+    if deduped:
+        return sanitize_doc(deduped)
         
-    return []
+    fallback = load_json_fallback("field_notifications.json")
+    return sanitize_doc(fallback)
 
 @api_router.post("/field-ops/notifications")
 async def create_field_notification(payload: dict):
@@ -2552,9 +2598,10 @@ async def create_field_notification(payload: dict):
     try:
         await db.notifications.insert_one(doc)
     except Exception as e:
-        logger.warning(f"MongoDB insert notification: {e}")
+        log_mongo_notice("insert notification", e)
     finally:
         sanitize_doc(doc)
+        IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(doc))
     return sanitize_doc(doc)
 
 # Include router
