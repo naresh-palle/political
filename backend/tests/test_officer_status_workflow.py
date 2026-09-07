@@ -2,6 +2,7 @@ from backend.services.officer_status_workflow import (
     complainant_whatsapp_text,
     mask_phone,
     normalize_status,
+    should_preserve_progress_status,
     ticket_display_number,
     validate_officer_status,
     validate_transition,
@@ -67,3 +68,10 @@ def test_complainant_phone_prefers_ticket_fields():
 def test_ticket_number():
     assert ticket_display_number({"id": "iss-ab12"}).startswith("LL-")
     assert normalize_status(" in_progress ") == "IN_PROGRESS"
+
+
+def test_preserve_progress_from_assignment_writes():
+    assert should_preserve_progress_status("IN_PROGRESS", "ASSIGNED") is True
+    assert should_preserve_progress_status("RESOLVED", "ASSIGNED") is True
+    assert should_preserve_progress_status("ASSIGNED", "ASSIGNED") is False
+    assert should_preserve_progress_status("IN_PROGRESS", "RESOLVED") is False

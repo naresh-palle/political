@@ -7,6 +7,7 @@ import {
   GeographicDrilldownNode
 } from "../../types";
 import { politicalApiService } from "../../services/api";
+import { statusAfterAssignment } from "../../utils/ticketActions";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
@@ -76,7 +77,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             assignedDepartment: newDept,
             assignedOfficialName: officialName || item.assignedOfficialName || "",
             assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: "ASSIGNED",
+            status: statusAfterAssignment(item.status),
             updatedAt: new Date().toISOString()
           };
         }
@@ -87,10 +88,12 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
         department: newDept,
-        status: "ASSIGNED",
         assignedOfficialName: officialName,
         assignedOfficialPhone: officialPhone,
-        remarks: `Department assigned to ${newDept}`
+        remarks: `Department assigned to ${newDept}`,
+        ...(statusAfterAssignment(issues.find((i) => i.id === issueId)?.status) === "ASSIGNED"
+          ? { status: "ASSIGNED" }
+          : {}),
       });
     } catch (e) {
       console.warn("Department update error", e);

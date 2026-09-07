@@ -16,7 +16,6 @@ import {
   Send,
   Upload,
   Clock,
-  ArrowRight,
   Sparkles,
   ExternalLink,
   ChevronRight,
@@ -298,6 +297,8 @@ export const OfficerTicketPortal: React.FC = () => {
       const waStatus = result?.complainantNotification?.status;
 
       setSubmitSuccess(true);
+      setRemarks("");
+      setProofFiles([]);
       setIssue((prev) =>
         prev
           ? {
@@ -642,40 +643,17 @@ export const OfficerTicketPortal: React.FC = () => {
                 </div>
               </div>
 
-              {submitSuccess ? (
-                <div className="p-5 rounded-xl bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 text-xs space-y-2.5 animate-fadeIn">
+              {submitSuccess && (
+                <div className="p-4 rounded-xl bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 text-xs space-y-2 animate-fadeIn">
                   <div className="flex items-center gap-2 font-bold text-sm text-emerald-300">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    Resolution Update Successfully Submitted & Synced!
+                    Update saved. Stay on this page to add another comment or change status.
                   </div>
-                  <p>• Grievance Status updated to: <strong className="text-white">{newStatus}</strong></p>
-                  <p>• Official Remarks: "{remarks}"</p>
-                  <p>• Automated notification dispatched to Field Volunteer & Campaign Director.</p>
-                  <p className="text-[11px] text-emerald-300/80 font-mono italic">
-                    ⏳ Auto-reverting to Grievance Dashboard in 3.5 seconds...
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.location.hash = `#/assign-tickets?status=${newStatus}`;
-                      }}
-                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md"
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                      Return to Grievance Dashboard ({newStatus})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSubmitSuccess(false)}
-                      className="px-4 py-2.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 text-xs font-bold cursor-pointer"
-                    >
-                      Submit Follow-up Update
-                    </button>
-                  </div>
+                  <p>Current ticket status: <strong className="text-white">{issue?.status || newStatus}</strong></p>
+                  <p>Volunteer and complainant notifications were dispatched from this update.</p>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmitResolution} className="space-y-4 text-xs">
+              )}
+              <form onSubmit={handleSubmitResolution} className="space-y-4 text-xs">
                   {/* Status Selection */}
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-[#D4A24C] font-semibold mb-1.5">
@@ -786,7 +764,6 @@ export const OfficerTicketPortal: React.FC = () => {
                     {submitting ? "Submitting Resolution Update..." : "Submit Official Resolution & Sync to Command Center"}
                   </button>
                 </form>
-              )}
             </div>
           </div>
         )}

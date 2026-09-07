@@ -9,6 +9,7 @@ import {
   WorkUpdateRecord
 } from "../../types";
 import { politicalApiService } from "../../services/api";
+import { statusAfterAssignment } from "../../utils/ticketActions";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Users,
@@ -597,12 +598,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     );
 
     try {
+      const nextVolStatus = statusAfterAssignment(issues.find((i) => i.id === issueId)?.status);
       await politicalApiService.updateFieldIssueStatus(issueId, {
         assignedVolunteerId: newVolunteerId || undefined,
         assignedVolunteerName: newVolName,
         assignedVolunteerPhone: newVolPhone,
-        status: "ASSIGNED",
-        remarks: `Assigned to ${newVolName} by Campaign Manager`
+        remarks: `Assigned to ${newVolName} by Campaign Manager`,
+        ...(nextVolStatus === "ASSIGNED" ? { status: nextVolStatus } : {}),
       });
     } catch (e) {
       console.warn("Assignment update fallback handled locally", e);
@@ -634,7 +636,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             assignedDepartment: baseDept,
             assignedOfficialName: officialName || item.assignedOfficialName || "",
             assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: "ASSIGNED",
+            status: statusAfterAssignment(item.status),
             updatedAt: new Date().toISOString()
           };
         }
@@ -654,7 +656,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               assignedDepartment: baseDept,
               assignedOfficialName: officialName || i.assignedOfficialName || "",
               assignedOfficialPhone: officialPhone || i.assignedOfficialPhone || "",
-              status: "ASSIGNED",
+              status: statusAfterAssignment(i.status),
               updatedAt: new Date().toISOString()
             };
           }
@@ -667,10 +669,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
         department: baseDept,
-        status: "ASSIGNED",
         assignedOfficialName: officialName,
         assignedOfficialPhone: officialPhone,
-        remarks: `Department assigned to ${baseDept}`
+        remarks: `Department assigned to ${baseDept}`,
+        ...(statusAfterAssignment(issues.find((i) => i.id === issueId)?.status) === "ASSIGNED"
+          ? { status: "ASSIGNED" }
+          : {}),
       });
     } catch (e) {
       console.warn("Department update error", e);

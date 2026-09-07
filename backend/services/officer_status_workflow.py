@@ -21,6 +21,24 @@ EVENT_BY_STATUS = {
     "REJECTED": "TICKET_REJECTED",
 }
 
+PROGRESS_STATUSES = ("IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED", "CLOSED")
+ASSIGNMENT_STATUSES = (
+    "NEW",
+    "OPEN",
+    "PENDING",
+    "UNRESOLVED",
+    "ASSIGNED",
+    "ACKNOWLEDGED",
+    "ASSIGNED_TO_DEPARTMENT",
+)
+
+
+def should_preserve_progress_status(current_status: Optional[str], incoming_status: Optional[str]) -> bool:
+    """Officer work must not be overwritten by a later assign / notify write."""
+    current = normalize_status(current_status)
+    incoming = normalize_status(incoming_status)
+    return current in PROGRESS_STATUSES and incoming in ASSIGNMENT_STATUSES
+
 
 def normalize_status(value: Optional[str]) -> str:
     return (value or "").strip().upper()
