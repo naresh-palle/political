@@ -166,8 +166,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-              {/* Image Preview with overlay button */}
-              <div className="relative group flex-shrink-0">
+              <div className="flex flex-col items-center gap-2 flex-shrink-0">
                 <img
                   src={avatar || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80"}
                   alt={name}
@@ -177,11 +176,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-bold transition-opacity cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] border border-[#D4A24C]/40 text-[#D4A24C] text-[10px] font-semibold transition-colors cursor-pointer"
                   title="Upload from device"
                 >
-                  <Upload className="w-4 h-4 mb-0.5 text-[#D4A24C]" />
-                  Change
+                  <Upload className="w-3 h-3" />
+                  Edit Photo
                 </button>
                 <input
                   type="file"

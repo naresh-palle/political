@@ -419,23 +419,30 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         <div className="p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div
-                className="relative group cursor-pointer flex-shrink-0"
-                onClick={() => setIsEditProfileOpen(true)}
-                title="Click to change profile picture"
-              >
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg group-hover:brightness-90 transition-all"
-                />
-                <div className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-semibold transition-opacity">
-                  <Camera className="w-4 h-4 mb-0.5 text-[#D4A24C]" />
-                  <span>Edit Photo</span>
+              <div className="flex flex-col items-center gap-3 flex-shrink-0">
+                <div
+                  className="relative cursor-pointer"
+                  onClick={() => setIsEditProfileOpen(true)}
+                  title="Click to change profile picture"
+                >
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg hover:brightness-90 transition-all"
+                  />
+                  <span className="absolute -bottom-1.5 -right-1.5 z-10 px-1.5 py-0.5 rounded-full bg-[#071322] border border-[#D4A24C] text-xs font-mono leading-none">
+                    {currentUser.partyEmoji || "🏛️"}
+                  </span>
                 </div>
-                <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-full bg-[#071322] border border-[#D4A24C] text-xs font-mono">
-                  {currentUser.partyEmoji || "🏛️"}
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditProfileOpen(true)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
+                  title="Edit profile photo"
+                >
+                  <Camera className="w-3 h-3" />
+                  <span>Edit Photo</span>
+                </button>
               </div>
 
               <div className="space-y-1.5">
