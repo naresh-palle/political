@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { UserProfile } from "../../types";
 import {
   X,
@@ -120,8 +121,11 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }, 400);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md animate-fadeIn">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md animate-fadeIn"
+      onClick={onClose}
+    >
       <div
         className="relative w-full max-w-xl bg-gradient-to-b from-[#0F2338] to-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
@@ -365,6 +369,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -72,7 +72,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isPlatformAdmin = currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin);
   const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
   const isDirector = !isPlatformAdmin && !isPoliticalAdmin && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
-  const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
 
   useEffect(() => {
     setLogoError(false);
@@ -399,7 +398,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   )}
 
-                  {isAdmin && (
+                  {(isPlatformAdmin || isDirector) && (
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
@@ -408,7 +407,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
                     >
                       <UserCheck className="w-4 h-4 text-[#D4A24C]" />
-                      <span>{isPlatformAdmin ? "Admin User Governance" : isPoliticalAdmin ? "Director User Management" : "Squad Volunteer"}</span>
+                      <span>{isPlatformAdmin ? "Admin User Governance" : "Squad Volunteer"}</span>
                     </button>
                   )}
 
