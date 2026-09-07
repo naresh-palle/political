@@ -505,196 +505,193 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         </div>
       </div>
 
-      {/* Two Column Executive Body */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Left Column (7/12): Scope, Description, Proofs */}
-        <div className="lg:col-span-7 space-y-5">
-          {/* Ground Scope & Description */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-3">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
-                Issue Scope & Ground Description
-              </h3>
-              <span className="text-xs text-[#8E9CAE] font-mono">Constituency Banaganapalle</span>
-            </div>
-
-            <p className="text-sm text-[#CBD5E1] leading-relaxed whitespace-pre-wrap pt-1">
-              {issue.description || "No specific detailed description recorded during ground intake."}
-            </p>
-
-            {issue.placeName && (
-              <div className="p-3 rounded-xl bg-[#0B131E] border border-[#223348] flex items-center gap-2 text-xs text-[#8E9CAE] mt-3">
-                <MapPin className="w-4 h-4 text-[#D4A24C] shrink-0" />
-                <span>Exact Location Landmark: <strong className="text-[#F5EFE0]">{issue.placeName}</strong></span>
-              </div>
-            )}
-          </div>
-
-          {/* Reporter Contact & Identification */}
-          <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[#223348]/70 pb-2">
-              Citizen / Reporter Identification
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
-              <div>
-                <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Reporter Name</span>
-                <strong className="text-[#F5EFE0] text-sm block mt-0.5">{issue.reportedBy}</strong>
-                <span className="text-[11px] text-[#D4A24C] block mt-0.5">
-                  {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
-                  {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
-                </span>
+      {/* Static facts stay top-aligned; growing audit sits full-width below */}
+      <div className="flex flex-col gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div className="lg:col-span-7 space-y-5 min-w-0">
+            <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
+              <div className="flex items-start justify-between gap-3 border-b border-[#223348]/70 pb-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
+                  Issue Scope & Ground Description
+                </h3>
+                <span className="text-xs text-[#8E9CAE] font-mono shrink-0 text-right">Constituency Banaganapalle</span>
               </div>
 
-              {issue.reporterPhone && (
-                <div>
-                  <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Direct Phone Contact</span>
-                  <a
-                    href={`tel:${issue.reporterPhone}`}
-                    className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold transition-colors"
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                    {issue.reporterPhone}
-                  </a>
+              <p className="text-sm text-[#CBD5E1] leading-relaxed whitespace-pre-wrap pt-1">
+                {issue.description || "No specific detailed description recorded during ground intake."}
+              </p>
+
+              {issue.placeName && (
+                <div className="p-3 rounded-xl bg-[#0B131E] border border-[#223348] flex items-start gap-2 text-xs text-[#8E9CAE] mt-3">
+                  <MapPin className="w-4 h-4 text-[#D4A24C] shrink-0 mt-0.5" />
+                  <span>Exact Location Landmark: <strong className="text-[#F5EFE0]">{issue.placeName}</strong></span>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Uploaded Photos & Verified Proof Documents */}
-          {issue.attachments && issue.attachments.length > 0 && (
-            <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2 border-b border-[#223348]/70 pb-2">
-                <Camera className="w-4 h-4 text-[#D4A24C]" />
-                Uploaded Proof Documents & Photos ({issue.attachments.length})
+            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg h-fit">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[#223348]/70 pb-2">
+                Citizen / Reporter Identification
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {issue.attachments.map((url, idx) => (
-                  <div
-                    key={idx}
-                    className="group rounded-2xl overflow-hidden border border-[#223348] bg-[#0B131E] relative aspect-video"
-                  >
-                    <img
-                      src={url}
-                      alt={`Proof Document ${idx + 1}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
+                <div className="min-w-0">
+                  <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Reporter Name</span>
+                  <strong className="text-[#F5EFE0] text-sm block mt-0.5 break-words">{issue.reportedBy}</strong>
+                  <span className="text-[11px] text-[#D4A24C] block mt-0.5">
+                    {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
+                    {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+                  </span>
+                </div>
+
+                {issue.reporterPhone && (
+                  <div className="min-w-0">
+                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Direct Phone Contact</span>
                     <a
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold text-[#D4A24C] transition-opacity"
+                      href={`tel:${issue.reporterPhone}`}
+                      className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold transition-colors whitespace-nowrap"
                     >
-                      <Eye className="w-4 h-4 mr-1.5" /> View Full Image
+                      <Phone className="w-3.5 h-3.5 shrink-0" />
+                      {issue.reporterPhone}
                     </a>
                   </div>
-                ))}
+                )}
               </div>
             </div>
-          )}
+
+            {issue.attachments && issue.attachments.length > 0 && (
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2 border-b border-[#223348]/70 pb-2">
+                  <Camera className="w-4 h-4 text-[#D4A24C]" />
+                  Uploaded Proof Documents & Photos ({issue.attachments.length})
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {issue.attachments.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="group rounded-2xl overflow-hidden border border-[#223348] bg-[#0B131E] relative aspect-video"
+                    >
+                      <img
+                        src={url}
+                        alt={`Proof Document ${idx + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold text-[#D4A24C] transition-opacity"
+                      >
+                        <Eye className="w-4 h-4 mr-1.5" /> View Full Image
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="lg:col-span-5 min-w-0">
+            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg h-fit">
+              <div className="flex items-center justify-between gap-2 border-b border-[#223348]/70 pb-2">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
+                  Field Squad Assignment
+                </h3>
+                <span className="text-xs text-emerald-400 font-semibold shrink-0">Active Ticket</span>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="flex items-start justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                  <span className="text-[#8E9CAE] shrink-0">Assigned Department:</span>
+                  <strong className="text-[#D4A24C] text-right break-words min-w-0">
+                    {issue.completedDepartment || issue.department || "General Administration"}
+                  </strong>
+                </div>
+
+                <div className="flex items-start justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                  <span className="text-[#8E9CAE] shrink-0">
+                    {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By:" : "Assigned Field Agent:"}
+                  </span>
+                  <strong className="text-[#F5EFE0] text-right break-words min-w-0">
+                    {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
+                  </strong>
+                </div>
+
+                {issue.assignedVolunteerPhone && (
+                  <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                    <span className="text-[#8E9CAE] shrink-0">Agent Contact:</span>
+                    <a href={`tel:${issue.assignedVolunteerPhone}`} className="text-[#D4A24C] font-mono font-bold hover:underline whitespace-nowrap">
+                      {issue.assignedVolunteerPhone}
+                    </a>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                  <span className="text-[#8E9CAE] shrink-0">Target Due Date:</span>
+                  <span className={`font-semibold ${issue.status === "OVERDUE" ? "text-rose-400" : "text-[#F5EFE0]"}`}>
+                    {issue.dueDate || "Within 72 Hours"}
+                  </span>
+                </div>
+              </div>
+
+              {canUpdateProof && (
+                <button
+                  onClick={() => setIsUpdateModalOpen(true)}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer mt-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Update Status & Upload Proof</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Right Column (5/12): Assignment, Resolution & History Timeline */}
-        <div className="lg:col-span-5 space-y-5">
-          {/* Assignment & Operational Controls */}
-          <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-2">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
-                Field Squad Assignment
-              </h3>
-              <span className="text-xs text-emerald-400 font-semibold">Active Ticket</span>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[#8E9CAE]">Assigned Department:</span>
-                <strong className="text-[#D4A24C] text-right truncate max-w-[200px]">
-                  {issue.completedDepartment || issue.department || "General Administration"}
-                </strong>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[#8E9CAE]">
-                  {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By:" : "Assigned Field Agent:"}
-                </span>
-                <strong className="text-[#F5EFE0] text-right">
-                  {issue.completedByPerson || issue.assignedVolunteerName || currentUser.name}
-                </strong>
-              </div>
-
-              {issue.assignedVolunteerPhone && (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                  <span className="text-[#8E9CAE]">Agent Contact:</span>
-                  <a href={`tel:${issue.assignedVolunteerPhone}`} className="text-[#D4A24C] font-mono font-bold hover:underline">
-                    {issue.assignedVolunteerPhone}
-                  </a>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[#8E9CAE]">Target Due Date:</span>
-                <span className={`font-semibold ${issue.status === "OVERDUE" ? "text-rose-400" : "text-[#F5EFE0]"}`}>
-                  {issue.dueDate || "Within 72 Hours"}
-                </span>
-              </div>
-            </div>
-
-            {canUpdateProof && (
-              <button
-                onClick={() => setIsUpdateModalOpen(true)}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer mt-2"
-              >
-                <Camera className="w-4 h-4" />
-                <span>Update Status & Upload Proof</span>
-              </button>
-            )}
+        <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
+          <div className="flex items-center justify-between border-b border-[#223348]/70 pb-2">
+            <h3 className="text-sm font-semibold text-[#F5EFE0] flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#D4A24C]" />
+              Audit & Activity Timeline
+            </h3>
+            <span className="text-xs text-[#8E9CAE] font-mono">
+              {loadingHistory ? "Loading…" : `${history.length} record${history.length === 1 ? "" : "s"}`}
+            </span>
           </div>
 
-          {/* Chronological Audit & Activity Timeline */}
-          <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-2">
-              <h3 className="text-sm font-semibold text-[#F5EFE0] flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#D4A24C]" />
-                Audit & Activity Timeline
-              </h3>
-              <span className="text-xs text-[#8E9CAE] font-mono">
-                {history.length} record{history.length === 1 ? "" : "s"}
-              </span>
+          {loadingHistory ? (
+            <div className="p-6 text-center text-xs text-[#8E9CAE]">Loading timeline updates...</div>
+          ) : history.length === 0 ? (
+            <div className="p-4 rounded-xl bg-[#0B131E] text-center text-xs text-[#8E9CAE] border border-[#223348]">
+              Intake registered on {issue.reportedDate}. No additional ground actions logged yet.
             </div>
-
-            {loadingHistory ? (
-              <div className="p-6 text-center text-xs text-[#8E9CAE]">Loading timeline updates...</div>
-            ) : history.length === 0 ? (
-              <div className="p-4 rounded-xl bg-[#0B131E] text-center text-xs text-[#8E9CAE] border border-[#223348]">
-                Intake registered on {issue.reportedDate}. No additional ground actions logged yet.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {history.map((record) => (
-                  <div
-                    key={record.id}
-                    className="p-3.5 rounded-xl bg-[#0B131E] border border-[#223348] text-xs space-y-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${getStatusBadge(record.newStatus)}`}>
-                        {formatIssueStatus(record.newStatus)}
-                      </span>
-                      <span className="text-[11px] text-[#8E9CAE] font-mono">{record.updateDate}</span>
-                    </div>
-
-                    <p className="text-xs text-[#CBD5E1] leading-relaxed">{record.remarks}</p>
-
-                    {record.volunteerName && (
-                      <div className="text-[10px] text-[#8E9CAE] pt-1.5 border-t border-[#223348]/60">
-                        Logged by: <span className="text-[#D4A24C] font-semibold">{record.volunteerName}</span>
-                      </div>
-                    )}
+          ) : (
+            <div
+              className={`space-y-3 ${history.length > 6 ? "max-h-[70vh] overflow-y-auto pr-1" : ""}`}
+            >
+              {history.map((record) => (
+                <div
+                  key={record.id}
+                  className="p-3.5 rounded-xl bg-[#0B131E] border border-[#223348] text-xs space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${getStatusBadge(record.newStatus)}`}>
+                      {formatIssueStatus(record.newStatus)}
+                    </span>
+                    <span className="text-[11px] text-[#8E9CAE] font-mono">{record.updateDate}</span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+
+                  <p className="text-xs text-[#CBD5E1] leading-relaxed">{record.remarks}</p>
+
+                  {record.volunteerName && (
+                    <div className="text-[10px] text-[#8E9CAE] pt-1.5 border-t border-[#223348]/60">
+                      Logged by: <span className="text-[#D4A24C] font-semibold">{record.volunteerName}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

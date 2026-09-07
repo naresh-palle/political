@@ -313,9 +313,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
         {/* Modal Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
             {/* Left Column (7/12): Description, Location details, Proofs */}
-            <div className="md:col-span-7 space-y-4">
+            <div className="md:col-span-7 space-y-4 min-w-0">
               {/* Description Block */}
               <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-2">
                 <span className="text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold block">
@@ -380,10 +381,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               )}
             </div>
 
-            {/* Right Column (5/12): Field Responsibility & Timeline */}
-            <div className="md:col-span-5 space-y-4">
+            {/* Right Column (5/12): Field Responsibility */}
+            <div className="md:col-span-5 min-w-0">
               {/* Responsibility Card & Action CTA */}
-              <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-3">
+              <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-3 h-fit">
                 <div className="flex items-center justify-between">
                   <span className="text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold">
                     Field Assignment
@@ -422,6 +423,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   </button>
                 )}
               </div>
+            </div>
+          </div>
 
               {/* Status & Activity Timeline */}
               <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-3">
@@ -431,7 +434,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     Activity & Audit Timeline
                   </h4>
                   <span className="text-[10px] text-[#8E9CAE]">
-                    {history.length} log{history.length === 1 ? "" : "s"}
+                    {loadingHistory ? "Loading…" : `${history.length} log${history.length === 1 ? "" : "s"}`}
                   </span>
                 </div>
 
@@ -442,7 +445,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     Intake recorded. No additional progress updates logged yet.
                   </div>
                 ) : (
-                  <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                  <div className={`space-y-2.5 pr-1 ${history.length > 6 ? "max-h-72 overflow-y-auto" : ""}`}>
                     {history.map((record) => (
                       <div
                         key={record.id}
@@ -528,7 +531,6 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   </div>
                 )}
               </div>
-            </div>
           </div>
         </div>
       </div>
