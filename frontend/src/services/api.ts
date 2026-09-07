@@ -24,6 +24,67 @@ import {
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
 const BASE_URL = (import.meta as any).env?.BASE_URL || "/";
+const ISSUES_API_TIMEOUT_MS = 4000;
+const LIST_API_TIMEOUT_MS = 2500;
+const RETIRED_MOCK_IDS = new Set([
+  "iss-bng-101",
+  "iss-bng-102",
+  "iss-bng-103",
+  "iss-1002",
+  "iss-102",
+  "iss-103",
+  "iss-104"
+]);
+const TICKET_SEED = "ll-open-tickets-v2-2026-09-07";
+
+let cachedSeedIssues: any[] | null = null;
+let seedIssuesPromise: Promise<any[]> | null = null;
+let fieldIssuesInflight: Promise<any[]> | null = null;
+
+async function loadSeedIssues(): Promise<any[]> {
+  if (cachedSeedIssues) return cachedSeedIssues;
+  if (!seedIssuesPromise) {
+    seedIssuesPromise = fetch("./data/field_issues.json")
+      .then(async (res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        cachedSeedIssues = Array.isArray(data) ? data : [];
+        return cachedSeedIssues;
+      })
+      .catch(() => [])
+      .finally(() => {
+        seedIssuesPromise = null;
+      });
+  }
+  return seedIssuesPromise;
+}
+
+function mergeFieldIssueLists(seedList: any[], remoteList: any[]): any[] {
+  const byId = new Map<string, any>();
+  seedList.forEach((i: any) => {
+    if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, i);
+  });
+  remoteList.forEach((i: any) => {
+    if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, { ...(byId.get(i.id) || {}), ...i });
+  });
+  try {
+    const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+    if (savedRaw) {
+      const savedList = JSON.parse(savedRaw);
+      if (Array.isArray(savedList)) {
+        savedList.forEach((local: any) => {
+          if (!local?.id || RETIRED_MOCK_IDS.has(local.id)) return;
+          const current = byId.get(local.id);
+          if (!current) {
+            byId.set(local.id, local);
+            return;
+          }
+          byId.set(local.id, { ...local, ...current, status: current.status || local.status });
+        });
+      }
+    }
+  } catch (e) {}
+  return Array.from(byId.values());
+}
 
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 3000): Promise<Response> {
   const controller = new AbortController();
@@ -87,7 +148,7 @@ let notificationListInflight: Promise<any[]> | null = null;
 export const politicalApiService = {
   async getUsers(): Promise<UserProfile[]> {
     try {
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/users`);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/users`, {}, LIST_API_TIMEOUT_MS);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) return data;
@@ -907,7 +968,7 @@ export const politicalApiService = {
       const params = new URLSearchParams();
       if (assemblyConstituencyId) params.append("assemblyConstituencyId", assemblyConstituencyId);
       if (stateId) params.append("stateId", stateId);
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/mandals?${params.toString()}`);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/mandals?${params.toString()}`, {}, LIST_API_TIMEOUT_MS);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) return data;
@@ -936,7 +997,7 @@ export const politicalApiService = {
       const params = new URLSearchParams();
       if (mandalId) params.append("mandalId", mandalId);
       if (assemblyConstituencyId) params.append("assemblyConstituencyId", assemblyConstituencyId);
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/villages?${params.toString()}`);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/villages?${params.toString()}`, {}, LIST_API_TIMEOUT_MS);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) return data;
@@ -970,16 +1031,6 @@ export const politicalApiService = {
     priority?: string;
     q?: string;
   }): Promise<any[]> {
-    const TICKET_SEED = "ll-open-tickets-2026-09-07";
-    const RETIRED_MOCK_IDS = new Set([
-      "iss-bng-101",
-      "iss-bng-102",
-      "iss-bng-103",
-      "iss-1002",
-      "iss-102",
-      "iss-103",
-      "iss-104"
-    ]);
     try {
       if (localStorage.getItem("leaders_lens_ticket_seed") !== TICKET_SEED) {
         localStorage.removeItem("leaders_lens_created_field_issues");
@@ -987,9 +1038,9 @@ export const politicalApiService = {
       }
     } catch (e) {}
 
-    let list: any[] = [];
-    let fetchOk = false;
-    try {
+    if (fieldIssuesInflight) return fieldIssuesInflight;
+
+    fieldIssuesInflight = (async () => {
       const qp = new URLSearchParams();
       if (params?.userId) qp.append("userId", params.userId);
       if (params?.userRole) qp.append("userRole", params.userRole);
@@ -1000,90 +1051,53 @@ export const politicalApiService = {
       if (params?.priority) qp.append("priority", params.priority);
       if (params?.q) qp.append("q", params.q);
 
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues?${qp.toString()}`, {}, 15000);
-      if (res.ok) {
-        fetchOk = true;
-        const data = await res.json();
-        if (Array.isArray(data)) list = data.filter((i: any) => !RETIRED_MOCK_IDS.has(i?.id));
-      }
-    } catch (e) {
-      // Fallback
-    }
-
-    try {
-      const res = await fetch("./data/field_issues.json");
-      if (res.ok) {
-        const seedList = await res.json();
-        if (Array.isArray(seedList)) {
-          const byId = new Map<string, any>();
-          seedList.forEach((i: any) => {
-            if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, i);
-          });
-          list.forEach((i: any) => {
-            if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, { ...(byId.get(i.id) || {}), ...i });
-          });
-          list = Array.from(byId.values());
+      const remotePromise = (async () => {
+        try {
+          const res = await fetchWithTimeout(
+            `${RENDER_BACKEND_URL}/field-ops/issues?${qp.toString()}`,
+            {},
+            ISSUES_API_TIMEOUT_MS
+          );
+          if (!res.ok) return [] as any[];
+          const data = await res.json();
+          return Array.isArray(data) ? data : [];
+        } catch {
+          return [] as any[];
         }
+      })();
+
+      const [seedList, remoteList] = await Promise.all([loadSeedIssues(), remotePromise]);
+      let list = mergeFieldIssueLists(seedList, remoteList);
+
+      if (params?.userRole === "VOLUNTEER" && params?.userId) {
+        list = list.filter(
+          (i: any) =>
+            i.assignedVolunteerId === params.userId ||
+            i.createdBy === params.userId ||
+            i.volunteerId === params.userId
+        );
+      } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
+        const dId = params.directorId || params.userId;
+        list = list.filter((i: any) => i.directorId === dId || !i.directorId);
       }
-    } catch (e) {}
-
-    // Merge with locally created/updated issues from localStorage so status updates (IN_PROGRESS, RESOLVED, etc.) take precedence
-    try {
-      const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
-      if (savedRaw) {
-        const savedList = JSON.parse(savedRaw);
-        if (Array.isArray(savedList) && savedList.length > 0) {
-          const savedMap = new Map(savedList.map((i: any) => [i.id, i]));
-          const statusPriority: Record<string, number> = {
-            NEW: 1,
-            ASSIGNED: 2,
-            ACKNOWLEDGED: 3,
-            IN_PROGRESS: 4,
-            RESOLVED: 5,
-            REJECTED: 5,
-            COMPLETED: 5,
-            CLOSED: 6
-          };
-          list = list.map((item: any) => {
-            const local = savedMap.get(item.id);
-            if (!local) return item;
-            // Authoritative backend status always wins when the API returned the ticket.
-            return { ...local, ...item, status: item.status || local.status };
-          });
-          // Add any brand new items in savedList that weren't in list
-          const existingIds = new Set(list.map((i: any) => i.id));
-          const brandNew = savedList.filter((i: any) => !existingIds.has(i.id));
-          list = [...brandNew, ...list];
-        }
+      if (params?.mandalId && params.mandalId !== "ALL") {
+        list = list.filter((i: any) => i.mandalId === params.mandalId);
       }
-    } catch (e) {}
+      if (params?.villageId && params.villageId !== "ALL") {
+        list = list.filter((i: any) => i.villageId === params.villageId);
+      }
+      if (params?.status && params.status !== "ALL") {
+        list = list.filter((i: any) => i.status === params.status);
+      }
+      if (params?.priority && params.priority !== "ALL") {
+        list = list.filter((i: any) => i.priority === params.priority);
+      }
+      return list;
+    })().finally(() => {
+      fieldIssuesInflight = null;
+    });
 
-    // Apply filtering
-    if (params?.userRole === "VOLUNTEER" && params?.userId) {
-      list = list.filter(
-        (i: any) =>
-          i.assignedVolunteerId === params.userId ||
-          i.createdBy === params.userId ||
-          i.volunteerId === params.userId
-      );
-    } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
-      const dId = params.directorId || params.userId;
-      list = list.filter((i: any) => i.directorId === dId || !i.directorId);
-    }
-    if (params?.mandalId && params.mandalId !== "ALL") {
-      list = list.filter((i: any) => i.mandalId === params.mandalId);
-    }
-    if (params?.villageId && params.villageId !== "ALL") {
-      list = list.filter((i: any) => i.villageId === params.villageId);
-    }
-    if (params?.status && params.status !== "ALL") {
-      list = list.filter((i: any) => i.status === params.status);
-    }
-    if (params?.priority && params.priority !== "ALL") {
-      list = list.filter((i: any) => i.priority === params.priority);
-    }
-
-    return list;
+    return fieldIssuesInflight;
   },
 
   async createFieldIssue(payload: any): Promise<any> {

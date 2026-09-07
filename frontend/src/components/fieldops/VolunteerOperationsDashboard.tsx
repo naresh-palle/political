@@ -413,7 +413,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     loadVolunteerData(false);
     const interval = setInterval(() => {
       loadVolunteerData(true);
-    }, 5000);
+    }, 45000);
     const handleFocus = () => {
       loadVolunteerData(true);
     };
@@ -1620,20 +1620,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             const canAssign = isTicketOpenForAssign(issue.status);
                             if (!canAssign) {
                               return (
-                                <div>
-                                  <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                                      <span>🏛️</span> Assigned Dept
-                                    </span>
-                                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#0B131E] text-[#D4A24C] border border-[#D4A24C]/30">
-                                      {formatIssueStatus(issue.status)}
-                                    </span>
+                                <div className="space-y-1.5 min-w-0">
+                                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                                    Assigned dept
                                   </div>
-                                  <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words">
+                                  <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words leading-snug">
                                     {issue.department || "General Administration"}
-                                  </div>
-                                  <div className="text-[10px] text-[#8E9CAE] mt-1">
-                                    Category: <span className="text-[#CBD5E1] font-medium">{issue.category}</span>
                                   </div>
                                 </div>
                               );

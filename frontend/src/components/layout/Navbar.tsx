@@ -178,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Tab 2: Assign Tickets / Complaints */}
             <button
               onClick={() => {
-                window.location.hash = "#/assign-tickets";
+                window.location.hash = "#/assign-tickets?status=ALL";
                 onProductChange("assigntickets");
               }}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${

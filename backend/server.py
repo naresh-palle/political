@@ -1440,7 +1440,10 @@ async def get_field_issues(
         query = {}
         # Backend-enforced RBAC:
         if userRole == "VOLUNTEER" and userId:
-            query["assignedVolunteerId"] = userId
+            query["$or"] = [
+                {"assignedVolunteerId": userId},
+                {"createdBy": userId},
+            ]
         elif userRole == "DIRECTOR" and (userId or directorId):
             query["directorId"] = directorId or userId
         
@@ -1453,9 +1456,14 @@ async def get_field_issues(
         if priority and priority != "ALL":
             query["priority"] = priority
             
-        issues = await db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(1000)
+        issues = await mongo_wait(
+            db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(500),
+            timeout=2.0,
+            fallback=[],
+            tag="get_field_issues",
+        )
         if issues:
-            return sanitize_doc(overlay_in_memory_issues(issues))
+            IN_MEMORY_FIELD_ISSUES.update({i["id"]: i for i in issues if i.get("id")})
     except Exception as e:
         log_mongo_notice("get_field_issues", e)
     
@@ -1470,7 +1478,11 @@ async def get_field_issues(
         fallback = list(fallback_map.values())
 
     if userRole == "VOLUNTEER" and userId:
-        filtered = [i for i in fallback if i.get("assignedVolunteerId") == userId]
+        filtered = [
+            i
+            for i in fallback
+            if i.get("assignedVolunteerId") == userId or i.get("createdBy") == userId
+        ]
         fallback = filtered if filtered else fallback
     elif userRole == "DIRECTOR" and (userId or directorId):
         target_dir = directorId or userId

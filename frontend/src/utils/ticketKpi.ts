@@ -56,13 +56,10 @@ export function isRejectedStatus(status?: string | null): boolean {
 export function hasAssignee(issue: AssigneeFields): boolean {
   const status = normalizeIssueStatus(issue.status);
   if ((ASSIGNED_STATUSES as readonly string[]).includes(status)) return true;
-  const name = String(issue.assignedOfficialName || issue.assignedVolunteerName || "").trim();
-  if (name && name.toLowerCase() !== "unassigned") return true;
+  const official = String(issue.assignedOfficialName || "").trim();
+  if (official && official.toLowerCase() !== "unassigned") return true;
   return Boolean(
-    issue.assignedVolunteerId ||
-      issue.assignedOfficialPhone ||
-      issue.assignedDepartment ||
-      issue.departmentContactId
+    issue.assignedOfficialPhone || issue.assignedDepartment || issue.departmentContactId
   );
 }
 

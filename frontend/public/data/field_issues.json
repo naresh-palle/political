@@ -186,7 +186,10 @@
     "createdBy": "usr-demo-volunteer",
     "createdByRole": "VOLUNTEER",
     "createdAt": "2026-09-07T10:00:00Z",
-    "updatedAt": "2026-09-07T10:00:00Z"
+    "updatedAt": "2026-09-07T10:00:00Z",
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Demo Volunteer",
+    "assignedVolunteerPhone": "+91 98850 44003"
   },
   {
     "id": "iss-ll-open-02",
@@ -219,7 +222,10 @@
     "createdBy": "usr-demo-volunteer",
     "createdByRole": "VOLUNTEER",
     "createdAt": "2026-09-07T10:05:00Z",
-    "updatedAt": "2026-09-07T10:05:00Z"
+    "updatedAt": "2026-09-07T10:05:00Z",
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Demo Volunteer",
+    "assignedVolunteerPhone": "+91 98850 44003"
   },
   {
     "id": "iss-ll-open-03",
@@ -252,7 +258,10 @@
     "createdBy": "usr-demo-volunteer",
     "createdByRole": "VOLUNTEER",
     "createdAt": "2026-09-07T10:10:00Z",
-    "updatedAt": "2026-09-07T10:10:00Z"
+    "updatedAt": "2026-09-07T10:10:00Z",
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Demo Volunteer",
+    "assignedVolunteerPhone": "+91 98850 44003"
   },
   {
     "id": "iss-ll-open-04",
@@ -285,6 +294,9 @@
     "createdBy": "usr-demo-volunteer",
     "createdByRole": "VOLUNTEER",
     "createdAt": "2026-09-07T10:15:00Z",
-    "updatedAt": "2026-09-07T10:15:00Z"
+    "updatedAt": "2026-09-07T10:15:00Z",
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Demo Volunteer",
+    "assignedVolunteerPhone": "+91 98850 44003"
   }
 ]
