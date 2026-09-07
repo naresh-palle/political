@@ -12,6 +12,7 @@ import {
   X,
   UserPlus
 } from "lucide-react";
+import { downloadContactWorkbook } from "../../utils/contactExcelExport";
 
 export interface ContactRecord {
   id: string;
@@ -430,46 +431,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
   };
 
   const handleExportExcel = () => {
-    const headers = [
-      "ID",
-      "Name",
-      "Phone",
-      "Category",
-      "Designation",
-      "Mandal",
-      "Village",
-      "Occupation",
-      "Gender",
-      "Age",
-      "Voter ID",
-      "Notes"
-    ];
-
-    const rows = filteredContacts.map((c) => [
-      c.id,
-      `"${c.name}"`,
-      `"${c.phone}"`,
-      c.category,
-      `"${c.designation}"`,
-      `"${c.mandalName}"`,
-      `"${c.villageName}"`,
-      `"${c.occupation}"`,
-      c.gender,
-      c.age || "",
-      c.voterId || "",
-      `"${(c.notes || "").replace(/"/g, '""')}"`
-    ]);
-
-    const table = "\uFEFF" + [headers.join("\t"), ...rows.map((e) => e.join("\t"))].join("\n");
-    const blob = new Blob([table], { type: "application/vnd.ms-excel;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `LeadersLens_Contact_Database_${new Date().toISOString().split("T")[0]}.xls`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    downloadContactWorkbook(filteredContacts, "Banaganapalle");
   };
 
   const getCategoryBadge = (cat: ContactRecord["category"]) => {
