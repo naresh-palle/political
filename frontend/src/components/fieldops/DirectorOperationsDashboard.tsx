@@ -803,8 +803,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               </span>
               <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "Constituency Grievance Command"}</span>
             </div>
-            <p className="text-xs text-[#8E9CAE] mt-0.5">
-              Supervising Ground Grievance Intake & Resolutions across {mandals.length} Mandals
+            <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
+              {currentUser.name}
+            </h1>
+            <p className="text-xs text-[#8E9CAE] mt-0.5 flex flex-wrap items-center gap-x-3">
+              <span>{currentUser.designation || currentUser.roleTitle || `Supervising Ground Intake across ${mandals.length} Mandals`}</span>
+              {currentUser.email && <span>✉️ {currentUser.email}</span>}
+              {currentUser.phone && <span>📞 {currentUser.phone}</span>}
             </p>
           </div>
         </div>

@@ -443,8 +443,16 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   </button>
                 </div>
 
+                <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal">
+                  {currentUser.name}
+                </h1>
+
                 <p className="text-xs sm:text-sm text-[#D8CFB8] leading-relaxed">
                   {currentUser.designation || "Minister for Roads & Buildings and Infrastructure & Investments | MLA Banaganapalle"}
+                </p>
+                <p className="text-xs text-[#8E9CAE] flex flex-wrap items-center gap-x-3">
+                  {currentUser.email && <span>✉️ {currentUser.email}</span>}
+                  {currentUser.phone && <span>📞 {currentUser.phone}</span>}
                 </p>
 
                 {/* Portfolios Strip */}

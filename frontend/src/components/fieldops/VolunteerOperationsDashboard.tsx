@@ -1001,19 +1001,34 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
         {!isAssignTicketsMode && (
         <div className="space-y-5">
-          {/* Volunteer home: identity strip without name title, plus KPI cards */}
+          {/* Volunteer home: identity strip with name and assignment details */}
           <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
               <div className="flex items-start sm:items-center gap-4">
+                {currentUser.avatar && (
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg shrink-0"
+                  />
+                )}
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                       FIELD VOLUNTEER
                     </span>
                     <span className="text-xs font-semibold text-[#D4A24C] bg-[#142B45]/70 px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
-                      Banaganapalle AC (AC-140) · Nandyala PC
+                      {currentUser.assignedConstituency || "Banaganapalle AC (AC-140) · Nandyala PC"}
                     </span>
                   </div>
+                  <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal">
+                    {currentUser.name}
+                  </h1>
+                  <p className="text-xs text-[#8E9CAE] flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                    <span>{currentUser.designation || currentUser.roleTitle || "Field Volunteer"}</span>
+                    {currentUser.email && <span>✉️ {currentUser.email}</span>}
+                    {currentUser.phone && <span>📞 {currentUser.phone}</span>}
+                  </p>
                 </div>
               </div>
 
