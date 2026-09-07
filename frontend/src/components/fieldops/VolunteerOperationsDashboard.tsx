@@ -10,14 +10,7 @@ import {
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
-import {
-  countByKpi,
-  isInProgressStatus,
-  isOverdueStatus,
-  isPendingOpenStatus,
-  isRejectedStatus,
-  isResolvedClosedStatus
-} from "../../utils/ticketKpi";
+import { countByKpi, kpiBucket } from "../../utils/ticketKpi";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Plus,
@@ -678,17 +671,20 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     const thisMonthPrefix = todayStr.slice(0, 7); // "YYYY-MM"
 
     let list = issues.filter((item) => {
-      // Status filter — buckets are exclusive (pending does not include in progress / overdue)
-      if (filterStatus === "OVERDUE" && !isOverdueStatus(item.status)) return false;
+      const bucket = kpiBucket(item);
       if (
-        (filterStatus === "UNRESOLVED" || filterStatus === "PENDING") &&
-        !isPendingOpenStatus(item.status)
+        (filterStatus === "OPEN_UNASSIGNED" ||
+          filterStatus === "UNRESOLVED" ||
+          filterStatus === "PENDING") &&
+        bucket !== "OPEN_UNASSIGNED"
       )
         return false;
+      if (filterStatus === "ASSIGNED" && bucket !== "ASSIGNED") return false;
       if (filterStatus === "NEW" && item.status !== "NEW") return false;
-      if (filterStatus === "IN_PROGRESS" && !isInProgressStatus(item.status)) return false;
-      if (filterStatus === "RESOLVED" && !isResolvedClosedStatus(item.status)) return false;
-      if (filterStatus === "REJECTED" && !isRejectedStatus(item.status)) return false;
+      if (filterStatus === "IN_PROGRESS" && bucket !== "IN_PROGRESS") return false;
+      if (filterStatus === "OVERDUE" && bucket !== "OVERDUE") return false;
+      if (filterStatus === "RESOLVED" && bucket !== "RESOLVED") return false;
+      if (filterStatus === "REJECTED" && bucket !== "REJECTED") return false;
 
       // Category filter
       if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
@@ -1090,7 +1086,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           )}
 
           {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters - Screenshot 1) */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
             <div
               onClick={() => {
                 setSearchQuery("");
@@ -1119,17 +1115,38 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterPriority("ALL");
                 setFilterReporterType("ALL");
                 setDateFilter("ALL");
-                setFilterStatus("UNRESOLVED");
-                window.location.hash = "#/assign-tickets?status=UNRESOLVED";
+                setFilterStatus("OPEN_UNASSIGNED");
+                window.location.hash = "#/assign-tickets?status=OPEN_UNASSIGNED";
               }}
               className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-amber-500/60 cursor-pointer space-y-1 transition-all"
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block truncate">
-                Pending / Open
+                Open / Unassigned
               </span>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-amber-300">{kpiCounts.pendingOpen}</span>
-                <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Open</span>
+                <span className="text-2xl font-bold font-mono text-amber-300">{kpiCounts.openUnassigned}</span>
+                <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Pending</span>
+              </div>
+            </div>
+
+            <div
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("ASSIGNED");
+                window.location.hash = "#/assign-tickets?status=ASSIGNED";
+              }}
+              className="p-3.5 rounded-xl border border-[#22354D] bg-[#0F1E30] hover:border-violet-500/60 cursor-pointer space-y-1 transition-all"
+            >
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-violet-300 block truncate">
+                Assigned
+              </span>
+              <div className="flex items-baseline justify-between">
+                <span className="text-2xl font-bold font-mono text-violet-200">{kpiCounts.assigned}</span>
+                <span className="text-[10px] text-violet-400/80 font-mono font-semibold">Officer</span>
               </div>
             </div>
 
@@ -1350,7 +1367,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Status: All (Total Records)</option>
-              <option value="UNRESOLVED">Status: Pending / Open</option>
+              <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
+              <option value="ASSIGNED">Status: Assigned</option>
               <option value="IN_PROGRESS">Status: In Progress</option>
               <option value="OVERDUE">Status: Overdue</option>
               <option value="RESOLVED">Status: Resolved / Closed</option>
@@ -1605,8 +1623,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                           {(() => {
                             const canAssign = isTicketOpenForAssign(issue.status);
-                            const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
-
                             if (!canAssign) {
                               return (
                                 <div>
@@ -1614,10 +1630,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                                       <span>🏛️</span> Assigned Dept
                                     </span>
-                                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
-                                      isUnresolved ? "bg-amber-950 text-amber-300 border border-amber-500/40" : "bg-emerald-950 text-emerald-300 border border-emerald-500/40"
-                                    }`}>
-                                      {isUnresolved ? "Unresolved" : "Resolved"}
+                                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#0B131E] text-[#D4A24C] border border-[#D4A24C]/30">
+                                      {formatIssueStatus(issue.status)}
                                     </span>
                                   </div>
                                   <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words">

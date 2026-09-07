@@ -160,7 +160,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const volunteers = users.filter((u) => u.primaryRole === "VOLUNTEER");
   const kpiCounts = countByKpi(issues);
   const totalIssues = kpiCounts.total;
-  const pendingCount = kpiCounts.pendingOpen;
+  const pendingCount = kpiCounts.openUnassigned;
+  const assignedCount = kpiCounts.assigned;
   const inProgressCount = kpiCounts.inProgress;
   const completedCount = kpiCounts.resolvedClosed;
   const overdueCount = kpiCounts.overdue;
@@ -410,7 +411,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* KPI Overview Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
         <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
           <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Tickets</span>
           <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-1">{totalIssues}</div>
@@ -418,9 +419,15 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
-          <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">Pending / Open</span>
+          <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">Open / Unassigned</span>
           <div className="font-display text-2xl font-bold text-amber-400 mt-1">{pendingCount}</div>
-          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Awaiting action</span>
+          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Pending</span>
+        </div>
+
+        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+          <span className="text-[10px] uppercase tracking-wider text-violet-300 block font-semibold">Assigned</span>
+          <div className="font-display text-2xl font-bold text-violet-200 mt-1">{assignedCount}</div>
+          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Officer</span>
         </div>
 
         <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">

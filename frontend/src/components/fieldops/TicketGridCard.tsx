@@ -39,7 +39,6 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
   onAssignDepartment,
   onOpenWhatsAppAssign
 }) => {
-  const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
   const departmentLabel = issue.department?.split("(")[0]?.trim() || issue.category;
 
   return (
@@ -171,12 +170,16 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           </span>
           <span
             className={`shrink-0 text-[10.5px] font-mono font-bold px-2 py-0.5 rounded ${
-              isUnresolved
-                ? "bg-amber-950/80 text-amber-300 border border-amber-500/40"
-                : "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+              timing.isClosed || issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+                : issue.status === "IN_PROGRESS"
+                  ? "bg-sky-950/80 text-sky-300 border border-sky-500/40"
+                  : issue.status === "ASSIGNED" || issue.status === "ACKNOWLEDGED"
+                    ? "bg-violet-950/80 text-violet-200 border border-violet-500/40"
+                    : "bg-amber-950/80 text-amber-300 border border-amber-500/40"
             }`}
           >
-            {isUnresolved ? "Unresolved" : "Resolved"}
+            {formatIssueStatus(issue.status)}
           </span>
         </div>
 

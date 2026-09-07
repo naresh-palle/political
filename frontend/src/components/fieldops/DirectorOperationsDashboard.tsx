@@ -44,14 +44,8 @@ import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDa
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
-import {
-  countByKpi,
-  isInProgressStatus,
-  isOverdueStatus,
-  isPendingOpenStatus,
-  isRejectedStatus,
-  isResolvedClosedStatus
-} from "../../utils/ticketKpi";
+import { formatIssueStatus } from "../../utils/statusLabels";
+import { countByKpi, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -83,14 +77,16 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       const match = hash.match(/status=([A-Z_]+)/i);
       if (match && match[1]) {
         const val = match[1].toUpperCase();
-        return val === "UNRESOLVED" ? "PENDING" : val === "RESOLVED" ? "COMPLETED" : val;
+        if (val === "UNRESOLVED" || val === "PENDING") return "OPEN_UNASSIGNED";
+        if (val === "RESOLVED") return "COMPLETED";
+        return val;
       }
     }
     return "ALL";
   };
 
   // Active Status Tab State
-  const [activeTab, setActiveTab] = useState<string>(() => getStatusFromUrl() || (initialFilterStatus === "NEW" ? "PENDING" : initialFilterStatus || "ALL"));
+  const [activeTab, setActiveTab] = useState<string>(() => getStatusFromUrl() || (initialFilterStatus === "NEW" ? "OPEN_UNASSIGNED" : initialFilterStatus || "ALL"));
 
   useEffect(() => {
     const syncStatus = () => {
@@ -319,7 +315,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   // Top Tickets Metrics (pending/open does not include in progress)
   const kpiCounts = countByKpi(allOperationsList);
   const totalOperationsCount = kpiCounts.total;
-  const pendingCount = kpiCounts.pendingOpen;
+  const pendingCount = kpiCounts.openUnassigned;
   const completedCount = kpiCounts.resolvedClosed;
   const cantBeDoneCount = allOperationsList.filter(
     (i) => isOverdueStatus(i.status) || (i as any).status === "Can't be done"
@@ -454,12 +450,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const sortedAndFilteredOperations = useMemo(() => {
     let list = allOperationsList.filter((item) => {
       // Status Tabs
-      if (activeTab === "OVERDUE" && !isOverdueStatus(item.status)) return false;
-      if (activeTab === "CANT_BE_DONE" && !isOverdueStatus(item.status) && (item as any).status !== "Can't be done") return false;
-      if (activeTab === "PENDING" && !isPendingOpenStatus(item.status)) return false;
-      if (activeTab === "IN_PROGRESS" && !isInProgressStatus(item.status)) return false;
-      if (activeTab === "COMPLETED" && !isResolvedClosedStatus(item.status)) return false;
-      if (activeTab === "REJECTED" && !isRejectedStatus(item.status)) return false;
+      const bucket = kpiBucket(item);
+      if (activeTab === "OVERDUE" && bucket !== "OVERDUE") return false;
+      if (activeTab === "CANT_BE_DONE" && bucket !== "OVERDUE" && (item as any).status !== "Can't be done") return false;
+      if ((activeTab === "PENDING" || activeTab === "OPEN_UNASSIGNED") && bucket !== "OPEN_UNASSIGNED") return false;
+      if (activeTab === "ASSIGNED" && bucket !== "ASSIGNED") return false;
+      if (activeTab === "IN_PROGRESS" && bucket !== "IN_PROGRESS") return false;
+      if (activeTab === "COMPLETED" && bucket !== "RESOLVED") return false;
+      if (activeTab === "REJECTED" && bucket !== "REJECTED") return false;
 
       // Category, Department, Type Filters
       if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
@@ -891,15 +889,15 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
 
           <div
-            onClick={() => setActiveTab("PENDING")}
+            onClick={() => setActiveTab("OPEN_UNASSIGNED")}
             className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
-              activeTab === "PENDING"
+              activeTab === "OPEN_UNASSIGNED" || activeTab === "PENDING"
                 ? "bg-[#131E2D] border-[#D4A24C] shadow-lg ring-1 ring-[#D4A24C]/50"
                 : "bg-[#0B131E] border-[#223348] hover:border-blue-500/40"
             }`}
           >
             <span className="text-[10.5px] uppercase tracking-wider text-blue-300 block font-semibold">
-              Pending / Open
+              Open / Unassigned
             </span>
             <div className="font-display text-2xl sm:text-3xl font-bold text-blue-400 mt-1">
               {pendingCount}
@@ -1324,7 +1322,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       </div>
 
       {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
         <div
           onClick={() => {
             setSearchQuery("");
@@ -1359,21 +1357,46 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             setFilterDepartment("ALL");
             setFilterPriority("ALL");
             setFilterMandalId("ALL");
-            setActiveTab("PENDING");
-            window.location.hash = "#/assign-tickets?status=UNRESOLVED";
+            setActiveTab("OPEN_UNASSIGNED");
+            window.location.hash = "#/assign-tickets?status=OPEN_UNASSIGNED";
           }}
           className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
-            activeTab === "PENDING"
+            activeTab === "OPEN_UNASSIGNED" || activeTab === "PENDING"
               ? "bg-[#14263B] border-amber-400 shadow-md ring-1 ring-amber-400/40"
               : "bg-[#0F1E30] border-[#22354D] hover:border-amber-500/60"
           }`}
         >
           <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block truncate">
-            Pending / Open
+            Open / Unassigned
           </span>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-amber-300">{kpiCounts.pendingOpen}</span>
-            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Open</span>
+            <span className="text-2xl font-bold font-mono text-amber-300">{kpiCounts.openUnassigned}</span>
+            <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Pending</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => {
+            setSearchQuery("");
+            setFilterCategory("ALL");
+            setFilterDepartment("ALL");
+            setFilterPriority("ALL");
+            setFilterMandalId("ALL");
+            setActiveTab("ASSIGNED");
+            window.location.hash = "#/assign-tickets?status=ASSIGNED";
+          }}
+          className={`p-3.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
+            activeTab === "ASSIGNED"
+              ? "bg-[#14263B] border-violet-400 shadow-md ring-1 ring-violet-400/40"
+              : "bg-[#0F1E30] border-[#22354D] hover:border-violet-500/60"
+          }`}
+        >
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-violet-300 block truncate">
+            Assigned
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold font-mono text-violet-200">{kpiCounts.assigned}</span>
+            <span className="text-[10px] text-violet-400/80 font-mono font-semibold">Officer</span>
           </div>
         </div>
 
@@ -1584,7 +1607,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Status: All</option>
-              <option value="PENDING">Status: Pending / Open</option>
+              <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
+              <option value="ASSIGNED">Status: Assigned</option>
               <option value="IN_PROGRESS">Status: In Progress</option>
               <option value="OVERDUE">Status: Overdue</option>
               <option value="COMPLETED">Status: Resolved / Closed</option>
@@ -1975,8 +1999,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                       <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canAssign = isTicketOpenForAssign(issue.status);
-                          const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
-
                           if (!canAssign) {
                             return (
                               <div>
@@ -1984,10 +2006,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                                     <span>🏛️</span> Assigned Dept
                                   </span>
-                                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
-                                    isUnresolved ? "bg-amber-950 text-amber-300 border border-amber-500/40" : "bg-emerald-950 text-emerald-300 border border-emerald-500/40"
-                                  }`}>
-                                    {isUnresolved ? "Unresolved" : "Resolved"}
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-[#0B131E] text-[#D4A24C] border border-[#D4A24C]/30">
+                                    {issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                                      ? "Resolved"
+                                      : formatIssueStatus(issue.status)}
                                   </span>
                                 </div>
                                 <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words">
