@@ -13,6 +13,7 @@ import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { assignmentSafeStatus, countByKpi, kpiBucket, ticketStatusSurface } from "../../utils/ticketKpi";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
+import { OfficerStatusComments } from "./OfficerStatusComments";
 import {
   Plus,
   MapPin,
@@ -1200,6 +1201,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               </div>
             </div>
           </div>
+
+          <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
         </div>
         )}
 
@@ -1207,7 +1210,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         <div className="space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <p className="text-xs text-[#8E9CAE]">
-              Assign departments, inspect tickets, and review officer status updates.
+              Assign departments and inspect tickets.
             </p>
             <button
               onClick={() => setIsAddModalOpen(true)}
@@ -1218,61 +1221,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               <span>Add Complaint / Requirement</span>
             </button>
           </div>
-
-          {issues.filter(
-            (i) =>
-              ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
-              (i.lastStatusRemarks || i.lastStatusUpdateAt)
-          ).length > 0 && (
-            <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 space-y-2">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C]">
-                Officer status comments
-              </h2>
-              <div className="space-y-2 max-h-56 overflow-y-auto">
-                {issues
-                  .filter(
-                    (i) =>
-                      ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
-                      (i.lastStatusRemarks || i.lastStatusUpdateAt)
-                  )
-                  .sort(
-                    (a, b) =>
-                      new Date(b.lastStatusUpdateAt || b.updatedAt).getTime() -
-                      new Date(a.lastStatusUpdateAt || a.updatedAt).getTime()
-                  )
-                  .slice(0, 8)
-                  .map((i) => (
-                    <button
-                      key={`${i.id}-${i.status}-${i.lastStatusUpdateAt}`}
-                      type="button"
-                      onClick={() => setSelectedIssue(i)}
-                      className="w-full text-left p-3 rounded-xl bg-[#070D15] border border-[#223348] hover:border-[#D4A24C]/50 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-[11px] text-[#D4A24C] truncate">#{i.id}</span>
-                        <span className="text-[10px] font-bold uppercase text-amber-300 shrink-0">
-                          {formatIssueStatus(i.status)}
-                        </span>
-                      </div>
-                      <p className="text-[12px] text-[#F5EFE0] mt-1 line-clamp-2">
-                        {i.lastStatusRemarks?.trim() || "Officer updated this ticket."}
-                      </p>
-                    </button>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {issues.some((i) => i.lastStatusRemarks) && (
-            <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C] mb-2">
-                Officer status comments on these tickets
-              </h2>
-              <p className="text-[11px] text-[#8E9CAE]">
-                Each card and table row now shows the officer&apos;s In Progress / Resolved / Rejected comment.
-              </p>
-            </div>
-          )}
 
           {/* 2. Filter & Sort Master Toolbar */}
           <div className="p-4 rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg space-y-3 overflow-visible">

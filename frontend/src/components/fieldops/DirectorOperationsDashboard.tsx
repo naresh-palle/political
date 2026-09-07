@@ -44,6 +44,7 @@ import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
+import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { assignmentSafeStatus, countByKpi, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
@@ -859,7 +860,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       {isAssignTicketsMode && (
       <>
       <p className="text-xs text-[#8E9CAE]">
-        Assign departments, inspect tickets, and review officer status updates.
+        Assign departments and inspect tickets.
       </p>
       {/* 1. Official Tickets Master Summary Header Strip */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-xl space-y-4">
@@ -1539,6 +1540,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
 
       </>
       )}

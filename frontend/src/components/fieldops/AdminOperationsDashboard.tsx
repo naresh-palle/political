@@ -12,6 +12,7 @@ import { IssueDetailView } from "./IssueDetailView";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
+import { OfficerStatusComments } from "./OfficerStatusComments";
 import { assignmentSafeStatus, countByKpi, kpiBucket } from "../../utils/ticketKpi";
 import {
   ShieldCheck,
@@ -574,6 +575,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
+      <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
+
       {/* VIEW 1: INTERACTIVE GEOGRAPHIC DRILLDOWN TREE */}
       {viewMode === "DRILLDOWN" && (
         <div className="space-y-4">
@@ -802,7 +805,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       {isAssignTicketsMode && (
       <div className="space-y-4">
         <p className="text-xs text-[#8E9CAE]">
-          Assign departments, inspect tickets, and review officer status updates.
+          Assign departments and inspect tickets.
         </p>
       {/* VIEW 2: MASTER ISSUES GRID & SEARCH */}
         <div className="space-y-4">
