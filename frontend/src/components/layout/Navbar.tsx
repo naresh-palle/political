@@ -79,6 +79,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   useEffect(() => {
     loadUnreadNotifications();
+    const interval = setInterval(loadUnreadNotifications, 5000);
+    return () => clearInterval(interval);
   }, [currentProfile.id, currentProfile.primaryRole]);
 
   const loadUnreadNotifications = async () => {

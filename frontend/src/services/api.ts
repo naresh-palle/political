@@ -1018,12 +1018,8 @@ export const politicalApiService = {
           list = list.map((item: any) => {
             const local = savedMap.get(item.id);
             if (!local) return item;
-            const itemPrio = statusPriority[(item.status || "").toUpperCase()] || 0;
-            const localPrio = statusPriority[(local.status || "").toUpperCase()] || 0;
-            if (itemPrio >= localPrio) {
-              return { ...local, ...item, status: item.status };
-            }
-            return { ...item, ...local };
+            // Authoritative backend status always wins when the API returned the ticket.
+            return { ...local, ...item, status: item.status || local.status };
           });
           // Add any brand new items in savedList that weren't in list
           const existingIds = new Set(list.map((i: any) => i.id));
@@ -1090,85 +1086,43 @@ export const politicalApiService = {
   },
 
   async updateFieldIssueStatus(issueId: string, payload: any): Promise<any> {
+    const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: payload.status,
+        remarks: payload.remarks,
+        proofUrl: payload.proofUrl,
+        proofFiles: payload.proofFiles
+      })
+    });
+    if (!res.ok) {
+      let detail = "Failed to update ticket status.";
+      try {
+        const errBody = await res.json();
+        detail = errBody.detail || errBody.message || detail;
+      } catch {}
+      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    }
+    const data = await res.json();
+    const authoritativeStatus = data?.ticket?.status || data?.status || payload.status;
     try {
       const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
       const savedList = savedRaw ? JSON.parse(savedRaw) : [];
       const idx = savedList.findIndex((i: any) => i.id === issueId);
-      if (idx !== -1) {
-        savedList[idx] = {
-          ...savedList[idx],
-          ...payload,
-          status: payload.status || savedList[idx].status,
-          lastStatusRemarks: payload.remarks || payload.lastStatusRemarks || savedList[idx].lastStatusRemarks,
-          lastStatusProof: payload.proofUrl || payload.lastStatusProof || savedList[idx].lastStatusProof,
-          updatedAt: new Date().toISOString()
-        };
-      } else {
-        savedList.push({
-          id: issueId,
-          ...payload,
-          status: payload.status || "IN_PROGRESS",
-          lastStatusRemarks: payload.remarks,
-          lastStatusProof: payload.proofUrl,
-          updatedAt: new Date().toISOString()
-        });
-      }
+      const merged = {
+        ...(idx !== -1 ? savedList[idx] : { id: issueId }),
+        status: authoritativeStatus,
+        lastStatusRemarks: payload.remarks,
+        lastStatusProof: payload.proofUrl,
+        updatedAt: data?.ticket?.updatedAt || new Date().toISOString()
+      };
+      if (idx !== -1) savedList[idx] = { ...savedList[idx], ...merged };
+      else savedList.push(merged);
       localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(savedList));
     } catch (e) {}
-
-    // Dispatch live WhatsApp status update alert to Customer / Citizen
-    const metaToken =
-      localStorage.getItem("WHATSAPP_ACCESS_TOKEN") ||
-      (window as any).WHATSAPP_ACCESS_TOKEN ||
-      "EAAPfoO339fkBSerKDXs1dhvenNkaxhO6oRbDbfB8XGMzZAx8vv2HBPcQnPNjCo5tkUsZArIbj1sZAkC9wlZCJZApHBzPEbAZA4qiWhzzRZAfDTFsmZAQg2ZCZAlpZCpKyFjEfJF2W5dY0naIK2GZCVgDKbdyOnFmqpRZBmzHyaKWIycfF2QaExXZB6zrbyayyMzMgg0ZAclGgZDZD";
-    const phoneNumberId =
-      localStorage.getItem("WHATSAPP_PHONE_NUMBER_ID") ||
-      "1326513833874482";
-
-    const citizenPhoneRaw = (payload.reporterPhone || payload.citizenPhone || "9885765672").replace(/\D/g, "");
-    const formattedCitizenPhone = citizenPhoneRaw.length === 10 ? `91${citizenPhoneRaw}` : citizenPhoneRaw;
-    const targetCitizenPhones = Array.from(new Set([formattedCitizenPhone, "919885765672"].filter(Boolean)));
-
-    if (metaToken) {
-      for (const custPhone of targetCitizenPhones) {
-        try {
-          console.log(`[Meta WhatsApp API] Sending live status update alert (${payload.status}) to customer: ${custPhone}`);
-          await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${metaToken}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              messaging_product: "whatsapp",
-              recipient_type: "individual",
-              to: custPhone,
-              type: "text",
-              text: {
-                preview_url: true,
-                body: `🏛️ *LeaderLens Grievance Status Update*\n\nDear Citizen,\n\nYour grievance ticket *#${issueId.replace(/^#/, "")}* has been updated to status: *${payload.status}* by officer ${payload.completedByPerson || "Department Officer"} (${payload.completedDepartment || "Assigned Department"}).\n\n*Official Remarks / Field Notes:* "${payload.remarks || "Status updated"}"\n\nThank you for working with LeaderLens Command Center!\nOffice of Hon. B. C. Janardhan Reddy (MLA)`
-              }
-            })
-          });
-        } catch (custErr) {
-          console.warn("Failed to dispatch WhatsApp status update to customer:", custErr);
-        }
-      }
-    }
-
-    try {
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {
-      // Fallback
-    }
-    return { issueId, ...payload, updatedAt: new Date().toISOString() };
+    return data;
   },
-
   async sendWhatsAppOTP(phone: string, issueId: string): Promise<{ success: boolean; otp?: string; message: string }> {
     const cleanDigits = phone.replace(/\D/g, "");
     try {
@@ -1318,12 +1272,14 @@ export const politicalApiService = {
     } catch (e) {}
 
     let fetchedData: any[] = [];
+    let fetchOk = false;
     try {
       const qp = new URLSearchParams();
       if (recipientUserId) qp.append("recipientUserId", recipientUserId);
       if (recipientRole) qp.append("recipientRole", recipientRole);
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications?${qp.toString()}`);
       if (res.ok) {
+        fetchOk = true;
         const data = await res.json();
         if (Array.isArray(data)) {
           fetchedData = data;
@@ -1333,7 +1289,7 @@ export const politicalApiService = {
       // Fallback
     }
 
-    if (fetchedData.length === 0) {
+    if (!fetchOk && fetchedData.length === 0) {
       try {
         const res = await fetch("./data/field_notifications.json");
         if (res.ok) {
@@ -1358,7 +1314,7 @@ export const politicalApiService = {
     });
 
     if (recipientUserId) {
-      list = list.filter((n: any) => n.recipientUserId === recipientUserId || (recipientRole && n.recipientRole === recipientRole));
+      list = list.filter((n: any) => n.recipientUserId === recipientUserId);
     } else if (recipientRole) {
       list = list.filter((n: any) => n.recipientRole === recipientRole);
     }

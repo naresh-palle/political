@@ -8,6 +8,7 @@ import {
   MandalInfo
 } from "../../types";
 import { politicalApiService } from "../../services/api";
+import { formatIssueStatus } from "../../utils/statusLabels";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Plus,
@@ -449,6 +450,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       );
       setVolunteers(volList.length > 0 ? volList : [currentUser]);
       setIssues(issueList);
+      setSelectedIssue((prev) => {
+        if (!prev) return prev;
+        const fresh = issueList.find((i: FieldIssue) => i.id === prev.id);
+        return fresh ? { ...prev, ...fresh, status: fresh.status } : prev;
+      });
     } catch (e) {
       console.error(e);
       setVolunteers([currentUser]);
@@ -1657,7 +1663,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                   : "bg-blue-950/60 text-blue-300 border-blue-500/40"
                               }`}
                             >
-                              {issue.status}
+                              {formatIssueStatus(issue.status)}
                             </span>
                           </div>
                         </td>
