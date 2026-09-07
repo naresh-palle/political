@@ -1929,6 +1929,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                         <div className="text-[11px] text-[#8E9CAE] break-words mt-1 leading-relaxed">
                           {issue.description}
                         </div>
+                        <div className="mt-2 p-2 rounded-lg bg-[#142B45]/80 border border-[#D4A24C]/30">
+                          <div className="text-[9.5px] font-bold uppercase tracking-wider text-[#D4A24C]">
+                            Officer comment
+                          </div>
+                          <div className="text-[11px] text-[#F5EFE0] mt-0.5 break-words whitespace-pre-wrap">
+                            {issue.lastStatusRemarks?.trim() || "No officer comment on this status yet."}
+                          </div>
+                        </div>
                         <div className="mt-1.5 flex items-center gap-1.5">
                           <span
                             className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded ${

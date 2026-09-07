@@ -176,7 +176,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     if (type === "WORK_OVERDUE" || priority === "URGENT") {
       return <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />;
     }
-    if (type === "WORK_COMPLETED") {
+    if (type === "TICKET_STATUS_UPDATED" || type === "WORK_COMPLETED") {
       return <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
     }
     return <Bell className="w-4 h-4 text-[#D4A24C] shrink-0" />;

@@ -1349,6 +1349,42 @@ export const politicalApiService = {
     } else if (recipientRole) {
       list = list.filter((n: any) => n.recipientRole === recipientRole);
     }
+
+    if (recipientRole === "VOLUNTEER" && recipientUserId) {
+      try {
+        const issues = await this.getFieldIssues({ userId: recipientUserId, userRole: "VOLUNTEER" });
+        const derived = (issues || [])
+          .filter(
+            (issue: any) =>
+              ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(issue.status) &&
+              (issue.lastStatusUpdateAt || issue.lastStatusRemarks)
+          )
+          .map((issue: any) => {
+            const id = `ticket-status-${issue.id}-${issue.status}-${issue.lastStatusUpdateAt || issue.updatedAt || ""}`;
+            return {
+              id,
+              recipientUserId,
+              recipientRole: "VOLUNTEER",
+              type: "TICKET_STATUS_UPDATED",
+              title: `Officer update: ${issue.status.replace(/_/g, " ")}`,
+              message: `${issue.lastStatusRemarks?.trim() || "Department updated this ticket."} (Ticket ${issue.id})`,
+              issueId: issue.id,
+              resourceId: issue.id,
+              status: issue.status,
+              volunteerId: recipientUserId,
+              priority: issue.status === "REJECTED" || issue.status === "RESOLVED" ? "HIGH" : "NORMAL",
+              isRead: readIds.has(id),
+              createdAt: issue.lastStatusUpdateAt || issue.updatedAt
+            };
+          });
+        derived.forEach((n: any) => {
+          if (!list.some((x: any) => x.id === n.id || (x.issueId === n.issueId && x.type === "TICKET_STATUS_UPDATED" && x.status === n.status))) {
+            list.unshift(n);
+          }
+        });
+      } catch (e) {}
+    }
+
     return list;
   },
 

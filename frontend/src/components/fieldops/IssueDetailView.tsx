@@ -405,6 +405,22 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           );
         })()}
 
+        <div className="p-4 rounded-2xl bg-[#142B45] border border-[#D4A24C]/40 space-y-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
+            Officer status comment · {formatIssueStatus(issue.status)}
+          </span>
+          <p className="text-sm text-[#F5EFE0] leading-relaxed whitespace-pre-wrap break-words">
+            {issue.lastStatusRemarks?.trim()
+              || (issue as any).rejectionReason
+              || "No officer comment has been recorded for this status yet."}
+          </p>
+          {issue.lastStatusUpdateAt && (
+            <span className="text-[11px] font-mono text-[#8E9CAE] block">
+              Last officer update: {issue.lastStatusUpdateAt.replace("T", " ").slice(0, 19)}
+            </span>
+          )}
+        </div>
+
         {/* Highlights Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-xs">
           <div className="space-y-1">

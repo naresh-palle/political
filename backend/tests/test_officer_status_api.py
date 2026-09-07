@@ -63,7 +63,7 @@ def test_officer_status_creates_volunteer_notification_and_audit(monkeypatch):
     monkeypatch.setattr(srv, "db", _DB())
 
     async def fake_wa(payload):
-        assert payload.get("messageKind") == "TEMPLATE"
+        assert payload.get("messageKind") == "TEXT"
         assert payload.get("recipientPhone") in ("9876543210", "919876543210")
         return {
             "success": False,

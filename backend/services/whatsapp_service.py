@@ -381,13 +381,20 @@ class WhatsAppCloudApiClient:
 
             # Session text messages are often rejected; retry with the approved Cloud template.
             if message_kind == "TEXT":
-                logger.warning(
-                    "[WhatsApp] text failed ticket=%s metaHttp=%s; retrying approved template %s",
-                    ticket_ref, status_code, self.complainant_template_name,
+                dedicated = (self.complainant_template_name or "").strip()
+                if dedicated and dedicated.lower() not in ("officer_ticket_alert_v1", "hello_world"):
+                    logger.warning(
+                        "[WhatsApp] text failed ticket=%s metaHttp=%s; retrying complainant template %s",
+                        ticket_ref, status_code, dedicated,
+                    )
+                    retry_payload = dict(payload)
+                    retry_payload["messageKind"] = "COMPLAINANT_STATUS"
+                    return await self.send_whatsapp_notification(retry_payload)
+                return _fail(
+                    "NEEDS_COMPLAINANT_TEMPLATE",
+                    "Complainant WhatsApp needs an approved Meta template for citizens. The officer ticket template cannot be used for the complaint person.",
+                    http_status=status_code,
                 )
-                retry_payload = dict(payload)
-                retry_payload["messageKind"] = "COMPLAINANT_STATUS"
-                return await self.send_whatsapp_notification(retry_payload)
 
             safe = _safe_provider_error(res_json, error_msg_fallback)
             return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)

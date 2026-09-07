@@ -675,6 +675,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       if (filterStatus === "NEW" && item.status !== "NEW") return false;
       if (filterStatus === "IN_PROGRESS" && item.status !== "IN_PROGRESS") return false;
       if (filterStatus === "RESOLVED" && !["COMPLETED", "RESOLVED"].includes(item.status)) return false;
+      if (filterStatus === "REJECTED" && item.status !== "REJECTED") return false;
 
       // Category filter
       if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
@@ -712,7 +713,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           (item.mandalName || "").toLowerCase().includes(q) ||
           item.reportedBy.toLowerCase().includes(q) ||
           (item.reporterPhone || "").includes(q) ||
-          (item.department || "").toLowerCase().includes(q)
+          (item.department || "").toLowerCase().includes(q) ||
+          (item.lastStatusRemarks || "").toLowerCase().includes(q)
         );
       }
 
@@ -1028,6 +1030,50 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
           </div>
 
+          {issues.filter(
+            (i) =>
+              ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
+              (i.lastStatusRemarks || i.lastStatusUpdateAt)
+          ).length > 0 && (
+            <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 space-y-2">
+              <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C]">
+                Officer status comments
+              </h2>
+              <div className="space-y-2 max-h-56 overflow-y-auto">
+                {issues
+                  .filter(
+                    (i) =>
+                      ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
+                      (i.lastStatusRemarks || i.lastStatusUpdateAt)
+                  )
+                  .sort(
+                    (a, b) =>
+                      new Date(b.lastStatusUpdateAt || b.updatedAt).getTime() -
+                      new Date(a.lastStatusUpdateAt || a.updatedAt).getTime()
+                  )
+                  .slice(0, 8)
+                  .map((i) => (
+                    <button
+                      key={`${i.id}-${i.status}-${i.lastStatusUpdateAt}`}
+                      type="button"
+                      onClick={() => setSelectedIssue(i)}
+                      className="w-full text-left p-3 rounded-xl bg-[#070D15] border border-[#223348] hover:border-[#D4A24C]/50 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-[11px] text-[#D4A24C] truncate">#{i.id}</span>
+                        <span className="text-[10px] font-bold uppercase text-amber-300 shrink-0">
+                          {formatIssueStatus(i.status)}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-[#F5EFE0] mt-1 line-clamp-2">
+                        {i.lastStatusRemarks?.trim() || "Officer updated this ticket."}
+                      </p>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters - Screenshot 1) */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
             <div
@@ -1186,6 +1232,17 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </button>
           </div>
 
+          {issues.some((i) => i.lastStatusRemarks) && (
+            <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40">
+              <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C] mb-2">
+                Officer status comments on these tickets
+              </h2>
+              <p className="text-[11px] text-[#8E9CAE]">
+                Each card and table row now shows the officer&apos;s In Progress / Resolved / Rejected comment.
+              </p>
+            </div>
+          )}
+
           {/* 2. Filter & Sort Master Toolbar */}
           <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
         {/* Row 1: Search, Sort & View Mode */}
@@ -1292,6 +1349,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               <option value="NEW">Status: 🟡 New Only</option>
               <option value="IN_PROGRESS">Status: 🔵 In Progress</option>
               <option value="RESOLVED">Status: 🟢 Resolved / Completed</option>
+              <option value="REJECTED">Status: ⛔ Rejected</option>
               <option value="OVERDUE">Status: 🔴 Overdue</option>
             </select>
           </div>
@@ -1524,6 +1582,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           </div>
                           <div className="text-[11px] text-[#8E9CAE] break-words mt-1 leading-relaxed">
                             {issue.description}
+                          </div>
+                          <div className="mt-2 p-2 rounded-lg bg-[#142B45]/80 border border-[#D4A24C]/30">
+                            <div className="text-[9.5px] font-bold uppercase tracking-wider text-[#D4A24C]">
+                              Officer comment · {formatIssueStatus(issue.status)}
+                            </div>
+                            <div className="text-[11px] text-[#F5EFE0] mt-0.5 break-words whitespace-pre-wrap">
+                              {issue.lastStatusRemarks?.trim() || "No officer comment on this status yet."}
+                            </div>
                           </div>
                         </td>
                         <td className="py-3 px-3 align-top">

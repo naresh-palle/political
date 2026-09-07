@@ -147,6 +147,23 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         )}
       </div>
 
+      <div className="mt-2 p-2.5 rounded-xl bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]">
+          Officer status comment · {formatIssueStatus(issue.status)}
+        </div>
+        <p className="mt-1 text-[12px] text-[#F5EFE0] leading-relaxed whitespace-pre-wrap break-words">
+          {issue.lastStatusRemarks?.trim()
+            || (issue as any).rejectionReason
+            || (issue as any).notes
+            || "No officer comment on this status yet."}
+        </p>
+        {issue.lastStatusUpdateAt && (
+          <div className="mt-1 text-[10px] font-mono text-[#8E9CAE]">
+            Updated {issue.lastStatusUpdateAt.replace("T", " ").slice(0, 16)}
+          </div>
+        )}
+      </div>
+
       <div className="mt-auto pt-3 space-y-2 min-w-0" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-2 text-[11px] min-w-0">
           <span className="min-w-0 truncate text-[#8E9CAE]">

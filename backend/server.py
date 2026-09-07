@@ -1760,24 +1760,66 @@ async def get_issue_history(issue_id: str):
     ]
 
 @api_router.get("/field-ops/notifications")
-async def get_field_notifications(recipientUserId: Optional[str] = None, recipientRole: Optional[str] = None):
+async def get_field_notifications(recipientUserId: Optional[str] = Query(None), recipientRole: Optional[str] = Query(None)):
+    db_notifs = []
+    issue_ids = []
     try:
-        query = {}
+        query: dict = {}
         if recipientUserId:
-            query["recipientUserId"] = recipientUserId
+            try:
+                tickets = await db.field_issues.find(
+                    {
+                        "$or": [
+                            {"assignedVolunteerId": recipientUserId},
+                            {"createdBy": recipientUserId},
+                        ]
+                    },
+                    {"_id": 0, "id": 1},
+                ).to_list(300)
+                issue_ids = [t.get("id") for t in tickets if t.get("id")]
+            except Exception as ticket_err:
+                log_mongo_notice("notifications ticket lookup", ticket_err)
+            or_filters = [
+                {"recipientUserId": recipientUserId},
+                {"volunteerId": recipientUserId, "type": "TICKET_STATUS_UPDATED"},
+            ]
+            if issue_ids:
+                or_filters.append({"type": "TICKET_STATUS_UPDATED", "issueId": {"$in": issue_ids}})
+                or_filters.append({"type": "TICKET_STATUS_UPDATED", "resourceId": {"$in": issue_ids}})
+            query["$or"] = or_filters
         elif recipientRole:
             query["recipientRole"] = recipientRole
-        notifs = await db.field_notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
-        if notifs:
-            return notifs
+        res = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(200)
+        if res:
+            db_notifs = list(res)
+        extra = await db.field_notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(200)
+        if extra:
+            db_notifs = db_notifs + list(extra)
     except Exception as e:
-        logger.warning(f"MongoDB get field_notifications: {e}")
-    fallback = load_json_fallback("field_notifications.json")
+        log_mongo_notice("get_field_notifications", e)
+
+    combined = list(IN_MEMORY_NOTIFICATIONS) + db_notifs
     if recipientUserId:
-        fallback = [n for n in fallback if n.get("recipientUserId") == recipientUserId]
+        combined = [
+            n for n in combined
+            if n.get("recipientUserId") == recipientUserId
+            or (n.get("volunteerId") == recipientUserId and n.get("type") == "TICKET_STATUS_UPDATED")
+            or (
+                n.get("type") == "TICKET_STATUS_UPDATED"
+                and ((n.get("issueId") in issue_ids) or (n.get("resourceId") in issue_ids))
+            )
+        ]
     elif recipientRole:
-        fallback = [n for n in fallback if n.get("recipientRole") == recipientRole]
-    return fallback
+        combined = [n for n in combined if n.get("recipientRole") == recipientRole]
+
+    seen = set()
+    deduped = []
+    for n in combined:
+        nid = n.get("id")
+        if nid and nid not in seen:
+            seen.add(nid)
+            deduped.append(n)
+    return sanitize_doc(deduped)
 
 @api_router.patch("/field-ops/notifications/{notification_id}/read")
 async def mark_notification_read(notification_id: str):
@@ -2276,11 +2318,11 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     sanitize_doc(pending_audit)
     IN_MEMORY_NOTIFICATION_AUDITS.insert(0, sanitize_doc(dict(pending_audit)))
 
-    # Use the same approved Cloud template that already delivers officer alerts.
-    # Session text is rejected outside the 24h window, so do not send TEXT first.
+    # Session text first (works inside 24h). Outside that window a dedicated
+    # complainant Meta template is required — do not reuse the officer template.
     wa_payload = {
         "recipientPhone": complainant_phone,
-        "messageKind": "TEMPLATE",
+        "messageKind": "TEXT",
         "event": event_type,
         "eventType": event_type,
         "ticketNumber": ticket_number,
@@ -2631,46 +2673,6 @@ async def get_issue_history(issue_id: str):
         }
     ]
     return sanitize_doc(fallback)
-
-@api_router.get("/field-ops/notifications")
-async def get_field_notifications(recipientUserId: Optional[str] = Query(None), recipientRole: Optional[str] = Query(None)):
-    db_notifs = []
-    try:
-        query = {}
-        if recipientUserId:
-            query["$or"] = [
-                {"recipientUserId": recipientUserId},
-                {"volunteerId": recipientUserId, "type": "TICKET_STATUS_UPDATED"},
-            ]
-        elif recipientRole:
-            query["recipientRole"] = recipientRole
-        res = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
-        if res:
-            db_notifs = list(res)
-        extra = await db.field_notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
-        if extra:
-            db_notifs = db_notifs + list(extra)
-    except Exception as e:
-        log_mongo_notice("get_field_notifications", e)
-
-    combined = list(IN_MEMORY_NOTIFICATIONS) + db_notifs
-    if recipientUserId:
-        combined = [
-            n for n in combined
-            if n.get("recipientUserId") == recipientUserId
-            or (n.get("volunteerId") == recipientUserId and n.get("type") == "TICKET_STATUS_UPDATED")
-        ]
-    elif recipientRole:
-        combined = [n for n in combined if n.get("recipientRole") == recipientRole]
-
-    seen = set()
-    deduped = []
-    for n in combined:
-        nid = n.get("id")
-        if nid and nid not in seen:
-            seen.add(nid)
-            deduped.append(n)
-    return sanitize_doc(deduped)
 
 @api_router.post("/field-ops/notifications")
 async def create_field_notification(payload: dict):
