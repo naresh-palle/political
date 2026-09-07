@@ -97,7 +97,39 @@ def test_officer_status_creates_volunteer_notification_and_audit(monkeypatch):
     assert srv.IN_MEMORY_ISSUE_HISTORY[0]["previousStatus"] == "ASSIGNED"
 
 
-def test_rejected_without_reason_is_422():
+def test_assign_notify_does_not_overwrite_in_progress(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"] = {
+        **_issue(status="IN_PROGRESS"),
+        "lastStatusRemarks": "on site",
+    }
+
+    mock_issues = MagicMock()
+    mock_issues.find_one = AsyncMock(return_value=_issue(status="IN_PROGRESS"))
+    mock_issues.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
+
+    class _DB:
+        field_issues = mock_issues
+        users = MagicMock()
+        notification_audits = MagicMock()
+
+    _DB.users.find_one = AsyncMock(return_value=None)
+    _DB.notification_audits.insert_one = AsyncMock(return_value=None)
+    monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(
+        srv.whatsapp_client,
+        "send_whatsapp_notification",
+        AsyncMock(return_value={"success": True, "status": "SENT"}),
+    )
+
+    result = asyncio.run(
+        srv.assign_and_notify_whatsapp("iss-e2e-1", {"assignedDeptName": "R&B", "assignedOfficialName": "Officer A"})
+    )
+    assert result["issue"]["status"] == "IN_PROGRESS"
+    args = mock_issues.update_one.await_args
+    assert args[0][1]["$set"].get("status") != "ASSIGNED"
     import asyncio
     from fastapi import HTTPException
     from backend import server as srv

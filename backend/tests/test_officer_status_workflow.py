@@ -64,6 +64,18 @@ def test_complainant_phone_prefers_ticket_fields():
     assert phone.endswith("3210")
 
 
-def test_ticket_number():
+def test_preserve_in_progress_against_open():
+    from backend.services.officer_status_workflow import merge_issue_docs, should_preserve_progress_status
+
+    assert should_preserve_progress_status("IN_PROGRESS", "NEW")
+    assert should_preserve_progress_status("IN_PROGRESS", "ASSIGNED")
+    assert not should_preserve_progress_status("IN_PROGRESS", "RESOLVED")
+    merged = merge_issue_docs(
+        {"id": "iss-1", "status": "IN_PROGRESS", "lastStatusRemarks": "on site"},
+        {"id": "iss-1", "status": "NEW", "title": "seed"},
+    )
+    assert merged["status"] == "IN_PROGRESS"
+    assert merged["lastStatusRemarks"] == "on site"
+    assert merged["title"] == "seed"
     assert ticket_display_number({"id": "iss-ab12"}).startswith("LL-")
     assert normalize_status(" in_progress ") == "IN_PROGRESS"

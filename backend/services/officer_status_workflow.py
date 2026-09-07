@@ -151,6 +151,45 @@ def volunteer_phone_from_issue(issue: Dict[str, Any]) -> str:
     )
 
 
+OFFICER_LOCKED_STATUSES = frozenset({"IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED", "CLOSED"})
+WEAKER_THAN_OFFICER = frozenset(
+    {"NEW", "ASSIGNED", "ACKNOWLEDGED", "ASSIGNED_TO_DEPARTMENT", "OPEN", "OPEN_UNASSIGNED", ""}
+)
+
+
+def is_officer_locked_status(status: Optional[str]) -> bool:
+    return normalize_status(status) in OFFICER_LOCKED_STATUSES
+
+
+def should_preserve_progress_status(current_status: Optional[str], incoming_status: Optional[str]) -> bool:
+    """Do not let assign-notify, seed JSON, or stale Mongo overwrite officer work."""
+    current = normalize_status(current_status)
+    incoming = normalize_status(incoming_status)
+    if current not in OFFICER_LOCKED_STATUSES:
+        return False
+    if incoming in OFFICER_LOCKED_STATUSES:
+        return False
+    return incoming in WEAKER_THAN_OFFICER or incoming not in OFFICER_LOCKED_STATUSES
+
+
+def merge_issue_docs(base: Optional[Dict[str, Any]], overlay: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Merge ticket records so In Progress / Resolved / Rejected cannot revert to Open."""
+    if not base:
+        return dict(overlay or {})
+    if not overlay:
+        return dict(base)
+    merged = {**base, **overlay}
+    if should_preserve_progress_status(base.get("status"), overlay.get("status")):
+        merged["status"] = base.get("status")
+        if base.get("lastStatusRemarks") and not overlay.get("lastStatusRemarks"):
+            merged["lastStatusRemarks"] = base.get("lastStatusRemarks")
+        if base.get("lastStatusUpdateAt") and not overlay.get("lastStatusUpdateAt"):
+            merged["lastStatusUpdateAt"] = base.get("lastStatusUpdateAt")
+        if base.get("lastStatusProof") and not overlay.get("lastStatusProof"):
+            merged["lastStatusProof"] = base.get("lastStatusProof")
+    return merged
+
+
 def ticket_display_number(issue: Dict[str, Any]) -> str:
     raw = issue.get("ticketNumber") or issue.get("id") or "LL-TICKET"
     raw = str(raw)

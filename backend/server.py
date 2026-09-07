@@ -37,6 +37,8 @@ try:
         volunteer_notification_copy,
         volunteer_phone_from_issue,
         volunteer_recipient_ids,
+        merge_issue_docs,
+        should_preserve_progress_status,
     )
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
@@ -52,12 +54,14 @@ except ImportError:
         volunteer_notification_copy,
         volunteer_phone_from_issue,
         volunteer_recipient_ids,
+        merge_issue_docs,
+        should_preserve_progress_status,
     )
 
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'political_intelligence')
 
-client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=15000)
 db = client[db_name]
 
 app = FastAPI(title="Leader's Lens Political Intelligence API", version="1.0.0")
@@ -124,6 +128,11 @@ async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = 
         return fallback
 
 
+async def mongo_write(awaitable, timeout: float = 20.0, tag: str = "mongo_write"):
+    """Officer status must land in Mongo. Timeouts are failures, not silent success."""
+    return await asyncio.wait_for(awaitable, timeout=timeout)
+
+
 def log_mongo_notice(tag: str, exc: Exception):
     """
     Filters out noisy 'Connection refused' connection timeout logs when running in offline/demo mode,
@@ -142,7 +151,7 @@ def overlay_in_memory_issues(issues: list) -> list:
     merged = {i.get("id"): dict(i) for i in issues if isinstance(i, dict) and i.get("id")}
     for issue_id, mem in IN_MEMORY_FIELD_ISSUES.items():
         if issue_id in merged:
-            merged[issue_id].update(mem)
+            merged[issue_id] = merge_issue_docs(merged[issue_id], mem)
         else:
             merged[issue_id] = dict(mem)
     return list(merged.values())
@@ -152,7 +161,7 @@ def resolve_stored_issue(issue_id: str, mongo_doc: Optional[dict] = None) -> Opt
         base = dict(mongo_doc)
         mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
         if mem:
-            base.update(mem)
+            base = merge_issue_docs(base, mem)
         return sanitize_doc(base)
     if issue_id in IN_MEMORY_FIELD_ISSUES:
         return sanitize_doc(dict(IN_MEMORY_FIELD_ISSUES[issue_id]))
@@ -161,7 +170,7 @@ def resolve_stored_issue(issue_id: str, mongo_doc: Optional[dict] = None) -> Opt
     if found:
         mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
         if mem:
-            found = {**found, **mem}
+            found = merge_issue_docs(found, mem)
         return sanitize_doc(found)
     return None
 
@@ -1436,6 +1445,7 @@ async def get_field_issues(
     priority: Optional[str] = None,
     q: Optional[str] = None
 ):
+    issues = []
     try:
         query = {}
         # Backend-enforced RBAC:
@@ -1458,23 +1468,33 @@ async def get_field_issues(
             
         issues = await mongo_wait(
             db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(500),
-            timeout=2.0,
+            timeout=12.0,
             fallback=[],
             tag="get_field_issues",
         )
         if issues:
-            IN_MEMORY_FIELD_ISSUES.update({i["id"]: i for i in issues if i.get("id")})
+            for doc in issues:
+                iid = doc.get("id")
+                if not iid:
+                    continue
+                existing = IN_MEMORY_FIELD_ISSUES.get(iid)
+                IN_MEMORY_FIELD_ISSUES[iid] = merge_issue_docs(doc, existing) if existing else dict(doc)
     except Exception as e:
         log_mongo_notice("get_field_issues", e)
     
     fallback = load_json_fallback("field_issues.json")
+    fallback_map = {i["id"]: dict(i) for i in fallback if i.get("id")}
+    if issues:
+        for doc in issues:
+            iid = doc.get("id")
+            if not iid:
+                continue
+            fallback_map[iid] = merge_issue_docs(fallback_map.get(iid), doc)
     if IN_MEMORY_FIELD_ISSUES:
-        fallback_map = {i["id"]: dict(i) for i in fallback}
         for k, v in IN_MEMORY_FIELD_ISSUES.items():
-            if k in fallback_map:
-                fallback_map[k].update(v)
-            else:
-                fallback_map[k] = dict(v)
+            fallback_map[k] = merge_issue_docs(fallback_map.get(k), v)
+        fallback = list(fallback_map.values())
+    else:
         fallback = list(fallback_map.values())
 
     if userRole == "VOLUNTEER" and userId:
@@ -1515,7 +1535,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
         if issue:
             mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
             if mem:
-                issue = {**issue, **mem}
+                issue = merge_issue_docs(issue, mem)
             if userRole == "VOLUNTEER" and userId:
                 if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
                     raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
@@ -2285,12 +2305,37 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     persisted = sanitize_doc(dict(issue))
     IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
 
+    persist_error = None
+    for attempt in range(3):
+        try:
+            await mongo_write(
+                db.field_issues.update_one({"id": issue_id}, {"$set": persisted}, upsert=True),
+                timeout=20.0,
+                tag="officer_status_persist",
+            )
+            persist_error = None
+            break
+        except Exception as e:
+            persist_error = e
+            log_mongo_notice(f"atomic officer status persist try={attempt + 1}", e)
+    if persist_error:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not save ticket status to the database. Please try again.",
+        )
     try:
-        await db.field_issues.update_one({"id": issue_id}, {"$set": persisted}, upsert=True)
-        await db.issue_history.insert_one(sanitize_doc(dict(history_record)))
-        await db.work_updates.insert_one(sanitize_doc(dict(history_record)))
+        await mongo_write(
+            db.issue_history.insert_one(sanitize_doc(dict(history_record))),
+            timeout=12.0,
+            tag="officer_status_history",
+        )
+        await mongo_write(
+            db.work_updates.insert_one(sanitize_doc(dict(history_record))),
+            timeout=12.0,
+            tag="officer_status_work_update",
+        )
     except Exception as e:
-        log_mongo_notice("atomic officer status persist", e)
+        log_mongo_notice("officer status history persist", e)
 
     sanitize_doc(history_record)
     IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(dict(history_record)))
@@ -2493,6 +2538,8 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
         logger.warning(f"MongoDB find issue {issue_id}: {e}")
         
     if not issue:
+        issue = resolve_stored_issue(issue_id)
+    if not issue:
         issue = {
             "id": issue_id,
             "title": payload.get("title") or payload.get("issueTitle") or f"Grievance Ticket #{issue_id}",
@@ -2511,6 +2558,10 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
 
     if isinstance(issue, dict) and "_id" in issue:
         issue.pop("_id")
+
+    mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
+    if mem:
+        issue = merge_issue_docs(issue, mem)
         
     # 2. Server-side Context Resolution: Resolve Political Leader / Admin
     #    Do NOT trust frontend leader overrides. Derive from database.
@@ -2583,10 +2634,11 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
         "assignedDepartment": dept_name,
         "assignedOfficialName": officer_name,
         "assignedOfficialPhone": officer_phone,
-        "status": "ASSIGNED",
         "assignedAt": now_iso,
         "updatedAt": now_iso
     }
+    if not should_preserve_progress_status(issue.get("status"), "ASSIGNED"):
+        update_data["status"] = "ASSIGNED"
     
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": update_data})

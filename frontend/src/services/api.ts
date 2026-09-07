@@ -24,7 +24,7 @@ import {
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
 const BASE_URL = (import.meta as any).env?.BASE_URL || "/";
-const ISSUES_API_TIMEOUT_MS = 4000;
+const ISSUES_API_TIMEOUT_MS = 12000;
 const LIST_API_TIMEOUT_MS = 2500;
 const RETIRED_MOCK_IDS = new Set([
   "iss-bng-101",
@@ -71,13 +71,30 @@ async function loadSeedIssues(): Promise<any[]> {
   return seedIssuesPromise;
 }
 
+const OFFICER_LOCKED_STATUSES = new Set(["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED", "CLOSED"]);
+
+function mergeIssueRecords(base: any, overlay: any): any {
+  if (!base) return overlay ? { ...overlay } : {};
+  if (!overlay) return { ...base };
+  const merged = { ...base, ...overlay };
+  const current = String(base.status || "").toUpperCase();
+  const incoming = String(overlay.status || "").toUpperCase();
+  if (OFFICER_LOCKED_STATUSES.has(current) && !OFFICER_LOCKED_STATUSES.has(incoming)) {
+    merged.status = base.status;
+    merged.lastStatusRemarks = overlay.lastStatusRemarks || base.lastStatusRemarks;
+    merged.lastStatusUpdateAt = overlay.lastStatusUpdateAt || base.lastStatusUpdateAt;
+    merged.lastStatusProof = overlay.lastStatusProof || base.lastStatusProof;
+  }
+  return merged;
+}
+
 function mergeFieldIssueLists(seedList: any[], remoteList: any[]): any[] {
   const byId = new Map<string, any>();
   seedList.forEach((i: any) => {
     if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, i);
   });
   remoteList.forEach((i: any) => {
-    if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, { ...(byId.get(i.id) || {}), ...i });
+    if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, mergeIssueRecords(byId.get(i.id), i));
   });
   try {
     const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
@@ -91,7 +108,7 @@ function mergeFieldIssueLists(seedList: any[], remoteList: any[]): any[] {
             byId.set(local.id, local);
             return;
           }
-          byId.set(local.id, { ...local, ...current, status: current.status || local.status });
+          byId.set(local.id, mergeIssueRecords(local, current));
         });
       }
     }
