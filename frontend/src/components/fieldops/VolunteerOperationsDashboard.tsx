@@ -289,6 +289,8 @@ const DEPARTMENTS = [
   "Other Government Department (ఇతర ప్రభుత్వ శాఖ)"
 ];
 
+const SCHEME_OTHER = "Other (ఇతరం)";
+
 export const resolveDeptValue = (deptStr?: string) => {
   if (!deptStr) return "";
   const dLower = deptStr.toLowerCase().trim();
@@ -392,7 +394,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [newCategory, setNewCategory] = useState<string>("Roads & Buildings");
   const [newDepartment, setNewDepartment] = useState<string>("8. Roads & Buildings (R&B) Department");
   const [otherDepartmentText, setOtherDepartmentText] = useState("");
-  const [newSchemeSubDetail, setNewSchemeSubDetail] = useState("");
+  const [newSchemeSubDetail, setNewSchemeSubDetail] = useState(
+    PGRS_DEPARTMENTS_LIST.find((d) => d.name === "8. Roads & Buildings (R&B) Department")?.subDetails[0] || ""
+  );
+  const [otherSchemeSubDetail, setOtherSchemeSubDetail] = useState("");
   const [newAadharNumber, setNewAadharNumber] = useState("");
   const [newPriority, setNewPriority] = useState<IssuePriority>("HIGH");
   const [newIssueType, setNewIssueType] = useState<"COMPLAINT" | "REQUIREMENT">("COMPLAINT");
@@ -423,7 +428,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
   // Multi-Proof attachments (Photos & Documents)
   const [proofFiles, setProofFiles] = useState<{ name: string; url: string; type: "image" | "document" }[]>([]);
-  const [newAttachmentUrl, setNewAttachmentUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [submitting, setSubmitting] = useState(false);
@@ -520,19 +524,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     }
   };
 
-  const handleAddUrlAttachment = () => {
-    if (!newAttachmentUrl.trim()) return;
-    setProofFiles((prev) => [
-      ...prev,
-      {
-        name: `Web Link (${new URL(newAttachmentUrl).hostname || "Photo"})`,
-        url: newAttachmentUrl.trim(),
-        type: "image"
-      }
-    ]);
-    setNewAttachmentUrl("");
-  };
-
   const handleRemoveProof = (index: number) => {
     setProofFiles((prev) => prev.filter((_, i) => i !== index));
   };
@@ -549,14 +540,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       return;
     }
 
+    if (newSchemeSubDetail === SCHEME_OTHER && !otherSchemeSubDetail.trim()) {
+      setFormError("Please enter scheme / work details for Other.");
+      return;
+    }
+
     setSubmitting(true);
     setFormError("");
 
     const mandalObj = FIXED_MANDALS_TOWNS.find((m) => m.id === selectedMandalId) || FIXED_MANDALS_TOWNS[0];
     const allAttachments = proofFiles.map((p) => p.url);
-    if (newAttachmentUrl.trim() && !allAttachments.includes(newAttachmentUrl.trim())) {
-      allAttachments.push(newAttachmentUrl.trim());
-    }
 
     const finalDepartment = newDepartment.includes("Other")
       ? (otherDepartmentText.trim() ? `Other: ${otherDepartmentText.trim()}` : "Other Government Department")
@@ -584,7 +577,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         reporterDesignation: reporterDesignation.trim(),
         reporterPhone: newReporterPhone.trim(),
         aadharNumber: newAadharNumber.trim(),
-        schemeSubDetail: newSchemeSubDetail.trim(),
+        schemeSubDetail:
+          newSchemeSubDetail === SCHEME_OTHER ? otherSchemeSubDetail.trim() : newSchemeSubDetail.trim(),
         reportedDate: new Date().toISOString().split("T")[0],
         assignedVolunteerId: currentUser.id,
         assignedVolunteerName: currentUser.name,
@@ -657,7 +651,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         setCitizenAge("");
         setCitizenGender("Male");
         setProofFiles([]);
-        setNewAttachmentUrl("");
+        setNewSchemeSubDetail(
+          PGRS_DEPARTMENTS_LIST.find((d) => d.name === "8. Roads & Buildings (R&B) Department")?.subDetails[0] || ""
+        );
+        setOtherSchemeSubDetail("");
 
         // Automatically open Assign & WhatsApp Notify modal for the newly created complaint!
         setAssignModalIssue(created);
@@ -1925,8 +1922,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         if (foundItem && foundItem.subDetails.length > 0) {
                           setNewSchemeSubDetail(foundItem.subDetails[0]);
                         } else {
-                          setNewSchemeSubDetail("");
+                          setNewSchemeSubDetail(SCHEME_OTHER);
                         }
+                        setOtherSchemeSubDetail("");
                       }}
                       className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
                     >
@@ -1940,27 +1938,38 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     {/* Dynamic Scheme / Work Sub-Details Dropdown */}
                     {(() => {
                       const foundItem = PGRS_DEPARTMENTS_LIST.find((d) => d.name === newDepartment);
-                      if (foundItem && foundItem.subDetails.length > 0) {
-                        return (
-                          <div className="mt-2.5 animate-fadeIn">
-                            <label className="block text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
-                              Scheme / Work Sub-Details / పథకం వివరాలు *
-                            </label>
+                      const subOptions = foundItem ? [...foundItem.subDetails, SCHEME_OTHER] : [SCHEME_OTHER];
+                      const isOtherScheme = newSchemeSubDetail === SCHEME_OTHER;
+                      return (
+                        <div className="mt-2.5 animate-fadeIn">
+                          <label className="block text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
+                            Scheme / Work Sub-Details / పథకం వివరాలు *
+                          </label>
+                          <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                             <select
                               value={newSchemeSubDetail}
                               onChange={(e) => setNewSchemeSubDetail(e.target.value)}
-                              className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-medium cursor-pointer"
+                              className="flex-1 min-w-0 bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-medium cursor-pointer"
                             >
-                              {foundItem.subDetails.map((sub) => (
+                              {subOptions.map((sub) => (
                                 <option key={sub} value={sub}>
                                   {sub}
                                 </option>
                               ))}
                             </select>
+                            {isOtherScheme && (
+                              <input
+                                type="text"
+                                required
+                                placeholder="Enter other scheme / work details..."
+                                value={otherSchemeSubDetail}
+                                onChange={(e) => setOtherSchemeSubDetail(e.target.value)}
+                                className="flex-1 min-w-0 bg-[#071322] border border-[#D4A24C]/50 focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                              />
+                            )}
                           </div>
-                        );
-                      }
-                      return null;
+                        </div>
+                      );
                     })()}
 
                     {newDepartment.includes("Other") && (
@@ -2232,7 +2241,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   </div>
 
                   {/* Upload controls */}
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -2249,24 +2258,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       accept="image/*,application/pdf"
                       className="hidden"
                     />
-
-                    <div className="flex-1 flex gap-2">
-                      <input
-                        type="url"
-                        value={newAttachmentUrl}
-                        onChange={(e) => setNewAttachmentUrl(e.target.value)}
-                        className="flex-1 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs text-[#F5EFE0] outline-none"
-                      />
-                      {newAttachmentUrl.trim() && (
-                        <button
-                          type="button"
-                          onClick={handleAddUrlAttachment}
-                          className="px-3 py-2 bg-[#D4A24C] text-[#071322] text-xs font-bold rounded-xl"
-                        >
-                          Add
-                        </button>
-                      )}
-                    </div>
                   </div>
 
                   {/* Uploaded Proof Badges / Previews */}
