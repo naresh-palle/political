@@ -1,32 +1,16 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { UserProfile } from "../../types";
 import {
   Search,
-  Users2,
   Phone,
   MessageCircle,
   MapPin,
   Building2,
-  Plus,
-  Download,
-  Upload,
-  Filter,
-  UserCheck,
-  Shield,
-  Briefcase,
-  Layers,
-  Sparkles,
-  ChevronRight,
   Eye,
-  CheckCircle2,
-  AlertCircle,
   FileSpreadsheet,
   X,
-  UserPlus,
-  HeartHandshake,
-  Landmark,
-  GraduationCap,
-  Home
+  UserPlus
 } from "lucide-react";
 
 export interface ContactRecord {
@@ -34,7 +18,7 @@ export interface ContactRecord {
   name: string;
   phone: string;
   email?: string;
-  category: "INFLUENCER" | "CADRE" | "CITIZEN" | "GOVT_OFFICIAL" | "DWCRA_LEAD" | "YOUTH_LEADER";
+  category: "INFLUENCER" | "CADRE" | "CITIZEN" | "GOVT_OFFICIAL" | "DWCRA_LEAD" | "YOUTH_LEADER" | "OTHER";
   designation: string;
   mandalId: string;
   mandalName: string;
@@ -312,7 +296,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterMandal, setFilterMandal] = useState<string>("ALL");
-  const [filterAlignment, setFilterAlignment] = useState<string>("ALL");
   const [filterGender, setFilterGender] = useState<string>("ALL");
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
@@ -338,6 +321,10 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     notes: ""
   });
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
   // Save to local storage whenever contacts change
   useEffect(() => {
     try {
@@ -361,7 +348,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     return contacts.filter((c) => {
       if (filterCategory !== "ALL" && c.category !== filterCategory) return false;
       if (filterMandal !== "ALL" && c.mandalName !== filterMandal && c.mandalId !== filterMandal) return false;
-      if (filterAlignment !== "ALL" && c.politicalAlignment !== filterAlignment) return false;
       if (filterGender !== "ALL" && c.gender !== filterGender) return false;
 
       if (searchQuery.trim()) {
@@ -378,7 +364,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       }
       return true;
     });
-  }, [contacts, filterCategory, filterMandal, filterAlignment, filterGender, searchQuery]);
+  }, [contacts, filterCategory, filterMandal, filterGender, searchQuery]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -443,7 +429,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     });
   };
 
-  const handleExportCSV = () => {
+  const handleExportExcel = () => {
     const headers = [
       "ID",
       "Name",
@@ -452,12 +438,10 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       "Designation",
       "Mandal",
       "Village",
-      "Political Alignment",
       "Occupation",
       "Gender",
       "Age",
       "Voter ID",
-      "Grievances Count",
       "Notes"
     ];
 
@@ -469,52 +453,41 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       `"${c.designation}"`,
       `"${c.mandalName}"`,
       `"${c.villageName}"`,
-      c.politicalAlignment,
       `"${c.occupation}"`,
       c.gender,
       c.age || "",
       c.voterId || "",
-      c.grievanceCount,
       `"${(c.notes || "").replace(/"/g, '""')}"`
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const table = "\uFEFF" + [headers.join("\t"), ...rows.map((e) => e.join("\t"))].join("\n");
+    const blob = new Blob([table], { type: "application/vnd.ms-excel;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `LeadersLens_Contact_Database_${new Date().toISOString().split("T")[0]}.csv`);
+    link.href = url;
+    link.download = `LeadersLens_Contact_Database_${new Date().toISOString().split("T")[0]}.xls`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const getCategoryBadge = (cat: ContactRecord["category"]) => {
     switch (cat) {
       case "INFLUENCER":
-        return <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10.5px] font-bold">👑 Influencer</span>;
+        return <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10.5px] font-bold">Influencer</span>;
       case "CADRE":
-        return <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[10.5px] font-bold">🚩 Party Cadre</span>;
+        return <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[10.5px] font-bold">Party Cadre</span>;
       case "GOVT_OFFICIAL":
-        return <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10.5px] font-bold">🏛️ Govt Officer</span>;
+        return <span className="px-2 py-0.5 rounded-md bg-[#D4A24C]/15 text-[#D4A24C] border border-[#D4A24C]/40 text-[10.5px] font-bold">Govt Officer</span>;
       case "DWCRA_LEAD":
-        return <span className="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/40 text-[10.5px] font-bold">👩 DWCRA Lead</span>;
+        return <span className="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/40 text-[10.5px] font-bold">DWCRA Lead</span>;
       case "YOUTH_LEADER":
-        return <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-bold">⚡ Youth Wing</span>;
+        return <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-bold">Youth Wing</span>;
+      case "OTHER":
+        return <span className="px-2 py-0.5 rounded-md bg-slate-500/20 text-slate-200 border border-slate-500/40 text-[10.5px] font-bold">Other</span>;
       default:
-        return <span className="px-2 py-0.5 rounded-md bg-[#223348] text-[#CBD5E1] border border-[#223348] text-[10.5px] font-medium">🧑 Citizen</span>;
-    }
-  };
-
-  const getAlignmentBadge = (align: ContactRecord["politicalAlignment"]) => {
-    switch (align) {
-      case "STRONG_SUPPORTER":
-        return <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold">🟢 Strong Supporter</span>;
-      case "NEUTRAL_LEANING":
-        return <span className="px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[10px] font-semibold">🟡 Neutral / Leaning</span>;
-      case "OFFICIAL":
-        return <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-600 text-[10px] font-semibold">🏛️ Non-Partisan Official</span>;
-      case "CRITICAL_NEEDS_REACH":
-        return <span className="px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/30 text-[10px] font-semibold">🟠 Needs Engagement</span>;
+        return <span className="px-2 py-0.5 rounded-md bg-[#223348] text-[#CBD5E1] border border-[#223348] text-[10.5px] font-medium">Citizen</span>;
     }
   };
 
@@ -522,37 +495,35 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 animate-fadeIn">
       {/* 1. Header Banner & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-xl">
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D97724] to-[#B45309] flex items-center justify-center text-[#0B131E] shadow-md shrink-0">
-            <Users2 className="w-6 h-6" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-[#F5EFE0] tracking-wide">
+              Constituency Contact Database
+            </h1>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 text-[#D4A24C] border border-[#D4A24C]/40">
+              Live Directory
+            </span>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-xl sm:text-2xl font-bold text-[#F5EFE0] tracking-wide">
-                Constituency Contact Database
-              </h1>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 text-[#D4A24C] border border-[#D4A24C]/40">
-                Live Directory
-              </span>
-            </div>
-            <p className="text-xs text-[#CBD5E1] mt-0.5">
-              Verified Citizens, Community Influencers, Booth Agents, Nodal Officers & DWCRA Leaders
-            </p>
-          </div>
+          <p className="text-xs text-[#CBD5E1] mt-0.5">
+            Verified Citizens, Community Influencers, Booth Agents, Nodal Officers & DWCRA Leaders
+          </p>
         </div>
 
         {/* Right CTA Actions */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
-            onClick={handleExportCSV}
+            onClick={handleExportExcel}
             className="px-3.5 py-2 rounded-xl bg-[#0B131E] border border-[#223348] hover:border-[#D4A24C]/50 text-[#CBD5E1] hover:text-[#F5EFE0] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
           >
-            <Download className="w-3.5 h-3.5 text-[#D4A24C]" />
-            <span>Export CSV</span>
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#D4A24C]" />
+            <span>Export Excel</span>
           </button>
 
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+              setIsAddModalOpen(true);
+            }}
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] hover:brightness-110 text-[#0B131E] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
           >
             <UserPlus className="w-4 h-4" />
@@ -653,7 +624,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
         </div>
 
         {/* Granular Filter Dropdowns */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-xs">
           <div>
             <select
               value={filterCategory}
@@ -661,12 +632,13 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Category: All Types</option>
-              <option value="INFLUENCER">👑 Community Influencer</option>
-              <option value="CADRE">🚩 Party Cadre</option>
-              <option value="GOVT_OFFICIAL">🏛️ Govt Nodal Officer</option>
-              <option value="DWCRA_LEAD">👩 DWCRA Leader</option>
-              <option value="YOUTH_LEADER">⚡ Youth Wing</option>
-              <option value="CITIZEN">🧑 Citizen Petitioner</option>
+              <option value="INFLUENCER">Community Influencer</option>
+              <option value="CADRE">Party Cadre</option>
+              <option value="GOVT_OFFICIAL">Govt Nodal Officer</option>
+              <option value="DWCRA_LEAD">DWCRA Leader</option>
+              <option value="YOUTH_LEADER">Youth Wing</option>
+              <option value="CITIZEN">Citizen Petitioner</option>
+              <option value="OTHER">Other</option>
             </select>
           </div>
 
@@ -687,27 +659,13 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
           <div>
             <select
-              value={filterAlignment}
-              onChange={(e) => setFilterAlignment(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Political Stance: All</option>
-              <option value="STRONG_SUPPORTER">🟢 Strong Supporter</option>
-              <option value="NEUTRAL_LEANING">🟡 Neutral / Leaning</option>
-              <option value="OFFICIAL">🏛️ Official / Non-Partisan</option>
-              <option value="CRITICAL_NEEDS_REACH">🟠 Needs Engagement</option>
-            </select>
-          </div>
-
-          <div>
-            <select
               value={filterGender}
               onChange={(e) => setFilterGender(e.target.value)}
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Gender: All</option>
-              <option value="Male">👨 Male</option>
-              <option value="Female">👩 Female</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
             </select>
           </div>
         </div>
@@ -725,17 +683,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    {contact.avatarUrl ? (
-                      <img
-                        src={contact.avatarUrl}
-                        alt={contact.name}
-                        className="w-12 h-12 rounded-xl object-cover border border-[#D4A24C]/40 shadow-sm shrink-0"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-[#131E2D] border border-[#223348] text-[#D4A24C] font-bold text-base flex items-center justify-center shrink-0">
-                        {contact.name.charAt(0)}
-                      </div>
-                    )}
                     <div className="min-w-0">
                       <h3 className="font-display text-base font-bold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
                         {contact.name}
@@ -749,7 +696,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
                 {/* Badges & Meta */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[11px]">
-                  {getAlignmentBadge(contact.politicalAlignment)}
                   {contact.voterId && (
                     <span className="px-2 py-0.5 rounded-full bg-[#131E2D] text-[#8E9CAE] border border-[#223348] font-mono text-[10px]">
                       {contact.voterId}
@@ -823,7 +769,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 <th className="p-3.5">Contact Name</th>
                 <th className="p-3.5">Category</th>
                 <th className="p-3.5">Location</th>
-                <th className="p-3.5">Political Stance</th>
                 <th className="p-3.5">Phone / Connect</th>
                 <th className="p-3.5 text-right">Actions</th>
               </tr>
@@ -840,7 +785,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                     <span className="text-[#F5EFE0] block">{c.mandalName}</span>
                     <span className="text-[11px] text-[#8E9CAE] block">{c.villageName}</span>
                   </td>
-                  <td className="p-3.5">{getAlignmentBadge(c.politicalAlignment)}</td>
                   <td className="p-3.5">
                     <div className="flex items-center gap-2">
                       <a
@@ -870,9 +814,10 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       )}
 
       {/* 5. Add Contact Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-xl bg-[#0E1724] border border-[#D4A24C]/40 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      {isAddModalOpen &&
+        createPortal(
+        <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-3 sm:p-6 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-xl mt-2 sm:mt-4 mb-8 bg-[#0E1724] border border-[#D4A24C]/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div className="p-4 sm:p-5 border-b border-[#223348] flex items-center justify-between bg-[#0B131E]">
               <div className="flex items-center gap-2.5">
                 <UserPlus className="w-5 h-5 text-[#D4A24C]" />
@@ -921,12 +866,13 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                     onChange={(e) => setNewContact({ ...newContact, category: e.target.value as any })}
                     className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
                   >
-                    <option value="INFLUENCER">👑 Community Influencer</option>
-                    <option value="CADRE">🚩 Party Cadre</option>
-                    <option value="GOVT_OFFICIAL">🏛️ Govt Nodal Officer</option>
-                    <option value="DWCRA_LEAD">👩 DWCRA Leader</option>
-                    <option value="YOUTH_LEADER">⚡ Youth Wing</option>
-                    <option value="CITIZEN">🧑 Citizen Resident</option>
+                    <option value="INFLUENCER">Community Influencer</option>
+                    <option value="CADRE">Party Cadre</option>
+                    <option value="GOVT_OFFICIAL">Govt Nodal Officer</option>
+                    <option value="DWCRA_LEAD">DWCRA Leader</option>
+                    <option value="YOUTH_LEADER">Youth Wing</option>
+                    <option value="CITIZEN">Citizen Resident</option>
+                    <option value="OTHER">Other</option>
                   </select>
                 </div>
 
@@ -966,21 +912,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Political Stance</label>
-                  <select
-                    value={newContact.politicalAlignment}
-                    onChange={(e) => setNewContact({ ...newContact, politicalAlignment: e.target.value as any })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-                  >
-                    <option value="STRONG_SUPPORTER">🟢 Strong Supporter</option>
-                    <option value="NEUTRAL_LEANING">🟡 Neutral / Leaning</option>
-                    <option value="OFFICIAL">🏛️ Official</option>
-                    <option value="CRITICAL_NEEDS_REACH">🟠 Needs Engagement</option>
-                  </select>
-                </div>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[#8E9CAE] block mb-1 font-medium">Gender</label>
                   <select
@@ -1033,31 +965,20 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 6. Contact Details Modal */}
-      {selectedContact && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-lg bg-[#0E1724] border border-[#D4A24C]/40 rounded-2xl shadow-2xl p-5 space-y-4">
+      {selectedContact &&
+        createPortal(
+        <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-3 sm:p-6 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-lg mt-2 sm:mt-4 mb-8 bg-[#0E1724] border border-[#D4A24C]/40 rounded-2xl shadow-2xl p-5 space-y-4">
             <div className="flex items-start justify-between border-b border-[#223348] pb-3">
-              <div className="flex items-center gap-3">
-                {selectedContact.avatarUrl ? (
-                  <img
-                    src={selectedContact.avatarUrl}
-                    alt={selectedContact.name}
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-md shrink-0"
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-2xl bg-[#131E2D] border border-[#D4A24C] text-[#D4A24C] font-bold text-xl flex items-center justify-center shrink-0">
-                    {selectedContact.name.charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-display text-lg font-bold text-[#F5EFE0]">{selectedContact.name}</h3>
-                  <p className="text-xs text-[#CBD5E1]">{selectedContact.designation}</p>
-                  <div className="mt-1">{getCategoryBadge(selectedContact.category)}</div>
-                </div>
+              <div>
+                <h3 className="font-display text-lg font-bold text-[#F5EFE0]">{selectedContact.name}</h3>
+                <p className="text-xs text-[#CBD5E1]">{selectedContact.designation}</p>
+                <div className="mt-1">{getCategoryBadge(selectedContact.category)}</div>
               </div>
               <button
                 onClick={() => setSelectedContact(null)}
@@ -1073,8 +994,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 <strong className="text-[#F5EFE0] font-mono">{selectedContact.phone}</strong>
               </div>
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[10px] text-[#8E9CAE] block">Political Stance</span>
-                <div className="mt-0.5">{getAlignmentBadge(selectedContact.politicalAlignment)}</div>
+                <span className="text-[10px] text-[#8E9CAE] block">Gender</span>
+                <strong className="text-[#F5EFE0]">{selectedContact.gender}</strong>
               </div>
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                 <span className="text-[10px] text-[#8E9CAE] block">Mandal</span>
@@ -1112,7 +1033,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               </a>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

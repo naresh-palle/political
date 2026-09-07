@@ -986,11 +986,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
               {/* Volunteer Avatar & Main Name */}
               <div className="flex items-start sm:items-center gap-4">
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg flex-shrink-0"
-                />
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
@@ -1040,50 +1035,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               </div>
             </div>
           </div>
-
-          {issues.filter(
-            (i) =>
-              ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
-              (i.lastStatusRemarks || i.lastStatusUpdateAt)
-          ).length > 0 && (
-            <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 space-y-2">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C]">
-                Officer status comments
-              </h2>
-              <div className="space-y-2 max-h-56 overflow-y-auto">
-                {issues
-                  .filter(
-                    (i) =>
-                      ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
-                      (i.lastStatusRemarks || i.lastStatusUpdateAt)
-                  )
-                  .sort(
-                    (a, b) =>
-                      new Date(b.lastStatusUpdateAt || b.updatedAt).getTime() -
-                      new Date(a.lastStatusUpdateAt || a.updatedAt).getTime()
-                  )
-                  .slice(0, 8)
-                  .map((i) => (
-                    <button
-                      key={`${i.id}-${i.status}-${i.lastStatusUpdateAt}`}
-                      type="button"
-                      onClick={() => setSelectedIssue(i)}
-                      className="w-full text-left p-3 rounded-xl bg-[#070D15] border border-[#223348] hover:border-[#D4A24C]/50 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-[11px] text-[#D4A24C] truncate">#{i.id}</span>
-                        <span className="text-[10px] font-bold uppercase text-amber-300 shrink-0">
-                          {formatIssueStatus(i.status)}
-                        </span>
-                      </div>
-                      <p className="text-[12px] text-[#F5EFE0] mt-1 line-clamp-2">
-                        {i.lastStatusRemarks?.trim() || "Officer updated this ticket."}
-                      </p>
-                    </button>
-                  ))}
-              </div>
-            </div>
-          )}
 
           {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters - Screenshot 1) */}
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
@@ -1234,6 +1185,50 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               </div>
             </div>
           </div>
+
+          {issues.filter(
+            (i) =>
+              ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
+              (i.lastStatusRemarks || i.lastStatusUpdateAt)
+          ).length > 0 && (
+            <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 space-y-2">
+              <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C]">
+                Officer status comments
+              </h2>
+              <div className="space-y-2 max-h-56 overflow-y-auto">
+                {issues
+                  .filter(
+                    (i) =>
+                      ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(i.status) &&
+                      (i.lastStatusRemarks || i.lastStatusUpdateAt)
+                  )
+                  .sort(
+                    (a, b) =>
+                      new Date(b.lastStatusUpdateAt || b.updatedAt).getTime() -
+                      new Date(a.lastStatusUpdateAt || a.updatedAt).getTime()
+                  )
+                  .slice(0, 8)
+                  .map((i) => (
+                    <button
+                      key={`${i.id}-${i.status}-${i.lastStatusUpdateAt}`}
+                      type="button"
+                      onClick={() => setSelectedIssue(i)}
+                      className="w-full text-left p-3 rounded-xl bg-[#070D15] border border-[#223348] hover:border-[#D4A24C]/50 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-[11px] text-[#D4A24C] truncate">#{i.id}</span>
+                        <span className="text-[10px] font-bold uppercase text-amber-300 shrink-0">
+                          {formatIssueStatus(i.status)}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-[#F5EFE0] mt-1 line-clamp-2">
+                        {i.lastStatusRemarks?.trim() || "Officer updated this ticket."}
+                      </p>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         /* SCREENSHOT 2: Full Assign Tickets / Complaints Stream */
