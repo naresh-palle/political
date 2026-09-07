@@ -119,9 +119,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     setSelectedNotification({ ...item, isRead: true });
   };
 
-  const handleInspectIssue = async (issueId: string) => {
+  const handleInspectIssue = async (item: FieldNotification) => {
+    const resourceId = (item as any).resourceId || item.issueId;
+    if (!resourceId) return;
+
     if (onSelectIssue) {
-      onSelectIssue(issueId);
+      onSelectIssue(resourceId);
       setSelectedNotification(null);
       onClose();
       return;
@@ -129,8 +132,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
     setLoadingIssue(true);
     try {
-      const issues = await politicalApiService.getFieldIssues();
-      const found = issues.find((i: FieldIssue) => i.id === issueId);
+      const found = await politicalApiService.getFieldIssueById(
+        resourceId,
+        currentUser.id,
+        currentUser.primaryRole
+      );
       if (found) {
         setSelectedIssue(found);
       }
@@ -417,24 +423,29 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </div>
 
               {/* Linked Issue Card (if available) */}
-              {selectedNotification.issueId && (
+              {((selectedNotification as any).resourceId || selectedNotification.issueId) && (
                 <div className="p-4 bg-gradient-to-r from-[#122A44] to-[#0F2338] border border-[#D4A24C]/60 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
                   <div>
                     <div className="flex items-center gap-1.5 text-xs text-[#D4A24C] font-bold">
                       <Tag className="w-3.5 h-3.5" /> Associated Ground Issue
                     </div>
                     <div className="text-sm font-bold text-white mt-0.5 font-mono">
-                      Ticket #{selectedNotification.issueId}
+                      Ticket {(selectedNotification as any).ticketNumber || selectedNotification.issueId}
                     </div>
+                    {(selectedNotification as any).status && (
+                      <div className="text-[11px] text-[#F5EFE0] mt-1">
+                        Latest Status: {(selectedNotification as any).status}
+                      </div>
+                    )}
                     <div className="text-[11px] text-[#8E9CAE] mt-0.5">
-                      Ground intake logged with real-time constituency dispatch
+                      Officer update recorded for this ticket
                     </div>
                   </div>
 
                   <button
                     type="button"
                     disabled={loadingIssue}
-                    onClick={() => handleInspectIssue(selectedNotification.issueId!)}
+                    onClick={() => handleInspectIssue(selectedNotification)}
                     className="px-4 py-2 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:from-[#D26A0F] hover:to-[#C99640] text-[#0B1A2C] text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow"
                   >
                     {loadingIssue ? "Loading..." : "Inspect Ground Issue"}

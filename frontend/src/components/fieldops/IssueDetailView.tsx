@@ -6,6 +6,7 @@ import {
   IssueStatus
 } from "../../types";
 import { politicalApiService } from "../../services/api";
+import { formatIssueStatus } from "../../utils/statusLabels";
 import {
   ArrowLeft,
   Clock,
@@ -94,7 +95,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
       loadTimeline();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [issue?.id]);
+  }, [issue?.id, issue?.status, issue?.updatedAt]);
 
   const loadTimeline = async () => {
     setLoadingHistory(true);
@@ -217,6 +218,8 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         return "bg-blue-500/20 text-blue-300 border-blue-500/40";
       case "IN_PROGRESS":
         return "bg-indigo-500/20 text-indigo-300 border-indigo-500/40";
+      case "REJECTED":
+        return "bg-rose-500/20 text-rose-300 border-rose-500/40";
       case "COMPLETED":
       case "RESOLVED":
         return "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
@@ -321,7 +324,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                 issue.status
               )}`}
             >
-              {issue.status}
+              {formatIssueStatus(issue.status)}
             </span>
             <span
               className={`text-xs font-semibold px-2.5 py-1 rounded border ${getPriorityBadge(
@@ -612,7 +615,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${getStatusBadge(record.newStatus)}`}>
-                        {record.newStatus}
+                        {formatIssueStatus(record.newStatus)}
                       </span>
                       <span className="text-[11px] text-[#8E9CAE] font-mono">{record.updateDate}</span>
                     </div>

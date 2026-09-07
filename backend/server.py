@@ -24,8 +24,28 @@ load_dotenv(ROOT_DIR / '.env')
 
 try:
     from services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
+    from services.officer_status_workflow import (
+        EVENT_BY_STATUS,
+        complainant_whatsapp_text,
+        mask_phone,
+        normalize_status,
+        ticket_display_number,
+        validate_officer_status,
+        validate_transition,
+        volunteer_notification_copy,
+    )
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
+    from backend.services.officer_status_workflow import (
+        EVENT_BY_STATUS,
+        complainant_whatsapp_text,
+        mask_phone,
+        normalize_status,
+        ticket_display_number,
+        validate_officer_status,
+        validate_transition,
+        volunteer_notification_copy,
+    )
 
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 db_name = os.environ.get('DB_NAME', 'political_intelligence')
@@ -44,6 +64,7 @@ IN_MEMORY_FIELD_ISSUES: dict = {}
 IN_MEMORY_NOTIFICATIONS: list = []
 IN_MEMORY_ISSUE_HISTORY: list = []
 IN_MEMORY_NOTIFICATION_AUDITS: list = []
+IN_MEMORY_STATUS_IDEMPOTENCY: dict = {}
 
 # Models
 class StatusCheck(BaseModel):
@@ -97,6 +118,36 @@ def log_mongo_notice(tag: str, exc: Exception):
         logger.debug(f"MongoDB offline ({tag}), using in-memory/JSON fallback: {exc}")
     else:
         logger.warning(f"MongoDB warning ({tag}): {exc}")
+
+def overlay_in_memory_issues(issues: list) -> list:
+    """Merge authoritative in-memory officer updates onto a ticket list."""
+    if not IN_MEMORY_FIELD_ISSUES:
+        return issues
+    merged = {i.get("id"): dict(i) for i in issues if isinstance(i, dict) and i.get("id")}
+    for issue_id, mem in IN_MEMORY_FIELD_ISSUES.items():
+        if issue_id in merged:
+            merged[issue_id].update(mem)
+        else:
+            merged[issue_id] = dict(mem)
+    return list(merged.values())
+
+def resolve_stored_issue(issue_id: str, mongo_doc: Optional[dict] = None) -> Optional[dict]:
+    if mongo_doc:
+        base = dict(mongo_doc)
+        mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
+        if mem:
+            base.update(mem)
+        return sanitize_doc(base)
+    if issue_id in IN_MEMORY_FIELD_ISSUES:
+        return sanitize_doc(dict(IN_MEMORY_FIELD_ISSUES[issue_id]))
+    fallback = load_json_fallback("field_issues.json")
+    found = next((i for i in fallback if i.get("id") == issue_id), None)
+    if found:
+        mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
+        if mem:
+            found = {**found, **mem}
+        return sanitize_doc(found)
+    return None
 
 # Base routes
 @api_router.get("/")
@@ -1388,7 +1439,7 @@ async def get_field_issues(
             
         issues = await db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(1000)
         if issues:
-            return issues
+            return sanitize_doc(overlay_in_memory_issues(issues))
     except Exception as e:
         log_mongo_notice("get_field_issues", e)
     
@@ -1422,10 +1473,11 @@ async def get_field_issues(
     if priority and priority != "ALL":
         filtered = [i for i in fallback if i.get("priority") == priority]
         fallback = filtered if filtered else fallback
-    if q:
-        ql = q.lower()
-        filtered = [i for i in fallback if ql in i.get("title", "").lower() or ql in i.get("description", "").lower() or ql in i.get("reportedBy", "").lower()]
-        fallback = filtered if filtered else fallback
+        if q:
+            ql = q.lower()
+            filtered = [i for i in fallback if ql in i.get("title", "").lower() or ql in i.get("description", "").lower() or ql in i.get("reportedBy", "").lower()]
+            fallback = filtered if filtered else fallback
+    fallback = overlay_in_memory_issues(fallback)
     return sanitize_doc(fallback)
 
 @api_router.get("/field-ops/issues/{issue_id}")
@@ -1939,6 +1991,15 @@ async def get_field_issues(
             fallback = [i for i in fallback if i.get("priority") == priority]
         issues = fallback
 
+    issues = overlay_in_memory_issues(issues)
+    if userRole == "VOLUNTEER" and userId:
+        issues = [i for i in issues if i.get("assignedVolunteerId") == userId]
+    elif userRole == "DIRECTOR" and (userId or directorId):
+        d_id = directorId or userId
+        issues = [i for i in issues if i.get("directorId") == d_id]
+    if status and status != "ALL":
+        issues = [i for i in issues if i.get("status") == status]
+
     if q and q.strip():
         ql = q.lower()
         issues = [
@@ -1963,30 +2024,16 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     except Exception as e:
         logger.warning(f"MongoDB get issue by id: {e}")
         
-    if not issue:
-        fallback_issues = load_json_fallback("field_issues.json")
-        issue = next((i for i in fallback_issues if i.get("id") == issue_id), None)
+    issue = resolve_stored_issue(issue_id, issue)
         
     if not issue:
-        issue = {
-            "id": issue_id,
-            "title": f"Grievance Ticket #{issue_id}",
-            "description": "Public grievance ticket logged on ground.",
-            "category": "Roads & Buildings",
-            "department": "8. Roads & Buildings (R&B) Department",
-            "mandalName": "Banaganapalle",
-            "villageName": "Banaganapalle Town",
-            "reportedBy": "Citizen",
-            "reporterPhone": "9885765672",
-            "priority": "MEDIUM",
-            "status": "ASSIGNED",
-            "reportedDate": datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        }
-        
-    if isinstance(issue, dict) and "_id" in issue:
-        issue.pop("_id")
-        
-    return issue
+        raise HTTPException(status_code=404, detail="Issue not found")
+
+    if userRole == "VOLUNTEER" and userId and issue.get("assignedVolunteerId") != userId:
+        raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+    if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
+        raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
+    return sanitize_doc(issue)
 
 
 @api_router.post("/field-ops/send-whatsapp-otp")
@@ -2040,263 +2087,227 @@ async def create_field_issue(payload: dict):
         
     if "_id" in issue_doc:
         issue_doc.pop("_id")
+    IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(dict(issue_doc))
     return issue_doc
 
 
 @api_router.put("/field-ops/issues/{issue_id}/status")
 async def update_field_issue_status(issue_id: str, payload: dict):
     now_str = datetime.now(timezone.utc).isoformat()
-    new_status = (payload.get("status") or "").strip().upper()
+    payload = payload or {}
+    new_status = normalize_status(payload.get("status") or payload.get("newStatus"))
     remarks = (payload.get("remarks") or payload.get("rejectionReason") or payload.get("notes") or "").strip()
-    proof_url = (payload.get("proofUrl") or "").strip()
-    completed_by = payload.get("completedByPerson") or payload.get("officerName") or "Department Officer"
-    completed_dept = payload.get("completedDepartment") or payload.get("departmentName") or "Assigned Department"
+    proof_files = payload.get("proofFiles") if isinstance(payload.get("proofFiles"), list) else []
+    proof_url = (payload.get("proofUrl") or (proof_files[0] if proof_files else "") or "").strip()
+    attachments = [u for u in ([proof_url] + proof_files) if u]
+    attachments = list(dict.fromkeys(attachments))
 
-    # Default fallback remarks if empty
-    if not remarks and new_status == "RESOLVED":
-        remarks = "Work completed by department officer."
-    elif not remarks and new_status == "REJECTED":
-        remarks = "Issue not accepted by department officer."
+    status_err = validate_officer_status(new_status)
+    if status_err:
+        raise HTTPException(status_code=400, detail=status_err)
 
-    # Valid allowed officer statuses (Section 26.4)
-    if new_status not in ["IN_PROGRESS", "RESOLVED", "REJECTED"]:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid officer status action '{new_status}'. Allowed officer statuses: IN_PROGRESS, RESOLVED, REJECTED."
-        )
+    if new_status == "REJECTED" and not remarks:
+        raise HTTPException(status_code=422, detail="Rejection reason is required.")
+    if new_status == "RESOLVED" and not remarks:
+        raise HTTPException(status_code=422, detail="Resolution remarks are required.")
 
-    # 1. Fetch ticket from MongoDB or fallback JSON
-    issue = None
+    mongo_issue = None
     try:
-        issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
+        mongo_issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
     except Exception as e:
-        logger.warning(f"MongoDB find issue {issue_id}: {e}")
+        log_mongo_notice("find issue for officer status", e)
 
+    issue = resolve_stored_issue(issue_id, mongo_issue)
     if not issue:
-        issue = {
-            "id": issue_id,
-            "title": payload.get("title") or payload.get("issueTitle") or f"Grievance Ticket #{issue_id}",
-            "description": payload.get("description") or "Public grievance ticket logged on ground.",
-            "category": completed_dept,
-            "department": completed_dept,
-            "mandalName": payload.get("mandalName") or "Banaganapalle",
-            "villageName": payload.get("villageName") or "Banaganapalle Town",
-            "reportedBy": payload.get("reportedBy") or "Citizen",
-            "reporterPhone": payload.get("reporterPhone") or payload.get("citizenPhone") or "9885765672",
-            "assignedVolunteerId": payload.get("assignedVolunteerId") or "usr-demo-volunteer",
-            "assignedVolunteerName": payload.get("assignedVolunteerName") or "Assigned Volunteer",
-            "priority": payload.get("priority") or "MEDIUM",
-            "status": "ASSIGNED"
-        }
+        raise HTTPException(status_code=404, detail="Ticket not found.")
 
-    sanitize_doc(issue)
+    current_status = normalize_status(issue.get("status") or "NEW")
+    transition_err = validate_transition(current_status, new_status)
+    if transition_err:
+        raise HTTPException(status_code=400, detail=transition_err)
 
-    current_status = (issue.get("status") or "NEW").upper()
+    idem_key = f"{issue_id}:{new_status}:{remarks}"
+    prior = IN_MEMORY_STATUS_IDEMPOTENCY.get(idem_key)
+    if prior and current_status == new_status:
+        return sanitize_doc(prior)
 
-    # State Machine Validation (Section 26.4)
-    if current_status == "CLOSED":
-        raise HTTPException(
-            status_code=400,
-            detail="Ticket is permanently CLOSED and cannot be modified by Department Officers."
-        )
+    volunteer_id = issue.get("assignedVolunteerId")
+    volunteer_notif_status = "SKIPPED_NO_ASSIGNEE"
+    volunteer_notif = None
 
-    allowed_transitions = {
-        "NEW": ["IN_PROGRESS", "RESOLVED", "REJECTED", "ASSIGNED", "ACKNOWLEDGED"],
-        "ASSIGNED": ["IN_PROGRESS", "RESOLVED", "REJECTED", "ACKNOWLEDGED"],
-        "ACKNOWLEDGED": ["IN_PROGRESS", "RESOLVED", "REJECTED"],
-        "IN_PROGRESS": ["RESOLVED", "REJECTED", "IN_PROGRESS"],
-        "RESOLVED": ["RESOLVED"],
-        "REJECTED": ["REJECTED"]
-    }
+    completed_by = issue.get("assignedOfficialName") or "Department Officer"
+    completed_dept = issue.get("assignedDepartment") or issue.get("department") or "Assigned Department"
+    actor_id = issue.get("departmentContactId") or issue.get("assignedOfficialPhone") or "dept-officer"
+    ticket_number = ticket_display_number(issue)
+    event_type = EVENT_BY_STATUS[new_status]
 
-    valid_next_states = allowed_transitions.get(current_status, ["IN_PROGRESS", "RESOLVED", "REJECTED"])
-    if new_status not in valid_next_states:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid status transition from '{current_status}' to '{new_status}'."
-        )
-
-    # Idempotency check (Section 26.12)
-    if current_status == new_status and issue.get("lastStatusRemarks") == remarks:
-        logger.info(f"Duplicate status update request for ticket {issue_id} ({new_status}), returning existing record.")
-        return sanitize_doc({
-            "success": True,
-            "issueId": issue_id,
-            "status": new_status,
-            "message": "Status already set to requested state",
-            "issue": issue
-        })
-
-    # 2. Update Authoritative Ticket DB Record (Section 26.5)
     update_doc = {
         "status": new_status,
         "lastStatusRemarks": remarks,
-        "lastStatusProof": proof_url,
+        "lastStatusProof": proof_url or None,
+        "lastStatusUpdateAt": now_str,
         "completedByPerson": completed_by,
         "completedDepartment": completed_dept,
-        "updatedAt": now_str
+        "updatedAt": now_str,
     }
+    if attachments:
+        existing_att = issue.get("attachments") or []
+        update_doc["attachments"] = list(dict.fromkeys(list(existing_att) + attachments))
 
-    try:
-        await db.field_issues.update_one({"id": issue_id}, {"$set": update_doc})
-        issue.update(update_doc)
-        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
-    except Exception as e:
-        logger.warning(f"MongoDB update issue status: {e}")
-        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
-
-    # 3. Create Work Update / History Record (Section 26.1, 26.2, 26.3, 26.8)
     history_record = {
         "id": f"upd-{uuid.uuid4().hex[:8]}",
         "issueId": issue_id,
         "actorType": "EXTERNAL_DEPARTMENT",
-        "actorId": payload.get("departmentContactId") or issue.get("assignedDepartment") or "dept-officer",
-        "volunteerId": issue.get("assignedVolunteerId") or "usr-demo-volunteer",
+        "actorId": actor_id,
+        "volunteerId": volunteer_id,
         "volunteerName": issue.get("assignedVolunteerName") or "Assigned Volunteer",
         "officerName": completed_by,
         "previousStatus": current_status,
         "newStatus": new_status,
         "updateDate": datetime.now(timezone.utc).strftime("%d %b %Y"),
         "remarks": remarks,
-        "proofUrl": proof_url,
-        "attachments": [proof_url] if proof_url else [],
-        "createdAt": now_str
+        "proofUrl": proof_url or None,
+        "attachments": attachments,
+        "createdAt": now_str,
     }
 
-    try:
-        await db.issue_history.insert_one(history_record)
-    except Exception as e:
-        log_mongo_notice("insert issue_history", e)
-    finally:
-        sanitize_doc(history_record)
-        IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(history_record))
-
-    # 4. Create Volunteer In-App Notification (Section 26.6, 26.7)
-    volunteer_id = issue.get("assignedVolunteerId") or "usr-demo-volunteer"
-    event_type = "TICKET_STARTED" if new_status == "IN_PROGRESS" else ("TICKET_RESOLVED" if new_status == "RESOLVED" else "TICKET_REJECTED")
-    
-    if new_status == "IN_PROGRESS":
-        notif_msg = f"Department officer {completed_by} ({completed_dept}) started work on ticket #{issue_id}. Remarks: '{remarks}'"
-        notif_title = f"Officer Work Started: Ticket #{issue_id}"
-    elif new_status == "RESOLVED":
-        notif_msg = f"Department has marked ticket #{issue_id} as resolved. Remarks: '{remarks}'"
-        notif_title = f"Ticket #{issue_id} Marked RESOLVED by Department"
-    else:
-        notif_msg = f"The department has rejected ticket #{issue_id}. Reason: '{remarks}'"
-        notif_title = f"Ticket #{issue_id} REJECTED by Department"
-
-    volunteer_notif = {
-        "id": f"notif-{uuid.uuid4().hex[:8]}",
-        "recipientUserId": volunteer_id,
-        "recipientRole": "VOLUNTEER",
-        "type": "TICKET_STATUS_UPDATED",
-        "eventType": event_type,
-        "resourceType": "ISSUE",
-        "resourceId": issue_id,
-        "ticketNumber": issue_id,
-        "status": new_status,
-        "title": notif_title,
-        "message": notif_msg,
-        "isRead": False,
-        "readAt": None,
-        "createdAt": now_str
-    }
+    issue.update(update_doc)
+    IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(dict(issue))
 
     try:
-        await db.notifications.insert_one(volunteer_notif)
+        result = await db.field_issues.update_one({"id": issue_id}, {"$set": update_doc}, upsert=True)
+        if result.matched_count == 0 and not result.upserted_id:
+            await db.field_issues.update_one({"id": issue_id}, {"$set": sanitize_doc(dict(issue))}, upsert=True)
+        await db.issue_history.insert_one(dict(history_record))
+        await db.work_updates.insert_one(dict(history_record))
     except Exception as e:
-        log_mongo_notice("insert notification", e)
-    finally:
+        log_mongo_notice("atomic officer status persist", e)
+
+    sanitize_doc(history_record)
+    IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(dict(history_record)))
+
+    if volunteer_id:
+        notif_title, notif_msg = volunteer_notification_copy(ticket_number, new_status, remarks)
+        volunteer_notif = {
+            "id": f"notif-{uuid.uuid4().hex[:8]}",
+            "recipientUserId": volunteer_id,
+            "recipientRole": "VOLUNTEER",
+            "type": "TICKET_STATUS_UPDATED",
+            "eventType": event_type,
+            "resourceType": "ISSUE",
+            "resourceId": issue_id,
+            "issueId": issue_id,
+            "ticketNumber": ticket_number,
+            "status": new_status,
+            "title": notif_title,
+            "message": notif_msg,
+            "priority": "HIGH" if new_status in ("RESOLVED", "REJECTED") else "NORMAL",
+            "isRead": False,
+            "readAt": None,
+            "createdAt": now_str,
+        }
+        volunteer_notif_status = "CREATED"
+        try:
+            await db.notifications.insert_one(dict(volunteer_notif))
+            await db.field_notifications.insert_one(dict(volunteer_notif))
+        except Exception as e:
+            log_mongo_notice("insert volunteer notification", e)
+            volunteer_notif_status = "CREATED_IN_MEMORY"
         sanitize_doc(volunteer_notif)
-        IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(volunteer_notif))
+        IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(dict(volunteer_notif)))
 
-    # 5. Send Complaint Person WhatsApp Notification (Section 26.9, 26.10, 26.11)
     complainant_name = issue.get("reportedBy") or "Citizen"
-    complainant_phone = issue.get("reporterPhone") or issue.get("citizenPhone") or "9885765672"
-    clean_complainant_phone = complainant_phone.replace("+", "").replace(" ", "").replace("-", "")
-    if len(clean_complainant_phone) == 10:
-        clean_complainant_phone = f"91{clean_complainant_phone}"
+    complainant_phone = issue.get("reporterPhone") or issue.get("citizenPhone") or ""
+    wa_text = complainant_whatsapp_text(complainant_name, ticket_number, new_status, remarks)
+    correlation_id = f"{issue_id}:{event_type}:{now_str}"
 
-    issue_title = issue.get("title") or "Public Grievance"
-
-    if new_status == "IN_PROGRESS":
-        wa_text = (
-            f"Hello {complainant_name},\n\n"
-            f"There is an update on your complaint.\n\n"
-            f"Ticket: #{issue_id}\n\n"
-            f"Status: IN PROGRESS\n\n"
-            f"The concerned department has started working on the issue.\n\n"
-            f"Issue:\n{issue_title}\n\n"
-            f"You will receive further updates as the work progresses.\n\n"
-            f"Thank you,\nLeaderLens"
-        )
-    elif new_status == "RESOLVED":
-        wa_text = (
-            f"Hello {complainant_name},\n\n"
-            f"There is an update on your complaint.\n\n"
-            f"Ticket: #{issue_id}\n\n"
-            f"Status: RESOLVED\n\n"
-            f"The concerned department has reported that the issue has been resolved.\n\n"
-            f"Resolution:\n{remarks}\n\n"
-            f"Thank you,\nLeaderLens"
-        )
-    else:  # REJECTED
-        wa_text = (
-            f"Hello {complainant_name},\n\n"
-            f"There is an update on your complaint.\n\n"
-            f"Ticket: #{issue_id}\n\n"
-            f"Status: REJECTED\n\n"
-            f"The concerned department has not accepted the complaint for processing.\n\n"
-            f"Reason:\n{remarks}\n\n"
-            f"For further clarification, please contact the concerned administration.\n\n"
-            f"Thank you,\nLeaderLens"
-        )
-
-    wa_dispatch_payload = {
-        "recipientPhone": clean_complainant_phone,
-        "officerName": completed_by,
-        "deptName": completed_dept,
-        "ticketNumber": f"#{issue_id}",
+    whatsapp_result = await whatsapp_client.send_whatsapp_notification({
+        "recipientPhone": complainant_phone,
+        "messageKind": "TEXT",
+        "templateName": "complainant_status_update",
+        "event": event_type,
+        "eventType": event_type,
+        "ticketNumber": ticket_number,
         "rawTicketId": issue_id,
-        "textMessage": wa_text
-    }
+        "issueId": issue_id,
+        "textMessage": wa_text,
+        "correlationId": correlation_id,
+    })
 
-    # Dispatch via WhatsApp Cloud API
-    whatsapp_result = await whatsapp_client.send_whatsapp_notification(wa_dispatch_payload)
+    wa_status = whatsapp_result.get("status") or "FAILED"
+    if wa_status not in ("SENT", "DELIVERED", "FAILED", "PENDING"):
+        wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
 
-    # Notification Audit record
     audit_record = {
         "id": f"wa-stat-{uuid.uuid4().hex[:8]}",
         "issueId": issue_id,
         "eventType": event_type,
         "recipientType": "COMPLAINT_PERSON",
-        "recipientReference": clean_complainant_phone,
+        "recipientReference": mask_phone(complainant_phone),
         "channel": "WHATSAPP",
-        "templateName": "status_update_alert",
+        "templateName": "complainant_status_update",
         "providerMessageId": whatsapp_result.get("providerMessageId"),
-        "status": whatsapp_result.get("status", "DELIVERED"),
-        "sentAt": whatsapp_result.get("sentAt", now_str),
+        "status": wa_status,
+        "attempt": 1,
+        "createdAt": now_str,
+        "sentAt": whatsapp_result.get("sentAt") if wa_status in ("SENT", "DELIVERED") else None,
+        "failedAt": whatsapp_result.get("sentAt") if wa_status == "FAILED" else None,
         "errorCode": whatsapp_result.get("errorCode"),
         "errorMessage": whatsapp_result.get("errorMessage"),
-        "messageContent": wa_text
+        "correlationId": correlation_id,
+        "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
+        "apiVersion": whatsapp_result.get("apiVersion"),
     }
-
     try:
-        await db.notification_audits.insert_one(audit_record)
+        await db.notification_audits.insert_one(dict(audit_record))
     except Exception as e:
         logger.warning(f"MongoDB insert notification_audit: {e}")
-    finally:
-        sanitize_doc(audit_record)
+    sanitize_doc(audit_record)
+    IN_MEMORY_NOTIFICATION_AUDITS.insert(0, sanitize_doc(dict(audit_record)))
 
-    return sanitize_doc({
+    response = {
         "success": True,
-        "issueId": issue_id,
-        "status": new_status,
-        "issue": issue,
+        "ticket": {
+            "id": issue_id,
+            "ticketNumber": ticket_number,
+            "status": new_status,
+            "updatedAt": now_str,
+        },
+        "issue": sanitize_doc(issue),
+        "workUpdate": {"status": new_status, "id": history_record["id"], "previousStatus": current_status},
         "history": history_record,
-        "volunteerNotification": volunteer_notif,
-        "whatsappResult": whatsapp_result
-    })
+        "volunteerNotification": {
+            "status": volunteer_notif_status,
+            "id": volunteer_notif.get("id") if volunteer_notif else None,
+            "resourceId": issue_id,
+        },
+        "complainantNotification": {
+            "channel": "WHATSAPP",
+            "status": wa_status,
+            "providerMessageId": whatsapp_result.get("providerMessageId"),
+            "errorCode": whatsapp_result.get("errorCode"),
+            "errorMessage": whatsapp_result.get("errorMessage"),
+        },
+        "whatsappResult": {
+            "status": wa_status,
+            "providerMessageId": whatsapp_result.get("providerMessageId"),
+            "errorCode": whatsapp_result.get("errorCode"),
+            "errorMessage": whatsapp_result.get("errorMessage"),
+            "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
+        },
+        "status": new_status,
+        "issueId": issue_id,
+        "message": (
+            "Ticket updated successfully. Volunteer notified."
+            + (
+                " Complaint Person WhatsApp sent."
+                if wa_status in ("SENT", "DELIVERED")
+                else " Complaint Person WhatsApp failed."
+            )
+        ),
+    }
+    IN_MEMORY_STATUS_IDEMPOTENCY[idem_key] = sanitize_doc(response)
+    return sanitize_doc(response)
 
 
 # ----------------- DYNAMIC LEADER-SPECIFIC WHATSAPP NOTIFICATION ENDPOINTS -----------------
@@ -2520,6 +2531,12 @@ async def get_issue_history(issue_id: str):
             db_history = res
     except Exception as e:
         log_mongo_notice("get_issue_history", e)
+    try:
+        extra = await db.work_updates.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
+        if extra:
+            db_history = db_history + extra
+    except Exception as e:
+        log_mongo_notice("get_work_updates", e)
         
     in_mem = [h for h in IN_MEMORY_ISSUE_HISTORY if h.get("issueId") == issue_id]
     combined = in_mem + db_history
@@ -2553,37 +2570,32 @@ async def get_field_notifications(recipientUserId: Optional[str] = Query(None), 
     try:
         query = {}
         if recipientUserId:
-            query["$or"] = [
-                {"recipientUserId": recipientUserId},
-                {"recipientRole": recipientRole or "VOLUNTEER"}
-            ]
+            query["recipientUserId"] = recipientUserId
         elif recipientRole:
             query["recipientRole"] = recipientRole
-            
         res = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
         if res:
-            db_notifs = res
+            db_notifs = list(res)
+        extra = await db.field_notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
+        if extra:
+            db_notifs = db_notifs + list(extra)
     except Exception as e:
         log_mongo_notice("get_field_notifications", e)
 
     combined = list(IN_MEMORY_NOTIFICATIONS) + db_notifs
     if recipientUserId:
-        combined = [n for n in combined if n.get("recipientUserId") == recipientUserId or n.get("recipientRole") == (recipientRole or "VOLUNTEER") or not n.get("recipientUserId")]
+        combined = [n for n in combined if n.get("recipientUserId") == recipientUserId]
     elif recipientRole:
         combined = [n for n in combined if n.get("recipientRole") == recipientRole]
 
     seen = set()
     deduped = []
     for n in combined:
-        if n.get("id") not in seen:
-            seen.add(n.get("id"))
+        nid = n.get("id")
+        if nid and nid not in seen:
+            seen.add(nid)
             deduped.append(n)
-            
-    if deduped:
-        return sanitize_doc(deduped)
-        
-    fallback = load_json_fallback("field_notifications.json")
-    return sanitize_doc(fallback)
+    return sanitize_doc(deduped)
 
 @api_router.post("/field-ops/notifications")
 async def create_field_notification(payload: dict):

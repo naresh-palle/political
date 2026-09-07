@@ -261,6 +261,10 @@ export const OfficerTicketPortal: React.FC = () => {
       setError("Please enter official resolution remarks / field notes.");
       return;
     }
+    if (newStatus === "REJECTED" && !remarks.trim()) {
+      setError("A rejection reason is required.");
+      return;
+    }
 
     setSubmitting(true);
     setError("");
@@ -280,35 +284,31 @@ export const OfficerTicketPortal: React.FC = () => {
     };
 
     try {
-      await politicalApiService.updateFieldIssueStatus(issueId, updatePayload);
-
-      await politicalApiService.createNotification({
-        recipientUserId: issue?.assignedVolunteerId || "usr-demo-volunteer",
-        recipientRole: "VOLUNTEER",
-        type: "STATUS_UPDATE",
-        title: `Officer Update: Grievance #${issueId} marked ${newStatus}`,
-        message: `Officer ${officerInfo?.name || "Department Officer"} (${officerInfo?.role || "Nodal Executive"}) updated ticket #${issueId} to ${newStatus}. Remarks: "${remarks.trim()}"`,
-        issueId: issueId,
-        priority: newStatus === "RESOLVED" ? "HIGH" : "NORMAL"
-      });
+      const result = await politicalApiService.updateFieldIssueStatus(issueId, updatePayload);
+      const authoritative = result?.ticket?.status || result?.status || newStatus;
+      const waStatus = result?.complainantNotification?.status;
 
       setSubmitSuccess(true);
       setIssue((prev) =>
         prev
           ? {
               ...prev,
-              status: newStatus,
+              status: authoritative,
               lastStatusRemarks: remarks.trim(),
               lastStatusProof: primaryProofUrl,
               attachments: Array.from(new Set([...(prev.attachments || []), ...uploadedUrls]))
             }
           : prev
       );
-
-      // Revert back to ticket dashboard after 1.2 seconds so status is updated live
-      setTimeout(() => {
-        window.location.hash = `#/assign-tickets?status=${newStatus}`;
-      }, 1200);
+      if (waStatus === "FAILED") {
+        setError(
+          `Ticket updated and volunteer notified. Complaint WhatsApp failed${
+            result?.complainantNotification?.errorMessage
+              ? `: ${result.complainantNotification.errorMessage}`
+              : "."
+          }`
+        );
+      }
     } catch (err: any) {
       setError("Failed to submit resolution update: " + (err?.message || "Server connection error"));
     } finally {

@@ -25,9 +25,6 @@ class WhatsAppMessageBuilder:
     
     @staticmethod
     def resolve_leader_name(leader_data: Optional[Dict[str, Any]]) -> str:
-        """
-        Safely resolves leader name or falls back to generic administration phrase.
-        """
         if not leader_data:
             return "the constituency administration"
         
@@ -51,9 +48,6 @@ class WhatsAppMessageBuilder:
         volunteer: Optional[Dict[str, Any]] = None,
         base_portal_url: str = "https://leaderslensconsulting.com"
     ) -> Dict[str, Any]:
-        """
-        Builds dynamic, context-aware notification payload for WhatsApp Business Cloud API.
-        """
         officer_name = officer.get("name", "Department Officer")
         officer_designation = officer.get("designation", department.get("name", "Department"))
         officer_phone = officer.get("phone", "").replace(" ", "").replace("-", "")
@@ -76,7 +70,6 @@ class WhatsAppMessageBuilder:
         
         secure_link = f"{base_portal_url}/#/field-ops?issueId={ticket_id}"
         
-        # Message Body (Human Readable Notification)
         text_message = (
             f"Hello {officer_name},\n\n"
             f"A new issue has been raised from {leader_name}'s constituency.\n\n"
@@ -92,7 +85,6 @@ class WhatsAppMessageBuilder:
             f"Thank you,\nLeaderLens"
         )
         
-        # Meta Cloud API Template Parameter Mapping
         template_variables = {
             "1": officer_name,
             "2": leader_name,
@@ -122,56 +114,92 @@ class WhatsAppMessageBuilder:
         }
 
 
+def _mask_phone(phone: str) -> str:
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    if len(digits) <= 4:
+        return "****"
+    return f"{digits[:-4]}****{digits[-4:]}"
+
+
+def _safe_provider_error(res_json: Dict[str, Any], fallback: str = "") -> Dict[str, Any]:
+    error = (res_json or {}).get("error") or {}
+    message = error.get("message") or fallback or "Unknown Meta Cloud API error"
+    if isinstance(message, str):
+        lowered = message.lower()
+        for secret_hint in ("bearer ", "eaa", "access token", "authorization"):
+            if secret_hint in lowered:
+                message = "Meta Cloud API rejected the request."
+                break
+    return {
+        "errorCode": str(error.get("code") or error.get("error_subcode") or "META_ERROR"),
+        "errorMessage": message,
+        "errorType": error.get("type"),
+        "fbtrace_id": error.get("fbtrace_id"),
+    }
+
+
 class WhatsAppCloudApiClient:
     """
     Client for Meta WhatsApp Business Cloud API.
-    Sends template or text messages and handles errors gracefully.
+    Sends template or text messages and records truthful provider outcomes.
     """
     def __init__(self):
         self.enabled = os.environ.get("WHATSAPP_ENABLED", "true").lower() == "true"
-        self.phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "1326513833874482")
-        self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "EAAPfoO339fkBSerKDXs1dhvenNkaxhO6oRbDbfB8XGMzZAx8vv2HBPcQnPNjCo5tkUsZArIbj1sZAkC9wlZCJZApHBzPEbAZA4qiWhzzRZAfDTFsmZAQg2ZCZAlpZCpKyFjEfJF2W5dY0naIK2GZCVgDKbdyOnFmqpRZBmzHyaKWIycfF2QaExXZB6zrbyayyMzMgg0ZAclGgZDZD")
-        self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "1439753914880297")
-        self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v21.0")
+        self.phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")
+        self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "")
+        self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
+        self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v25.0")
         self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "officer_ticket_alert_v1")
 
-    async def send_whatsapp_notification(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        phone = payload.get("recipientPhone", "").replace("+", "").replace(" ", "").replace("-", "")
-        if len(phone) == 10:
-            phone = f"91{phone}"
-            
-        if not phone:
-            return {
-                "success": False,
-                "status": "FAILED",
-                "errorCode": "INVALID_PHONE",
-                "errorMessage": "Recipient phone number is missing or invalid.",
-                "providerMessageId": None,
-                "sentAt": datetime.now(timezone.utc).isoformat()
-            }
+    def _graph_url(self) -> str:
+        return f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
 
-        # If WhatsApp Cloud API credentials are not set or disabled, execute clean mock dispatch
-        if not self.enabled or not self.phone_number_id or not self.access_token or "dummy" in self.access_token.lower():
-            logger.info(f"WhatsApp Cloud API simulated dispatch to {phone} for ticket {payload.get('ticketNumber')}")
-            return {
-                "success": True,
-                "status": "DELIVERED",
-                "mode": "SIMULATED_TEST_MODE",
-                "providerMessageId": f"wmid.simulated.{int(datetime.now(timezone.utc).timestamp())}",
-                "sentAt": datetime.now(timezone.utc).isoformat(),
-                "recipientPhone": phone,
-                "messageContent": payload.get("textMessage")
-            }
-
-        url = f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
+    async def _post_graph(self, request_body: Dict[str, Any]) -> Dict[str, Any]:
+        url = self._graph_url()
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json"
         }
-        
-        # Meta Graph API JSON payload
+        status_code = 500
+        res_json: Dict[str, Any] = {}
+        error_msg_fallback = ""
+        if httpx is not None:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(url, headers=headers, json=request_body)
+                try:
+                    res_json = res.json()
+                except Exception:
+                    res_json = {}
+                status_code = res.status_code
+                error_msg_fallback = (res.text or "")[:800]
+        elif requests is not None:
+            res = requests.post(url, headers=headers, json=request_body, timeout=10.0)
+            try:
+                res_json = res.json()
+            except Exception:
+                res_json = {}
+            status_code = res.status_code
+            error_msg_fallback = (res.text or "")[:800]
+        else:
+            import urllib.request
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(request_body).encode("utf-8"),
+                headers=headers,
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10.0) as response:
+                res_json = json.loads(response.read().decode("utf-8"))
+                status_code = response.status
+        return {
+            "status_code": status_code,
+            "res_json": res_json if isinstance(res_json, dict) else {},
+            "error_msg_fallback": error_msg_fallback,
+        }
+
+    def _template_request_body(self, phone: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         if self.template_name.strip().lower() == "hello_world":
-            request_body = {
+            return {
                 "messaging_product": "whatsapp",
                 "recipient_type": "individual",
                 "to": phone,
@@ -181,14 +209,13 @@ class WhatsAppCloudApiClient:
                     "language": {"code": "en_US"}
                 }
             }
-        elif self.template_name.strip().lower() == "officer_ticket_alert_v1":
-            clean_ticket_id = (payload.get("rawTicketId") or payload.get("ticketNumber") or "iss-1002").replace("#", "")
+        if self.template_name.strip().lower() == "officer_ticket_alert_v1":
+            clean_ticket_id = (payload.get("rawTicketId") or payload.get("ticketNumber") or "ticket").replace("#", "")
             officer_name = payload.get("officerName", "Department Officer")
-            leader_name = payload.get("leaderName", "Hon. B. C. Janardhan Reddy (MLA)")
-            dept_name = payload.get("deptName", "Panchayat Raj")
-            mandal_name = payload.get("mandalName", "Banaganapalle")
-
-            request_body = {
+            leader_name = payload.get("leaderName") or "the constituency administration"
+            dept_name = payload.get("deptName", "Assigned Department")
+            mandal_name = payload.get("mandalName") or payload.get("location") or "Constituency"
+            return {
                 "messaging_product": "whatsapp",
                 "recipient_type": "individual",
                 "to": phone,
@@ -197,12 +224,7 @@ class WhatsAppCloudApiClient:
                     "name": "officer_ticket_alert_v1",
                     "language": {"code": "en"},
                     "components": [
-                        {
-                            "type": "header",
-                            "parameters": [
-                                {"type": "text", "text": leader_name}
-                            ]
-                        },
+                        {"type": "header", "parameters": [{"type": "text", "text": leader_name}]},
                         {
                             "type": "body",
                             "parameters": [
@@ -216,131 +238,110 @@ class WhatsAppCloudApiClient:
                             "type": "button",
                             "sub_type": "url",
                             "index": "0",
-                            "parameters": [
-                                {"type": "text", "text": clean_ticket_id}
-                            ]
+                            "parameters": [{"type": "text", "text": clean_ticket_id}]
                         }
                     ]
                 }
             }
-        else:
-            params = [{"type": "text", "text": str(v)} for v in payload.get("templateVariables", {}).values()]
-            components = []
-            if params:
-                components.append({
-                    "type": "body",
-                    "parameters": params
-                })
+        params = [{"type": "text", "text": str(v)} for v in payload.get("templateVariables", {}).values()]
+        components = []
+        if params:
+            components.append({"type": "body", "parameters": params})
+        return {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": phone,
+            "type": "template",
+            "template": {
+                "name": self.template_name,
+                "language": {"code": "en_US"},
+                "components": components
+            }
+        }
+
+    async def send_whatsapp_notification(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        phone = payload.get("recipientPhone", "").replace("+", "").replace(" ", "").replace("-", "")
+        if len(phone) == 10:
+            phone = f"91{phone}"
+
+        correlation_id = payload.get("correlationId") or f"wa-{int(datetime.now(timezone.utc).timestamp())}"
+        event = payload.get("event") or payload.get("eventType") or "WHATSAPP_DISPATCH"
+        ticket_ref = payload.get("rawTicketId") or payload.get("ticketNumber") or payload.get("issueId")
+        message_kind = (payload.get("messageKind") or "TEMPLATE").upper()
+        template_for_log = payload.get("templateName") or (
+            "status_update_text" if message_kind == "TEXT" else self.template_name
+        )
+        masked = _mask_phone(phone)
+        sent_at = datetime.now(timezone.utc).isoformat()
+
+        def _fail(code: str, message: str, http_status: Optional[int] = None) -> Dict[str, Any]:
+            logger.warning(
+                "[WhatsApp] event=%s ticket=%s recipient=%s template=%s correlation=%s metaHttp=%s result=FAILED errorCode=%s error=%s ts=%s",
+                event, ticket_ref, masked, template_for_log, correlation_id, http_status, code, message, sent_at,
+            )
+            return {
+                "success": False,
+                "status": "FAILED",
+                "errorCode": code,
+                "errorMessage": message,
+                "providerMessageId": None,
+                "sentAt": sent_at,
+                "correlationId": correlation_id,
+                "recipientPhone": phone,
+                "metaHttpStatus": http_status,
+                "messageContent": payload.get("textMessage"),
+                "apiVersion": self.api_version,
+            }
+
+        if not phone or len("".join(ch for ch in phone if ch.isdigit())) < 10:
+            return _fail("INVALID_PHONE", "Recipient phone number is missing or invalid.")
+
+        if not self.enabled:
+            return _fail("WHATSAPP_DISABLED", "WhatsApp Cloud API is disabled (WHATSAPP_ENABLED=false).")
+
+        if not self.phone_number_id or not self.access_token:
+            return _fail(
+                "MISSING_CREDENTIALS",
+                "WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_ACCESS_TOKEN is not configured on the backend.",
+            )
+
+        if message_kind == "TEXT" and payload.get("textMessage"):
             request_body = {
                 "messaging_product": "whatsapp",
                 "recipient_type": "individual",
                 "to": phone,
-                "type": "template",
-                "template": {
-                    "name": self.template_name,
-                    "language": {"code": "en_US"},
-                    "components": components
-                }
+                "type": "text",
+                "text": {"preview_url": False, "body": payload.get("textMessage")},
             }
+        else:
+            request_body = self._template_request_body(phone, payload)
 
         try:
-            status_code = 500
-            res_json = {}
-            error_msg_fallback = ""
+            posted = await self._post_graph(request_body)
+            status_code = posted["status_code"]
+            res_json = posted["res_json"]
+            error_msg_fallback = posted["error_msg_fallback"]
 
-            if httpx is not None:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    res = await client.post(url, headers=headers, json=request_body)
-                    res_json = res.json()
-                    status_code = res.status_code
-                    error_msg_fallback = res.text
-            elif requests is not None:
-                res = requests.post(url, headers=headers, json=request_body, timeout=10.0)
-                res_json = res.json()
-                status_code = res.status_code
-                error_msg_fallback = res.text
-            else:
-                import urllib.request
-                req = urllib.request.Request(url, data=json.dumps(request_body).encode("utf-8"), headers=headers, method="POST")
-                with urllib.request.urlopen(req, timeout=10.0) as response:
-                    res_json = json.loads(response.read().decode("utf-8"))
-                    status_code = response.status
-
-            # If 401 Unauthorized / Token Expired, fallback gracefully to simulated dispatch
-            if status_code == 401 or res_json.get("error", {}).get("code") == 190:
-                logger.warning(f"WhatsApp Cloud API 401 Unauthorized (Meta Token Expired). Executing simulated dispatch fallback.")
-                return {
-                    "success": True,
-                    "status": "DELIVERED",
-                    "mode": "SIMULATED_TEST_MODE_AUTH_EXPIRED",
-                    "providerMessageId": f"wmid.simulated.{int(datetime.now(timezone.utc).timestamp())}",
-                    "sentAt": datetime.now(timezone.utc).isoformat(),
-                    "recipientPhone": phone,
-                    "messageContent": payload.get("textMessage"),
-                    "warning": "Meta Access Token expired. Notification simulated successfully."
-                }
-
-            # If custom template failed (e.g. template not created in Meta yet), retry with standard hello_world test template
-            if status_code != 200 and status_code != 401 and self.template_name.strip().lower() != "hello_world":
-                logger.warning(f"Custom template '{self.template_name}' failed ({error_msg_fallback}). Attempting fallback retry with Meta hello_world template...")
-                fallback_body = {
-                    "messaging_product": "whatsapp",
-                    "recipient_type": "individual",
-                    "to": phone,
-                    "type": "template",
-                    "template": {
-                        "name": "hello_world",
-                        "language": {"code": "en_US"}
-                    }
-                }
-                try:
-                    if httpx is not None:
-                        async with httpx.AsyncClient(timeout=10.0) as client:
-                            fb_res = await client.post(url, headers=headers, json=fallback_body)
-                            if fb_res.status_code == 200 and "messages" in fb_res.json():
-                                res_json = fb_res.json()
-                                status_code = 200
-                    elif requests is not None:
-                        fb_res = requests.post(url, headers=headers, json=fallback_body, timeout=10.0)
-                        if fb_res.status_code == 200 and "messages" in fb_res.json():
-                            res_json = fb_res.json()
-                            status_code = 200
-                except Exception as fb_err:
-                    logger.warning(f"Fallback hello_world dispatch failed: {fb_err}")
-                
             if status_code == 200 and "messages" in res_json:
                 msg_id = res_json["messages"][0].get("id")
+                logger.info(
+                    "[WhatsApp] event=%s ticket=%s recipient=%s template=%s correlation=%s metaHttp=%s result=SENT providerMessageId=%s ts=%s",
+                    event, ticket_ref, masked, template_for_log, correlation_id, status_code, msg_id, sent_at,
+                )
                 return {
                     "success": True,
-                    "status": "DELIVERED",
+                    "status": "SENT",
                     "providerMessageId": msg_id,
-                    "sentAt": datetime.now(timezone.utc).isoformat(),
+                    "sentAt": sent_at,
                     "recipientPhone": phone,
-                    "messageContent": payload.get("textMessage")
+                    "messageContent": payload.get("textMessage"),
+                    "correlationId": correlation_id,
+                    "metaHttpStatus": status_code,
+                    "apiVersion": self.api_version,
                 }
-            else:
-                error_data = res_json.get("error", {})
-                error_msg = error_data.get("message") or error_msg_fallback
-                logger.error(f"WhatsApp Cloud API error ({status_code}): {error_msg}")
-                return {
-                    "success": False,
-                    "status": "FAILED",
-                    "errorCode": str(error_data.get("code") or status_code),
-                    "errorMessage": error_msg,
-                    "providerMessageId": None,
-                    "sentAt": datetime.now(timezone.utc).isoformat(),
-                    "recipientPhone": phone,
-                    "messageContent": payload.get("textMessage")
-                }
+
+            safe = _safe_provider_error(res_json, error_msg_fallback)
+            return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)
         except Exception as e:
-            logger.error(f"WhatsApp Cloud API connection failure: {e}")
-            return {
-                "success": False,
-                "status": "FAILED",
-                "errorCode": "HTTP_CONNECTION_ERROR",
-                "errorMessage": str(e),
-                "providerMessageId": None,
-                "sentAt": datetime.now(timezone.utc).isoformat(),
-                "recipientPhone": phone,
-                "messageContent": payload.get("textMessage")
-            }
+            logger.error("[WhatsApp] connection failure event=%s ticket=%s correlation=%s error=%s", event, ticket_ref, correlation_id, e)
+            return _fail("HTTP_CONNECTION_ERROR", "Unable to reach Meta Cloud API.")
