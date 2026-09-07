@@ -26,7 +26,10 @@ import {
   Filter,
   Search,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Eye,
   Camera,
   Layers,
@@ -167,7 +170,14 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const [filterMandal, setFilterMandal] = useState<string>("ALL");
   const [filterDepartment, setFilterDepartment] = useState<string>("ALL");
   const [filterVolunteer, setFilterVolunteer] = useState<string>("ALL");
+  const [filterType, setFilterType] = useState<string>("ALL");
+  const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [filterGender, setFilterGender] = useState<string>("ALL");
+  const [filterAgeGroup, setFilterAgeGroup] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"NEWEST" | "OLDEST" | "DUE_DATE" | "PRIORITY" | "STATUS" | "TITLE">("NEWEST");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [dashboardError, setDashboardError] = useState("");
 
   useEffect(() => {
@@ -274,11 +284,33 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
   const goAssignTickets = (status: string) => {
     setFilterStatus(status);
+    setCurrentPage(1);
     window.location.hash = `#/assign-tickets?status=${status}`;
   };
 
+  const getItemDepartment = (item: FieldIssue) => item.department || item.assignedDepartment || item.category || "General";
+  const getItemType = (item: FieldIssue) => item.issueType || item.reporterType || "Field Issue";
+  const getItemDemographics = (item: FieldIssue) => {
+    const gender = String((item as any).citizenGender || "").trim();
+    const age = Number((item as any).citizenAge || 0);
+    return { gender, age };
+  };
+
+  const availableCategories = useMemo(
+    () => Array.from(new Set(issues.map((i) => i.category).filter(Boolean))).sort() as string[],
+    [issues]
+  );
+  const availableTypes = useMemo(
+    () => Array.from(new Set(issues.map((i) => getItemType(i)).filter(Boolean))).sort(),
+    [issues]
+  );
+  const availableDepartments = useMemo(
+    () => Array.from(new Set(issues.map((i) => getItemDepartment(i)).filter(Boolean))).sort(),
+    [issues]
+  );
+
   const filteredIssues = useMemo(() => {
-    return issues.filter((item) => {
+    const list = issues.filter((item) => {
       const bucket = kpiBucket(item);
       if (filterStatus !== "ALL") {
         if (
@@ -299,6 +331,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           return false;
         } else if (filterStatus === "REJECTED" && bucket !== "REJECTED") {
           return false;
+        } else if (filterStatus === "CANT_BE_DONE" && bucket !== "OVERDUE" && (item as any).status !== "Can't be done") {
+          return false;
         } else if (
           ![
             "OPEN_UNASSIGNED",
@@ -309,7 +343,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             "OVERDUE",
             "RESOLVED",
             "COMPLETED",
-            "REJECTED"
+            "REJECTED",
+            "CANT_BE_DONE"
           ].includes(filterStatus) &&
           item.status !== filterStatus
         ) {
@@ -318,22 +353,85 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       }
       if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
       if (filterMandal !== "ALL" && item.mandalId !== filterMandal) return false;
-      if (filterDepartment !== "ALL" && (item.department || item.assignedDepartment) !== filterDepartment) return false;
+      if (filterDepartment !== "ALL" && getItemDepartment(item) !== filterDepartment) return false;
       if (filterVolunteer !== "ALL" && item.assignedVolunteerId !== filterVolunteer) return false;
+      if (filterType !== "ALL" && getItemType(item) !== filterType) return false;
+      if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
+      if (filterGender !== "ALL") {
+        const { gender } = getItemDemographics(item);
+        if (gender.toLowerCase() !== filterGender.toLowerCase()) return false;
+      }
+      if (filterAgeGroup !== "ALL") {
+        const { age } = getItemDemographics(item);
+        if (!age) return false;
+        if (filterAgeGroup === "20-30" && (age < 20 || age > 30)) return false;
+        if (filterAgeGroup === "30-40" && (age < 30 || age > 40)) return false;
+        if (filterAgeGroup === "40-50" && (age < 40 || age > 50)) return false;
+        if (filterAgeGroup === "50+" && age < 50) return false;
+      }
 
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
+          item.id.toLowerCase().includes(q) ||
           item.title.toLowerCase().includes(q) ||
           item.description.toLowerCase().includes(q) ||
           (item.villageName || "").toLowerCase().includes(q) ||
+          (item.mandalName || "").toLowerCase().includes(q) ||
           (item.assignedVolunteerName || "").toLowerCase().includes(q) ||
-          item.reportedBy.toLowerCase().includes(q)
+          item.reportedBy.toLowerCase().includes(q) ||
+          (item.reporterPhone || "").includes(q)
         );
       }
       return true;
     });
-  }, [issues, filterStatus, filterPriority, filterMandal, filterDepartment, filterVolunteer, searchQuery]);
+
+    return list.sort((a, b) => {
+      if (sortBy === "NEWEST") {
+        return new Date(b.createdAt || b.reportedDate).getTime() - new Date(a.createdAt || a.reportedDate).getTime();
+      }
+      if (sortBy === "OLDEST") {
+        return new Date(a.createdAt || a.reportedDate).getTime() - new Date(b.createdAt || b.reportedDate).getTime();
+      }
+      if (sortBy === "DUE_DATE") {
+        return new Date(a.dueDate || "9999-12-31").getTime() - new Date(b.dueDate || "9999-12-31").getTime();
+      }
+      if (sortBy === "PRIORITY") {
+        const weights: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+        return (weights[b.priority] || 0) - (weights[a.priority] || 0);
+      }
+      if (sortBy === "TITLE") return a.title.localeCompare(b.title);
+      if (sortBy === "STATUS") return a.status.localeCompare(b.status);
+      return 0;
+    });
+  }, [
+    issues,
+    filterStatus,
+    filterPriority,
+    filterMandal,
+    filterDepartment,
+    filterVolunteer,
+    filterType,
+    filterCategory,
+    filterGender,
+    filterAgeGroup,
+    searchQuery,
+    sortBy
+  ]);
+
+  const totalPages = Math.ceil(filteredIssues.length / pageSize) || 1;
+  const paginatedIssues = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredIssues.slice(start, start + pageSize);
+  }, [filteredIssues, currentPage, pageSize]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterPriority, filterMandal, filterDepartment, filterVolunteer, filterType, filterCategory, filterGender, filterAgeGroup, searchQuery, sortBy, pageSize]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   if (selectedIssue) {
     return (
@@ -856,85 +954,63 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
       {isAssignTicketsMode && (
       <div className="space-y-4">
-        <p className="text-xs text-[#8E9CAE]">
-          Assign departments and inspect tickets.
-        </p>
-      {/* VIEW 2: MASTER ISSUES GRID & SEARCH */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="relative w-full sm:w-80">
+        <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#223348] shadow-lg space-y-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="relative w-full lg:flex-1 lg:max-w-md">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
               <input
                 type="text"
-                placeholder="Search across all mandals, issues, citizens..."
+                placeholder="Search by ID, title, village, citizen, phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#0F2338] border border-[#22405E] rounded-xl pl-9 pr-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="OPEN_UNASSIGNED">Open / Unassigned</option>
-                <option value="ASSIGNED">Assigned</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="OVERDUE">Overdue</option>
-                <option value="RESOLVED">Resolved / Closed</option>
-                <option value="REJECTED">Rejected</option>
-              </select>
-
-              <select
-                value={filterPriority}
-                onChange={(e) => setFilterPriority(e.target.value)}
-                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-              >
-                <option value="ALL">All Priorities</option>
-                <option value="URGENT">URGENT</option>
-                <option value="HIGH">HIGH</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="LOW">LOW</option>
-              </select>
-              <select
-                value={filterDepartment}
-                onChange={(e) => setFilterDepartment(e.target.value)}
-                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-              >
-                <option value="ALL">All Departments</option>
-                {Array.from(new Set(issues.map((i) => i.department || i.assignedDepartment).filter(Boolean))).map((dept) => (
-                  <option key={String(dept)} value={String(dept)}>{String(dept)}</option>
-                ))}
-              </select>
-              <select
-                value={filterVolunteer}
-                onChange={(e) => setFilterVolunteer(e.target.value)}
-                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-              >
-                <option value="ALL">All Volunteers</option>
-                {volunteers.map((vol) => (
-                  <option key={vol.id} value={vol.id}>{vol.name}</option>
-                ))}
-              </select>
-              <select
-                value={filterMandal}
-                onChange={(e) => setFilterMandal(e.target.value)}
-                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
-              >
-                <option value="ALL">All Mandals</option>
-                {mandals.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-              <div className="flex items-center p-1 rounded-xl bg-[#071322] border border-[#22405E] text-xs">
+            <div className="flex flex-wrap items-center justify-end gap-2.5 w-full lg:w-auto">
+              <div className="flex items-center h-10 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
+                <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
+                >
+                  <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
+                  <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
+                  <option value="DUE_DATE" className="bg-[#0B131E]">Earliest Due (Urgent SLA)</option>
+                  <option value="PRIORITY" className="bg-[#0B131E]">Highest Priority (Urgent → Low)</option>
+                  <option value="STATUS" className="bg-[#0B131E]">By Lifecycle Status</option>
+                  <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
+                </select>
+              </div>
+              <div className="flex items-center h-10 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
+                <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-transparent text-[#D4A24C] font-bold text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value={10} className="bg-[#0B131E]">10 / page</option>
+                  <option value={25} className="bg-[#0B131E]">25 / page</option>
+                  <option value={50} className="bg-[#0B131E]">50 / page</option>
+                  <option value={100} className="bg-[#0B131E]">100 / page</option>
+                </select>
+              </div>
+              <div className="flex items-center h-10 p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
                 <button
                   type="button"
                   onClick={() => setTicketLayout("GRID")}
-                  title="Grid cards"
-                  className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  title="Grid Cards View"
+                  className={`h-8 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                     ticketLayout === "GRID"
                       ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
                       : "text-[#CBD5E1] hover:text-white"
@@ -946,8 +1022,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setTicketLayout("TABLE")}
-                  title="Data table"
-                  className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  title="Data Table View"
+                  className={`h-8 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                     ticketLayout === "TABLE"
                       ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
                       : "text-[#CBD5E1] hover:text-white"
@@ -960,13 +1036,114 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
 
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-2 text-xs">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Status: All</option>
+              <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
+              <option value="ASSIGNED">Status: Assigned</option>
+              <option value="IN_PROGRESS">Status: In Progress</option>
+              <option value="OVERDUE">Status: Overdue</option>
+              <option value="COMPLETED">Status: Resolved / Closed</option>
+              <option value="REJECTED">Status: Rejected</option>
+              <option value="CANT_BE_DONE">Status: Can't be done</option>
+            </select>
+            <select
+              value={filterDepartment}
+              onChange={(e) => setFilterDepartment(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Dept: All</option>
+              {availableDepartments.map((dept) => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Type: All</option>
+              {availableTypes.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Category: All</option>
+              {availableCategories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Priority: All</option>
+              <option value="URGENT">Urgent</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+            <select
+              value={filterGender}
+              onChange={(e) => setFilterGender(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Gender: All</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <select
+              value={filterAgeGroup}
+              onChange={(e) => setFilterAgeGroup(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Age: All</option>
+              <option value="20-30">Age: 20-30</option>
+              <option value="30-40">Age: 30-40</option>
+              <option value="40-50">Age: 40-50</option>
+              <option value="50+">Age: 50+</option>
+            </select>
+            <select
+              value={filterMandal}
+              onChange={(e) => setFilterMandal(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Mandal: All</option>
+              {mandals.map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+            <select
+              value={filterVolunteer}
+              onChange={(e) => setFilterVolunteer(e.target.value)}
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Assignee: All</option>
+              {volunteers.map((vol) => (
+                <option key={vol.id} value={vol.id}>{vol.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+
           {filteredIssues.length === 0 ? (
             <div className="p-8 text-center text-sm text-[#8E9CAE] rounded-xl border border-[#22405E] bg-[#0F2338]">
               No tickets match the current filters.
             </div>
           ) : ticketLayout === "GRID" ? (
           <div className={TICKET_GRID_CLASS}>
-            {filteredIssues.map((iss) => {
+            {paginatedIssues.map((iss) => {
               const isClosed = iss.status === "COMPLETED" || iss.status === "RESOLVED";
               return (
                 <TicketGridCard
@@ -1015,7 +1192,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#223348]/50">
-                  {filteredIssues.map((iss) => {
+                  {paginatedIssues.map((iss) => {
                     const surface = ticketStatusSurface(iss);
                     return (
                       <tr
@@ -1074,6 +1251,57 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               </table>
             </div>
           </div>
+          )}
+
+          {filteredIssues.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:px-5 rounded-2xl bg-[#0E1724]/90 border border-[#223348] text-xs">
+              <div className="text-[#8E9CAE] font-mono">
+                Showing{" "}
+                <strong className="text-[#F5EFE0]">{(currentPage - 1) * pageSize + 1}</strong>
+                {" "}to{" "}
+                <strong className="text-[#F5EFE0]">{Math.min(currentPage * pageSize, filteredIssues.length)}</strong>
+                {" "}of{" "}
+                <strong className="text-[#D4A24C]">{filteredIssues.length}</strong>
+                {" "}records
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronsLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="px-2 text-[#F5EFE0] font-semibold">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronsRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
