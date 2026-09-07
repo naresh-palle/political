@@ -73,7 +73,7 @@ export const OfficerTicketPortal: React.FC = () => {
       }
 
       if (!tid) {
-        tid = "iss-ll-pr-01";
+        tid = "iss-ll-sec-asg-01";
       }
       setIssueId(tid);
     };

@@ -781,8 +781,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     );
   }
 
+  const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign");
+
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
+      {!isAssignTicketsMode && (
+      <>
       {/* Manager Command Strip */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-2xl">
         <div className="flex items-center gap-4">
@@ -798,9 +802,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               </span>
               <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "Constituency Grievance Command"}</span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
-              {currentUser.name}
-            </h1>
             <p className="text-xs text-[#8E9CAE] mt-0.5">
               Supervising Ground Grievance Intake & Resolutions across {mandals.length} Mandals
             </p>
@@ -852,6 +853,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
       )}
 
+      </>
+      )}
+
+      {isAssignTicketsMode && (
+      <>
+      <p className="text-xs text-[#8E9CAE]">
+        Assign departments, inspect tickets, and review officer status updates.
+      </p>
       {/* 1. Official Tickets Master Summary Header Strip */}
       <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#223348]/70 pb-3">
@@ -1346,6 +1355,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         )}
       </div>
 
+      </>
+      )}
+
+      {!isAssignTicketsMode && (
+      <>
       {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters) */}
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
         <div
@@ -1526,6 +1540,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
       </div>
 
+      </>
+      )}
+
+      {isAssignTicketsMode && (
+      <>
       {/* Filter & Sort Master Command Strip */}
       <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#223348] shadow-lg space-y-3">
         {/* Row 1: Search, Sort & View Mode */}
@@ -2206,6 +2225,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         )}
       </div>
+
+      </>
+      )}
 
       {/* Tickets Table PDF Export Modal */}
       {isAiPdfModalOpen && (

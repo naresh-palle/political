@@ -17,6 +17,23 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 
 ROOT_DIR = Path(__file__).parent
+RETIRED_MOCK_ISSUE_IDS = {
+    "iss-bng-101",
+    "iss-bng-102",
+    "iss-bng-103",
+    "iss-1002",
+    "iss-102",
+    "iss-103",
+    "iss-104",
+    "iss-ll-pr-01",
+    "iss-ll-pr-02",
+    "iss-ll-rws-01",
+    "iss-ll-rws-02",
+    "iss-ll-open-01",
+    "iss-ll-open-02",
+    "iss-ll-open-03",
+    "iss-ll-open-04",
+}
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 if str(ROOT_DIR.parent) not in sys.path:
@@ -219,7 +236,7 @@ def load_json_fallback(filename: str):
         if not iid:
             continue
         by_id[iid] = merge_issue_docs(by_id.get(iid), doc)
-    return list(by_id.values())
+    return [i for i in by_id.values() if i.get("id") not in RETIRED_MOCK_ISSUE_IDS]
 
 def sanitize_doc(obj):
     """
@@ -2170,7 +2187,7 @@ async def trigger_geography_seed():
             await db.field_issues.update_one({"id": iss["id"]}, {"$set": iss}, upsert=True)
             imported_issues += 1
         await db.field_issues.delete_many(
-            {"id": {"$in": ["iss-bng-101", "iss-bng-102", "iss-bng-103", "iss-1002", "iss-102", "iss-103", "iss-104"]}}
+            {"id": {"$in": list(RETIRED_MOCK_ISSUE_IDS)}}
         )
 
         for notif in field_notifications:
@@ -2282,6 +2299,7 @@ async def get_field_issues(
     for i in issues:
         if isinstance(i, dict) and "_id" in i:
             i.pop("_id")
+    issues = [i for i in issues if isinstance(i, dict) and i.get("id") not in RETIRED_MOCK_ISSUE_IDS]
     return issues
 
 
@@ -2293,6 +2311,9 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     except Exception as e:
         log_mongo_notice("get issue by id", e)
         
+    if issue_id in RETIRED_MOCK_ISSUE_IDS:
+        raise HTTPException(status_code=404, detail="Issue not found")
+
     issue = resolve_stored_issue(issue_id, issue)
         
     if not issue:
@@ -2309,7 +2330,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
 @api_router.post("/field-ops/send-whatsapp-otp")
 async def send_whatsapp_otp(payload: dict):
     phone = payload.get("phone", "").replace("+", "").replace(" ", "").replace("-", "")
-    issue_id = payload.get("issueId") or "iss-ll-pr-01"
+    issue_id = payload.get("issueId") or "iss-ll-sec-asg-01"
     otp = "482910"
     
     clean_phone = phone[-10:] if len(phone) >= 10 else phone

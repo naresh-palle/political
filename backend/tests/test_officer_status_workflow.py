@@ -122,14 +122,14 @@ def test_runtime_persist_prevents_seed_assigned_from_winning(tmp_path, monkeypat
     monkeypatch.setattr(srv, "RUNTIME_FIELD_ISSUES_PATH", runtime_path)
     srv.persist_field_issue(
         {
-            "id": "iss-ll-open-04",
+            "id": "iss-ll-sec-open-01",
             "status": "IN_PROGRESS",
             "lastStatusRemarks": "Cleaning started at Ward 4",
             "lastStatusUpdateAt": "2026-09-07T16:00:00Z",
         }
     )
     loaded = srv.load_json_fallback("field_issues.json")
-    found = next((i for i in loaded if i.get("id") == "iss-ll-open-04"), None)
+    found = next((i for i in loaded if i.get("id") == "iss-ll-sec-open-01"), None)
     assert found is not None
     assert found["status"] == "IN_PROGRESS"
     assert found["lastStatusRemarks"] == "Cleaning started at Ward 4"

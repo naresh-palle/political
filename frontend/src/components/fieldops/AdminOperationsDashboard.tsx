@@ -7,11 +7,12 @@ import {
   GeographicDrilldownNode
 } from "../../types";
 import { politicalApiService } from "../../services/api";
-import { IssueDetailModal } from "./IssueDetailModal";
+import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
+import { IssueDetailView } from "./IssueDetailView";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
-import { assignmentSafeStatus, countByKpi } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, kpiBucket } from "../../utils/ticketKpi";
 import {
   ShieldCheck,
   Users,
@@ -40,11 +41,13 @@ import {
 interface AdminDashboardProps {
   currentUser: UserProfile;
   onUpdateProfile?: (updated: UserProfile) => void;
+  initialFilterStatus?: string;
 }
 
 export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   currentUser,
-  onUpdateProfile
+  onUpdateProfile,
+  initialFilterStatus
 }) => {
   const [drilldownData, setDrilldownData] = useState<any>(null);
   const [issues, setIssues] = useState<FieldIssue[]>([]);
@@ -108,11 +111,34 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   // View Mode: Geographic Tree vs Master Table vs Director Command vs Political Admins
   const [viewMode, setViewMode] = useState<"DRILLDOWN" | "ALL_ISSUES" | "DIRECTORS" | "VOLUNTEERS" | "POLITICAL_ADMINS">("DRILLDOWN");
 
+  const getStatusFromUrl = (): string => {
+    const hash = window.location.hash;
+    if (hash.includes("status=")) {
+      const match = hash.match(/status=([A-Z_]+)/i);
+      if (match && match[1]) {
+        return match[1].toUpperCase();
+      }
+    }
+    return "";
+  };
+
   // Filters
-  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [filterStatus, setFilterStatus] = useState<string>(
+    () => getStatusFromUrl() || initialFilterStatus || "ALL"
+  );
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterMandal, setFilterMandal] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const syncStatus = () => {
+      const fromUrl = getStatusFromUrl();
+      if (fromUrl) setFilterStatus(fromUrl);
+    };
+    syncStatus();
+    window.addEventListener("hashchange", syncStatus);
+    return () => window.removeEventListener("hashchange", syncStatus);
+  }, []);
 
   useEffect(() => {
     loadAdminData();
@@ -167,9 +193,71 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const overdueCount = kpiCounts.overdue;
   const rejectedCount = kpiCounts.rejected;
 
+  useEffect(() => {
+    const openTicketFromHash = async () => {
+      const ticketId = getTicketIdFromHash();
+      if (!ticketId) return;
+      const found = issues.find((i) => i.id === ticketId);
+      if (found) {
+        setSelectedIssue(found);
+        return;
+      }
+      try {
+        const remote = await politicalApiService.getFieldIssueById(ticketId);
+        if (remote) setSelectedIssue(remote);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    openTicketFromHash();
+    window.addEventListener("hashchange", openTicketFromHash);
+    return () => window.removeEventListener("hashchange", openTicketFromHash);
+  }, [issues]);
+
+  const goAssignTickets = (status: string) => {
+    setFilterStatus(status);
+    window.location.hash = `#/assign-tickets?status=${status}`;
+  };
+
   const filteredIssues = useMemo(() => {
     return issues.filter((item) => {
-      if (filterStatus !== "ALL" && item.status !== filterStatus) return false;
+      const bucket = kpiBucket(item);
+      if (filterStatus !== "ALL") {
+        if (
+          (filterStatus === "OPEN_UNASSIGNED" || filterStatus === "PENDING" || filterStatus === "NEW") &&
+          bucket !== "OPEN_UNASSIGNED"
+        ) {
+          return false;
+        } else if (filterStatus === "ASSIGNED" && bucket !== "ASSIGNED") {
+          return false;
+        } else if (filterStatus === "IN_PROGRESS" && bucket !== "IN_PROGRESS") {
+          return false;
+        } else if (filterStatus === "OVERDUE" && bucket !== "OVERDUE") {
+          return false;
+        } else if (
+          (filterStatus === "RESOLVED" || filterStatus === "COMPLETED") &&
+          bucket !== "RESOLVED"
+        ) {
+          return false;
+        } else if (filterStatus === "REJECTED" && bucket !== "REJECTED") {
+          return false;
+        } else if (
+          ![
+            "OPEN_UNASSIGNED",
+            "PENDING",
+            "NEW",
+            "ASSIGNED",
+            "IN_PROGRESS",
+            "OVERDUE",
+            "RESOLVED",
+            "COMPLETED",
+            "REJECTED"
+          ].includes(filterStatus) &&
+          item.status !== filterStatus
+        ) {
+          return false;
+        }
+      }
       if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
       if (filterMandal !== "ALL" && item.mandalId !== filterMandal) return false;
 
@@ -187,8 +275,28 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     });
   }, [issues, filterStatus, filterPriority, filterMandal, searchQuery]);
 
+  if (selectedIssue) {
+    return (
+      <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6">
+        <IssueDetailView
+          issue={selectedIssue}
+          currentUser={currentUser}
+          onBack={() => {
+            setSelectedIssue(null);
+            clearTicketIdFromHash();
+          }}
+          onIssueUpdated={loadAdminData}
+        />
+      </div>
+    );
+  }
+
+  const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign");
+
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
+      {!isAssignTicketsMode && (
+      <>
       {/* Executive Command Header */}
       {isPlatformSuperAdmin ? (
         /* LEVEL 1: SUPER ADMIN MASTER BANNER */
@@ -258,12 +366,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               Geographic Tree
             </button>
             <button
-              onClick={() => setViewMode("ALL_ISSUES")}
-              className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-                viewMode === "ALL_ISSUES"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
-              }`}
+              onClick={() => goAssignTickets("ALL")}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
             >
               Master Issues ({totalIssues})
             </button>
@@ -338,10 +442,6 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   </button>
                 </div>
 
-                <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal">
-                  {currentUser.name}
-                </h1>
-
                 <p className="text-xs sm:text-sm text-[#D8CFB8] leading-relaxed">
                   {currentUser.designation || "Minister for Roads & Buildings and Infrastructure & Investments | MLA Banaganapalle"}
                 </p>
@@ -376,12 +476,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 Constituency Tree
               </button>
               <button
-                onClick={() => setViewMode("ALL_ISSUES")}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-                  viewMode === "ALL_ISSUES"
-                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
-                }`}
+                onClick={() => goAssignTickets("ALL")}
+                className="px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
               >
                 Constituency Issues ({totalIssues})
               </button>
@@ -412,31 +508,46 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* KPI Overview Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+        <div
+          onClick={() => goAssignTickets("ALL")}
+          className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/35 hover:border-[#D4A24C]/80 cursor-pointer transition-all"
+        >
           <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Tickets</span>
-          <div className="font-display text-2xl font-bold text-[#F5EFE0] mt-1">{totalIssues}</div>
+          <div className="font-display text-2xl font-bold text-[#D4A24C] mt-1">{totalIssues}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">All</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+        <div
+          onClick={() => goAssignTickets("OPEN_UNASSIGNED")}
+          className="p-4 rounded-xl bg-amber-950/40 backdrop-blur-xl border border-amber-500/40 hover:border-amber-400/70 cursor-pointer transition-all"
+        >
           <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">Open / Unassigned</span>
           <div className="font-display text-2xl font-bold text-amber-400 mt-1">{pendingCount}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Pending</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+        <div
+          onClick={() => goAssignTickets("ASSIGNED")}
+          className="p-4 rounded-xl bg-violet-950/40 backdrop-blur-xl border border-violet-500/40 hover:border-violet-400/70 cursor-pointer transition-all"
+        >
           <span className="text-[10px] uppercase tracking-wider text-violet-300 block font-semibold">Assigned</span>
           <div className="font-display text-2xl font-bold text-violet-200 mt-1">{assignedCount}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Officer</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+        <div
+          onClick={() => goAssignTickets("IN_PROGRESS")}
+          className="p-4 rounded-xl bg-sky-950/40 backdrop-blur-xl border border-sky-500/40 hover:border-sky-400/70 cursor-pointer transition-all"
+        >
           <span className="text-[10px] uppercase tracking-wider text-sky-300 block font-semibold">In Progress</span>
           <div className="font-display text-2xl font-bold text-sky-400 mt-1">{inProgressCount}</div>
           <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Ground</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40">
+        <div
+          onClick={() => goAssignTickets("OVERDUE")}
+          className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40 hover:border-rose-400/80 cursor-pointer transition-all"
+        >
           <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" /> Overdue Alerts
           </span>
@@ -444,13 +555,19 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           <span className="text-[10px] text-rose-300 mt-0.5 block">Urgent</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+        <div
+          onClick={() => goAssignTickets("RESOLVED")}
+          className="p-4 rounded-xl bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/40 hover:border-emerald-400/70 cursor-pointer transition-all"
+        >
           <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Resolved / Closed</span>
           <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{completedCount}</div>
           <span className="text-[10px] text-emerald-400 mt-0.5 block">Closed</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#22405E]/80">
+        <div
+          onClick={() => goAssignTickets("REJECTED")}
+          className="p-4 rounded-xl bg-slate-800/50 backdrop-blur-xl border border-slate-500/40 hover:border-slate-400/70 cursor-pointer transition-all"
+        >
           <span className="text-[10px] uppercase tracking-wider text-slate-300 block font-semibold">Rejected</span>
           <div className="font-display text-2xl font-bold text-slate-200 mt-1">{rejectedCount}</div>
           <span className="text-[10px] text-slate-400 mt-0.5 block">Closed</span>
@@ -679,8 +796,15 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
+      </>
+      )}
+
+      {isAssignTicketsMode && (
+      <div className="space-y-4">
+        <p className="text-xs text-[#8E9CAE]">
+          Assign departments, inspect tickets, and review officer status updates.
+        </p>
       {/* VIEW 2: MASTER ISSUES GRID & SEARCH */}
-      {viewMode === "ALL_ISSUES" && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="relative w-full sm:w-80">
@@ -701,10 +825,12 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
               >
                 <option value="ALL">All Statuses</option>
-                <option value="NEW">NEW</option>
-                <option value="IN_PROGRESS">IN_PROGRESS</option>
-                <option value="COMPLETED">COMPLETED</option>
-                <option value="OVERDUE">OVERDUE</option>
+                <option value="OPEN_UNASSIGNED">Open / Unassigned</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="OVERDUE">Overdue</option>
+                <option value="RESOLVED">Resolved / Closed</option>
+                <option value="REJECTED">Rejected</option>
               </select>
 
               <select
@@ -756,8 +882,11 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             })}
           </div>
         </div>
+      </div>
       )}
 
+      {!isAssignTicketsMode && (
+      <>
       {/* VIEW 0: POLITICAL ADMINS / CONSTITUENCIES HUB (PLATFORM SUPER ADMIN ONLY) */}
       {viewMode === "POLITICAL_ADMINS" && isPlatformSuperAdmin && (
         <div className="space-y-4">
@@ -967,15 +1096,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Selected Issue Detail Modal */}
-      {selectedIssue && (
-        <IssueDetailModal
-          issue={selectedIssue}
-          currentUser={currentUser}
-          isOpen={!!selectedIssue}
-          onClose={() => setSelectedIssue(null)}
-          onIssueUpdated={loadAdminData}
-        />
+      </>
       )}
 
       {/* Edit Profile Modal */}

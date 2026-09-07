@@ -33,9 +33,17 @@ const RETIRED_MOCK_IDS = new Set([
   "iss-1002",
   "iss-102",
   "iss-103",
-  "iss-104"
+  "iss-104",
+  "iss-ll-pr-01",
+  "iss-ll-pr-02",
+  "iss-ll-rws-01",
+  "iss-ll-rws-02",
+  "iss-ll-open-01",
+  "iss-ll-open-02",
+  "iss-ll-open-03",
+  "iss-ll-open-04"
 ]);
-const TICKET_SEED = "ll-open-tickets-v2-2026-09-07";
+const TICKET_SEED = "ll-section-tickets-v1-2026-09-07";
 const REMOTE_ISSUES_CACHE_KEY = "leaders_lens_remote_field_issues";
 
 let cachedSeedIssues: any[] | null = null;
@@ -1132,10 +1140,8 @@ export const politicalApiService = {
   }): Promise<any[]> {
     try {
       if (localStorage.getItem("leaders_lens_ticket_seed") !== TICKET_SEED) {
-        const preserved = readCachedIssueList("leaders_lens_created_field_issues").filter((i: any) =>
-          OFFICER_LOCKED_STATUSES.has(String(i?.status || "").toUpperCase())
-        );
-        writeCachedIssueList("leaders_lens_created_field_issues", preserved);
+        writeCachedIssueList("leaders_lens_created_field_issues", []);
+        writeCachedIssueList(REMOTE_ISSUES_CACHE_KEY, []);
         localStorage.setItem("leaders_lens_ticket_seed", TICKET_SEED);
       }
     } catch (e) {}

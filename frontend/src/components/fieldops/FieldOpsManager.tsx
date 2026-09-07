@@ -31,5 +31,11 @@ export const FieldOpsManager: React.FC<FieldOpsManagerProps> = ({ currentUser, i
   }
 
   // Renders for both Level 1 Platform Super Admin and Level 2 Political / Constituency Admin
-  return <AdminOperationsDashboard currentUser={currentUser} onUpdateProfile={onUpdateProfile} />;
+  return (
+    <AdminOperationsDashboard
+      currentUser={currentUser}
+      onUpdateProfile={onUpdateProfile}
+      initialFilterStatus={initialFilter}
+    />
+  );
 };

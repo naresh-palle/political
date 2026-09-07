@@ -313,7 +313,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
   const canUpdateProof = isAdmin || isDirector;
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-2 sm:py-4 space-y-4 animate-fadeIn text-[#F5EFE0]">
+    <div className="w-full max-w-7xl mx-auto py-2 sm:py-4 space-y-3 animate-fadeIn text-[#F5EFE0]">
       {/* Navigation Breadcrumb Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#0E1724]/85 backdrop-blur-xl border border-[#223348] shadow-lg">
         <div className="flex items-center gap-3">
@@ -509,10 +509,9 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         </div>
       </div>
 
-      {/* Two aligned columns: scope/reporter left, assignment + timeline fill the right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          <div className="lg:col-span-7 space-y-5 min-w-0 flex flex-col">
-            <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
+      {/* 2×2 cells: card borders fill the cell so bottoms align and gaps stay tight */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:auto-rows-fr">
+            <div className="h-full p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
               <div className="flex items-start justify-between gap-3 border-b border-[#223348]/70 pb-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
                   Issue Scope & Ground Description
@@ -532,71 +531,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
               )}
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg h-fit">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[#223348]/70 pb-2">
-                Citizen / Reporter Identification
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
-                <div className="min-w-0">
-                  <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Reporter Name</span>
-                  <strong className="text-[#F5EFE0] text-sm block mt-0.5 break-words">{issue.reportedBy}</strong>
-                  <span className="text-[11px] text-[#D4A24C] block mt-0.5">
-                    {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
-                    {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
-                  </span>
-                </div>
-
-                {issue.reporterPhone && (
-                  <div className="min-w-0">
-                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Direct Phone Contact</span>
-                    <a
-                      href={`tel:${issue.reporterPhone}`}
-                      className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold transition-colors whitespace-nowrap"
-                    >
-                      <Phone className="w-3.5 h-3.5 shrink-0" />
-                      {issue.reporterPhone}
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {issue.attachments && issue.attachments.length > 0 && (
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2 border-b border-[#223348]/70 pb-2">
-                  <Camera className="w-4 h-4 text-[#D4A24C]" />
-                  Uploaded Proof Documents & Photos ({issue.attachments.length})
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {issue.attachments.map((url, idx) => (
-                    <div
-                      key={idx}
-                      className="group rounded-2xl overflow-hidden border border-[#223348] bg-[#0B131E] relative aspect-video"
-                    >
-                      <img
-                        src={url}
-                        alt={`Proof Document ${idx + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold text-[#D4A24C] transition-opacity"
-                      >
-                        <Eye className="w-4 h-4 mr-1.5" /> View Full Image
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="lg:col-span-5 min-w-0 flex flex-col gap-5">
-            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg flex-1">
+            <div className="h-full p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
               <div className="flex items-center justify-between gap-2 border-b border-[#223348]/70 pb-2">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
                   Field Squad Assignment
@@ -649,7 +584,37 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
               )}
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg flex-1 min-h-0">
+            <div className="h-full p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[#223348]/70 pb-2">
+                Citizen / Reporter Identification
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
+                <div className="min-w-0">
+                  <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Reporter Name</span>
+                  <strong className="text-[#F5EFE0] text-sm block mt-0.5 break-words">{issue.reportedBy}</strong>
+                  <span className="text-[11px] text-[#D4A24C] block mt-0.5">
+                    {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
+                    {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+                  </span>
+                </div>
+
+                {issue.reporterPhone && (
+                  <div className="min-w-0">
+                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Direct Phone Contact</span>
+                    <a
+                      href={`tel:${issue.reporterPhone}`}
+                      className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold transition-colors whitespace-nowrap"
+                    >
+                      <Phone className="w-3.5 h-3.5 shrink-0" />
+                      {issue.reporterPhone}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="h-full p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg min-h-0">
           <div className="flex items-center justify-between border-b border-[#223348]/70 pb-2">
             <h3 className="text-sm font-semibold text-[#F5EFE0] flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#D4A24C]" />
@@ -694,8 +659,39 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
             </div>
           )}
             </div>
+        </div>
+
+      {issue.attachments && issue.attachments.length > 0 && (
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2 border-b border-[#223348]/70 pb-2">
+            <Camera className="w-4 h-4 text-[#D4A24C]" />
+            Uploaded Proof Documents & Photos ({issue.attachments.length})
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {issue.attachments.map((url, idx) => (
+              <div
+                key={idx}
+                className="group rounded-2xl overflow-hidden border border-[#223348] bg-[#0B131E] relative aspect-video"
+              >
+                <img
+                  src={url}
+                  alt={`Proof Document ${idx + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs font-bold text-[#D4A24C] transition-opacity"
+                >
+                  <Eye className="w-4 h-4 mr-1.5" /> View Full Image
+                </a>
+              </div>
+            ))}
           </div>
         </div>
+      )}
 
       {/* Submodal: Submit Work Update & Upload Proof */}
       {isUpdateModalOpen && (
