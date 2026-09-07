@@ -67,23 +67,56 @@ const HASH_TO_PRODUCT_MAP: Record<string, ActiveProductType> = {
   "#/pitch": "pitch"
 };
 
+function isOfficerPortalLocation(): boolean {
+  const hash = (window.location.hash || "").toLowerCase();
+  const path = (window.location.pathname || "").toLowerCase();
+  const search = (window.location.search || "").toLowerCase();
+  return (
+    hash.includes("#/officer-portal") ||
+    hash.includes("#/ticket-action") ||
+    path.includes("/officer-portal") ||
+    path.includes("/ticket-action") ||
+    search.includes("ticket=")
+  );
+}
+
+function canonicalizeOfficerPortalUrl(): string {
+  const hash = window.location.hash || "";
+  const search = window.location.search || "";
+  let ticket = "";
+  const hashTicket = hash.match(/ticket=([^&]+)/i);
+  const searchTicket = search.match(/ticket=([^&]+)/i);
+  if (hashTicket && hashTicket[1]) ticket = decodeURIComponent(hashTicket[1]);
+  else if (searchTicket && searchTicket[1]) ticket = decodeURIComponent(searchTicket[1]);
+
+  let path = window.location.pathname || "/";
+  path = path.replace(/\/login\/?$/i, "/");
+  if (!path.endsWith("/")) {
+    // Keep directory roots like /political/ ; strip accidental /login.html
+    path = path.replace(/login\.html$/i, "");
+  }
+  const ticketQs = ticket ? `?ticket=${encodeURIComponent(ticket)}` : "";
+  return `${path}#/officer-portal${ticketQs}`;
+}
+
 export function App() {
   return <AppInner />;
 }
 
 function AppInner() {
-  const [isOfficerPortal, setIsOfficerPortal] = useState<boolean>(() => {
-    const currentHash = window.location.hash.toLowerCase();
-    return currentHash.includes("#/officer-portal") || currentHash.includes("#/ticket-action");
-  });
+  const [isOfficerPortal, setIsOfficerPortal] = useState<boolean>(() => isOfficerPortalLocation());
 
   useEffect(() => {
     const handleHashCheck = () => {
-      const currentHash = window.location.hash.toLowerCase();
-      setIsOfficerPortal(currentHash.includes("#/officer-portal") || currentHash.includes("#/ticket-action"));
+      setIsOfficerPortal(isOfficerPortalLocation());
     };
+    handleHashCheck();
     window.addEventListener("hashchange", handleHashCheck);
-    return () => window.removeEventListener("hashchange", handleHashCheck);
+    window.addEventListener("popstate", handleHashCheck);
+    return () => {
+      window.removeEventListener("hashchange", handleHashCheck);
+      window.removeEventListener("popstate", handleHashCheck);
+    };
   }, []);
 
   const [route, setRoute] = useState<"auth" | "app">(() => {
@@ -166,6 +199,16 @@ function AppInner() {
 
   // URL Hash Synchronization & Browser Title Sync
   useEffect(() => {
+    if (isOfficerPortal) {
+      document.title = "Department Ticket Action | Leader's Lens";
+      const canonical = canonicalizeOfficerPortalUrl();
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (current !== canonical) {
+        window.history.replaceState(null, "", canonical);
+      }
+      return;
+    }
+
     let targetHash = "#/field-ops";
     if (route === "auth") {
       targetHash = "#/login";
@@ -189,7 +232,7 @@ function AppInner() {
     if (currentBaseHash !== targetHash && !window.location.hash.includes("?status=")) {
       window.history.replaceState(null, "", targetHash);
     }
-  }, [route, activeProduct]);
+  }, [route, activeProduct, isOfficerPortal]);
 
   // Listen to browser Back/Forward navigation (`hashchange` event)
   useEffect(() => {
@@ -197,6 +240,7 @@ function AppInner() {
       const rawHash = window.location.hash.toLowerCase();
       const currentHash = rawHash.split("?")[0];
       if (currentHash === "#/login" || currentHash === "#/auth") {
+        if (isOfficerPortalLocation()) return;
         setRoute("auth");
       } else if (HASH_TO_PRODUCT_MAP[currentHash]) {
         const prod = HASH_TO_PRODUCT_MAP[currentHash];

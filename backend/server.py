@@ -9,6 +9,7 @@ import json
 import logging
 import sys
 import uuid
+import asyncio
 from datetime import datetime, timezone
 from typing import List, Optional
 from pathlib import Path
@@ -2099,7 +2100,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     remarks = (payload.get("remarks") or payload.get("rejectionReason") or payload.get("notes") or "").strip()
     proof_files = payload.get("proofFiles") if isinstance(payload.get("proofFiles"), list) else []
     proof_url = (payload.get("proofUrl") or (proof_files[0] if proof_files else "") or "").strip()
-    attachments = [u for u in ([proof_url] + proof_files) if u]
+    attachments = [u for u in ([proof_url] + proof_files) if u and not str(u).startswith("data:")]
     attachments = list(dict.fromkeys(attachments))
 
     status_err = validate_officer_status(new_status)
@@ -2220,8 +2221,34 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     complainant_phone = issue.get("reporterPhone") or issue.get("citizenPhone") or ""
     wa_text = complainant_whatsapp_text(complainant_name, ticket_number, new_status, remarks)
     correlation_id = f"{issue_id}:{event_type}:{now_str}"
+    audit_id = f"wa-stat-{uuid.uuid4().hex[:8]}"
 
-    whatsapp_result = await whatsapp_client.send_whatsapp_notification({
+    pending_audit = {
+        "id": audit_id,
+        "issueId": issue_id,
+        "eventType": event_type,
+        "recipientType": "COMPLAINT_PERSON",
+        "recipientReference": mask_phone(complainant_phone),
+        "channel": "WHATSAPP",
+        "templateName": "complainant_status_update",
+        "providerMessageId": None,
+        "status": "PENDING",
+        "attempt": 1,
+        "createdAt": now_str,
+        "sentAt": None,
+        "failedAt": None,
+        "errorCode": None,
+        "errorMessage": None,
+        "correlationId": correlation_id,
+    }
+    try:
+        await db.notification_audits.insert_one(dict(pending_audit))
+    except Exception as e:
+        logger.warning(f"MongoDB insert notification_audit: {e}")
+    sanitize_doc(pending_audit)
+    IN_MEMORY_NOTIFICATION_AUDITS.insert(0, sanitize_doc(dict(pending_audit)))
+
+    wa_payload = {
         "recipientPhone": complainant_phone,
         "messageKind": "TEXT",
         "templateName": "complainant_status_update",
@@ -2232,38 +2259,41 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "issueId": issue_id,
         "textMessage": wa_text,
         "correlationId": correlation_id,
-    })
-
-    wa_status = whatsapp_result.get("status") or "FAILED"
-    if wa_status not in ("SENT", "DELIVERED", "FAILED", "PENDING"):
-        wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
-
-    audit_record = {
-        "id": f"wa-stat-{uuid.uuid4().hex[:8]}",
-        "issueId": issue_id,
-        "eventType": event_type,
-        "recipientType": "COMPLAINT_PERSON",
-        "recipientReference": mask_phone(complainant_phone),
-        "channel": "WHATSAPP",
-        "templateName": "complainant_status_update",
-        "providerMessageId": whatsapp_result.get("providerMessageId"),
-        "status": wa_status,
-        "attempt": 1,
-        "createdAt": now_str,
-        "sentAt": whatsapp_result.get("sentAt") if wa_status in ("SENT", "DELIVERED") else None,
-        "failedAt": whatsapp_result.get("sentAt") if wa_status == "FAILED" else None,
-        "errorCode": whatsapp_result.get("errorCode"),
-        "errorMessage": whatsapp_result.get("errorMessage"),
-        "correlationId": correlation_id,
-        "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
-        "apiVersion": whatsapp_result.get("apiVersion"),
     }
+
+    async def _dispatch_complainant_whatsapp():
+        try:
+            whatsapp_result = await whatsapp_client.send_whatsapp_notification(wa_payload)
+            wa_status = whatsapp_result.get("status") or "FAILED"
+            if wa_status not in ("SENT", "DELIVERED", "FAILED", "PENDING"):
+                wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
+            patch = {
+                "status": wa_status,
+                "providerMessageId": whatsapp_result.get("providerMessageId"),
+                "sentAt": whatsapp_result.get("sentAt") if wa_status in ("SENT", "DELIVERED") else None,
+                "failedAt": whatsapp_result.get("sentAt") if wa_status == "FAILED" else None,
+                "errorCode": whatsapp_result.get("errorCode"),
+                "errorMessage": whatsapp_result.get("errorMessage"),
+                "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
+                "apiVersion": whatsapp_result.get("apiVersion"),
+            }
+            try:
+                await db.notification_audits.update_one({"id": audit_id}, {"$set": patch})
+            except Exception as inner:
+                log_mongo_notice("update notification_audit", inner)
+            for rec in IN_MEMORY_NOTIFICATION_AUDITS:
+                if rec.get("id") == audit_id:
+                    rec.update(patch)
+                    break
+        except Exception as dispatch_err:
+            logger.warning(f"Background complainant WhatsApp failed: {dispatch_err}")
+
     try:
-        await db.notification_audits.insert_one(dict(audit_record))
-    except Exception as e:
-        logger.warning(f"MongoDB insert notification_audit: {e}")
-    sanitize_doc(audit_record)
-    IN_MEMORY_NOTIFICATION_AUDITS.insert(0, sanitize_doc(dict(audit_record)))
+        asyncio.create_task(_dispatch_complainant_whatsapp())
+    except Exception:
+        await _dispatch_complainant_whatsapp()
+
+    wa_status = "PENDING"
 
     response = {
         "success": True,
@@ -2284,23 +2314,25 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "complainantNotification": {
             "channel": "WHATSAPP",
             "status": wa_status,
-            "providerMessageId": whatsapp_result.get("providerMessageId"),
-            "errorCode": whatsapp_result.get("errorCode"),
-            "errorMessage": whatsapp_result.get("errorMessage"),
+            "providerMessageId": None,
+            "errorCode": None,
+            "errorMessage": None,
         },
         "whatsappResult": {
             "status": wa_status,
-            "providerMessageId": whatsapp_result.get("providerMessageId"),
-            "errorCode": whatsapp_result.get("errorCode"),
-            "errorMessage": whatsapp_result.get("errorMessage"),
-            "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
+            "providerMessageId": None,
+            "errorCode": None,
+            "errorMessage": None,
+            "metaHttpStatus": None,
         },
         "status": new_status,
         "issueId": issue_id,
         "message": (
             "Ticket updated successfully. Volunteer notified."
             + (
-                " Complaint Person WhatsApp sent."
+                " Complaint Person WhatsApp dispatch started."
+                if wa_status == "PENDING"
+                else " Complaint Person WhatsApp sent."
                 if wa_status in ("SENT", "DELIVERED")
                 else " Complaint Person WhatsApp failed."
             )
