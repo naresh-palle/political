@@ -61,6 +61,7 @@ def test_officer_status_creates_volunteer_notification_and_audit(monkeypatch):
         notification_audits = mock_col
 
     monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(srv, "_mongo_circuit_open", False)
 
     async def fake_wa(payload):
         assert payload.get("messageKind") == "TEXT"
@@ -118,6 +119,7 @@ def test_assign_notify_does_not_overwrite_in_progress(monkeypatch):
     _DB.users.find_one = AsyncMock(return_value=None)
     _DB.notification_audits.insert_one = AsyncMock(return_value=None)
     monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(srv, "_mongo_circuit_open", False)
     monkeypatch.setattr(
         srv.whatsapp_client,
         "send_whatsapp_notification",
@@ -202,6 +204,7 @@ def test_resolved_and_rejected_propagate(monkeypatch):
         notification_audits = mock_col
 
     monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(srv, "_mongo_circuit_open", False)
     monkeypatch.setattr(
         srv.whatsapp_client,
         "send_whatsapp_notification",
@@ -253,6 +256,7 @@ def test_volunteer_b_does_not_receive_volunteer_a_notification(monkeypatch):
         notification_audits = mock_col
 
     monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(srv, "_mongo_circuit_open", False)
     monkeypatch.setattr(
         srv.whatsapp_client,
         "send_whatsapp_notification",
@@ -296,6 +300,7 @@ def test_status_notifies_created_by_when_assignee_is_demo(monkeypatch):
         notification_audits = mock_col
 
     monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(srv, "_mongo_circuit_open", False)
     monkeypatch.setattr(
         srv.whatsapp_client,
         "send_whatsapp_notification",
