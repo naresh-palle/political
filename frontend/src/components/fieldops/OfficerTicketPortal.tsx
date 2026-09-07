@@ -73,7 +73,7 @@ export const OfficerTicketPortal: React.FC = () => {
       }
 
       if (!tid) {
-        tid = "iss-1002";
+        tid = "iss-ll-pr-01";
       }
       setIssueId(tid);
     };
@@ -154,11 +154,18 @@ export const OfficerTicketPortal: React.FC = () => {
     }
 
     // 3. Fallback demo numbers (9885765672, 9848033441, 9849244556, etc.)
-    if (["9885765672", "9848033441", "9849244556", "9848012345"].includes(rawDigits)) {
+    if (rawDigits === "9885765672") {
       return {
-        name: "Senior Department Officer",
-        role: issue?.department || "Nodal Department Executive",
-        phone: `+91 ${rawDigits}`
+        name: "N. Palle",
+        role: issue?.department || "Panchayat Raj – Engineering",
+        phone: "+91 98857 65672"
+      };
+    }
+    if (rawDigits === "8985216765") {
+      return {
+        name: "K. Reddy",
+        role: issue?.department || "Rural Water Supply (RWS)",
+        phone: "+91 89852 16765"
       };
     }
 

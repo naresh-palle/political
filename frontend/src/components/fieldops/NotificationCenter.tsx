@@ -74,7 +74,23 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   }, [isOpen, selectedNotification, selectedIssue, onClose]);
 
   const loadNotifications = async () => {
-    setLoading(true);
+    try {
+      const stored = localStorage.getItem("leaders_lens_field_notifications");
+      if (stored) {
+        const cached = JSON.parse(stored);
+        if (Array.isArray(cached) && cached.length > 0) {
+          setNotifications(cached);
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+      } else {
+        setLoading(true);
+      }
+    } catch {
+      setLoading(true);
+    }
+    const watchdog = window.setTimeout(() => setLoading(false), 4000);
     try {
       const list = await politicalApiService.getFieldNotifications(
         currentUser.id,
@@ -87,6 +103,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     } catch (e) {
       console.error(e);
     } finally {
+      window.clearTimeout(watchdog);
       setLoading(false);
     }
   };

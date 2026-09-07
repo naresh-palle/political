@@ -82,6 +82,8 @@ async function loadStaticGeography() {
   }
 }
 
+let notificationListInflight: Promise<any[]> | null = null;
+
 export const politicalApiService = {
   async getUsers(): Promise<UserProfile[]> {
     try {
@@ -968,6 +970,23 @@ export const politicalApiService = {
     priority?: string;
     q?: string;
   }): Promise<any[]> {
+    const TICKET_SEED = "ll-officers-2026-09-07";
+    const RETIRED_MOCK_IDS = new Set([
+      "iss-bng-101",
+      "iss-bng-102",
+      "iss-bng-103",
+      "iss-1002",
+      "iss-102",
+      "iss-103",
+      "iss-104"
+    ]);
+    try {
+      if (localStorage.getItem("leaders_lens_ticket_seed") !== TICKET_SEED) {
+        localStorage.removeItem("leaders_lens_created_field_issues");
+        localStorage.setItem("leaders_lens_ticket_seed", TICKET_SEED);
+      }
+    } catch (e) {}
+
     let list: any[] = [];
     let fetchOk = false;
     try {
@@ -985,13 +1004,13 @@ export const politicalApiService = {
       if (res.ok) {
         fetchOk = true;
         const data = await res.json();
-        if (Array.isArray(data)) list = data;
+        if (Array.isArray(data)) list = data.filter((i: any) => !RETIRED_MOCK_IDS.has(i?.id));
       }
     } catch (e) {
       // Fallback
     }
 
-    if (!fetchOk && (!list || list.length === 0)) {
+    if (!list || list.length === 0) {
       try {
         const res = await fetch("./data/field_issues.json");
         if (res.ok) {
@@ -1272,6 +1291,16 @@ export const politicalApiService = {
   },
 
   async getFieldNotifications(recipientUserId?: string, recipientRole?: string): Promise<any[]> {
+    if (notificationListInflight) {
+      return notificationListInflight;
+    }
+    notificationListInflight = this._loadFieldNotifications(recipientUserId, recipientRole).finally(() => {
+      notificationListInflight = null;
+    });
+    return notificationListInflight;
+  },
+
+  async _loadFieldNotifications(recipientUserId?: string, recipientRole?: string): Promise<any[]> {
     let localList: any[] = [];
     let readIds: Set<string> = new Set();
     try {
@@ -1291,7 +1320,7 @@ export const politicalApiService = {
       const qp = new URLSearchParams();
       if (recipientUserId) qp.append("recipientUserId", recipientUserId);
       if (recipientRole) qp.append("recipientRole", recipientRole);
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications?${qp.toString()}`, {}, 15000);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/notifications?${qp.toString()}`, {}, 5000);
       if (res.ok) {
         fetchOk = true;
         const data = await res.json();
@@ -1305,7 +1334,7 @@ export const politicalApiService = {
 
     if (!fetchOk && fetchedData.length === 0) {
       try {
-        const res = await fetch("./data/field_notifications.json");
+        const res = await fetchWithTimeout("./data/field_notifications.json", {}, 2500);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
@@ -1315,7 +1344,6 @@ export const politicalApiService = {
       } catch (e) {}
     }
 
-    // Merge: Remote/static items FIRST, then local items override
     const map = new Map<string, any>();
     fetchedData.forEach((n) => map.set(n.id, n));
     localList.forEach((n) => map.set(n.id, n));
@@ -1339,12 +1367,14 @@ export const politicalApiService = {
 
     if (recipientRole === "VOLUNTEER" && recipientUserId) {
       try {
-        const issues = await this.getFieldIssues({ userId: recipientUserId, userRole: "VOLUNTEER" });
-        const derived = (issues || [])
+        const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+        const issues = savedRaw ? JSON.parse(savedRaw) : [];
+        const derived = (Array.isArray(issues) ? issues : [])
           .filter(
             (issue: any) =>
               ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"].includes(issue.status) &&
-              (issue.lastStatusUpdateAt || issue.lastStatusRemarks)
+              (issue.lastStatusUpdateAt || issue.lastStatusRemarks) &&
+              (issue.assignedVolunteerId === recipientUserId || issue.createdBy === recipientUserId)
           )
           .map((issue: any) => {
             const id = `ticket-status-${issue.id}-${issue.status}-${issue.lastStatusUpdateAt || issue.updatedAt || ""}`;
@@ -1372,6 +1402,7 @@ export const politicalApiService = {
       } catch (e) {}
     }
 
+    list.sort((a: any, b: any) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
     return list;
   },
 

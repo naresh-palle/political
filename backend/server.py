@@ -115,6 +115,15 @@ def sanitize_doc(obj):
         pass
     return obj
 
+async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = "mongo"):
+    """Never let a Mongo round-trip block alert/ticket APIs for minutes."""
+    try:
+        return await asyncio.wait_for(awaitable, timeout=timeout)
+    except Exception as e:
+        log_mongo_notice(tag, e)
+        return fallback
+
+
 def log_mongo_notice(tag: str, exc: Exception):
     """
     Filters out noisy 'Connection refused' connection timeout logs when running in offline/demo mode,
@@ -1773,8 +1782,8 @@ async def get_field_notifications(recipientUserId: Optional[str] = Query(None), 
     try:
         query: dict = {}
         if recipientUserId:
-            try:
-                tickets = await db.field_issues.find(
+            tickets = await mongo_wait(
+                db.field_issues.find(
                     {
                         "$or": [
                             {"assignedVolunteerId": recipientUserId},
@@ -1782,10 +1791,12 @@ async def get_field_notifications(recipientUserId: Optional[str] = Query(None), 
                         ]
                     },
                     {"_id": 0, "id": 1},
-                ).to_list(300)
-                issue_ids = [t.get("id") for t in tickets if t.get("id")]
-            except Exception as ticket_err:
-                log_mongo_notice("notifications ticket lookup", ticket_err)
+                ).to_list(300),
+                timeout=2.0,
+                fallback=[],
+                tag="notifications ticket lookup",
+            )
+            issue_ids = [t.get("id") for t in (tickets or []) if t.get("id")]
             or_filters = [
                 {"recipientUserId": recipientUserId},
                 {"volunteerId": recipientUserId, "type": "TICKET_STATUS_UPDATED"},
@@ -1796,10 +1807,20 @@ async def get_field_notifications(recipientUserId: Optional[str] = Query(None), 
             query["$or"] = or_filters
         elif recipientRole:
             query["recipientRole"] = recipientRole
-        res = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(200)
+        res = await mongo_wait(
+            db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(200),
+            timeout=2.0,
+            fallback=[],
+            tag="get_field_notifications",
+        )
         if res:
             db_notifs = list(res)
-        extra = await db.field_notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(200)
+        extra = await mongo_wait(
+            db.field_notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(200),
+            timeout=2.0,
+            fallback=[],
+            tag="get_field_notifications extra",
+        )
         if extra:
             db_notifs = db_notifs + list(extra)
     except Exception as e:
@@ -1968,6 +1989,9 @@ async def trigger_geography_seed():
         for iss in field_issues:
             await db.field_issues.update_one({"id": iss["id"]}, {"$set": iss}, upsert=True)
             imported_issues += 1
+        await db.field_issues.delete_many(
+            {"id": {"$in": ["iss-bng-101", "iss-bng-102", "iss-bng-103", "iss-1002", "iss-102", "iss-103", "iss-104"]}}
+        )
 
         for notif in field_notifications:
             await db.field_notifications.update_one({"id": notif["id"]}, {"$set": notif}, upsert=True)
@@ -2105,7 +2129,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
 @api_router.post("/field-ops/send-whatsapp-otp")
 async def send_whatsapp_otp(payload: dict):
     phone = payload.get("phone", "").replace("+", "").replace(" ", "").replace("-", "")
-    issue_id = payload.get("issueId") or "iss-1002"
+    issue_id = payload.get("issueId") or "iss-ll-pr-01"
     otp = "482910"
     
     clean_phone = phone[-10:] if len(phone) >= 10 else phone
