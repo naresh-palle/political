@@ -39,6 +39,8 @@ try:
         volunteer_recipient_ids,
         merge_issue_docs,
         should_preserve_progress_status,
+        apply_assignment_fields,
+        ASSIGNMENT_STATUSES,
     )
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
@@ -56,19 +58,93 @@ except ImportError:
         volunteer_recipient_ids,
         merge_issue_docs,
         should_preserve_progress_status,
+        apply_assignment_fields,
+        ASSIGNMENT_STATUSES,
     )
 
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-db_name = os.environ.get('DB_NAME', 'political_intelligence')
-
-client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=15000)
-db = client[db_name]
-
-app = FastAPI(title="Leader's Lens Political Intelligence API", version="1.0.0")
-api_router = APIRouter(prefix="/api")
+mongo_url = (
+    os.environ.get("MONGO_URL")
+    or os.environ.get("MONGODB_URI")
+    or os.environ.get("MONGO_URI")
+    or os.environ.get("DATABASE_URL")
+    or ""
+).strip()
+db_name = os.environ.get("DB_NAME", "political_intelligence")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logging.getLogger("pymongo").setLevel(logging.ERROR)
+logging.getLogger("pymongo.topology").setLevel(logging.ERROR)
+logging.getLogger("pymongo.connection").setLevel(logging.ERROR)
+logging.getLogger("motor").setLevel(logging.ERROR)
+
+
+class MongoUnavailable(Exception):
+    """Raised when Mongo is not configured or the circuit breaker is open."""
+
+
+class _OfflineCursor:
+    def sort(self, *args, **kwargs):
+        return self
+
+    async def to_list(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
+
+class _OfflineCollection:
+    def find(self, *args, **kwargs):
+        return _OfflineCursor()
+
+    async def find_one(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
+    async def update_one(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
+    async def insert_one(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
+    async def delete_one(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
+    async def count_documents(self, *args, **kwargs):
+        raise MongoUnavailable("MongoDB is not configured")
+
+
+class _OfflineDB:
+    def __getattr__(self, name):
+        return _OfflineCollection()
+
+
+def _mongo_url_is_local(url: str) -> bool:
+    lowered = (url or "").lower()
+    return (not url) or "localhost" in lowered or "127.0.0.1" in lowered
+
+
+_mongo_circuit_open = _mongo_url_is_local(mongo_url)
+_mongo_offline_logged = False
+_live_mongo_client = None
+
+if _mongo_circuit_open:
+    client = None
+    db = _OfflineDB()
+    logger.info(
+        "MONGO_URL is not set (or points at localhost). Using JSON/in-memory field-ops store. "
+        "Add MONGO_URL on Render to persist officer/volunteer ticket updates."
+    )
+    _mongo_offline_logged = True
+else:
+    _live_mongo_client = AsyncIOMotorClient(
+        mongo_url,
+        serverSelectionTimeoutMS=2500,
+        connectTimeoutMS=2500,
+        socketTimeoutMS=8000,
+    )
+    client = _live_mongo_client
+    db = client[db_name]
+
+app = FastAPI(title="Leader's Lens Political Intelligence API", version="1.0.0")
+api_router = APIRouter(prefix="/api")
 
 # Global In-Memory Stores (Ensures instant status updates, notifications, and history sync across all clients even when MongoDB is offline)
 IN_MEMORY_FIELD_ISSUES: dict = {}
@@ -121,6 +197,8 @@ def sanitize_doc(obj):
 
 async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = "mongo"):
     """Never let a Mongo round-trip block alert/ticket APIs for minutes."""
+    if _mongo_circuit_open:
+        return fallback
     try:
         return await asyncio.wait_for(awaitable, timeout=timeout)
     except Exception as e:
@@ -128,21 +206,55 @@ async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = 
         return fallback
 
 
-async def mongo_write(awaitable, timeout: float = 20.0, tag: str = "mongo_write"):
-    """Officer status must land in Mongo. Timeouts are failures, not silent success."""
-    return await asyncio.wait_for(awaitable, timeout=timeout)
+async def mongo_write(awaitable, timeout: float = 8.0, tag: str = "mongo_write"):
+    """Persist when Mongo is configured. Fail immediately if the circuit is open."""
+    if _mongo_circuit_open:
+        raise MongoUnavailable("MongoDB is not configured")
+    try:
+        return await asyncio.wait_for(awaitable, timeout=timeout)
+    except Exception as e:
+        log_mongo_notice(tag, e)
+        raise
+
+
+def _is_mongo_offline_error(exc: Exception) -> bool:
+    if isinstance(exc, MongoUnavailable):
+        return True
+    err_str = str(exc)
+    return (
+        isinstance(exc, MongoUnavailable)
+        or "Connection refused" in err_str
+        or "[Errno 111]" in err_str
+        or "ServerSelectionTimeoutError" in type(exc).__name__
+        or "AutoReconnect" in type(exc).__name__
+        or "MongoDB is not configured" in err_str
+    )
+
+
+def trip_mongo_circuit(exc: Optional[Exception] = None):
+    global db, _mongo_circuit_open, _mongo_offline_logged
+    if _mongo_circuit_open:
+        return
+    _mongo_circuit_open = True
+    db = _OfflineDB()
+    if not _mongo_offline_logged:
+        _mongo_offline_logged = True
+        logger.info(
+            "MongoDB is not reachable; using in-memory/JSON fallback. "
+            "Set MONGO_URL (or MONGODB_URI) on the Render service to persist tickets."
+        )
 
 
 def log_mongo_notice(tag: str, exc: Exception):
-    """
-    Filters out noisy 'Connection refused' connection timeout logs when running in offline/demo mode,
-    logging them at DEBUG level so Render logs stay clean.
-    """
-    err_str = str(exc)
-    if "Connection refused" in err_str or "111" in err_str or "ServerSelectionTimeoutError" in err_str or "AutoReconnect" in err_str:
-        logger.debug(f"MongoDB offline ({tag}), using in-memory/JSON fallback: {exc}")
-    else:
-        logger.warning(f"MongoDB warning ({tag}): {exc}")
+    """One quiet fallback path. Connection-refused dumps do not fill Render logs."""
+    if _is_mongo_offline_error(exc):
+        trip_mongo_circuit(exc)
+        if not _mongo_offline_logged:
+            # trip_mongo_circuit already logged once
+            pass
+        logger.debug("MongoDB offline (%s): %s", tag, type(exc).__name__)
+        return
+    logger.warning("MongoDB warning (%s): %s", tag, type(exc).__name__)
 
 def overlay_in_memory_issues(issues: list) -> list:
     """Merge authoritative in-memory officer updates onto a ticket list."""
@@ -180,6 +292,7 @@ async def root():
     return {
         "message": "Leader's Lens Intelligence API Active",
         "database": db_name,
+        "mongo": "offline-fallback" if _mongo_circuit_open else "configured",
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
@@ -193,7 +306,7 @@ async def create_status_check(input: StatusCheckCreate):
     try:
         await db.status_checks.insert_one(doc)
     except Exception as e:
-        logger.warning(f"MongoDB insert notice: {e}")
+        log_mongo_notice("insert notice", e)
     return status_obj
 
 @api_router.get("/status", response_model=List[StatusCheck])
@@ -205,7 +318,7 @@ async def get_status_checks():
                 check['timestamp'] = datetime.fromisoformat(check['timestamp'])
         return checks
     except Exception as e:
-        logger.warning(f"MongoDB find notice: {e}")
+        log_mongo_notice("find notice", e)
         return []
 
 # ----------------- MASTER ELECTION GEOGRAPHY ENDPOINTS -----------------
@@ -217,7 +330,7 @@ async def get_countries():
         if countries:
             return countries
     except Exception as e:
-        logger.warning(f"MongoDB get_countries: {e}")
+        log_mongo_notice("get_countries", e)
     return [{
         "id": "IND",
         "name": "India",
@@ -239,7 +352,7 @@ async def get_states(q: Optional[str] = None):
         if states:
             return states
     except Exception as e:
-        logger.warning(f"MongoDB get_states: {e}")
+        log_mongo_notice("get_states", e)
     
     fallback = load_json_fallback("states.json")
     if q:
@@ -257,7 +370,7 @@ async def get_parliaments_by_state(state_id: str, q: Optional[str] = None):
         if pcs:
             return pcs
     except Exception as e:
-        logger.warning(f"MongoDB get_parliaments: {e}")
+        log_mongo_notice("get_parliaments", e)
     
     fallback = load_json_fallback("parliaments.json")
     results = [p for p in fallback if p['stateId'].upper() == state_id.upper()]
@@ -276,7 +389,7 @@ async def get_assemblies_by_parliament(pc_id: str, q: Optional[str] = None):
         if acs:
             return acs
     except Exception as e:
-        logger.warning(f"MongoDB get_assemblies: {e}")
+        log_mongo_notice("get_assemblies", e)
     
     fallback = load_json_fallback("assemblies.json")
     results = [a for a in fallback if a['parliamentConstituencyId'].upper() == pc_id.upper()]
@@ -292,7 +405,7 @@ async def get_assembly_by_id(ac_id: str):
         if ac:
             return ac
     except Exception as e:
-        logger.warning(f"MongoDB get_assembly_by_id: {e}")
+        log_mongo_notice("get_assembly_by_id", e)
     
     fallback = load_json_fallback("assemblies.json")
     for a in fallback:
@@ -307,7 +420,7 @@ async def get_candidates_by_assembly(ac_id: str):
         if candidates:
             return candidates
     except Exception as e:
-        logger.warning(f"MongoDB get_candidates: {e}")
+        log_mongo_notice("get_candidates", e)
     
     return [
         {
@@ -451,7 +564,7 @@ async def get_current_representative(ac_id: str):
         if vacant:
             return {"representative": None, "status": "VACANT", "message": "Seat currently vacant"}
     except Exception as e:
-        logger.warning(f"MongoDB get_current_representative: {e}")
+        log_mongo_notice("get_current_representative", e)
 
     # Fallback to elected_representatives.json
     reps_fallback = load_json_fallback("elected_representatives.json")
@@ -486,7 +599,7 @@ async def get_representatives_history(ac_id: str):
                 item["party"] = resolve_representative_party(item.get("partyId", ""), parties_fallback)
             return history
     except Exception as e:
-        logger.warning(f"MongoDB get_representatives_history: {e}")
+        log_mongo_notice("get_representatives_history", e)
 
     reps_fallback = load_json_fallback("elected_representatives.json")
     matched = [r for r in reps_fallback if r.get("assemblyConstituencyId", "").upper() == ac_clean]
@@ -516,7 +629,7 @@ async def create_elected_representative(ac_id: str, payload: ElectedRepresentati
             inserted["party"] = resolve_representative_party(inserted.get("partyId", ""), parties_fallback)
             return inserted
     except Exception as e:
-        logger.warning(f"MongoDB create_elected_representative: {e}")
+        log_mongo_notice("create_elected_representative", e)
 
     # Update local fallback
     reps_fallback = load_json_fallback("elected_representatives.json")
@@ -566,7 +679,7 @@ async def update_elected_representative(ac_id: str, rep_id: str, updates: Electe
             updated["party"] = resolve_representative_party(updated.get("partyId", ""), parties_fallback)
             return updated
     except Exception as e:
-        logger.warning(f"MongoDB update_elected_representative: {e}")
+        log_mongo_notice("update_elected_representative", e)
 
     reps_fallback = load_json_fallback("elected_representatives.json")
     found = False
@@ -633,7 +746,7 @@ async def get_political_parties():
         if parties:
             return parties
     except Exception as e:
-        logger.warning(f"MongoDB get_political_parties: {e}")
+        log_mongo_notice("get_political_parties", e)
     return load_json_fallback("political_parties.json")
 
 @api_router.get("/political-parties/{party_id}")
@@ -643,7 +756,7 @@ async def get_political_party(party_id: str):
         if party:
             return party
     except Exception as e:
-        logger.warning(f"MongoDB get_political_party: {e}")
+        log_mongo_notice("get_political_party", e)
     fallback = load_json_fallback("political_parties.json")
     for p in fallback:
         if p["id"].upper() == party_id.upper() or p.get("abbreviation", "").upper() == party_id.upper():
@@ -667,7 +780,7 @@ async def update_political_party(party_id: str, updates: PoliticalPartyUpdate):
         if updated:
             return updated
     except Exception as e:
-        logger.warning(f"MongoDB update_political_party: {e}")
+        log_mongo_notice("update_political_party", e)
     
     # Update local fallback
     fallback = load_json_fallback("political_parties.json")
@@ -721,7 +834,7 @@ async def login(credentials: LoginRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"MongoDB login query: {e}")
+        log_mongo_notice("login query", e)
 
     # Fallback to local users.json
     users = load_json_fallback("users.json")
@@ -875,7 +988,7 @@ async def get_admin_users(
                 "limit": limit
             }
     except Exception as e:
-        logger.warning(f"MongoDB admin get_users query: {e}")
+        log_mongo_notice("admin get_users query", e)
 
     # Fallback to local data
     raw_users = load_json_fallback("users.json")
@@ -915,7 +1028,7 @@ async def get_admin_user_detail(user_id: str):
                 "auditLogs": audit_logs
             }
     except Exception as e:
-        logger.warning(f"MongoDB get user detail: {e}")
+        log_mongo_notice("get user detail", e)
 
     raw_users = load_json_fallback("users.json")
     match = next((u for u in raw_users if u.get("id") == user_id), None)
@@ -1149,7 +1262,7 @@ async def get_admin_audit_logs(
         logs = await db.audit_logs.find(query, {"_id": 0}).sort("timestamp", -1).to_list(limit)
         return logs
     except Exception as e:
-        logger.warning(f"MongoDB get audit logs: {e}")
+        log_mongo_notice("get audit logs", e)
         return []
 
 # ----------------- CITIZEN GRIEVANCES & CONTACTS (MONGODB) -----------------
@@ -1234,7 +1347,7 @@ async def get_grievances(
         if items:
             return items
     except Exception as e:
-        logger.warning(f"MongoDB get_grievances: {e}")
+        log_mongo_notice("get_grievances", e)
     
     fallback = load_json_fallback("grievances.json")
     if status:
@@ -1292,7 +1405,7 @@ async def create_grievance(item: GrievanceCreate):
         await db.grievances.insert_one(doc)
         doc.pop("_id", None)
     except Exception as e:
-        logger.warning(f"MongoDB insert grievance: {e}")
+        log_mongo_notice("insert grievance", e)
     return doc
 
 @api_router.patch("/grievances/{ticket_id}")
@@ -1314,7 +1427,7 @@ async def update_grievance(ticket_id: str, patch: GrievanceUpdate):
         if updated:
             return updated
     except Exception as e:
-        logger.warning(f"MongoDB update grievance: {e}")
+        log_mongo_notice("update grievance", e)
     return {"status": "success", "ticketId": ticket_id, "updated": updates}
 
 @api_router.get("/grievances/contacts")
@@ -1329,7 +1442,7 @@ async def get_grievance_contacts(department: Optional[str] = None, mandal: Optio
         if contacts:
             return contacts
     except Exception as e:
-        logger.warning(f"MongoDB get_contacts: {e}")
+        log_mongo_notice("get_contacts", e)
     return load_json_fallback("grievance_contacts.json")
 
 @api_router.post("/grievances/contacts")
@@ -1342,7 +1455,7 @@ async def create_grievance_contact(contact: GrievanceContactModel):
         doc.pop("_id", None)
         return doc
     except Exception as e:
-        logger.warning(f"MongoDB save contact: {e}")
+        log_mongo_notice("save contact", e)
         return doc
 
 # ----------------- VOLUNTEER SQUADS & TASKS (MONGODB) -----------------
@@ -1354,7 +1467,7 @@ async def get_volunteer_squads():
         if squads:
             return squads
     except Exception as e:
-        logger.warning(f"MongoDB get squads: {e}")
+        log_mongo_notice("get squads", e)
     return load_json_fallback("volunteer_squads.json")
 
 @api_router.get("/volunteers/tasks")
@@ -1364,7 +1477,7 @@ async def get_volunteer_tasks():
         if tasks:
             return tasks
     except Exception as e:
-        logger.warning(f"MongoDB get tasks: {e}")
+        log_mongo_notice("get tasks", e)
     return load_json_fallback("volunteer_tasks.json")
 
 # ----------------- CAMPAIGN WEBSITE CONFIG (MONGODB) -----------------
@@ -1376,7 +1489,7 @@ async def get_landing_config():
         if config:
             return config
     except Exception as e:
-        logger.warning(f"MongoDB get config: {e}")
+        log_mongo_notice("get config", e)
     return load_json_fallback("campaign_config.json")
 
 @api_router.post("/landing-page/config")
@@ -1387,7 +1500,7 @@ async def save_landing_config(payload: dict):
         await db.campaign_pages.update_one({"id": "master_config"}, {"$set": payload}, upsert=True)
         payload.pop("_id", None)
     except Exception as e:
-        logger.warning(f"MongoDB save config: {e}")
+        log_mongo_notice("save config", e)
     return payload
 
 # ----------------- FIELD OPERATIONS & RBAC MANAGEMENT ENDPOINTS -----------------
@@ -1404,7 +1517,7 @@ async def get_mandals(assemblyConstituencyId: Optional[str] = None, stateId: Opt
         if mandals:
             return mandals
     except Exception as e:
-        logger.warning(f"MongoDB get mandals: {e}")
+        log_mongo_notice("get mandals", e)
     
     fallback = load_json_fallback("mandals.json")
     if assemblyConstituencyId and assemblyConstituencyId != "ALL":
@@ -1425,7 +1538,7 @@ async def get_villages(mandalId: Optional[str] = None, assemblyConstituencyId: O
         if villages:
             return villages
     except Exception as e:
-        logger.warning(f"MongoDB get villages: {e}")
+        log_mongo_notice("get villages", e)
     
     fallback = load_json_fallback("villages.json")
     if mandalId and mandalId != "ALL":
@@ -1468,7 +1581,7 @@ async def get_field_issues(
             
         issues = await mongo_wait(
             db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1).to_list(500),
-            timeout=12.0,
+            timeout=2.5,
             fallback=[],
             tag="get_field_issues",
         )
@@ -1498,12 +1611,12 @@ async def get_field_issues(
         fallback = list(fallback_map.values())
 
     if userRole == "VOLUNTEER" and userId:
-        filtered = [
-            i
-            for i in fallback
-            if i.get("assignedVolunteerId") == userId or i.get("createdBy") == userId
-        ]
-        fallback = filtered if filtered else fallback
+        def volunteer_can_see(item: dict) -> bool:
+            if item.get("assignedVolunteerId") == userId or item.get("createdBy") == userId or item.get("volunteerId") == userId:
+                return True
+            status = normalize_status(item.get("status"))
+            return status in ("NEW", "OPEN", "PENDING", "UNRESOLVED")
+        fallback = [i for i in fallback if volunteer_can_see(i)]
     elif userRole == "DIRECTOR" and (userId or directorId):
         target_dir = directorId or userId
         filtered = [i for i in fallback if i.get("directorId") == target_dir]
@@ -1545,7 +1658,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"MongoDB get issue by id: {e}")
+        log_mongo_notice("get issue by id", e)
 
     if issue_id in IN_MEMORY_FIELD_ISSUES:
         return sanitize_doc(IN_MEMORY_FIELD_ISSUES[issue_id])
@@ -1657,7 +1770,7 @@ async def create_field_issue(payload: dict):
             
         new_issue.pop("_id", None)
     except Exception as e:
-        logger.warning(f"MongoDB save field_issue: {e}")
+        log_mongo_notice("save field_issue", e)
         
     return new_issue
 
@@ -1675,7 +1788,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning(f"MongoDB get issue by id: {e}")
+        log_mongo_notice("get issue by id", e)
         
     fallback = load_json_fallback("field_issues.json")
     found = next((i for i in fallback if i.get("id") == issue_id), None)
@@ -1701,7 +1814,7 @@ async def update_field_issue(issue_id: str, payload: dict, userRole: Optional[st
         if updated:
             return updated
     except Exception as e:
-        logger.warning(f"MongoDB update field_issue: {e}")
+        log_mongo_notice("update field_issue", e)
     return payload
 
 @api_router.post("/field-ops/issues/{issue_id}/updates")
@@ -1776,7 +1889,7 @@ async def add_work_update(issue_id: str, payload: dict):
             
         update_record.pop("_id", None)
     except Exception as e:
-        logger.warning(f"MongoDB save work_update: {e}")
+        log_mongo_notice("save work_update", e)
         
     return update_record
 
@@ -1887,7 +2000,7 @@ async def mark_notification_read(notification_id: str):
         await db.field_notifications.update_one({"id": notification_id}, {"$set": {"isRead": True}})
         return {"status": "success", "id": notification_id, "isRead": True}
     except Exception as e:
-        logger.warning(f"MongoDB mark notif read: {e}")
+        log_mongo_notice("mark notif read", e)
     return {"status": "success", "id": notification_id, "isRead": True}
 
 @api_router.get("/field-ops/drilldown")
@@ -2087,7 +2200,7 @@ async def get_field_issues(
         cursor = db.field_issues.find(query, {"_id": 0}).sort("createdAt", -1)
         issues = await cursor.to_list(length=500)
     except Exception as e:
-        logger.warning(f"MongoDB field_issues fetch error: {e}")
+        log_mongo_notice("field_issues fetch error", e)
         
     if not issues:
         fallback = load_json_fallback("field_issues.json")
@@ -2143,7 +2256,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     try:
         issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
     except Exception as e:
-        logger.warning(f"MongoDB get issue by id: {e}")
+        log_mongo_notice("get issue by id", e)
         
     issue = resolve_stored_issue(issue_id, issue)
         
@@ -2205,7 +2318,7 @@ async def create_field_issue(payload: dict):
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": issue_doc}, upsert=True)
     except Exception as e:
-        logger.error(f"Failed to persist field_issue to MongoDB: {e}")
+        log_mongo_notice("persist field_issue", e)
         
     if "_id" in issue_doc:
         issue_doc.pop("_id")
@@ -2224,15 +2337,6 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     attachments = [u for u in ([proof_url] + proof_files) if u and not str(u).startswith("data:")]
     attachments = list(dict.fromkeys(attachments))
 
-    status_err = validate_officer_status(new_status)
-    if status_err:
-        raise HTTPException(status_code=400, detail=status_err)
-
-    if new_status == "REJECTED" and not remarks:
-        raise HTTPException(status_code=422, detail="Rejection reason is required.")
-    if new_status == "RESOLVED" and not remarks:
-        raise HTTPException(status_code=422, detail="Resolution remarks are required.")
-
     mongo_issue = None
     try:
         mongo_issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
@@ -2242,6 +2346,45 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     issue = resolve_stored_issue(issue_id, mongo_issue)
     if not issue:
         raise HTTPException(status_code=404, detail="Ticket not found.")
+
+    if new_status in ASSIGNMENT_STATUSES:
+        current_status = normalize_status(issue.get("status") or "NEW")
+        issue = apply_assignment_fields(issue, payload)
+        if should_preserve_progress_status(current_status, new_status):
+            issue["status"] = current_status
+        else:
+            issue["status"] = new_status
+        if remarks:
+            issue["lastStatusRemarks"] = remarks
+        issue["updatedAt"] = now_str
+        persisted = sanitize_doc(dict(issue))
+        IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
+        persist_error = None
+        if not _mongo_circuit_open:
+            try:
+                await mongo_write(
+                    db.field_issues.update_one({"id": issue_id}, {"$set": persisted}, upsert=True),
+                    timeout=8.0,
+                    tag="assignment_persist",
+                )
+            except Exception as e:
+                persist_error = e
+                log_mongo_notice("assignment persist", e)
+        if persist_error and not _mongo_circuit_open:
+            raise HTTPException(
+                status_code=503,
+                detail="Could not save assignment to the database. Please try again.",
+            )
+        return sanitize_doc({"ticket": persisted, "status": persisted.get("status")})
+
+    status_err = validate_officer_status(new_status)
+    if status_err:
+        raise HTTPException(status_code=400, detail=status_err)
+
+    if new_status == "REJECTED" and not remarks:
+        raise HTTPException(status_code=422, detail="Rejection reason is required.")
+    if new_status == "RESOLVED" and not remarks:
+        raise HTTPException(status_code=422, detail="Resolution remarks are required.")
 
     current_status = normalize_status(issue.get("status") or "NEW")
     transition_err = validate_transition(current_status, new_status)
@@ -2306,36 +2449,35 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
 
     persist_error = None
-    for attempt in range(3):
+    if not _mongo_circuit_open:
         try:
             await mongo_write(
                 db.field_issues.update_one({"id": issue_id}, {"$set": persisted}, upsert=True),
-                timeout=20.0,
+                timeout=8.0,
                 tag="officer_status_persist",
             )
-            persist_error = None
-            break
         except Exception as e:
             persist_error = e
-            log_mongo_notice(f"atomic officer status persist try={attempt + 1}", e)
-    if persist_error:
+            log_mongo_notice("atomic officer status persist", e)
+    if persist_error and not _mongo_circuit_open:
         raise HTTPException(
             status_code=503,
             detail="Could not save ticket status to the database. Please try again.",
         )
-    try:
-        await mongo_write(
-            db.issue_history.insert_one(sanitize_doc(dict(history_record))),
-            timeout=12.0,
-            tag="officer_status_history",
-        )
-        await mongo_write(
-            db.work_updates.insert_one(sanitize_doc(dict(history_record))),
-            timeout=12.0,
-            tag="officer_status_work_update",
-        )
-    except Exception as e:
-        log_mongo_notice("officer status history persist", e)
+    if not _mongo_circuit_open:
+        try:
+            await mongo_write(
+                db.issue_history.insert_one(sanitize_doc(dict(history_record))),
+                timeout=8.0,
+                tag="officer_status_history",
+            )
+            await mongo_write(
+                db.work_updates.insert_one(sanitize_doc(dict(history_record))),
+                timeout=8.0,
+                tag="officer_status_work_update",
+            )
+        except Exception as e:
+            log_mongo_notice("officer status history persist", e)
 
     sanitize_doc(history_record)
     IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(dict(history_record)))
@@ -2402,7 +2544,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     try:
         await db.notification_audits.insert_one(dict(pending_audit))
     except Exception as e:
-        logger.warning(f"MongoDB insert notification_audit: {e}")
+        log_mongo_notice("insert notification_audit", e)
     sanitize_doc(pending_audit)
     IN_MEMORY_NOTIFICATION_AUDITS.insert(0, sanitize_doc(dict(pending_audit)))
 
@@ -2535,7 +2677,7 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     try:
         issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
     except Exception as e:
-        logger.warning(f"MongoDB find issue {issue_id}: {e}")
+        log_mongo_notice("find issue {issue_id}", e)
         
     if not issue:
         issue = resolve_stored_issue(issue_id)
@@ -2577,7 +2719,7 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
             ]
         }, {"_id": 0})
     except Exception as e:
-        logger.warning(f"MongoDB find leader: {e}")
+        log_mongo_notice("find leader", e)
         
     if not leader:
         fallback_users = load_json_fallback("users.json")
@@ -2645,7 +2787,7 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
         issue.update(update_data)
         IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
     except Exception as e:
-        logger.warning(f"MongoDB update issue status on assign-notify: {e}")
+        log_mongo_notice("update issue status on assign-notify", e)
         IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
         
     # 8. Create Notification Audit Log Record
@@ -2673,7 +2815,7 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     try:
         await db.notification_audits.insert_one(audit_record)
     except Exception as e:
-        logger.warning(f"MongoDB insert notification_audit: {e}")
+        log_mongo_notice("insert notification_audit", e)
     finally:
         sanitize_doc(audit_record)
         
@@ -2691,7 +2833,7 @@ async def retry_whatsapp_notification(issue_id: str, payload: dict = {}):
     try:
         issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
     except Exception as e:
-        logger.warning(f"MongoDB find issue {issue_id}: {e}")
+        log_mongo_notice("find issue {issue_id}", e)
         
     if not issue:
         fallback_issues = load_json_fallback("field_issues.json")
@@ -2782,6 +2924,8 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_db_seed():
+    if _mongo_circuit_open:
+        return
     try:
         count = await db.states.count_documents({})
         user_count = await db.users.count_documents({})
@@ -2789,8 +2933,9 @@ async def startup_db_seed():
             logger.info("MongoDB collections empty, executing comprehensive auto-seed...")
             await trigger_geography_seed()
     except Exception as e:
-        logger.warning(f"Startup MongoDB seed notice: {e}")
+        log_mongo_notice("startup seed", e)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    if client is not None:
+        client.close()

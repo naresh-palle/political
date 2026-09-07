@@ -72,18 +72,69 @@ async function loadSeedIssues(): Promise<any[]> {
 }
 
 const OFFICER_LOCKED_STATUSES = new Set(["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED", "CLOSED"]);
+const STATUS_RANK: Record<string, number> = {
+  NEW: 1,
+  OPEN: 1,
+  PENDING: 1,
+  UNRESOLVED: 1,
+  ASSIGNED: 2,
+  ACKNOWLEDGED: 2,
+  ASSIGNED_TO_DEPARTMENT: 2,
+  IN_PROGRESS: 3,
+  OVERDUE: 3,
+  RESOLVED: 4,
+  COMPLETED: 4,
+  REJECTED: 4,
+  CLOSED: 5
+};
+const IDENTITY_FIELDS = [
+  "assignedVolunteerId",
+  "assignedVolunteerName",
+  "assignedVolunteerPhone",
+  "assignedDepartment",
+  "assignedOfficialName",
+  "assignedOfficialPhone",
+  "department",
+  "departmentContactId",
+  "createdBy",
+  "createdByRole",
+  "directorId",
+  "reporterPhone",
+  "reportedBy",
+  "title",
+  "description",
+  "category",
+  "mandalName",
+  "villageName",
+  "placeName"
+];
+
+function hasFieldValue(value: any): boolean {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string" && !value.trim()) return false;
+  if (Array.isArray(value) && value.length === 0) return false;
+  return true;
+}
 
 function mergeIssueRecords(base: any, overlay: any): any {
   if (!base) return overlay ? { ...overlay } : {};
   if (!overlay) return { ...base };
   const merged = { ...base, ...overlay };
+  for (const key of IDENTITY_FIELDS) {
+    if (!hasFieldValue(overlay[key]) && hasFieldValue(base[key])) {
+      merged[key] = base[key];
+    }
+  }
   const current = String(base.status || "").toUpperCase();
   const incoming = String(overlay.status || "").toUpperCase();
-  if (OFFICER_LOCKED_STATUSES.has(current) && !OFFICER_LOCKED_STATUSES.has(incoming)) {
+  if ((STATUS_RANK[current] || 0) > (STATUS_RANK[incoming] || 0)) {
     merged.status = base.status;
-    merged.lastStatusRemarks = overlay.lastStatusRemarks || base.lastStatusRemarks;
-    merged.lastStatusUpdateAt = overlay.lastStatusUpdateAt || base.lastStatusUpdateAt;
-    merged.lastStatusProof = overlay.lastStatusProof || base.lastStatusProof;
+    if (hasFieldValue(base.lastStatusRemarks) && !hasFieldValue(overlay.lastStatusRemarks)) {
+      merged.lastStatusRemarks = base.lastStatusRemarks;
+    }
+    if (hasFieldValue(base.lastStatusUpdateAt) && !hasFieldValue(overlay.lastStatusUpdateAt)) {
+      merged.lastStatusUpdateAt = base.lastStatusUpdateAt;
+    }
   }
   return merged;
 }
@@ -1106,7 +1157,8 @@ export const politicalApiService = {
           (i: any) =>
             i.assignedVolunteerId === params.userId ||
             i.createdBy === params.userId ||
-            i.volunteerId === params.userId
+            i.volunteerId === params.userId ||
+            ["NEW", "OPEN", "PENDING", "UNRESOLVED"].includes(String(i.status || "").toUpperCase())
         );
       } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
         const dId = params.directorId || params.userId;
@@ -1185,7 +1237,13 @@ export const politicalApiService = {
             status: payload.status,
             remarks: payload.remarks,
             proofUrl: compactProof(payload.proofUrl),
-            proofFiles
+            proofFiles,
+            department: payload.department,
+            assignedDepartment: payload.assignedDepartment || payload.department,
+            assignedVolunteerId: payload.assignedVolunteerId,
+            assignedVolunteerName: payload.assignedVolunteerName,
+            assignedOfficialName: payload.assignedOfficialName,
+            assignedOfficialPhone: payload.assignedOfficialPhone
           })
         },
         45000
@@ -1209,6 +1267,15 @@ export const politicalApiService = {
           status: authoritativeStatus,
           lastStatusRemarks: payload.remarks,
           lastStatusProof: compactProof(payload.proofUrl),
+          department: payload.department || (idx !== -1 ? savedList[idx].department : undefined),
+          assignedDepartment:
+            payload.assignedDepartment ||
+            payload.department ||
+            (idx !== -1 ? savedList[idx].assignedDepartment : undefined),
+          assignedVolunteerId: payload.assignedVolunteerId || (idx !== -1 ? savedList[idx].assignedVolunteerId : undefined),
+          assignedVolunteerName: payload.assignedVolunteerName || (idx !== -1 ? savedList[idx].assignedVolunteerName : undefined),
+          assignedOfficialName: payload.assignedOfficialName || (idx !== -1 ? savedList[idx].assignedOfficialName : undefined),
+          assignedOfficialPhone: payload.assignedOfficialPhone || (idx !== -1 ? savedList[idx].assignedOfficialPhone : undefined),
           updatedAt: data?.ticket?.updatedAt || new Date().toISOString()
         };
         if (idx !== -1) savedList[idx] = { ...savedList[idx], ...merged };

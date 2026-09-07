@@ -77,5 +77,17 @@ def test_preserve_in_progress_against_open():
     assert merged["status"] == "IN_PROGRESS"
     assert merged["lastStatusRemarks"] == "on site"
     assert merged["title"] == "seed"
+    assigned = merge_issue_docs(
+        {
+            "id": "iss-2",
+            "status": "ASSIGNED",
+            "assignedVolunteerId": "usr-demo-volunteer",
+            "department": "R&B",
+        },
+        {"id": "iss-2", "status": "NEW"},
+    )
+    assert assigned["status"] == "ASSIGNED"
+    assert assigned["assignedVolunteerId"] == "usr-demo-volunteer"
+    assert assigned["department"] == "R&B"
     assert ticket_display_number({"id": "iss-ab12"}).startswith("LL-")
     assert normalize_status(" in_progress ") == "IN_PROGRESS"

@@ -172,20 +172,111 @@ def should_preserve_progress_status(current_status: Optional[str], incoming_stat
     return incoming in WEAKER_THAN_OFFICER or incoming not in OFFICER_LOCKED_STATUSES
 
 
+ASSIGNMENT_STATUSES = frozenset({"ASSIGNED", "ACKNOWLEDGED", "ASSIGNED_TO_DEPARTMENT"})
+STATUS_RANK = {
+    "NEW": 1,
+    "OPEN": 1,
+    "PENDING": 1,
+    "UNRESOLVED": 1,
+    "ASSIGNED": 2,
+    "ACKNOWLEDGED": 2,
+    "ASSIGNED_TO_DEPARTMENT": 2,
+    "IN_PROGRESS": 3,
+    "OVERDUE": 3,
+    "RESOLVED": 4,
+    "COMPLETED": 4,
+    "REJECTED": 4,
+    "CLOSED": 5,
+}
+IDENTITY_FIELDS = (
+    "assignedVolunteerId",
+    "assignedVolunteerName",
+    "assignedVolunteerPhone",
+    "assignedDepartment",
+    "assignedOfficialName",
+    "assignedOfficialPhone",
+    "department",
+    "departmentContactId",
+    "completedDepartment",
+    "completedByPerson",
+    "createdBy",
+    "createdByRole",
+    "createdByPhone",
+    "directorId",
+    "directorName",
+    "reporterPhone",
+    "reportedBy",
+    "reporterType",
+    "reporterDesignation",
+    "title",
+    "description",
+    "category",
+    "priority",
+    "issueType",
+    "mandalId",
+    "mandalName",
+    "villageId",
+    "villageName",
+    "placeName",
+    "stateId",
+    "assemblyConstituencyId",
+    "assemblyConstituencyName",
+    "ticketNumber",
+)
+
+
+def _has_value(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str) and not value.strip():
+        return False
+    if isinstance(value, (list, dict)) and len(value) == 0:
+        return False
+    return True
+
+
+def apply_assignment_fields(issue: Dict[str, Any], payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    payload = payload or {}
+    updated = dict(issue)
+    mapping = {
+        "assignedVolunteerId": payload.get("assignedVolunteerId"),
+        "assignedVolunteerName": payload.get("assignedVolunteerName"),
+        "assignedVolunteerPhone": payload.get("assignedVolunteerPhone"),
+        "assignedDepartment": payload.get("assignedDepartment") or payload.get("department"),
+        "department": payload.get("department") or payload.get("assignedDepartment"),
+        "assignedOfficialName": payload.get("assignedOfficialName"),
+        "assignedOfficialPhone": payload.get("assignedOfficialPhone"),
+        "departmentContactId": payload.get("departmentContactId"),
+    }
+    for key, value in mapping.items():
+        if _has_value(value):
+            updated[key] = value
+    return updated
+
+
 def merge_issue_docs(base: Optional[Dict[str, Any]], overlay: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Merge ticket records so In Progress / Resolved / Rejected cannot revert to Open."""
+    """Merge tickets without dropping assignment data or reverting officer work."""
     if not base:
         return dict(overlay or {})
     if not overlay:
         return dict(base)
     merged = {**base, **overlay}
-    if should_preserve_progress_status(base.get("status"), overlay.get("status")):
+    for key in IDENTITY_FIELDS:
+        if not _has_value(overlay.get(key)) and _has_value(base.get(key)):
+            merged[key] = base.get(key)
+    base_atts = base.get("attachments") if isinstance(base.get("attachments"), list) else []
+    over_atts = overlay.get("attachments") if isinstance(overlay.get("attachments"), list) else []
+    if base_atts or over_atts:
+        merged["attachments"] = list(dict.fromkeys([*base_atts, *over_atts]))
+    base_st = normalize_status(base.get("status"))
+    over_st = normalize_status(overlay.get("status"))
+    if STATUS_RANK.get(base_st, 0) > STATUS_RANK.get(over_st, 0):
         merged["status"] = base.get("status")
-        if base.get("lastStatusRemarks") and not overlay.get("lastStatusRemarks"):
+        if _has_value(base.get("lastStatusRemarks")) and not _has_value(overlay.get("lastStatusRemarks")):
             merged["lastStatusRemarks"] = base.get("lastStatusRemarks")
-        if base.get("lastStatusUpdateAt") and not overlay.get("lastStatusUpdateAt"):
+        if _has_value(base.get("lastStatusUpdateAt")) and not _has_value(overlay.get("lastStatusUpdateAt")):
             merged["lastStatusUpdateAt"] = base.get("lastStatusUpdateAt")
-        if base.get("lastStatusProof") and not overlay.get("lastStatusProof"):
+        if _has_value(base.get("lastStatusProof")) and not _has_value(overlay.get("lastStatusProof")):
             merged["lastStatusProof"] = base.get("lastStatusProof")
     return merged
 

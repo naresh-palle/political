@@ -130,9 +130,41 @@ def test_assign_notify_does_not_overwrite_in_progress(monkeypatch):
     assert result["issue"]["status"] == "IN_PROGRESS"
     args = mock_issues.update_one.await_args
     assert args[0][1]["$set"].get("status") != "ASSIGNED"
+
+
+def test_volunteer_assignment_saves_department_without_mongo(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"] = _issue(status="NEW")
+    monkeypatch.setattr(srv, "_mongo_circuit_open", True)
+    monkeypatch.setattr(srv, "db", srv._OfflineDB())
+
+    result = asyncio.run(
+        srv.update_field_issue_status(
+            "iss-e2e-1",
+            {
+                "status": "ASSIGNED",
+                "department": "1. Panchayat Raj – Engineering Department",
+                "assignedOfficialName": "Dept Officer",
+                "assignedOfficialPhone": "9885044003",
+                "remarks": "Department assigned",
+            },
+        )
+    )
+    assert result["ticket"]["status"] == "ASSIGNED"
+    assert "Panchayat Raj" in result["ticket"]["department"]
+    assert result["ticket"]["assignedOfficialName"] == "Dept Officer"
+    assert srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"]["status"] == "ASSIGNED"
+
+
+def test_rejected_without_reason_is_422():
     import asyncio
     from fastapi import HTTPException
     from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"] = _issue(status="ASSIGNED")
 
     async def run():
         await srv.update_field_issue_status("iss-e2e-1", {"status": "REJECTED", "remarks": ""})
