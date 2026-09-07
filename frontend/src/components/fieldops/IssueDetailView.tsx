@@ -22,10 +22,12 @@ import {
   X,
   MessageCircle,
   Upload,
-  FileText
+  FileText,
+  FileDown
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
+import { exportTicketPdf } from "../../utils/exportTicketPdf";
 
 interface IssueDetailViewProps {
   issue: FieldIssue;
@@ -333,6 +335,15 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => exportTicketPdf(issue, history)}
+            className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] hover:text-[#F5EFE0] border border-[#D4A24C]/50 text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+            title="Export this ticket as PDF"
+          >
+            <FileDown className="w-4 h-4" />
+            <span>Export PDF</span>
+          </button>
           {canAssign && (
             <button
               onClick={() => setIsAssignModalOpen(true)}

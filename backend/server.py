@@ -60,6 +60,13 @@ try:
         apply_assignment_fields,
         ASSIGNMENT_STATUSES,
     )
+    from services.role_scope import (
+        actor_role,
+        build_manager_dashboard,
+        build_political_admin_dashboard,
+        issue_in_scope,
+        issue_mongo_query,
+    )
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
     from backend.services.officer_status_workflow import (
@@ -78,6 +85,13 @@ except ImportError:
         should_preserve_progress_status,
         apply_assignment_fields,
         ASSIGNMENT_STATUSES,
+    )
+    from backend.services.role_scope import (
+        actor_role,
+        build_manager_dashboard,
+        build_political_admin_dashboard,
+        issue_in_scope,
+        issue_mongo_query,
     )
 
 mongo_url = (
@@ -226,6 +240,25 @@ def persist_field_issue(issue: Optional[dict]) -> None:
 
 
 # Helper to load fallback JSON data
+async def load_actor(user_id: Optional[str]):
+    """Load the real user record. Client-supplied role/geography is never trusted."""
+    if not user_id:
+        return None
+    try:
+        user = await db.users.find_one(
+            {"id": user_id},
+            {"passwordHash": 0, "demoPassword": 0, "_id": 0},
+        )
+        if user:
+            return sanitize_user(user)
+    except Exception as e:
+        log_mongo_notice("load_actor", e)
+    for raw in load_json_fallback("users.json"):
+        if raw.get("id") == user_id:
+            return sanitize_user(raw)
+    return None
+
+
 def load_json_fallback(filename: str):
     packaged = _load_packaged_json(filename)
     if filename != "field_issues.json":
@@ -2056,11 +2089,20 @@ async def mark_notification_read(notification_id: str):
     return {"status": "success", "id": notification_id, "isRead": True}
 
 @api_router.get("/field-ops/drilldown")
-async def get_geographic_drilldown(assemblyConstituencyId: Optional[str] = "KDP-AC", stateId: Optional[str] = "AP"):
-    # Returns interactive MLA hierarchy: State -> AC -> Mandal -> Village -> Volunteer -> Issues / Live Status
+async def get_geographic_drilldown(
+    assemblyConstituencyId: Optional[str] = None,
+    stateId: Optional[str] = None,
+    userId: Optional[str] = None,
+):
+    actor = await load_actor(userId)
+    if actor and actor_role(actor) != "SUPER_ADMIN":
+        assemblyConstituencyId = actor.get("assemblyConstituencyId") or assemblyConstituencyId
+        stateId = actor.get("stateId") or stateId
+    if not assemblyConstituencyId:
+        return {"assemblyConstituencyId": None, "stateId": stateId, "mandals": []}
     mandals = await get_mandals(assemblyConstituencyId=assemblyConstituencyId, stateId=stateId)
     villages = await get_villages(assemblyConstituencyId=assemblyConstituencyId)
-    issues = await get_field_issues()
+    issues = await get_field_issues(userId=userId)
     users = await get_system_users()
     
     result = []
@@ -2151,6 +2193,11 @@ async def trigger_geography_seed():
         await db.users.create_index("email", unique=True)
         await db.grievances.create_index("ticketNumber", unique=True)
         await db.field_issues.create_index("id", unique=True)
+        await db.field_issues.create_index("directorId")
+        await db.field_issues.create_index("assemblyConstituencyId")
+        await db.field_issues.create_index("assignedVolunteerId")
+        await db.users.create_index("directorId")
+        await db.users.create_index("assemblyConstituencyId")
         await db.work_updates.create_index("id", unique=True)
 
         await db.countries.update_one({"id": "IND"}, {"$set": {"id": "IND", "name": "India", "code": "IND"}}, upsert=True)
@@ -2230,16 +2277,12 @@ async def get_field_issues(
     priority: Optional[str] = None,
     q: Optional[str] = None
 ):
+    actor = await load_actor(userId)
     issues = []
     try:
         query = {}
-        if userRole == "VOLUNTEER" and userId:
-            query["$or"] = [
-                {"assignedVolunteerId": userId},
-                {"createdBy": userId},
-            ]
-        elif userRole == "DIRECTOR" and (userId or directorId):
-            query["directorId"] = directorId or userId
+        if actor:
+            query.update(issue_mongo_query(actor))
         if mandalId and mandalId != "ALL":
             query["mandalId"] = mandalId
         if villageId and villageId != "ALL":
@@ -2256,14 +2299,8 @@ async def get_field_issues(
         
     if not issues:
         fallback = load_json_fallback("field_issues.json")
-        if userRole == "VOLUNTEER" and userId:
-            fallback = [
-                i for i in fallback
-                if i.get("assignedVolunteerId") == userId or i.get("createdBy") == userId
-            ]
-        elif userRole == "DIRECTOR" and (userId or directorId):
-            d_id = directorId or userId
-            fallback = [i for i in fallback if i.get("directorId") == d_id]
+        if actor:
+            fallback = [i for i in fallback if issue_in_scope(actor, i)]
         if mandalId and mandalId != "ALL":
             fallback = [i for i in fallback if i.get("mandalId") == mandalId]
         if villageId and villageId != "ALL":
@@ -2275,14 +2312,8 @@ async def get_field_issues(
         issues = fallback
 
     issues = overlay_in_memory_issues(issues)
-    if userRole == "VOLUNTEER" and userId:
-        issues = [
-            i for i in issues
-            if i.get("assignedVolunteerId") == userId or i.get("createdBy") == userId
-        ]
-    elif userRole == "DIRECTOR" and (userId or directorId):
-        d_id = directorId or userId
-        issues = [i for i in issues if i.get("directorId") == d_id or not i.get("directorId")]
+    if actor:
+        issues = [i for i in issues if issue_in_scope(actor, i)]
     if status and status != "ALL":
         issues = [i for i in issues if i.get("status") == status]
 
@@ -2303,6 +2334,30 @@ async def get_field_issues(
     return issues
 
 
+@api_router.get("/dashboard/political-admin")
+async def dashboard_political_admin(userId: Optional[str] = None):
+    actor = await load_actor(userId)
+    if not actor:
+        raise HTTPException(status_code=401, detail="userId is required")
+    if actor_role(actor) not in {"POLITICAL_ADMIN", "SUPER_ADMIN"}:
+        raise HTTPException(status_code=403, detail="Forbidden: Political Admin dashboard only.")
+    users = await get_system_users()
+    issues = await get_field_issues(userId=actor.get("id"))
+    return build_political_admin_dashboard(actor, users, issues)
+
+
+@api_router.get("/dashboard/manager")
+async def dashboard_manager(userId: Optional[str] = None):
+    actor = await load_actor(userId)
+    if not actor:
+        raise HTTPException(status_code=401, detail="userId is required")
+    if actor_role(actor) not in {"DIRECTOR", "SUPER_ADMIN"}:
+        raise HTTPException(status_code=403, detail="Forbidden: Manager dashboard only.")
+    users = await get_system_users()
+    issues = await get_field_issues(userId=actor.get("id"))
+    return build_manager_dashboard(actor, users, issues)
+
+
 @api_router.get("/field-ops/issues/{issue_id}")
 async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
     issue = None
@@ -2319,11 +2374,9 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
 
-    if userRole == "VOLUNTEER" and userId:
-        if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
-            raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-    if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
-        raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
+    actor = await load_actor(userId)
+    if actor and not issue_in_scope(actor, issue):
+        raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
     return sanitize_doc(issue)
 
 
@@ -2541,8 +2594,8 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     sanitize_doc(history_record)
     IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(dict(history_record)))
 
+    notif_title, notif_msg = volunteer_notification_copy(ticket_number, new_status, remarks)
     if volunteer_ids:
-        notif_title, notif_msg = volunteer_notification_copy(ticket_number, new_status, remarks)
         volunteer_notif_status = "CREATED"
         for recipient_id in volunteer_ids:
             volunteer_notif = {
@@ -2572,6 +2625,64 @@ async def update_field_issue_status(issue_id: str, payload: dict):
                 volunteer_notif_status = "CREATED_IN_MEMORY"
             sanitize_doc(volunteer_notif)
             IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(dict(volunteer_notif)))
+
+    scoped_recipients = []
+    director_id = issue.get("directorId")
+    if director_id and director_id not in (volunteer_ids or []):
+        scoped_recipients.append((director_id, "DIRECTOR"))
+    ac_id = issue.get("assemblyConstituencyId")
+    pa_user = None
+    if ac_id:
+        try:
+            pa_user = await db.users.find_one(
+                {
+                    "assemblyConstituencyId": ac_id,
+                    "$or": [
+                        {"primaryRole": "POLITICAL_ADMIN"},
+                        {"isPoliticalAdmin": True},
+                    ],
+                },
+                {"_id": 0},
+            )
+        except Exception as e:
+            log_mongo_notice("lookup political admin for status notify", e)
+        if not pa_user:
+            pa_user = next(
+                (
+                    u
+                    for u in load_json_fallback("users.json")
+                    if u.get("assemblyConstituencyId") == ac_id
+                    and (u.get("primaryRole") == "POLITICAL_ADMIN" or u.get("isPoliticalAdmin"))
+                ),
+                None,
+            )
+    if pa_user and pa_user.get("id") and pa_user.get("id") not in (volunteer_ids or []):
+        scoped_recipients.append((pa_user["id"], "POLITICAL_ADMIN"))
+    for recipient_id, recipient_role in scoped_recipients:
+            role_notif = {
+                "id": f"notif-{uuid.uuid4().hex[:8]}",
+                "recipientUserId": recipient_id,
+                "recipientRole": recipient_role,
+                "type": "TICKET_STATUS_UPDATED",
+                "eventType": event_type,
+                "resourceType": "ISSUE",
+                "resourceId": issue_id,
+                "issueId": issue_id,
+                "ticketNumber": ticket_number,
+                "status": new_status,
+                "title": notif_title,
+                "message": notif_msg,
+                "priority": "HIGH" if new_status in ("RESOLVED", "REJECTED") else "NORMAL",
+                "isRead": False,
+                "readAt": None,
+                "createdAt": now_str,
+            }
+            try:
+                await db.notifications.insert_one(sanitize_doc(dict(role_notif)))
+                await db.field_notifications.insert_one(sanitize_doc(dict(role_notif)))
+            except Exception as e:
+                log_mongo_notice("insert scoped status notification", e)
+            IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(dict(role_notif)))
 
     complainant_name = issue.get("reportedBy") or "Citizen"
     complainant_phone = complainant_phone_from_issue(issue, payload)

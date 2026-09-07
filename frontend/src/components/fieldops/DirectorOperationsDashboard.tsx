@@ -37,10 +37,8 @@ import {
   Eye,
   ClipboardList,
   Building2,
-  Sparkles,
   MessageCircle
 } from "lucide-react";
-import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
@@ -69,9 +67,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [mandals, setMandals] = useState<MandalInfo[]>([]);
   const [villages, setVillages] = useState<VillageInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [roleDashboard, setRoleDashboard] = useState<any>(null);
+  const [dashboardError, setDashboardError] = useState("");
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
   const [operationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("FIELD_ISSUES");
-  const [isAiPdfModalOpen, setIsAiPdfModalOpen] = useState(false);
 
   const getStatusFromUrl = (): string => {
     const hash = window.location.hash;
@@ -116,7 +115,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         return;
       }
       try {
-        const remote = await politicalApiService.getFieldIssueById(ticketId);
+        const remote = await politicalApiService.getFieldIssueById(
+          ticketId,
+          currentUser.id,
+          currentUser.primaryRole
+        );
         if (remote) setSelectedIssue(remote);
       } catch (e) {
         console.error(e);
@@ -171,28 +174,23 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const loadDirectorData = async () => {
     setLoading(true);
     try {
-      const [allUsers, issueList, grievanceList, mandalList, villageList] = await Promise.all([
+      const [allUsers, issueList, grievanceList, mandalList, villageList, dash] = await Promise.all([
         politicalApiService.getUsers(),
         politicalApiService.getFieldIssues({
+          userId: currentUser.id,
           directorId: currentUser.id,
           userRole: "DIRECTOR"
         }),
         politicalApiService.getGrievances(),
-        politicalApiService.getMandals(
-          currentUser.assemblyConstituencyId || "BNG-AC",
-          currentUser.stateId || "AP"
-        ),
-        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "BNG-AC")
+        politicalApiService.getMandals(currentUser.assemblyConstituencyId, currentUser.stateId),
+        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId),
+        politicalApiService.getManagerDashboard(currentUser.id).catch(() => null)
       ]);
 
-      // Filter volunteers assigned to this director
       const assignedVols = allUsers.filter(
         (u) =>
           (u.primaryRole === "VOLUNTEER" || u.roleId === "VOLUNTEER" || u.role === "volunteer") &&
-          (u.directorId === currentUser.id ||
-            u.directorName === currentUser.name ||
-            (u.partyId && currentUser.partyId && u.partyId === currentUser.partyId) ||
-            !u.directorId)
+          u.directorId === currentUser.id
       );
 
       setVolunteers(assignedVols);
@@ -200,8 +198,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       setGrievances(grievanceList);
       setMandals(mandalList);
       setVillages(villageList);
+      setRoleDashboard(dash);
+      setDashboardError("");
     } catch (e) {
       console.error(e);
+      setDashboardError("Dashboard data could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -337,7 +338,15 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
   // Top Tickets Metrics (pending/open does not include in progress)
   const kpiCounts = countByKpi(allOperationsList);
-  const totalOperationsCount = kpiCounts.total;
+  const dashStats = roleDashboard?.stats;
+  const assignedTicketIds = new Set<string>(roleDashboard?.assignedTicketIds || []);
+  const assignedTickets = allOperationsList.filter((item) =>
+    assignedTicketIds.size > 0
+      ? assignedTicketIds.has(item.id)
+      : Boolean(item.assignedVolunteerId && volunteers.some((v) => v.id === item.assignedVolunteerId))
+  );
+  const volunteerSummaries = roleDashboard?.volunteers || [];
+  const totalOperationsCount = dashStats?.totalTickets ?? kpiCounts.total;
   const pendingCount = kpiCounts.openUnassigned;
   const completedCount = kpiCounts.resolvedClosed;
   const cantBeDoneCount = allOperationsList.filter(
@@ -776,7 +785,9 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                 Campaign Manager
               </span>
-              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "Constituency Grievance Command"}</span>
+              {currentUser.assignedConstituency && (
+              <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency}</span>
+              )}
             </div>
             <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal mt-0.5">
               {currentUser.name}
@@ -1481,7 +1492,152 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#22354D]">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block">My Volunteers</span>
+          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.myVolunteers ?? volunteers.length}</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#22354D]">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block">Active Volunteers</span>
+          <span className="text-2xl font-bold font-mono text-emerald-300">{dashStats?.activeVolunteers ?? volunteers.filter((v) => !v.status || v.status === "ACTIVE").length}</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-violet-500/40">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-violet-300 block">Assigned Tickets</span>
+          <span className="text-2xl font-bold font-mono text-violet-200">{dashStats?.totalAssignedTickets ?? assignedTickets.length}</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-amber-500/40">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">Pending Tickets</span>
+          <span className="text-2xl font-bold font-mono text-amber-300">{dashStats?.pendingTickets ?? 0}</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-sky-500/40">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block">Assigned to Dept</span>
+          <span className="text-2xl font-bold font-mono text-sky-300">{dashStats?.assignedToDepartment ?? 0}</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-rose-500/40">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block">Overdue</span>
+          <span className="text-2xl font-bold font-mono text-rose-300">{dashStats?.overdue ?? kpiCounts.overdue}</span>
+        </div>
+      </div>
+
+      {dashboardError && (
+        <div className="p-3 rounded-xl border border-rose-500/40 bg-rose-950/30 text-rose-200 text-xs">
+          {dashboardError}
+        </div>
+      )}
+
       <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#D4A24C]" />
+            My Volunteers
+          </h2>
+          <span className="text-xs text-[#CBD5E1]">{volunteers.length} reporting to you</span>
+        </div>
+        {volunteers.length === 0 ? (
+          <div className="p-6 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
+            No volunteers are assigned to this manager.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {volunteers.map((vol) => {
+              const summary = volunteerSummaries.find((s: any) => s.id === vol.id);
+              const volIssues = assignedTickets.filter((i) => i.assignedVolunteerId === vol.id);
+              const assignedCount = summary?.assignedTickets ?? volIssues.length;
+              const pendingCountVol = summary?.pendingTickets ?? volIssues.filter((i) => kpiBucket(i) === "OPEN_UNASSIGNED" || kpiBucket(i) === "ASSIGNED").length;
+              const volOverdue = summary?.overdueTickets ?? volIssues.filter((i) => i.status === "OVERDUE").length;
+              const volCompleted = summary?.completedTickets ?? volIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(String(i.status))).length;
+              return (
+                <div
+                  key={vol.id}
+                  onClick={() => {
+                    setFilterVolunteerId(vol.id);
+                    window.location.hash = "#/assign-tickets?status=ALL";
+                  }}
+                  className="p-4 rounded-xl border bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/50 cursor-pointer space-y-3"
+                >
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-[13px] text-[#F5EFE0] truncate">{vol.name}</h4>
+                    <span className="text-[10px] text-[#CBD5E1] block truncate">
+                      {summary?.area || vol.assignedMandalName || vol.assignedConstituency || "Unassigned area"}
+                    </span>
+                    <span className="text-[10px] text-[#D4A24C] uppercase font-bold">
+                      {vol.status || "ACTIVE"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
+                    <div className="p-1 rounded bg-[#0B131E]/80">
+                      <span className="text-[#8E9CAE] block font-semibold">Assigned</span>
+                      <strong className="text-[#F5EFE0]">{assignedCount}</strong>
+                    </div>
+                    <div className="p-1 rounded bg-[#0B131E]/80">
+                      <span className="text-amber-300 block font-semibold">Pending</span>
+                      <strong className="text-amber-200">{pendingCountVol}</strong>
+                    </div>
+                    <div className="p-1 rounded bg-[#0B131E]/80">
+                      <span className="text-rose-300 block font-semibold">Overdue</span>
+                      <strong className={volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}>{volOverdue}</strong>
+                    </div>
+                    <div className="p-1 rounded bg-[#0B131E]/80">
+                      <span className="text-emerald-300 block font-semibold">Done</span>
+                      <strong className="text-emerald-400">{volCompleted}</strong>
+                    </div>
+                  </div>
+                  {summary?.lastActivity && (
+                    <p className="text-[10px] text-[#8E9CAE]">Last update: {new Date(summary.lastActivity).toLocaleString()}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-[#D4A24C]" />
+            Assigned Tickets
+          </h2>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = "#/assign-tickets?status=ALL";
+            }}
+            className="text-xs font-semibold text-[#D4A24C] hover:underline"
+          >
+            View all
+          </button>
+        </div>
+        {assignedTickets.length === 0 ? (
+          <div className="p-6 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
+            No tickets are currently assigned to your volunteers.
+          </div>
+        ) : (
+          <div className={TICKET_GRID_CLASS}>
+            {assignedTickets.slice(0, 8).map((issue) => {
+              const timing = getTicketTimingDetails(issue);
+              return (
+                <TicketGridCard
+                  key={issue.id}
+                  issue={issue}
+                  timing={timing}
+                  showAssignControls={false}
+                  volunteerName={issue.assignedVolunteerName || "Unassigned"}
+                  extraBadges={
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
+                      {issue.assignedVolunteerName || "Volunteer"}
+                    </span>
+                  }
+                  onOpen={() => setSelectedIssue(issue)}
+                  onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       </>
       )}
@@ -1571,16 +1727,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 <span className="text-[11px] hidden sm:inline">Table</span>
               </button>
             </div>
-
-            {/* Export to PDF Button */}
-            <button
-              onClick={() => setIsAiPdfModalOpen(true)}
-              className="p-1.5 px-3 rounded-xl bg-[#131E2D] border border-[#D4A24C]/50 hover:border-[#D4A24C] text-[#D4A24C] hover:text-[#F5EFE0] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-              title="Generate & Export Tickets PDF Report"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" />
-              <span className="text-[11px]">Export to PDF</span>
-            </button>
           </div>
         </div>
 
@@ -2112,16 +2258,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       </>
       )}
 
-      {/* Tickets Table PDF Export Modal */}
-      {isAiPdfModalOpen && (
-        <AiTicketsPdfReportModal
-          isOpen={isAiPdfModalOpen}
-          onClose={() => setIsAiPdfModalOpen(false)}
-          issues={sortedAndFilteredOperations}
-          currentUser={currentUser}
-          constituencyName="Banaganapalle AC (AC-140)"
-        />
-      )}
       {/* Assign Complaint & WhatsApp Modal */}
       <AssignComplaintModal
         isOpen={!!assignModalIssue}

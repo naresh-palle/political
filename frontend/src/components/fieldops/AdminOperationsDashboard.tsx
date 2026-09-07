@@ -53,6 +53,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const [drilldownData, setDrilldownData] = useState<any>(null);
   const [issues, setIssues] = useState<FieldIssue[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [roleDashboard, setRoleDashboard] = useState<any>(null);
   const [mandals, setMandals] = useState<MandalInfo[]>([]);
   const [villages, setVillages] = useState<VillageInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +130,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   );
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterMandal, setFilterMandal] = useState<string>("ALL");
+  const [filterDepartment, setFilterDepartment] = useState<string>("ALL");
+  const [filterVolunteer, setFilterVolunteer] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [dashboardError, setDashboardError] = useState("");
 
   useEffect(() => {
     const syncStatus = () => {
@@ -148,18 +152,21 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const loadAdminData = async () => {
     setLoading(true);
     try {
-      const [drilldown, issueList, userList, mandalList, villageList] = await Promise.all([
-        politicalApiService.getGeographicDrilldown(
-          currentUser.assemblyConstituencyId || "BNG-AC",
-          currentUser.stateId || "AP"
-        ),
-        politicalApiService.getFieldIssues(),
+      const acId = currentUser.assemblyConstituencyId;
+      const role = currentUser.primaryRole || (currentUser.isPoliticalAdmin ? "POLITICAL_ADMIN" : "SUPER_ADMIN");
+      const [drilldown, issueList, userList, mandalList, villageList, dash] = await Promise.all([
+        politicalApiService.getGeographicDrilldown(acId, currentUser.stateId, currentUser.id),
+        politicalApiService.getFieldIssues({
+          userId: currentUser.id,
+          userRole: role,
+          assemblyConstituencyId: acId
+        }),
         politicalApiService.getUsers(),
-        politicalApiService.getMandals(
-          currentUser.assemblyConstituencyId || "BNG-AC",
-          currentUser.stateId || "AP"
-        ),
-        politicalApiService.getVillages(undefined, currentUser.assemblyConstituencyId || "BNG-AC")
+        politicalApiService.getMandals(acId, currentUser.stateId),
+        politicalApiService.getVillages(undefined, acId),
+        isPlatformSuperAdmin
+          ? Promise.resolve(null)
+          : politicalApiService.getPoliticalAdminDashboard(currentUser.id).catch(() => null)
       ]);
 
       setDrilldownData(drilldown);
@@ -167,8 +174,11 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       setUsers(userList);
       setMandals(mandalList);
       setVillages(villageList);
+      setRoleDashboard(dash);
+      setDashboardError("");
     } catch (e) {
       console.error(e);
+      setDashboardError("Dashboard data could not be loaded.");
     } finally {
       setLoading(false);
     }
@@ -182,17 +192,25 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     setExpandedVillages((prev) => ({ ...prev, [villageId]: !prev[villageId] }));
   };
 
-  // Metrics
-  const directors = users.filter((u) => u.primaryRole === "DIRECTOR");
-  const volunteers = users.filter((u) => u.primaryRole === "VOLUNTEER");
+  const scopedUsers = users.filter((u) => {
+    if (isPlatformSuperAdmin) return true;
+    const ac = currentUser.assemblyConstituencyId;
+    return !ac || u.assemblyConstituencyId === ac;
+  });
+  const directors = scopedUsers.filter((u) => u.primaryRole === "DIRECTOR");
+  const volunteers = scopedUsers.filter((u) => u.primaryRole === "VOLUNTEER");
   const kpiCounts = countByKpi(issues);
-  const totalIssues = kpiCounts.total;
-  const pendingCount = kpiCounts.openUnassigned;
-  const assignedCount = kpiCounts.assigned;
-  const inProgressCount = kpiCounts.inProgress;
-  const completedCount = kpiCounts.resolvedClosed;
-  const overdueCount = kpiCounts.overdue;
-  const rejectedCount = kpiCounts.rejected;
+  const dashStats = roleDashboard?.stats;
+  const totalIssues = dashStats?.totalIssues ?? kpiCounts.total;
+  const pendingCount = dashStats?.newIssues ?? kpiCounts.openUnassigned;
+  const assignedCount = dashStats?.assigned ?? kpiCounts.assigned;
+  const assignedToDeptCount = dashStats?.assignedToDepartment ?? 0;
+  const inProgressCount = dashStats?.inProgress ?? kpiCounts.inProgress;
+  const completedCount = dashStats?.resolvedClosed ?? kpiCounts.resolvedClosed;
+  const overdueCount = dashStats?.overdue ?? kpiCounts.overdue;
+  const rejectedCount = dashStats?.rejected ?? kpiCounts.rejected;
+  const volunteerCount = dashStats?.totalVolunteers ?? volunteers.length;
+  const activeVolunteerCount = dashStats?.activeVolunteers ?? volunteers.filter((v) => !v.status || v.status === "ACTIVE").length;
 
   useEffect(() => {
     const openTicketFromHash = async () => {
@@ -204,7 +222,11 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         return;
       }
       try {
-        const remote = await politicalApiService.getFieldIssueById(ticketId);
+        const remote = await politicalApiService.getFieldIssueById(
+          ticketId,
+          currentUser.id,
+          currentUser.primaryRole
+        );
         if (remote) setSelectedIssue(remote);
       } catch (e) {
         console.error(e);
@@ -261,6 +283,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       }
       if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
       if (filterMandal !== "ALL" && item.mandalId !== filterMandal) return false;
+      if (filterDepartment !== "ALL" && (item.department || item.assignedDepartment) !== filterDepartment) return false;
+      if (filterVolunteer !== "ALL" && item.assignedVolunteerId !== filterVolunteer) return false;
 
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -274,7 +298,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       }
       return true;
     });
-  }, [issues, filterStatus, filterPriority, filterMandal, searchQuery]);
+  }, [issues, filterStatus, filterPriority, filterMandal, filterDepartment, filterVolunteer, searchQuery]);
 
   if (selectedIssue) {
     return (
@@ -429,9 +453,11 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                       <span>{currentUser.partyName} ({currentUser.partyAbbr})</span>
                     </span>
                   )}
+                  {currentUser.assignedConstituency && (
                   <span className="text-xs font-medium text-[#8E9CAE] bg-[#071322]/70 px-2.5 py-0.5 rounded-full border border-[#22405E]">
-                    {currentUser.assignedConstituency || "Banaganapalle AC (AC-140)"}
+                    {currentUser.assignedConstituency}
                   </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => setIsEditProfileOpen(true)}
@@ -447,9 +473,11 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   {currentUser.name}
                 </h1>
 
+                {currentUser.designation && (
                 <p className="text-xs sm:text-sm text-[#D8CFB8] leading-relaxed">
-                  {currentUser.designation || "Minister for Roads & Buildings and Infrastructure & Investments | MLA Banaganapalle"}
+                  {currentUser.designation}
                 </p>
+                )}
                 <p className="text-xs text-[#8E9CAE] flex flex-wrap items-center gap-x-3">
                   {currentUser.email && <span>✉️ {currentUser.email}</span>}
                   {currentUser.phone && <span>📞 {currentUser.phone}</span>}
@@ -457,7 +485,6 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
-            {isPlatformSuperAdmin && (
             <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
               <button
                 onClick={() => setViewMode("DRILLDOWN")}
@@ -475,6 +502,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               >
                 Constituency Issues ({totalIssues})
               </button>
+              {isPlatformSuperAdmin && (
               <button
                 onClick={() => setViewMode("DIRECTORS")}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
@@ -485,6 +513,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               >
                 My Managers ({directors.length})
               </button>
+              )}
               <button
                 onClick={() => setViewMode("VOLUNTEERS")}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
@@ -493,10 +522,9 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
                 }`}
               >
-                Squad Volunteers ({volunteers.length})
+                Squad Volunteers ({volunteerCount})
               </button>
             </div>
-            )}
           </div>
         </div>
       )}
@@ -569,10 +597,42 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/35">
+          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Volunteers</span>
+          <div className="font-display text-2xl font-bold text-[#D4A24C] mt-1">{volunteerCount}</div>
+        </div>
+        <div className="p-4 rounded-xl bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/40">
+          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Active Volunteers</span>
+          <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{activeVolunteerCount}</div>
+        </div>
+        <div className="p-4 rounded-xl bg-violet-950/40 backdrop-blur-xl border border-violet-500/40">
+          <span className="text-[10px] uppercase tracking-wider text-violet-300 block font-semibold">Assigned to Dept</span>
+          <div className="font-display text-2xl font-bold text-violet-200 mt-1">{assignedToDeptCount}</div>
+        </div>
+        <div className="p-4 rounded-xl bg-sky-950/40 backdrop-blur-xl border border-sky-500/40">
+          <span className="text-[10px] uppercase tracking-wider text-sky-300 block font-semibold">With Pending Work</span>
+          <div className="font-display text-2xl font-bold text-sky-400 mt-1">{dashStats?.volunteersWithPending ?? 0}</div>
+        </div>
+        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40">
+          <span className="text-[10px] uppercase tracking-wider text-rose-300 block font-semibold">With Overdue Work</span>
+          <div className="font-display text-2xl font-bold text-rose-400 mt-1">{dashStats?.volunteersWithOverdue ?? 0}</div>
+        </div>
+        <div className="p-4 rounded-xl bg-emerald-950/35 backdrop-blur-xl border border-emerald-500/35">
+          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">With Completed Work</span>
+          <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{dashStats?.volunteersWithCompleted ?? 0}</div>
+        </div>
+      </div>
+
+      {dashboardError && (
+        <div className="p-3 rounded-xl border border-rose-500/40 bg-rose-950/30 text-rose-200 text-xs">
+          {dashboardError}
+        </div>
+      )}
+
       <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
 
-      {/* VIEW 1: INTERACTIVE GEOGRAPHIC DRILLDOWN TREE (Super Admin only) */}
-      {isPlatformSuperAdmin && viewMode === "DRILLDOWN" && (
+      {viewMode === "DRILLDOWN" && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#0F2338]/80 border border-[#22405E]">
             <div>
@@ -590,7 +650,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             </div>
             <div className="flex items-center gap-2 text-xs">
               <span className="px-2.5 py-1 rounded bg-[#071322] border border-[#22405E] text-[#D4A24C]">
-                {currentUser.assignedConstituency || "Kadapa AC (AC-132)"}
+                {currentUser.assignedConstituency || currentUser.assemblyConstituencyName || "Constituency"}
               </span>
             </div>
           </div>
@@ -841,6 +901,36 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 <option value="MEDIUM">MEDIUM</option>
                 <option value="LOW">LOW</option>
               </select>
+              <select
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+              >
+                <option value="ALL">All Departments</option>
+                {Array.from(new Set(issues.map((i) => i.department || i.assignedDepartment).filter(Boolean))).map((dept) => (
+                  <option key={String(dept)} value={String(dept)}>{String(dept)}</option>
+                ))}
+              </select>
+              <select
+                value={filterVolunteer}
+                onChange={(e) => setFilterVolunteer(e.target.value)}
+                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+              >
+                <option value="ALL">All Volunteers</option>
+                {volunteers.map((vol) => (
+                  <option key={vol.id} value={vol.id}>{vol.name}</option>
+                ))}
+              </select>
+              <select
+                value={filterMandal}
+                onChange={(e) => setFilterMandal(e.target.value)}
+                className="bg-[#0F2338] border border-[#22405E] rounded-xl px-3 py-2 text-[12px] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+              >
+                <option value="ALL">All Mandals</option>
+                {mandals.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -946,19 +1036,19 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                       <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
                         <span className="text-[#8E9CAE] block uppercase">Directors</span>
                         <strong className="text-base text-[#F5EFE0] font-display">
-                          {polAdminDirectors.length || 2}
+                          {polAdminDirectors.length}
                         </strong>
                       </div>
                       <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
                         <span className="text-[#8E9CAE] block uppercase">Volunteers</span>
                         <strong className="text-base text-[#D4A24C] font-display">
-                          {polAdminVolunteers.length || 4}
+                          {polAdminVolunteers.length}
                         </strong>
                       </div>
                       <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
                         <span className="text-[#8E9CAE] block uppercase">Field Issues</span>
                         <strong className="text-base text-blue-400 font-display">
-                          {polAdminIssues.length || issues.length}
+                          {polAdminIssues.length}
                         </strong>
                       </div>
                     </div>
@@ -1034,8 +1124,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* VIEW 4: VOLUNTEERS MASTER GRID (Super Admin only) */}
-      {isPlatformSuperAdmin && viewMode === "VOLUNTEERS" && (
+      {viewMode === "VOLUNTEERS" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {volunteers.map((vol) => {
             const volIssues = issues.filter((i) => i.assignedVolunteerId === vol.id);
@@ -1058,10 +1147,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                       {vol.name}
                     </h4>
                     <span className="text-[11px] text-[#D4A24C] block truncate">
-                      {vol.assignedMandalName || "Kadapa Urban"}
+                      {vol.assignedMandalName || vol.assignedConstituency || "Unassigned area"}
                     </span>
                     <span className="text-[10px] text-[#8E9CAE] block truncate">
-                      {vol.assignedVillageNames?.join(", ") || "Chinna Chowk"}
+                      {vol.assignedVillageNames?.join(", ") || ""}
                     </span>
                   </div>
                 </div>

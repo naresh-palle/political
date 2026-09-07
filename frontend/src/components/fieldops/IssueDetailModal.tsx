@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   FieldIssue,
   WorkUpdateRecord,
@@ -23,10 +24,12 @@ import {
   Tag,
   MessageCircle,
   RotateCw,
-  ShieldCheck
+  ShieldCheck,
+  FileDown
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
+import { exportTicketPdf } from "../../utils/exportTicketPdf";
 
 interface IssueDetailModalProps {
   issue: FieldIssue;
@@ -204,9 +207,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   const canAssign = (isAdmin || isDirector || isVolunteer) && isTicketOpenForAssign(issue.status);
   const canUpdateProof = isAdmin || isDirector;
 
-  return (
+  const modal = (
     <div
-      className="fixed inset-0 z-[200000] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 z-[400020] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
       onClick={onClose}
     >
       <div
@@ -250,6 +253,15 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0 ml-2">
+            <button
+              type="button"
+              onClick={() => exportTicketPdf(issue, history)}
+              className="px-3 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] hover:text-[#F5EFE0] text-xs font-bold border border-[#D4A24C]/50 flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+              title="Export this ticket as PDF"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">Export PDF</span>
+            </button>
             {canAssign && (
               <button
                 type="button"
@@ -649,4 +661,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       )}
     </div>
   );
+
+  if (typeof document === "undefined") return modal;
+  return createPortal(modal, document.body);
 };

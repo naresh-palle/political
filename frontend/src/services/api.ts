@@ -1132,6 +1132,7 @@ export const politicalApiService = {
     userId?: string;
     userRole?: string;
     directorId?: string;
+    assemblyConstituencyId?: string;
     mandalId?: string;
     villageId?: string;
     status?: string;
@@ -1189,7 +1190,9 @@ export const politicalApiService = {
         );
       } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
         const dId = params.directorId || params.userId;
-        list = list.filter((i: any) => i.directorId === dId || !i.directorId);
+        list = list.filter((i: any) => i.directorId === dId);
+      } else if (params?.userRole === "POLITICAL_ADMIN" && params?.assemblyConstituencyId) {
+        list = list.filter((i: any) => i.assemblyConstituencyId === params.assemblyConstituencyId);
       }
       if (params?.mandalId && params.mandalId !== "ALL") {
         list = list.filter((i: any) => i.mandalId === params.mandalId);
@@ -1348,11 +1351,15 @@ export const politicalApiService = {
     return { success: false, message: "Invalid 6-digit OTP code" };
   },
 
-  async getFieldIssueById(issueId: string, _userId?: string, _userRole?: string): Promise<any> {
+  async getFieldIssueById(issueId: string, userId?: string, userRole?: string): Promise<any> {
     let remote: any = null;
     try {
+      const qp = new URLSearchParams();
+      if (userId) qp.append("userId", userId);
+      if (userRole) qp.append("userRole", userRole);
+      const suffix = qp.toString() ? `?${qp.toString()}` : "";
       const res = await fetchWithTimeout(
-        `${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}`
+        `${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}${suffix}`
       );
       if (res.ok) remote = await res.json();
     } catch (e) {
@@ -1584,11 +1591,28 @@ export const politicalApiService = {
     return { status: "success", id: notificationId, isRead: true };
   },
 
-  async getGeographicDrilldown(assemblyConstituencyId?: string, stateId?: string): Promise<any> {
+  async getPoliticalAdminDashboard(userId: string): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${RENDER_BACKEND_URL}/dashboard/political-admin?userId=${encodeURIComponent(userId)}`
+    );
+    if (!res.ok) throw new Error("Political Admin dashboard unavailable");
+    return res.json();
+  },
+
+  async getManagerDashboard(userId: string): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${RENDER_BACKEND_URL}/dashboard/manager?userId=${encodeURIComponent(userId)}`
+    );
+    if (!res.ok) throw new Error("Manager dashboard unavailable");
+    return res.json();
+  },
+
+  async getGeographicDrilldown(assemblyConstituencyId?: string, stateId?: string, userId?: string): Promise<any> {
     try {
       const qp = new URLSearchParams();
       if (assemblyConstituencyId) qp.append("assemblyConstituencyId", assemblyConstituencyId);
       if (stateId) qp.append("stateId", stateId);
+      if (userId) qp.append("userId", userId);
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/drilldown?${qp.toString()}`);
       if (res.ok) return await res.json();
     } catch (e) {

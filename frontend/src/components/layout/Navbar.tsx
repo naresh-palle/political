@@ -127,6 +127,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [isNotifOpen]);
 
   return (
+    <>
     <header
       ref={headerRef}
       data-testid="global-navbar"
@@ -485,37 +486,37 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Notification Center Modal */}
-      {isNotifOpen && (
-        <NotificationCenter
-          currentUser={currentProfile}
-          isOpen={isNotifOpen}
-          onUnreadCountChange={(count) => setUnreadCount(count)}
-          onSelectIssue={(issueId) => {
-            setIsNotifOpen(false);
-            loadUnreadNotifications();
-            setTicketIdInHash(issueId);
-          }}
-          onClose={() => {
-            setIsNotifOpen(false);
-            loadUnreadNotifications();
-          }}
-        />
-      )}
-
-      {/* Edit Profile Modal */}
-      {isEditProfileOpen && (
-        <EditProfileModal
-          currentUser={currentProfile}
-          isOpen={isEditProfileOpen}
-          onClose={() => setIsEditProfileOpen(false)}
-          onSave={(updated) => {
-            if (onUpdateProfile) {
-              onUpdateProfile(updated);
-            }
-          }}
-        />
-      )}
     </header>
+
+    {isNotifOpen && (
+      <NotificationCenter
+        currentUser={currentProfile}
+        isOpen={isNotifOpen}
+        onUnreadCountChange={(count) => setUnreadCount(count)}
+        onSelectIssue={(issueId) => {
+          setIsNotifOpen(false);
+          loadUnreadNotifications();
+          setTicketIdInHash(issueId);
+        }}
+        onClose={() => {
+          setIsNotifOpen(false);
+          loadUnreadNotifications();
+        }}
+      />
+    )}
+
+    {isEditProfileOpen && (
+      <EditProfileModal
+        currentUser={currentProfile}
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        onSave={(updated) => {
+          if (onUpdateProfile) {
+            onUpdateProfile(updated);
+          }
+        }}
+      />
+    )}
+    </>
   );
 };
