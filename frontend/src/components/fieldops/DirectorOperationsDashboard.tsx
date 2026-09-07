@@ -1866,24 +1866,26 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             })}
           </div>
         ) : (
-          /* TABLE VIEW WITH WORDWRAP - ZERO HORIZONTAL SCROLL */
-          <div className="rounded-2xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-xl">
-            <table className="w-full text-left text-xs border-collapse">
+          /* TABLE VIEW */
+          <div className="rounded-xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-lg">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[960px] table-fixed text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10.5px] font-semibold tracking-wider">
-                  <th className="py-3 px-3 w-[10%]">ID & Type</th>
-                  <th className="py-3 px-3 w-[24%]">Issue Title & Scope</th>
-                  <th className="py-3 px-3 w-[13%]">Category / Dept</th>
-                  <th className="py-3 px-3 w-[13%]">Mandal / Location</th>
-                  <th className="py-3 px-3 w-[12%]">Reported By</th>
-                  <th className="py-3 px-3 w-[16%]">Assign & Notify (WhatsApp)</th>
-                  <th className="py-3 px-3 w-[14%]">Timeline & Duration</th>
-                  <th className="py-3 px-3 w-[0%] text-right">Action</th>
+                <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+                  <th className="py-2 px-2 w-[12%]">ID & Status</th>
+                  <th className="py-2 px-2 w-[26%]">Issue Title</th>
+                  <th className="py-2 px-2 w-[12%]">Category / Dept</th>
+                  <th className="py-2 px-2 w-[12%]">Mandal / Location</th>
+                  <th className="py-2 px-2 w-[10%]">Reported By</th>
+                  <th className="py-2 px-2 w-[14%]">Assign & Notify</th>
+                  <th className="py-2 px-2 w-[10%]">Timeline</th>
+                  <th className="py-2 px-2 w-[4%] text-right">View</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#223348]/50">
                 {paginatedOperations.map((issue) => {
                   const timing = getTicketTimingDetails(issue);
+                  const officerComment = issue.lastStatusRemarks?.trim();
 
                   return (
                     <tr
@@ -1891,110 +1893,68 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                       onClick={() => setSelectedIssue(issue)}
                       className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
                     >
-                      {/* 1. ID & Type */}
-                      <td className="py-3 px-3 align-top">
-                        <div className="font-mono font-bold text-[#D4A24C] text-[11px]">
+                      <td className="py-1.5 px-2 align-top">
+                        <div className="font-mono font-bold text-[#D4A24C] text-[11px] truncate" title={`#${issue.id}`}>
                           #{issue.id}
                         </div>
-                        <div className="mt-1">
-                          <span
-                            className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border inline-block ${
-                              issue.issueType === "GRIEVANCE"
-                                ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
-                                : "bg-sky-950/70 text-sky-300 border-sky-500/40"
-                            }`}
-                          >
-                            {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
-                          </span>
-                        </div>
-                        <div className="mt-1">
-                          <span
-                            className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
-                              issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                                ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                                : issue.status === "IN_PROGRESS"
-                                ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                                : issue.status === "OVERDUE" || (issue as any).status === "Can't be done"
-                                ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
-                                : "bg-blue-950/60 text-blue-300 border-blue-500/40"
-                            }`}
-                          >
-                            {issue.status}
-                          </span>
-                        </div>
+                        <span
+                          className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
+                            issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                              ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                              : issue.status === "IN_PROGRESS"
+                              ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                              : issue.status === "OVERDUE" || (issue as any).status === "Can't be done"
+                              ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
+                              : "bg-blue-950/60 text-blue-300 border-blue-500/40"
+                          }`}
+                        >
+                          {formatIssueStatus(issue.status)}
+                        </span>
                       </td>
-
-                      {/* 2. Title & Scope (Word-wrapped) */}
-                      <td className="py-3 px-3 align-top">
-                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors break-words leading-snug">
+                      <td className="py-1.5 px-2 align-top">
+                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors line-clamp-2 leading-snug">
                           {issue.title}
                         </div>
-                        <div className="text-[11px] text-[#8E9CAE] break-words mt-1 leading-relaxed">
-                          {issue.description}
-                        </div>
-                        <div className="mt-2 p-2 rounded-lg bg-[#142B45]/80 border border-[#D4A24C]/30">
-                          <div className="text-[9.5px] font-bold uppercase tracking-wider text-[#D4A24C]">
-                            Officer comment
+                        {issue.description ? (
+                          <div className="text-[11px] text-[#8E9CAE] line-clamp-2 mt-0.5 leading-snug">
+                            {issue.description}
                           </div>
-                          <div className="text-[11px] text-[#F5EFE0] mt-0.5 break-words whitespace-pre-wrap">
-                            {issue.lastStatusRemarks?.trim() || "No officer comment on this status yet."}
+                        ) : null}
+                        {officerComment ? (
+                          <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0] line-clamp-2">
+                            {officerComment}
                           </div>
-                        </div>
-                        <div className="mt-1.5 flex items-center gap-1.5">
-                          <span
-                            className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded ${
-                              issue.priority === "URGENT"
-                                ? "text-red-400 bg-red-950/60 border border-red-500/40"
-                                : issue.priority === "HIGH"
-                                ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
-                                : "text-[#CBD5E1] bg-[#0B131E]"
-                            }`}
-                          >
-                            Priority: {issue.priority}
-                          </span>
-                        </div>
+                        ) : null}
                       </td>
-
-                      {/* 3. Category & Department (Word-wrapped) */}
-                      <td className="py-3 px-3 align-top">
-                        <div className="font-medium text-[#F5EFE0] break-words">{issue.category}</div>
+                      <td className="py-1.5 px-2 align-top">
+                        <div className="font-medium text-[#F5EFE0] truncate" title={issue.category}>{issue.category}</div>
                         {issue.department && (
-                          <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
-                            {issue.department}
+                          <div className="text-[10.5px] text-[#D4A24C] truncate mt-0.5" title={issue.department}>
+                            {issue.department.split("(")[0]}
                           </div>
                         )}
                       </td>
-
-                      {/* 4. Mandal & Location (Word-wrapped) */}
-                      <td className="py-3 px-3 align-top">
-                        <div className="font-medium text-[#F5EFE0] break-words">{issue.mandalName}</div>
-                        <div className="text-[10.5px] text-[#8E9CAE] break-words mt-0.5">
-                          📍 {issue.villageName || issue.placeName || "Sector Ward"}
-                        </div>
+                      <td className="py-1.5 px-2 align-top">
+                        <div className="font-medium text-[#F5EFE0] truncate" title={issue.mandalName}>{issue.mandalName}</div>
+                        {(issue.villageName || issue.placeName) ? (
+                          <div className="text-[10.5px] text-[#8E9CAE] truncate mt-0.5">
+                            {issue.villageName || issue.placeName}
+                          </div>
+                        ) : null}
                       </td>
-
-                      {/* 5. Reported By (Word-wrapped) */}
-                      <td className="py-3 px-3 align-top">
-                        <div className="font-medium text-[#F5EFE0] break-words">{issue.reportedBy}</div>
-                        <div className="text-[10.5px] text-[#D4A24C] break-words mt-0.5">
+                      <td className="py-1.5 px-2 align-top">
+                        <div className="font-medium text-[#F5EFE0] truncate" title={issue.reportedBy}>{issue.reportedBy}</div>
+                        <div className="text-[10.5px] text-[#D4A24C] truncate mt-0.5">
                           {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
-                          {issue.reporterPhone ? ` · ${issue.reporterPhone}` : ""}
                         </div>
                       </td>
-
-                      {/* 6. Assign Complaint / Resolved Department & WhatsApp Action */}
-                      <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-1.5 px-2 align-top" onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canAssign = isTicketOpenForAssign(issue.status);
                           if (!canAssign) {
                             return (
-                              <div className="space-y-1.5 min-w-0">
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                                  Assigned dept
-                                </div>
-                                <div className="text-[11.5px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1.5 break-words leading-snug">
-                                  {issue.department || "General Administration"}
-                                </div>
+                              <div className="text-[11px] font-semibold text-[#F5EFE0] truncate" title={issue.department || "General Administration"}>
+                                {issue.department || "General Administration"}
                               </div>
                             );
                           }
@@ -2013,61 +1973,40 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                                   </option>
                                 ))}
                               </select>
-
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setAssignModalIssue(issue);
                                 }}
-                                className="w-full py-1 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10.5px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1 cursor-pointer transition-all shadow-sm"
+                                className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer"
                               >
-                                <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20" />
-                                Assign & WhatsApp
+                                <MessageCircle className="w-3 h-3 text-emerald-400 fill-emerald-400/20 shrink-0" />
+                                WhatsApp
                               </button>
                             </div>
                           );
                         })()}
                       </td>
-
-                      {/* 7. Timeline Dates & Duration (Word-wrapped) */}
-                      <td className="py-3 px-3 align-top font-mono text-[10.5px]">
-                        <div className="text-[#CBD5E1]">
-                          <span className="text-[#8E9CAE]">Reg: </span>
-                          {timing.registeredTimeFormatted}
-                        </div>
-                        <div className="mt-0.5">
+                      <td className="py-1.5 px-2 align-top font-mono text-[10px]">
+                        <div className="text-[#CBD5E1] truncate">Reg: {timing.registeredTimeFormatted}</div>
+                        <div className="mt-0.5 truncate">
                           {timing.isClosed ? (
                             <span className="text-emerald-400 font-semibold">Done: {timing.closedTimeFormatted}</span>
                           ) : (
-                            <span className="text-amber-400/90 font-semibold">Status: Open</span>
+                            <span className="text-amber-400/90 font-semibold">Open {timing.durationText}</span>
                           )}
                         </div>
-                        <div className="mt-1">
-                          <span
-                            className={`inline-block px-1.5 py-0.2 rounded text-[9.5px] font-bold uppercase border ${
-                              timing.isClosed
-                                ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
-                                : issue.status === "OVERDUE"
-                                ? "bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse"
-                                : "bg-blue-950/80 text-blue-300 border-blue-500/40"
-                            }`}
-                          >
-                            ⏱️ {timing.isClosed ? `Closed in ${timing.durationText}` : `Open ${timing.durationText}`}
-                          </span>
-                        </div>
                       </td>
-
-                      {/* 8. Action */}
-                      <td className="py-3 px-3 align-top text-right">
+                      <td className="py-1.5 px-2 align-top text-right">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedIssue(issue);
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[11px] font-semibold border border-[#D4A24C]/30 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer"
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="w-3 h-3" />
                           View
                         </button>
                       </td>
@@ -2076,6 +2015,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
