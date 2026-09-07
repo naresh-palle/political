@@ -1086,42 +1086,62 @@ export const politicalApiService = {
   },
 
   async updateFieldIssueStatus(issueId: string, payload: any): Promise<any> {
-    const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status: payload.status,
-        remarks: payload.remarks,
-        proofUrl: payload.proofUrl,
-        proofFiles: payload.proofFiles
-      })
-    });
-    if (!res.ok) {
-      let detail = "Failed to update ticket status.";
-      try {
-        const errBody = await res.json();
-        detail = errBody.detail || errBody.message || detail;
-      } catch {}
-      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
-    }
-    const data = await res.json();
-    const authoritativeStatus = data?.ticket?.status || data?.status || payload.status;
+    const compactProof = (value: any) => {
+      if (typeof value !== "string") return "";
+      if (value.startsWith("data:")) return "";
+      return value;
+    };
+    const proofFiles = Array.isArray(payload.proofFiles)
+      ? payload.proofFiles.map(compactProof).filter(Boolean)
+      : [];
     try {
-      const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
-      const savedList = savedRaw ? JSON.parse(savedRaw) : [];
-      const idx = savedList.findIndex((i: any) => i.id === issueId);
-      const merged = {
-        ...(idx !== -1 ? savedList[idx] : { id: issueId }),
-        status: authoritativeStatus,
-        lastStatusRemarks: payload.remarks,
-        lastStatusProof: payload.proofUrl,
-        updatedAt: data?.ticket?.updatedAt || new Date().toISOString()
-      };
-      if (idx !== -1) savedList[idx] = { ...savedList[idx], ...merged };
-      else savedList.push(merged);
-      localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(savedList));
-    } catch (e) {}
-    return data;
+      const res = await fetchWithTimeout(
+        `${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/status`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: payload.status,
+            remarks: payload.remarks,
+            proofUrl: compactProof(payload.proofUrl),
+            proofFiles
+          })
+        },
+        45000
+      );
+      if (!res.ok) {
+        let detail = "Failed to update ticket status.";
+        try {
+          const errBody = await res.json();
+          detail = errBody.detail || errBody.message || detail;
+        } catch {}
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      const data = await res.json();
+      const authoritativeStatus = data?.ticket?.status || data?.status || payload.status;
+      try {
+        const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+        const savedList = savedRaw ? JSON.parse(savedRaw) : [];
+        const idx = savedList.findIndex((i: any) => i.id === issueId);
+        const merged = {
+          ...(idx !== -1 ? savedList[idx] : { id: issueId }),
+          status: authoritativeStatus,
+          lastStatusRemarks: payload.remarks,
+          lastStatusProof: compactProof(payload.proofUrl),
+          updatedAt: data?.ticket?.updatedAt || new Date().toISOString()
+        };
+        if (idx !== -1) savedList[idx] = { ...savedList[idx], ...merged };
+        else savedList.push(merged);
+        localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(savedList));
+      } catch (e) {}
+      return data;
+    } catch (error: any) {
+      const msg = String(error?.message || error || "");
+      if (error?.name === "AbortError" || msg.toLowerCase().includes("aborted")) {
+        throw new Error("The request timed out. Please try again — the ticket may still have been updated.");
+      }
+      throw error;
+    }
   },
   async sendWhatsAppOTP(phone: string, issueId: string): Promise<{ success: boolean; otp?: string; message: string }> {
     const cleanDigits = phone.replace(/\D/g, "");
@@ -1436,7 +1456,7 @@ export const politicalApiService = {
   ): Promise<{ success: boolean; notification: any; issue?: any }> {
     const cleanDigits = (payload.assignedOfficialPhone || "").replace(/\D/g, "");
     const formattedPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
-    const actionUrl = payload.actionUrl || `${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issueId}`;
+    const actionUrl = payload.actionUrl || `${window.location.origin}/#/officer-portal?ticket=${issueId}`;
     const cleanTicketId = issueId.replace(/^#/, "");
 
     const backendPayload = {

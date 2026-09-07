@@ -68,7 +68,7 @@ class WhatsAppMessageBuilder:
         priority = (ticket.get("priority") or "MEDIUM").upper()
         dept_name = department.get("name") or ticket.get("category") or "Public Service"
         
-        secure_link = f"{base_portal_url}/#/field-ops?issueId={ticket_id}"
+        secure_link = f"{base_portal_url}/#/officer-portal?ticket={ticket_id}"
         
         text_message = (
             f"Hello {officer_name},\n\n"

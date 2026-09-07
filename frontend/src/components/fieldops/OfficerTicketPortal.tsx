@@ -63,6 +63,15 @@ export const OfficerTicketPortal: React.FC = () => {
         }
       }
 
+      if (tid) {
+        const path = (window.location.pathname || "/").replace(/\/login\/?$/i, "/");
+        const canonical = `${path}#/officer-portal?ticket=${encodeURIComponent(tid)}`;
+        const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        if (current !== canonical) {
+          window.history.replaceState(null, "", canonical);
+        }
+      }
+
       if (!tid) {
         tid = "iss-1002";
       }
