@@ -45,6 +45,69 @@ const RETIRED_MOCK_IDS = new Set([
 ]);
 const TICKET_SEED = "ll-section-tickets-v1-2026-09-07";
 const REMOTE_ISSUES_CACHE_KEY = "leaders_lens_remote_field_issues";
+const LOCAL_AUDIT_KEY = "leaders_lens_usage_audit_logs";
+const MOCK_AUDIT_ACTORS = new Set([
+  "Dr. Vikramaditya Varma",
+  "Srikar Varma",
+  "R. Madhavi Reddy MLA Office",
+  "Director Naresh Palle",
+  "Platform Admin Srikar Varma"
+]);
+
+function readAuthActor(): { id: string; name: string } {
+  try {
+    const raw = localStorage.getItem("leaders_lens_auth_user") || localStorage.getItem("ll_current_profile");
+    if (!raw) return { id: "", name: "" };
+    const user = JSON.parse(raw);
+    return { id: user?.id || "", name: user?.name || "" };
+  } catch {
+    return { id: "", name: "" };
+  }
+}
+
+function isLiveAuditLog(log: any): boolean {
+  const actorId = String(log?.actorUserId || "");
+  const actorName = String(log?.actorName || "").trim();
+  if (actorId === "user-admin" || actorId === "system_admin") return false;
+  if (MOCK_AUDIT_ACTORS.has(actorName)) return false;
+  return true;
+}
+
+function readLocalAuditLogs(): any[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_AUDIT_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter(isLiveAuditLog) : [];
+  } catch {
+    return [];
+  }
+}
+
+function appendLocalAuditLog(entry: {
+  action: string;
+  actorUserId?: string;
+  actorName?: string;
+  targetUserId?: string;
+  targetUserName?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  const actor = readAuthActor();
+  const log = {
+    id: `aud_local_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    actorUserId: entry.actorUserId || actor.id,
+    actorName: entry.actorName || actor.name || "Unknown user",
+    action: entry.action,
+    targetUserId: entry.targetUserId,
+    targetUserName: entry.targetUserName,
+    timestamp: new Date().toISOString(),
+    metadata: entry.metadata || {}
+  };
+  if (!isLiveAuditLog(log)) return;
+  const next = [log, ...readLocalAuditLogs()].slice(0, 200);
+  try {
+    localStorage.setItem(LOCAL_AUDIT_KEY, JSON.stringify(next));
+  } catch {}
+}
 
 let cachedSeedIssues: any[] | null = null;
 let seedIssuesPromise: Promise<any[]> | null = null;
@@ -416,27 +479,22 @@ export const politicalApiService = {
     const match = allUsers.find((u) => u.id === userId) || allUsers[0];
     return {
       user: match,
-      auditLogs: [
-        {
-          id: "aud_sample_01",
-          actorUserId: "user-admin",
-          actorName: "Dr. Vikramaditya Varma",
-          action: "USER_ACTIVATED",
-          targetUserId: userId,
-          targetUserName: match?.name,
-          timestamp: new Date().toISOString(),
-          metadata: { note: "Security clearance verified by central administrator" }
-        }
-      ]
+      auditLogs: []
     };
   },
 
-  async createAdminUser(data: Partial<UserProfile> & { password?: string }): Promise<UserProfile> {
+  async createAdminUser(data: Partial<UserProfile> & { password?: string; actorUserId?: string; actorName?: string }): Promise<UserProfile> {
+    const actor = readAuthActor();
+    const payload = {
+      ...data,
+      actorUserId: data.actorUserId || actor.id,
+      actorName: data.actorName || actor.name
+    };
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         const json = await res.json();
@@ -480,15 +538,29 @@ export const politicalApiService = {
     if (cachedUsers) {
       cachedUsers = [newUser, ...cachedUsers];
     }
+    appendLocalAuditLog({
+      action: "USER_CREATED",
+      actorUserId: payload.actorUserId,
+      actorName: payload.actorName,
+      targetUserId: newUser.id,
+      targetUserName: newUser.name,
+      metadata: { email: newUser.email, roleId: newUser.roleId }
+    });
     return newUser;
   },
 
-  async updateAdminUser(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+  async updateAdminUser(userId: string, updates: Partial<UserProfile> & { actorUserId?: string; actorName?: string }): Promise<UserProfile> {
+    const actor = readAuthActor();
+    const payload = {
+      ...updates,
+      actorUserId: updates.actorUserId || actor.id,
+      actorName: updates.actorName || actor.name
+    };
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         const json = await res.json();
@@ -501,8 +573,24 @@ export const politicalApiService = {
     if (cachedUsers) {
       cachedUsers = cachedUsers.map((u) => u.id === userId ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u);
       const match = cachedUsers.find((u) => u.id === userId);
-      if (match) return match;
+      if (match) {
+        appendLocalAuditLog({
+          action: "USER_UPDATED",
+          actorUserId: payload.actorUserId,
+          actorName: payload.actorName,
+          targetUserId: userId,
+          targetUserName: match.name
+        });
+        return match;
+      }
     }
+    appendLocalAuditLog({
+      action: "USER_UPDATED",
+      actorUserId: payload.actorUserId,
+      actorName: payload.actorName,
+      targetUserId: userId,
+      targetUserName: updates.name
+    });
     return { ...USER_PROFILES[0], ...updates, id: userId };
   },
 
@@ -511,7 +599,12 @@ export const politicalApiService = {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, reason, actorUserId: "user-admin", actorName: "Dr. Vikramaditya Varma" })
+        body: JSON.stringify({
+          status,
+          reason,
+          actorUserId: readAuthActor().id,
+          actorName: readAuthActor().name
+        })
       });
       if (res.ok) return true;
     } catch (e) {
@@ -529,7 +622,11 @@ export const politicalApiService = {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword, actorUserId: "user-admin", actorName: "Dr. Vikramaditya Varma" })
+        body: JSON.stringify({
+          newPassword,
+          actorUserId: readAuthActor().id,
+          actorName: readAuthActor().name
+        })
       });
       if (res.ok) return true;
     } catch (e) {
@@ -540,9 +637,16 @@ export const politicalApiService = {
 
   async deleteAdminUser(userId: string): Promise<boolean> {
     try {
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}`, {
-        method: "DELETE"
-      });
+      const actor = readAuthActor();
+      const q = new URLSearchParams();
+      if (actor.id) q.set("actorUserId", actor.id);
+      if (actor.name) q.set("actorName", actor.name);
+      const res = await fetchWithTimeout(
+        `${RENDER_BACKEND_URL}/admin/users/${encodeURIComponent(userId)}${q.toString() ? `?${q}` : ""}`,
+        {
+          method: "DELETE"
+        }
+      );
       if (res.ok) return true;
     } catch (e) {
       // Fallback
@@ -550,6 +654,10 @@ export const politicalApiService = {
     if (cachedUsers) {
       cachedUsers = cachedUsers.filter((u) => u.id !== userId);
     }
+    appendLocalAuditLog({
+      action: "USER_DELETED",
+      targetUserId: userId
+    });
     return true;
   },
 
@@ -562,33 +670,18 @@ export const politicalApiService = {
 
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/admin/audit-logs?${q.toString()}`);
       if (res.ok) {
-        return await res.json();
+        const remote = await res.json();
+        const list = Array.isArray(remote) ? remote.filter(isLiveAuditLog) : [];
+        if (list.length) return list;
       }
     } catch (e) {
-      // Fallback
+      // Fallback to local usage logs only
     }
-    return [
-      {
-        id: "aud_01",
-        actorUserId: "user-admin",
-        actorName: "Dr. Vikramaditya Varma",
-        action: "USER_ACTIVATED",
-        targetUserId: "user-dir",
-        targetUserName: "Naresh Palle",
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        metadata: { role: "CAMPAIGN_MANAGER", partyId: "TDP", stateId: "AP" }
-      },
-      {
-        id: "aud_02",
-        actorUserId: "user-admin",
-        actorName: "Dr. Vikramaditya Varma",
-        action: "GEOGRAPHY_ASSIGNED",
-        targetUserId: "user-field",
-        targetUserName: "Venkatesh Rao",
-        timestamp: new Date(Date.now() - 7200000).toISOString(),
-        metadata: { constituency: "Kadapa AC (AC-132)" }
-      }
-    ];
+    const local = readLocalAuditLogs();
+    return local
+      .filter((item) => !params.targetUserId || item.targetUserId === params.targetUserId)
+      .filter((item) => !params.action || item.action === params.action)
+      .slice(0, params.limit || 50);
   },
 
   async getCurrentRepresentative(acId: string): Promise<{
@@ -950,6 +1043,14 @@ export const politicalApiService = {
         (u.demoPassword === password || password === "Admin@2026!" || password === "Leader@2026" || password === u.demoPassword)
     );
     if (user) {
+      appendLocalAuditLog({
+        action: "SESSION_LOGIN",
+        actorUserId: user.id,
+        actorName: user.name,
+        targetUserId: user.id,
+        targetUserName: user.name,
+        metadata: { email: user.email, source: "local_fallback" }
+      });
       return {
         user,
         token: `bearer_${user.id}_local`
@@ -1643,18 +1744,24 @@ export const politicalApiService = {
         },
         villages: mVillages.map((v: any) => {
           const vIssues = issues.filter((i: any) => i.villageId === v.id);
-          const vol = users.find((u: any) => u.id === v.assignedVolunteerId);
+          const vol = users.find(
+            (u: any) =>
+              String(u.primaryRole || u.roleId || u.role || "").toUpperCase().includes("VOLUNTEER") &&
+              Array.isArray(u.assignedVillageIds) &&
+              u.assignedVillageIds.includes(v.id)
+          );
           return {
             villageId: v.id,
             villageName: v.name,
             code: v.code,
             totalVoters: v.totalVoters || 0,
-            volunteer: {
-              id: vol?.id || v.assignedVolunteerId,
-              name: vol?.name || v.assignedVolunteerName || "Unassigned",
-              phone: vol?.phone || "",
-              avatar: vol?.avatar || ""
-            },
+            volunteer: vol
+              ? {
+                  id: vol.id,
+                  name: vol.name,
+                  phone: vol.phone || ""
+                }
+              : null,
             issueSummary: {
               total: vIssues.length,
               pending: vIssues.filter((i: any) => ["NEW", "ASSIGNED"].includes(i.status)).length,

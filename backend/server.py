@@ -183,7 +183,17 @@ IN_MEMORY_FIELD_ISSUES: dict = {}
 IN_MEMORY_NOTIFICATIONS: list = []
 IN_MEMORY_ISSUE_HISTORY: list = []
 IN_MEMORY_NOTIFICATION_AUDITS: list = []
+IN_MEMORY_AUDIT_LOGS: list = []
 IN_MEMORY_STATUS_IDEMPOTENCY: dict = {}
+
+MOCK_AUDIT_ACTORS = {
+    "Dr. Vikramaditya Varma",
+    "Srikar Varma",
+    "R. Madhavi Reddy MLA Office",
+    "Director Naresh Palle",
+    "Platform Admin Srikar Varma",
+}
+MOCK_AUDIT_ACTOR_IDS = {"user-admin", "system_admin"}
 
 # Models
 class StatusCheck(BaseModel):
@@ -946,9 +956,24 @@ async def login(credentials: LoginRequest):
         if user:
             # Check password
             if user.get("demoPassword") == credentials.password or credentials.password == "Admin@2026!" or credentials.password == "Leader@2026":
+                try:
+                    await db.users.update_one(
+                        {"id": user.get("id")},
+                        {"$set": {"lastLoginAt": datetime.now(timezone.utc).isoformat()}},
+                    )
+                except Exception as e:
+                    log_mongo_notice("login lastLoginAt", e)
+                await record_audit_log(
+                    actor_user_id=user.get("id") or "",
+                    actor_name=user.get("name") or email,
+                    action="SESSION_LOGIN",
+                    target_user_id=user.get("id"),
+                    target_user_name=user.get("name"),
+                    metadata={"email": user.get("email") or email},
+                )
                 return {
                     "status": "success",
-                    "user": user,
+                    "user": sanitize_user(user),
                     "token": f"bearer_{user.get('id', 'usr_auth')}_{int(datetime.now(timezone.utc).timestamp())}"
                 }
             raise HTTPException(status_code=401, detail="Invalid credentials provided.")
@@ -962,9 +987,17 @@ async def login(credentials: LoginRequest):
     for u in users:
         if u.get("email", "").lower() == email:
             if u.get("demoPassword") == credentials.password or credentials.password in ["Admin@2026!", "Director@2026!", "Candidate@2026!", "Field@2026!", "Media@2026!", "Volunteer@2026!", "Booth@2026!"]:
+                await record_audit_log(
+                    actor_user_id=u.get("id") or "",
+                    actor_name=u.get("name") or email,
+                    action="SESSION_LOGIN",
+                    target_user_id=u.get("id"),
+                    target_user_name=u.get("name"),
+                    metadata={"email": u.get("email") or email, "source": "json_fallback"},
+                )
                 return {
                     "status": "success",
-                    "user": u,
+                    "user": sanitize_user(u) if isinstance(u, dict) else u,
                     "token": f"bearer_{u.get('id')}"
                 }
     raise HTTPException(status_code=401, detail="Invalid email or password.")
@@ -990,19 +1023,31 @@ def sanitize_user(user: dict) -> dict:
     u.pop("_id", None)
     return apply_canonical_demo_names(u)
 
+def is_live_audit_log(log: dict) -> bool:
+    actor_id = str(log.get("actorUserId") or "")
+    actor_name = str(log.get("actorName") or "").strip()
+    if actor_id in MOCK_AUDIT_ACTOR_IDS:
+        return False
+    if actor_name in MOCK_AUDIT_ACTORS:
+        return False
+    return True
+
+
 async def record_audit_log(actor_user_id: str, actor_name: str, action: str, target_user_id: Optional[str] = None, target_user_name: Optional[str] = None, metadata: Optional[dict] = None):
     log_doc = {
         "id": f"aud_{uuid.uuid4().hex[:10]}",
-        "actorUserId": actor_user_id or "system_admin",
-        "actorName": actor_name or "System Administrator",
+        "actorUserId": actor_user_id or "",
+        "actorName": actor_name or "Unknown user",
         "action": action,
         "targetUserId": target_user_id,
         "targetUserName": target_user_name,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "metadata": metadata or {}
     }
+    IN_MEMORY_AUDIT_LOGS.insert(0, {k: v for k, v in log_doc.items()})
+    del IN_MEMORY_AUDIT_LOGS[200:]
     try:
-        await db.audit_logs.insert_one(log_doc)
+        await db.audit_logs.insert_one(dict(log_doc))
     except Exception as e:
         logger.warning(f"Failed to record audit log: {e}")
 
@@ -1023,6 +1068,8 @@ class AdminUserCreateModel(BaseModel):
     clearanceLevel: Optional[str] = "Level 2 (Operations)"
     profilePhotoUrl: Optional[str] = ""
     permissions: Optional[dict] = None
+    actorUserId: Optional[str] = None
+    actorName: Optional[str] = None
 
 class AdminUserUpdateModel(BaseModel):
     name: Optional[str] = None
@@ -1040,17 +1087,19 @@ class AdminUserUpdateModel(BaseModel):
     clearanceLevel: Optional[str] = None
     profilePhotoUrl: Optional[str] = None
     permissions: Optional[dict] = None
+    actorUserId: Optional[str] = None
+    actorName: Optional[str] = None
 
 class AdminUserStatusUpdateModel(BaseModel):
     status: str # ACTIVE, INACTIVE, SUSPENDED, PENDING
     reason: Optional[str] = None
-    actorUserId: Optional[str] = "user-admin"
-    actorName: Optional[str] = "Dr. Vikramaditya Varma"
+    actorUserId: Optional[str] = None
+    actorName: Optional[str] = None
 
 class AdminPasswordResetModel(BaseModel):
     newPassword: str
-    actorUserId: Optional[str] = "user-admin"
-    actorName: Optional[str] = "Dr. Vikramaditya Varma"
+    actorUserId: Optional[str] = None
+    actorName: Optional[str] = None
 
 @api_router.get("/users")
 @api_router.get("/auth/users")
@@ -1223,8 +1272,8 @@ async def create_admin_user(req: AdminUserCreateModel):
 
         await db.users.insert_one(user_doc)
         await record_audit_log(
-            actor_user_id="user-admin",
-            actor_name="Dr. Vikramaditya Varma",
+            actor_user_id=req.actorUserId or "",
+            actor_name=req.actorName or "Unknown user",
             action="USER_CREATED",
             target_user_id=user_id,
             target_user_name=req.name,
@@ -1249,6 +1298,8 @@ async def update_admin_user(user_id: str, req: AdminUserUpdateModel):
         audit_changes = {}
 
         for field, val in req.model_dump(exclude_unset=True).items():
+            if field in ("actorUserId", "actorName"):
+                continue
             if val is not None:
                 update_fields[field] = val
                 audit_changes[field] = val
@@ -1263,8 +1314,8 @@ async def update_admin_user(user_id: str, req: AdminUserUpdateModel):
 
         await db.users.update_one({"id": user_id}, {"$set": update_fields})
         await record_audit_log(
-            actor_user_id="user-admin",
-            actor_name="Dr. Vikramaditya Varma",
+            actor_user_id=req.actorUserId or "",
+            actor_name=req.actorName or "Unknown user",
             action="USER_UPDATED",
             target_user_id=user_id,
             target_user_name=existing.get("name"),
@@ -1291,8 +1342,8 @@ async def update_admin_user_status(user_id: str, req: AdminUserStatusUpdateModel
 
         action_name = "USER_ACTIVATED" if new_status == "ACTIVE" else ("USER_SUSPENDED" if new_status == "SUSPENDED" else "USER_DEACTIVATED")
         await record_audit_log(
-            actor_user_id=req.actorUserId or "user-admin",
-            actor_name=req.actorName or "Dr. Vikramaditya Varma",
+            actor_user_id=req.actorUserId or "",
+            actor_name=req.actorName or "Unknown user",
             action=action_name,
             target_user_id=user_id,
             target_user_name=existing.get("name"),
@@ -1317,8 +1368,8 @@ async def reset_admin_user_password(user_id: str, req: AdminPasswordResetModel):
         await db.users.update_one({"id": user_id}, {"$set": {"passwordHash": hashed_pw, "updatedAt": datetime.now(timezone.utc).isoformat()}})
 
         await record_audit_log(
-            actor_user_id=req.actorUserId or "user-admin",
-            actor_name=req.actorName or "Dr. Vikramaditya Varma",
+            actor_user_id=req.actorUserId or "",
+            actor_name=req.actorName or "Unknown user",
             action="PASSWORD_RESET",
             target_user_id=user_id,
             target_user_name=existing.get("name"),
@@ -1333,7 +1384,7 @@ async def reset_admin_user_password(user_id: str, req: AdminPasswordResetModel):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.delete("/admin/users/{user_id}")
-async def delete_admin_user(user_id: str):
+async def delete_admin_user(user_id: str, actorUserId: Optional[str] = None, actorName: Optional[str] = None):
     try:
         existing = await db.users.find_one({"id": user_id})
         if not existing:
@@ -1353,8 +1404,8 @@ async def delete_admin_user(user_id: str):
 
         await db.users.delete_one({"id": user_id})
         await record_audit_log(
-            actor_user_id="user-admin",
-            actor_name="Dr. Vikramaditya Varma",
+            actor_user_id=actorUserId or "",
+            actor_name=actorName or "Unknown user",
             action="USER_DELETED",
             target_user_id=user_id,
             target_user_name=existing.get("name"),
@@ -1380,11 +1431,23 @@ async def get_admin_audit_logs(
             query["targetUserId"] = targetUserId
         if action:
             query["action"] = action
-        logs = await db.audit_logs.find(query, {"_id": 0}).sort("timestamp", -1).to_list(limit)
-        return logs
+        logs = await db.audit_logs.find(query, {"_id": 0}).sort("timestamp", -1).to_list(limit * 2)
     except Exception as e:
         log_mongo_notice("get audit logs", e)
-        return []
+        logs = []
+    seen = {str(item.get("id")) for item in logs if item.get("id")}
+    for item in IN_MEMORY_AUDIT_LOGS:
+        if item.get("id") in seen:
+            continue
+        if targetUserId and item.get("targetUserId") != targetUserId:
+            continue
+        if action and item.get("action") != action:
+            continue
+        logs.append(item)
+        seen.add(str(item.get("id")))
+    live = [item for item in logs if is_live_audit_log(item)]
+    live.sort(key=lambda item: str(item.get("timestamp") or ""), reverse=True)
+    return live[:limit]
 
 # ----------------- CITIZEN GRIEVANCES & CONTACTS (MONGODB) -----------------
 
@@ -2139,7 +2202,16 @@ async def get_geographic_drilldown(
         village_nodes = []
         for v in m_villages:
             v_issues = [i for i in issues if i.get("villageId") == v["id"]]
-            assigned_vol = next((u for u in users if u.get("id") == v.get("assignedVolunteerId")), None)
+            village_id = v.get("id")
+            assigned_vol = next(
+                (
+                    u
+                    for u in users
+                    if village_id in (u.get("assignedVillageIds") or [])
+                    and str(u.get("primaryRole") or u.get("roleId") or u.get("role") or "").upper().find("VOLUNTEER") >= 0
+                ),
+                None,
+            )
             
             village_nodes.append({
                 "villageId": v["id"],
@@ -2147,11 +2219,10 @@ async def get_geographic_drilldown(
                 "code": v["code"],
                 "totalVoters": v.get("totalVoters", 0),
                 "volunteer": {
-                    "id": assigned_vol["id"] if assigned_vol else v.get("assignedVolunteerId"),
-                    "name": assigned_vol["name"] if assigned_vol else v.get("assignedVolunteerName", "Unassigned"),
-                    "phone": assigned_vol.get("phone", "") if assigned_vol else "",
-                    "avatar": assigned_vol.get("avatar", "") if assigned_vol else ""
-                },
+                    "id": assigned_vol.get("id"),
+                    "name": assigned_vol.get("name"),
+                    "phone": assigned_vol.get("phone", ""),
+                } if assigned_vol else None,
                 "issueSummary": {
                     "total": len(v_issues),
                     "pending": len([i for i in v_issues if i.get("status") in ["NEW", "ASSIGNED"]]),
@@ -3131,6 +3202,7 @@ async def startup_db_seed():
             logger.info("MongoDB collections empty, executing comprehensive auto-seed...")
             await trigger_geography_seed()
         await apply_demo_display_name_fixes()
+        await purge_mock_audit_logs()
     except Exception as e:
         log_mongo_notice("startup seed", e)
 
@@ -3163,6 +3235,22 @@ async def apply_demo_display_name_fixes():
         )
     except Exception as e:
         log_mongo_notice("demo display name fix", e)
+
+
+async def purge_mock_audit_logs():
+    """Drop canned demo audit rows so the trail only shows live user usage."""
+    try:
+        await db.audit_logs.delete_many(
+            {
+                "$or": [
+                    {"actorUserId": {"$in": list(MOCK_AUDIT_ACTOR_IDS)}},
+                    {"actorName": {"$in": list(MOCK_AUDIT_ACTORS)}},
+                ]
+            }
+        )
+    except Exception as e:
+        log_mongo_notice("purge mock audit logs", e)
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -13,7 +13,9 @@ import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
-import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, ticketStatusSurface } from "../../utils/ticketKpi";
+import { formatIssueStatus } from "../../utils/statusLabels";
+import { findVolunteerForVillage } from "../../utils/villageVolunteers";
 import {
   ShieldCheck,
   Users,
@@ -36,7 +38,9 @@ import {
   Phone,
   Calendar,
   Edit3,
-  MessageCircle
+  MessageCircle,
+  LayoutGrid,
+  List
 } from "lucide-react";
 
 interface AdminDashboardProps {
@@ -142,6 +146,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
   // View Mode: Geographic Tree vs Master Table vs Director Command vs Political Admins
   const [viewMode, setViewMode] = useState<"DRILLDOWN" | "ALL_ISSUES" | "DIRECTORS" | "VOLUNTEERS" | "POLITICAL_ADMINS">("DRILLDOWN");
+  const [ticketLayout, setTicketLayout] = useState<"GRID" | "TABLE">("GRID");
 
   const getStatusFromUrl = (): string => {
     const hash = window.location.hash;
@@ -746,29 +751,33 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                   </div>
                                 </div>
 
-                                {/* Responsible Volunteer Pill */}
                                 <div className="flex items-center gap-3">
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#071322] border border-[#22405E] text-[11px]">
-                                    {village.volunteer?.avatar && (
-                                      <img
-                                        src={village.volunteer.avatar}
-                                        alt={village.volunteer.name}
-                                        className="w-5 h-5 rounded-full object-cover"
-                                      />
-                                    )}
-                                    <span>
-                                      Volunteer: <strong className="text-[#D4A24C]">{village.volunteer?.name}</strong>
-                                    </span>
-                                    {village.volunteer?.phone && (
-                                      <a
-                                        href={`tel:${village.volunteer.phone}`}
-                                        className="text-[#8E9CAE] hover:text-white"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <Phone className="w-3 h-3" />
-                                      </a>
-                                    )}
-                                  </div>
+                                  {(() => {
+                                    const assigned = findVolunteerForVillage(scopedUsers, village.villageId);
+                                    if (!assigned) {
+                                      return (
+                                        <div className="px-3 py-1.5 rounded-lg bg-[#071322] border border-dashed border-[#22405E] text-[11px] text-[#8E9CAE]">
+                                          No volunteer assigned
+                                        </div>
+                                      );
+                                    }
+                                    return (
+                                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#071322] border border-[#22405E] text-[11px]">
+                                        <span>
+                                          Volunteer: <strong className="text-[#D4A24C]">{assigned.name}</strong>
+                                        </span>
+                                        {assigned.phone && (
+                                          <a
+                                            href={`tel:${assigned.phone}`}
+                                            className="text-[#8E9CAE] hover:text-white"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <Phone className="w-3 h-3" />
+                                          </a>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
 
                                   <div className="flex items-center gap-1.5 text-[10px]">
                                     <span className="px-2 py-0.5 rounded bg-[#071322] text-[#D8CFB8]">
@@ -920,9 +929,42 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
+              <div className="flex items-center p-1 rounded-xl bg-[#071322] border border-[#22405E] text-xs">
+                <button
+                  type="button"
+                  onClick={() => setTicketLayout("GRID")}
+                  title="Grid cards"
+                  className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    ticketLayout === "GRID"
+                      ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                      : "text-[#CBD5E1] hover:text-white"
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span className="text-[11px] hidden sm:inline">Grid</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTicketLayout("TABLE")}
+                  title="Data table"
+                  className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    ticketLayout === "TABLE"
+                      ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                      : "text-[#CBD5E1] hover:text-white"
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span className="text-[11px] hidden sm:inline">Table</span>
+                </button>
+              </div>
             </div>
           </div>
 
+          {filteredIssues.length === 0 ? (
+            <div className="p-8 text-center text-sm text-[#8E9CAE] rounded-xl border border-[#22405E] bg-[#0F2338]">
+              No tickets match the current filters.
+            </div>
+          ) : ticketLayout === "GRID" ? (
           <div className={TICKET_GRID_CLASS}>
             {filteredIssues.map((iss) => {
               const isClosed = iss.status === "COMPLETED" || iss.status === "RESOLVED";
@@ -957,6 +999,82 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               );
             })}
           </div>
+          ) : (
+          <div className="rounded-xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[960px] table-fixed text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+                    <th className="py-2 px-2 w-[12%]">ID & Status</th>
+                    <th className="py-2 px-2 w-[26%]">Issue Title</th>
+                    <th className="py-2 px-2 w-[14%]">Category / Dept</th>
+                    <th className="py-2 px-2 w-[14%]">Mandal / Location</th>
+                    <th className="py-2 px-2 w-[12%]">Reported By</th>
+                    <th className="py-2 px-2 w-[12%]">Volunteer</th>
+                    <th className="py-2 px-2 w-[10%] text-right">View</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#223348]/50">
+                  {filteredIssues.map((iss) => {
+                    const surface = ticketStatusSurface(iss);
+                    return (
+                      <tr
+                        key={iss.id}
+                        onClick={() => setSelectedIssue(iss)}
+                        className={`${surface.row} transition-colors cursor-pointer group`}
+                      >
+                        <td className="py-1.5 px-2 align-top">
+                          <div className="font-mono font-bold text-[#D4A24C] text-[11px] truncate" title={`#${iss.id}`}>
+                            #{iss.id}
+                          </div>
+                          <span className="mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block bg-[#071322] text-[#D8CFB8] border-[#22405E]">
+                            {formatIssueStatus(iss.status)}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2 align-top">
+                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] line-clamp-2 leading-snug">
+                            {iss.title}
+                          </div>
+                        </td>
+                        <td className="py-1.5 px-2 align-top">
+                          <div className="font-medium text-[#F5EFE0] truncate">{iss.category}</div>
+                          {iss.department && (
+                            <div className="text-[10.5px] text-[#D4A24C] truncate mt-0.5">{String(iss.department).split("(")[0]}</div>
+                          )}
+                        </td>
+                        <td className="py-1.5 px-2 align-top">
+                          <div className="font-medium text-[#F5EFE0] truncate">{iss.mandalName}</div>
+                          {(iss.villageName || iss.placeName) && (
+                            <div className="text-[10.5px] text-[#8E9CAE] truncate mt-0.5">{iss.villageName || iss.placeName}</div>
+                          )}
+                        </td>
+                        <td className="py-1.5 px-2 align-top">
+                          <div className="font-medium text-[#F5EFE0] truncate">{iss.reportedBy}</div>
+                        </td>
+                        <td className="py-1.5 px-2 align-top text-[#8E9CAE] truncate">
+                          {iss.assignedVolunteerName || "Unassigned"}
+                        </td>
+                        <td className="py-1.5 px-2 align-top text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedIssue(iss);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          )}
         </div>
       </div>
       )}

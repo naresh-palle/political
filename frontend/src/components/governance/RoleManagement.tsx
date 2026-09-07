@@ -113,6 +113,61 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   });
   const [userSaveSuccess, setUserSaveSuccess] = useState(false);
   const [selectedUserAudit, setSelectedUserAudit] = useState<UserProfile | null>(null);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [userAuditLogs, setUserAuditLogs] = useState<any[]>([]);
+
+  const formatAuditTime = (timestamp?: string) => {
+    if (!timestamp) return "—";
+    try {
+      return `${new Date(timestamp).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      })} IST`;
+    } catch {
+      return timestamp;
+    }
+  };
+
+  const formatAuditAction = (action?: string) => {
+    switch (String(action || "").toUpperCase()) {
+      case "SESSION_LOGIN":
+        return "Signed in";
+      case "USER_CREATED":
+        return "Created user";
+      case "USER_UPDATED":
+        return "Updated user";
+      case "USER_DELETED":
+        return "Deleted user";
+      case "USER_ACTIVATED":
+        return "Activated user";
+      case "USER_SUSPENDED":
+        return "Suspended user";
+      case "USER_DEACTIVATED":
+        return "Deactivated user";
+      case "PASSWORD_RESET":
+        return "Reset password";
+      default:
+        return String(action || "Activity").replace(/_/g, " ");
+    }
+  };
+
+  const loadAuditLogs = async (targetUserId?: string) => {
+    try {
+      const logs = await politicalApiService.getAdminAuditLogs({
+        targetUserId,
+        limit: 80
+      });
+      if (targetUserId) setUserAuditLogs(logs);
+      else setAuditLogs(logs);
+    } catch {
+      if (targetUserId) setUserAuditLogs([]);
+      else setAuditLogs([]);
+    }
+  };
 
   // Determine Current User Clearance Level
   const isSuperAdmin =
@@ -138,7 +193,17 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
   useEffect(() => {
     loadUsers();
+    loadAuditLogs();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "audit") loadAuditLogs();
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (selectedUserAudit) loadAuditLogs(selectedUserAudit.id);
+    else setUserAuditLogs([]);
+  }, [selectedUserAudit]);
 
   const loadUsers = async () => {
     try {
@@ -299,7 +364,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       };
 
       try {
-        await politicalApiService.updateAdminUser(editingUser.id, updated);
+        await politicalApiService.updateAdminUser(editingUser.id, {
+          ...updated,
+          actorUserId: currentProfile.id,
+          actorName: currentProfile.name
+        } as any);
+        loadAuditLogs();
       } catch (err) {
         console.warn("Backend update fallback", err);
       }
@@ -338,7 +408,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       };
 
       try {
-        await politicalApiService.createAdminUser(newUser as any);
+        await politicalApiService.createAdminUser({
+          ...newUser,
+          actorUserId: currentProfile.id,
+          actorName: currentProfile.name
+        } as any);
+        loadAuditLogs();
       } catch (err) {
         console.warn("Backend create fallback", err);
       }
@@ -359,6 +434,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
     try {
       await politicalApiService.deleteAdminUser(deletingUser.id);
       setProfiles((prev) => prev.filter((u) => u.id !== deletingUser.id));
+      loadAuditLogs();
     } catch (err) {
       console.error("Delete failed", err);
     } finally {
@@ -1313,41 +1389,30 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
                   <div className="space-y-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#D4A24C] block">
-                      Chronological Immutable Activity Log:
+                      Latest activity
                     </span>
-                    <div className="space-y-2 text-xs">
-                      <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
-                          <span className="font-mono">30 Aug 2026, 23:15 IST</span>
-                          <span className="text-emerald-400 font-bold uppercase">Authorized</span>
+                    <div className="space-y-2 text-xs max-h-72 overflow-y-auto pr-1">
+                      {userAuditLogs.length === 0 ? (
+                        <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] text-[#8E9CAE]">
+                          No usage recorded for this user yet.
                         </div>
-                        <p className="text-[#F5EFE0]">
-                          RBAC Session Authenticated · Ground Field Ops Access Granted
-                        </p>
-                        <span className="text-[10px] text-[#8E9CAE] block">IP: 182.73.194.21 · Kadapa Secure Node</span>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
-                          <span className="font-mono">30 Aug 2026, 21:40 IST</span>
-                          <span className="text-emerald-400 font-bold uppercase">Authorized</span>
-                        </div>
-                        <p className="text-[#F5EFE0]">
-                          Updated Issue Status #ISS-001 with site photo proofs & ground remarks
-                        </p>
-                        <span className="text-[10px] text-[#8E9CAE] block">Verified by Director Naresh Palle</span>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
-                          <span className="font-mono">29 Aug 2026, 14:00 IST</span>
-                          <span className="text-emerald-400 font-bold uppercase">Authorized</span>
-                        </div>
-                        <p className="text-[#F5EFE0]">
-                          Profile Provisioned into LeaderLens Master Active Directory
-                        </p>
-                        <span className="text-[10px] text-[#8E9CAE] block">Actor: Platform Admin Srikar Varma</span>
-                      </div>
+                      ) : (
+                        userAuditLogs.map((log) => (
+                          <div key={log.id} className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
+                            <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
+                              <span className="font-mono">{formatAuditTime(log.timestamp)}</span>
+                              <span className="text-emerald-400 font-bold uppercase">Live</span>
+                            </div>
+                            <p className="text-[#F5EFE0]">
+                              {formatAuditAction(log.action)}
+                              {log.targetUserName ? ` · ${log.targetUserName}` : ""}
+                            </p>
+                            <span className="text-[10px] text-[#8E9CAE] block">
+                              Actor: {log.actorName || "Unknown user"}
+                            </span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1424,52 +1489,38 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-display text-xl text-[#F5EFE0]">Platform Security & Access Audit Trail</h3>
-              <p className="text-xs text-[#8E9CAE]">Immutable log of RBAC permission checks, policy alterations, and operations.</p>
+              <p className="text-xs text-[#8E9CAE]">Live sign-ins and user-management actions. Mock history has been removed.</p>
             </div>
             <span className="px-3 py-1 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-xs font-bold">
-              100% Policy Integrity Verified
+              Live usage
             </span>
           </div>
 
           <div className="space-y-2.5">
-            <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
-              <div>
-                <span className="text-[10px] font-mono text-[#8E9CAE]">30 Aug 2026, 23:40 IST</span>
-                <p className="text-[#F5EFE0] font-semibold mt-0.5">
-                  Super Admin created Level 2 Political Admin (MLA Kadapa AC)
-                </p>
-                <span className="text-[11px] text-[#D4A24C]">Actor: Srikar Varma (Platform Super Admin)</span>
+            {auditLogs.length === 0 ? (
+              <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#8E9CAE]">
+                No security audit entries yet. Sign-ins and user changes appear here automatically.
               </div>
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px]">
-                Authorized
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
-              <div>
-                <span className="text-[10px] font-mono text-[#8E9CAE]">30 Aug 2026, 22:15 IST</span>
-                <p className="text-[#F5EFE0] font-semibold mt-0.5">
-                  Political Admin assigned Volunteer Manager (Director Naresh Palle)
-                </p>
-                <span className="text-[11px] text-[#D4A24C]">Actor: R. Madhavi Reddy MLA Office</span>
-              </div>
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px]">
-                Authorized
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
-              <div>
-                <span className="text-[10px] font-mono text-[#8E9CAE]">30 Aug 2026, 20:00 IST</span>
-                <p className="text-[#F5EFE0] font-semibold mt-0.5">
-                  Director onboarded Field Volunteer Ramesh Babu (Chinna Chowk)
-                </p>
-                <span className="text-[11px] text-[#D4A24C]">Actor: Director Naresh Palle</span>
-              </div>
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px]">
-                Authorized
-              </span>
-            </div>
+            ) : (
+              auditLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-mono text-[#8E9CAE]">{formatAuditTime(log.timestamp)}</span>
+                    <p className="text-[#F5EFE0] font-semibold mt-0.5">
+                      {formatAuditAction(log.action)}
+                      {log.targetUserName ? ` · ${log.targetUserName}` : ""}
+                    </p>
+                    <span className="text-[11px] text-[#D4A24C]">Actor: {log.actorName || "Unknown user"}</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px] shrink-0">
+                    Live
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
