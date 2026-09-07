@@ -19,7 +19,9 @@ import {
   Eye,
   ChevronRight,
   X,
-  MessageCircle
+  MessageCircle,
+  Upload,
+  FileText
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 
@@ -46,12 +48,46 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     (issue.status as IssueStatus) || "IN_PROGRESS"
   );
   const [updateRemarks, setUpdateRemarks] = useState("");
-  const [updateProofUrl, setUpdateProofUrl] = useState("");
+  const [updateProofFiles, setUpdateProofFiles] = useState<{ name: string; url: string; type: "image" | "pdf" }[]>([]);
   const [updateDate, setUpdateDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is larger than 10MB.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+          setUpdateProofFiles((prev) => [
+            ...prev,
+            {
+              name: file.name,
+              url: event.target?.result as string,
+              type: isPdf ? "pdf" : "image"
+            }
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    e.target.value = "";
+  };
+
+  const removeProofFile = (index: number) => {
+    setUpdateProofFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     if (issue?.id) {
@@ -92,13 +128,13 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         }),
         volunteerId: currentUser.id,
         volunteerName: currentUser.name,
-        attachments: updateProofUrl ? [updateProofUrl] : []
+        attachments: updateProofFiles.map((f) => f.url)
       };
 
       await politicalApiService.addWorkUpdate(issue.id, payload);
       setIsUpdateModalOpen(false);
       setUpdateRemarks("");
-      setUpdateProofUrl("");
+      setUpdateProofFiles([]);
       await loadTimeline();
       if (onIssueUpdated) onIssueUpdated();
     } catch (err: any) {
@@ -662,17 +698,58 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  Photo / Proof Document URL (Optional)
+              <div className="space-y-2">
+                <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold">
+                  Proof Attachments (Photos & PDF Documents)
                 </label>
-                <input
-                  type="url"
-                  value={updateProofUrl}
-                  onChange={(e) => setUpdateProofUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/... or image URL"
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                />
+                <div className="p-3.5 rounded-xl bg-[#0B131E] border border-[#223348] space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label
+                      htmlFor="issue-detail-file-input"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#142B45] hover:bg-[#1C3B5E] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Select Photos / PDFs</span>
+                    </label>
+                    <input
+                      id="issue-detail-file-input"
+                      type="file"
+                      accept="image/*,.pdf,application/pdf"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    {updateProofFiles.length > 0 && (
+                      <span className="text-xs text-emerald-400 font-mono font-semibold">
+                        ✓ {updateProofFiles.length} file{updateProofFiles.length > 1 ? "s" : ""} selected
+                      </span>
+                    )}
+                  </div>
+
+                  {updateProofFiles.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      {updateProofFiles.map((file, idx) => (
+                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-[#223348] bg-[#071322] aspect-square flex flex-col items-center justify-center p-1">
+                          {file.type === "pdf" ? (
+                            <div className="flex flex-col items-center justify-center text-center p-1">
+                              <FileText className="w-6 h-6 text-rose-400 mb-0.5" />
+                              <span className="text-[9px] text-[#F5EFE0] line-clamp-1 font-mono">{file.name}</span>
+                            </div>
+                          ) : (
+                            <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeProofFile(idx)}
+                            className="absolute top-1 right-1 p-0.5 rounded-full bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#223348]">

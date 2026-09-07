@@ -19,7 +19,8 @@ import {
   ArrowRight,
   Sparkles,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 
 export const OfficerTicketPortal: React.FC = () => {
@@ -41,7 +42,7 @@ export const OfficerTicketPortal: React.FC = () => {
   // Resolution Form State
   const [newStatus, setNewStatus] = useState<IssueStatus>("IN_PROGRESS");
   const [remarks, setRemarks] = useState<string>("");
-  const [proofUrl, setProofUrl] = useState<string>("");
+  const [proofFiles, setProofFiles] = useState<{ name: string; url: string; type: "image" | "pdf" }[]>([]);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
 
@@ -218,6 +219,41 @@ export const OfficerTicketPortal: React.FC = () => {
     }
   };
 
+  // Handle Multi-Photo & PDF File Upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is larger than 10MB.`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+          setProofFiles((prev) => [
+            ...prev,
+            {
+              name: file.name,
+              url: event.target?.result as string,
+              type: isPdf ? "pdf" : "image"
+            }
+          ]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    e.target.value = "";
+  };
+
+  const removeProofFile = (index: number) => {
+    setProofFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Submit Official Resolution Update
   const handleSubmitResolution = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,10 +265,14 @@ export const OfficerTicketPortal: React.FC = () => {
     setSubmitting(true);
     setError("");
 
+    const uploadedUrls = proofFiles.map((f) => f.url);
+    const primaryProofUrl = uploadedUrls[0] || "";
+
     const updatePayload = {
       status: newStatus,
       remarks: remarks.trim(),
-      proofUrl: proofUrl.trim(),
+      proofUrl: primaryProofUrl,
+      proofFiles: uploadedUrls,
       completedByPerson: officerInfo?.name || "Official Department Officer",
       completedDepartment: issue?.department || "Assigned Department",
       reporterPhone: issue?.reporterPhone || (issue as any)?.citizenPhone,
@@ -253,7 +293,17 @@ export const OfficerTicketPortal: React.FC = () => {
       });
 
       setSubmitSuccess(true);
-      setIssue((prev) => (prev ? { ...prev, status: newStatus, lastStatusRemarks: remarks.trim(), lastStatusProof: proofUrl.trim() } : prev));
+      setIssue((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: newStatus,
+              lastStatusRemarks: remarks.trim(),
+              lastStatusProof: primaryProofUrl,
+              attachments: Array.from(new Set([...(prev.attachments || []), ...uploadedUrls]))
+            }
+          : prev
+      );
 
       // Revert back to ticket dashboard after 1.2 seconds so status is updated live
       setTimeout(() => {
@@ -648,18 +698,73 @@ export const OfficerTicketPortal: React.FC = () => {
                     />
                   </div>
 
-                  {/* Resolution Proof Upload / URL */}
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-[#D4A24C] font-semibold mb-1.5">
-                      Resolution Proof Photo / Work Completion Link (Optional)
+                  {/* Resolution Proof Multi-Photo & PDF Upload */}
+                  <div className="space-y-2">
+                    <label className="block text-xs uppercase tracking-wider text-[#D4A24C] font-semibold">
+                      Attach Resolution Proof Files (Photos & PDF Documents Allowed)
                     </label>
-                    <input
-                      type="url"
-                      placeholder="Paste image URL (e.g. https://... photo of completed work)..."
-                      value={proofUrl}
-                      onChange={(e) => setProofUrl(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3.5 py-2.5 text-xs text-[#F5EFE0] outline-none"
-                    />
+                    <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <label
+                          htmlFor="officer-proof-file-input"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#142B45] hover:bg-[#1C3B5E] border border-[#D4A24C]/50 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all shadow-md"
+                        >
+                          <Upload className="w-4 h-4" />
+                          <span>Upload Photos / PDF Reports</span>
+                        </label>
+                        <input
+                          id="officer-proof-file-input"
+                          type="file"
+                          accept="image/*,.pdf,application/pdf"
+                          multiple
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        {proofFiles.length > 0 && (
+                          <span className="text-xs text-emerald-400 font-mono font-semibold">
+                            ✓ {proofFiles.length} file{proofFiles.length > 1 ? "s" : ""} selected
+                          </span>
+                        )}
+                      </div>
+
+                      {/* File Thumbnails / PDF Badges Grid */}
+                      {proofFiles.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                          {proofFiles.map((file, idx) => (
+                            <div key={idx} className="relative group rounded-xl overflow-hidden border border-[#D4A24C]/40 bg-[#0B1A2C] aspect-square flex flex-col items-center justify-center p-2">
+                              {file.type === "pdf" ? (
+                                <div className="flex flex-col items-center justify-center p-2 text-center">
+                                  <FileText className="w-8 h-8 text-rose-400 mb-1" />
+                                  <span className="text-[10px] text-[#F5EFE0] font-mono line-clamp-2 px-1 text-center">
+                                    {file.name}
+                                  </span>
+                                  <span className="text-[9px] text-rose-300 font-bold uppercase tracking-wider mt-0.5">PDF Doc</span>
+                                </div>
+                              ) : (
+                                <img
+                                  src={file.url}
+                                  alt={file.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => removeProofFile(idx)}
+                                  className="self-end p-1 rounded-full bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-lg cursor-pointer"
+                                  title="Remove file"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                                <span className="text-[9px] text-white truncate px-1 font-mono bg-black/70 rounded">
+                                  {file.name}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Submit Button */}
