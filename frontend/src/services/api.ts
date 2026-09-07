@@ -1005,8 +1005,26 @@ export const politicalApiService = {
         const savedList = JSON.parse(savedRaw);
         if (Array.isArray(savedList) && savedList.length > 0) {
           const savedMap = new Map(savedList.map((i: any) => [i.id, i]));
-          // Override existing list items with saved versions if present
-          list = list.map((item: any) => ({ ...item, ...(savedMap.get(item.id) || {}) }));
+          const statusPriority: Record<string, number> = {
+            NEW: 1,
+            ASSIGNED: 2,
+            ACKNOWLEDGED: 3,
+            IN_PROGRESS: 4,
+            RESOLVED: 5,
+            REJECTED: 5,
+            COMPLETED: 5,
+            CLOSED: 6
+          };
+          list = list.map((item: any) => {
+            const local = savedMap.get(item.id);
+            if (!local) return item;
+            const itemPrio = statusPriority[(item.status || "").toUpperCase()] || 0;
+            const localPrio = statusPriority[(local.status || "").toUpperCase()] || 0;
+            if (itemPrio >= localPrio) {
+              return { ...local, ...item, status: item.status };
+            }
+            return { ...item, ...local };
+          });
           // Add any brand new items in savedList that weren't in list
           const existingIds = new Set(list.map((i: any) => i.id));
           const brandNew = savedList.filter((i: any) => !existingIds.has(i.id));

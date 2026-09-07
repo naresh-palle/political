@@ -406,12 +406,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [dispatchedNotifs, setDispatchedNotifs] = useState<string[]>([]);
 
   useEffect(() => {
-    loadVolunteerData();
+    loadVolunteerData(false);
     const interval = setInterval(() => {
-      loadVolunteerData();
+      loadVolunteerData(true);
     }, 5000);
     const handleFocus = () => {
-      loadVolunteerData();
+      loadVolunteerData(true);
     };
     window.addEventListener("focus", handleFocus);
     return () => {
@@ -431,8 +431,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isAddModalOpen, selectedIssue]);
 
-  const loadVolunteerData = async () => {
-    setLoading(true);
+  const loadVolunteerData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const [allUsers, issueList] = await Promise.all([
         politicalApiService.getUsers(),
@@ -453,7 +453,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       console.error(e);
       setVolunteers([currentUser]);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 

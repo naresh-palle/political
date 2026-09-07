@@ -84,6 +84,17 @@ def sanitize_doc(obj):
         pass
     return obj
 
+def log_mongo_notice(tag: str, exc: Exception):
+    """
+    Filters out noisy 'Connection refused' connection timeout logs when running in offline/demo mode,
+    logging them at DEBUG level so Render logs stay clean.
+    """
+    err_str = str(exc)
+    if "Connection refused" in err_str or "111" in err_str or "ServerSelectionTimeoutError" in err_str or "AutoReconnect" in err_str:
+        logger.debug(f"MongoDB offline ({tag}), using in-memory/JSON fallback: {exc}")
+    else:
+        logger.warning(f"MongoDB warning ({tag}): {exc}")
+
 # Base routes
 @api_router.get("/")
 async def root():
@@ -736,7 +747,7 @@ async def get_system_users():
         if users:
             return users
     except Exception as e:
-        logger.warning(f"MongoDB get_system_users: {e}")
+        log_mongo_notice("get_system_users", e)
     raw_users = load_json_fallback("users.json")
     return [sanitize_user(u) for u in raw_users]
 
@@ -1376,7 +1387,7 @@ async def get_field_issues(
         if issues:
             return issues
     except Exception as e:
-        logger.warning(f"MongoDB get field_issues: {e}")
+        log_mongo_notice("get_field_issues", e)
     
     fallback = load_json_fallback("field_issues.json")
     if IN_MEMORY_FIELD_ISSUES:
