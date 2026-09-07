@@ -100,10 +100,18 @@ function canonicalizeAppUrl(route: "auth" | "app", activeProduct: ActiveProductT
   }
   const statusMatch = (window.location.hash.match(/[?&]status=([A-Z_]+)/i) || [])[1];
   const ticketMatch = (window.location.hash.match(/[?&]ticket=([^&]+)/i) || [])[1];
+  const assignedMatch = (window.location.hash.match(/[?&]assigned=(1|true)/i) || [])[1];
+  const volunteerMatch = (window.location.hash.match(/[?&]volunteer=([^&]+)/i) || [])[1];
   let hash = PRODUCT_TO_HASH_MAP[activeProduct] || "#/field-ops";
   const qs = new URLSearchParams();
   if (activeProduct === "assigntickets" && statusMatch) {
     qs.set("status", statusMatch.toUpperCase());
+  }
+  if (activeProduct === "assigntickets" && assignedMatch) {
+    qs.set("assigned", "1");
+  }
+  if (activeProduct === "assigntickets" && volunteerMatch) {
+    qs.set("volunteer", decodeURIComponent(volunteerMatch));
   }
   if (ticketMatch) {
     qs.set("ticket", decodeURIComponent(ticketMatch));

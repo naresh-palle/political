@@ -1,3 +1,21 @@
+export function getAssignTicketsParamsFromHash(): {
+  status: string;
+  assignedOnly: boolean;
+  volunteerId: string;
+} {
+  const raw = window.location.hash || "";
+  const query = raw.includes("?") ? raw.split("?")[1] : "";
+  const params = new URLSearchParams(query);
+  const status = (params.get("status") || "").toUpperCase();
+  const assigned = (params.get("assigned") || "").toLowerCase();
+  const volunteerId = (params.get("volunteer") || "").trim();
+  return {
+    status,
+    assignedOnly: assigned === "1" || assigned === "true",
+    volunteerId: volunteerId || "ALL"
+  };
+}
+
 export function getTicketIdFromHash(): string {
   const match = (window.location.hash || "").match(/[?&]ticket=([^&]+)/i);
   if (!match?.[1]) return "";

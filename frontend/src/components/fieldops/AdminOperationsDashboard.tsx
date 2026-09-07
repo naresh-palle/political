@@ -7,7 +7,7 @@ import {
   GeographicDrilldownNode
 } from "../../types";
 import { politicalApiService } from "../../services/api";
-import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
+import { getAssignTicketsParamsFromHash, getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
@@ -169,7 +169,9 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterMandal, setFilterMandal] = useState<string>("ALL");
   const [filterDepartment, setFilterDepartment] = useState<string>("ALL");
-  const [filterVolunteer, setFilterVolunteer] = useState<string>("ALL");
+  const [filterVolunteer, setFilterVolunteer] = useState<string>(
+    () => getAssignTicketsParamsFromHash().volunteerId
+  );
   const [filterType, setFilterType] = useState<string>("ALL");
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterGender, setFilterGender] = useState<string>("ALL");
@@ -184,6 +186,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     const syncStatus = () => {
       const fromUrl = getStatusFromUrl();
       if (fromUrl) setFilterStatus(fromUrl);
+      const volunteerFromUrl = getAssignTicketsParamsFromHash().volunteerId;
+      if (volunteerFromUrl) setFilterVolunteer(volunteerFromUrl);
     };
     syncStatus();
     window.addEventListener("hashchange", syncStatus);
@@ -286,7 +290,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     setFilterStatus(status);
     setCurrentPage(1);
     if (volunteerId) setFilterVolunteer(volunteerId);
-    window.location.hash = `#/assign-tickets?status=${status}`;
+    const params = new URLSearchParams();
+    params.set("status", status);
+    if (volunteerId) params.set("volunteer", volunteerId);
+    window.location.hash = `#/assign-tickets?${params.toString()}`;
   };
 
   const getItemDepartment = (item: FieldIssue) => item.department || item.assignedDepartment || item.category || "General";

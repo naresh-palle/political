@@ -9,7 +9,7 @@ import {
   WorkUpdateRecord
 } from "../../types";
 import { politicalApiService } from "../../services/api";
-import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
+import { getAssignTicketsParamsFromHash, getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Users,
@@ -89,10 +89,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
   // Active Status Tab State
   const [activeTab, setActiveTab] = useState<string>(() => getStatusFromUrl() || (initialFilterStatus === "NEW" ? "OPEN_UNASSIGNED" : initialFilterStatus || "ALL"));
-  const getAssignedOnlyFromUrl = () => {
-    const hash = window.location.hash.toLowerCase();
-    return hash.includes("assigned=1") || hash.includes("assigned=true");
-  };
+  const getAssignedOnlyFromUrl = () => getAssignTicketsParamsFromHash().assignedOnly;
+  const getVolunteerFromUrl = () => getAssignTicketsParamsFromHash().volunteerId;
   const [assignedOnly, setAssignedOnly] = useState(() => getAssignedOnlyFromUrl());
 
   useEffect(() => {
@@ -102,6 +100,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         setActiveTab(fromUrl);
       }
       setAssignedOnly(getAssignedOnlyFromUrl());
+      const volunteerFromUrl = getVolunteerFromUrl();
+      if (volunteerFromUrl) setFilterVolunteerId(volunteerFromUrl);
     };
     syncStatus();
     window.addEventListener("hashchange", syncStatus);
@@ -143,7 +143,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [filterType, setFilterType] = useState<string>("ALL");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
-  const [filterVolunteerId, setFilterVolunteerId] = useState<string>("ALL");
+  const [filterVolunteerId, setFilterVolunteerId] = useState<string>(() => getVolunteerFromUrl());
   const [filterMandalId, setFilterMandalId] = useState<string>("ALL");
   const [filterGender, setFilterGender] = useState<string>("ALL");
   const [filterAgeGroup, setFilterAgeGroup] = useState<string>("ALL");
@@ -369,6 +369,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     const params = new URLSearchParams();
     params.set("status", status);
     if (volunteerAssignedOnly) params.set("assigned", "1");
+    if (volunteerId) params.set("volunteer", volunteerId);
     window.location.hash = `#/assign-tickets?${params.toString()}`;
   };
   const volunteerSummaries = roleDashboard?.volunteers || [];
