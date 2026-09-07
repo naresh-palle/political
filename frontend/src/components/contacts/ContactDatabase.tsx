@@ -309,7 +309,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     name: "",
     phone: "+91 ",
     email: "",
-    category: "CITIZEN",
+    category: "CADRE",
     designation: "",
     mandalName: "Banaganapalle Town",
     mandalId: "MDL-BNG-TWN",
@@ -394,8 +394,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       name: newContact.name,
       phone: newContact.phone,
       email: newContact.email || undefined,
-      category: (newContact.category as any) || "CITIZEN",
-      designation: newContact.designation || "Citizen Resident",
+      category: (newContact.category as any) || "CADRE",
+      designation: newContact.designation || "",
       mandalId: newContact.mandalId || "MDL-BNG-TWN",
       mandalName: newContact.mandalName || "Banaganapalle Town",
       villageId: newContact.villageId || "VIL-01",
@@ -416,7 +416,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       name: "",
       phone: "+91 ",
       email: "",
-      category: "CITIZEN",
+      category: "CADRE",
       designation: "",
       mandalName: "Banaganapalle Town",
       mandalId: "MDL-BNG-TWN",
@@ -828,12 +828,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                     onChange={(e) => setNewContact({ ...newContact, category: e.target.value as any })}
                     className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
                   >
-                    <option value="INFLUENCER">Community Influencer</option>
                     <option value="CADRE">Party Cadre</option>
-                    <option value="GOVT_OFFICIAL">Govt Nodal Officer</option>
-                    <option value="DWCRA_LEAD">DWCRA Leader</option>
-                    <option value="YOUTH_LEADER">Youth Wing</option>
-                    <option value="CITIZEN">Citizen Resident</option>
+                    <option value="GOVT_OFFICIAL">Govt Officer</option>
                     <option value="OTHER">Other</option>
                   </select>
                 </div>

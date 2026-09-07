@@ -1992,10 +1992,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       onChange={(e) => setNewPriority(e.target.value as any)}
                       className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none cursor-pointer"
                     >
-                      <option value="LOW">LOW — Minor maintenance</option>
-                      <option value="MEDIUM">MEDIUM — Normal community matter</option>
-                      <option value="HIGH">HIGH — Critical public disruption</option>
-                      <option value="URGENT">URGENT — Affecting hospital / school / safety</option>
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                      <option value="URGENT">Urgent</option>
                     </select>
                   </div>
 
