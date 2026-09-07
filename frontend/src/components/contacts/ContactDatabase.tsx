@@ -318,7 +318,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     politicalAlignment: "STRONG_SUPPORTER",
     occupation: "",
     gender: "Male",
-    age: 35,
     notes: ""
   });
 
@@ -401,7 +400,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       villageId: newContact.villageId || "VIL-01",
       villageName: newContact.villageName || "Town Ward 1",
       voterId: newContact.voterId || undefined,
-      age: Number(newContact.age) || 35,
       gender: (newContact.gender as any) || "Male",
       politicalAlignment: (newContact.politicalAlignment as any) || "STRONG_SUPPORTER",
       occupation: newContact.occupation || "Resident",
@@ -425,7 +423,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       politicalAlignment: "STRONG_SUPPORTER",
       occupation: "",
       gender: "Male",
-      age: 35,
       notes: ""
     });
   };
@@ -870,29 +867,17 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Gender</label>
-                  <select
-                    value={newContact.gender}
-                    onChange={(e) => setNewContact({ ...newContact, gender: e.target.value as any })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Age</label>
-                  <input
-                    type="number"
-                    value={newContact.age}
-                    onChange={(e) => setNewContact({ ...newContact, age: Number(e.target.value) })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-                  />
-                </div>
+              <div>
+                <label className="text-[#8E9CAE] block mb-1 font-medium">Gender</label>
+                <select
+                  value={newContact.gender}
+                  onChange={(e) => setNewContact({ ...newContact, gender: e.target.value as any })}
+                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
 
               <div>
