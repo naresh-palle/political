@@ -10,6 +10,7 @@ import { politicalApiService } from "../../services/api";
 import { IssueDetailModal } from "./IssueDetailModal";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
+import { TicketGridCard } from "./TicketGridCard";
 import {
   ShieldCheck,
   Users,
@@ -704,78 +705,39 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredIssues.map((iss) => (
-              <div
-                key={iss.id}
-                onClick={() => setSelectedIssue(iss)}
-                className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-mono text-[#D4A24C] bg-[#071322] px-1.5 py-0.5 rounded border border-[#D4A24C]/30">
-                        #{iss.id}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                          iss.status === "COMPLETED"
-                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                            : iss.status === "OVERDUE"
-                            ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
-                            : "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                        }`}
-                      >
-                        {iss.status}
-                      </span>
-                    </div>
-
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#1A3654] text-[#D8CFB8]">
-                      {iss.category}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+            {filteredIssues.map((iss) => {
+              const isClosed = iss.status === "COMPLETED" || iss.status === "RESOLVED";
+              return (
+                <TicketGridCard
+                  key={iss.id}
+                  issue={iss}
+                  timing={{
+                    registeredTimeFormatted: iss.reportedDate || iss.createdAt || "",
+                    closedTimeFormatted: iss.updatedAt || "",
+                    isClosed,
+                    durationText: iss.dueDate ? `Due ${iss.dueDate}` : "—"
+                  }}
+                  showAssignControls={false}
+                  volunteerName={iss.assignedVolunteerName || "Unassigned"}
+                  extraBadges={
+                    <span
+                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                        iss.status === "COMPLETED" || iss.status === "RESOLVED"
+                          ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                          : iss.status === "OVERDUE"
+                          ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
+                          : "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                      }`}
+                    >
+                      {iss.status}
                     </span>
-                  </div>
-
-                  <h3 className="font-display text-[15px] font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
-                    {iss.title}
-                  </h3>
-                  <p className="text-[12px] text-[#A69B80] line-clamp-2 leading-relaxed">
-                    {iss.description}
-                  </p>
-                </div>
-
-                <div className="space-y-2 pt-3 border-t border-[#22405E]/60 text-[11px]">
-                  <div className="flex items-center justify-between text-[#D8CFB8]">
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
-                      {iss.mandalName} · {iss.villageName}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[#8E9CAE]">
-                    <span>Volunteer: <strong className="text-[#F5EFE0]">{iss.assignedVolunteerName || "Unassigned"}</strong></span>
-                    <span>Due: {iss.dueDate || "Not set"}</span>
-                  </div>
-
-                  {iss.lastStatusRemarks && (
-                    <div className="p-2 rounded bg-[#071322]/80 text-[10px] text-[#E2DCBE] line-clamp-1">
-                      <strong className="text-[#D4A24C]">Update: </strong>{iss.lastStatusRemarks}
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAssignModalIssue(iss);
-                    }}
-                    className="w-full mt-2 py-1.5 px-3 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
-                  >
-                    <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
-                    Assign & Notify on WhatsApp
-                  </button>
-                </div>
-              </div>
-            ))}
+                  }
+                  onOpen={() => setSelectedIssue(iss)}
+                  onOpenWhatsAppAssign={() => setAssignModalIssue(iss)}
+                />
+              );
+            })}
           </div>
         </div>
       )}

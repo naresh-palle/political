@@ -27,6 +27,7 @@ try:
     from services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
     from services.officer_status_workflow import (
         EVENT_BY_STATUS,
+        complainant_phone_from_issue,
         complainant_whatsapp_text,
         mask_phone,
         normalize_status,
@@ -34,11 +35,14 @@ try:
         validate_officer_status,
         validate_transition,
         volunteer_notification_copy,
+        volunteer_phone_from_issue,
+        volunteer_recipient_ids,
     )
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
     from backend.services.officer_status_workflow import (
         EVENT_BY_STATUS,
+        complainant_phone_from_issue,
         complainant_whatsapp_text,
         mask_phone,
         normalize_status,
@@ -46,6 +50,8 @@ except ImportError:
         validate_officer_status,
         validate_transition,
         volunteer_notification_copy,
+        volunteer_phone_from_issue,
+        volunteer_recipient_ids,
     )
 
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
@@ -1981,7 +1987,10 @@ async def get_field_issues(
     if not issues:
         fallback = load_json_fallback("field_issues.json")
         if userRole == "VOLUNTEER" and userId:
-            fallback = [i for i in fallback if i.get("assignedVolunteerId") == userId]
+            fallback = [
+                i for i in fallback
+                if i.get("assignedVolunteerId") == userId or i.get("createdBy") == userId
+            ]
         elif userRole == "DIRECTOR" and (userId or directorId):
             d_id = directorId or userId
             fallback = [i for i in fallback if i.get("directorId") == d_id]
@@ -2036,8 +2045,9 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
 
-    if userRole == "VOLUNTEER" and userId and issue.get("assignedVolunteerId") != userId:
-        raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+    if userRole == "VOLUNTEER" and userId:
+        if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
+            raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
     if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
         raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
     return sanitize_doc(issue)
@@ -2138,11 +2148,8 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     if prior and current_status == new_status:
         return sanitize_doc(prior)
 
-    volunteer_id = (
-        issue.get("assignedVolunteerId")
-        or (issue.get("createdBy") if (issue.get("createdByRole") or "").upper() == "VOLUNTEER" else None)
-        or issue.get("createdBy")
-    )
+    volunteer_ids = volunteer_recipient_ids(issue)
+    volunteer_id = volunteer_ids[0] if volunteer_ids else None
     volunteer_notif_status = "SKIPPED_NO_ASSIGNEE"
     volunteer_notif = None
 
@@ -2164,6 +2171,11 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     if attachments:
         existing_att = issue.get("attachments") or []
         update_doc["attachments"] = list(dict.fromkeys(list(existing_att) + attachments))
+    if volunteer_id and not issue.get("assignedVolunteerId"):
+        update_doc["assignedVolunteerId"] = volunteer_id
+    stored_phone = complainant_phone_from_issue(issue, payload)
+    if stored_phone and not (issue.get("reporterPhone") or issue.get("citizenPhone")):
+        update_doc["reporterPhone"] = stored_phone
 
     history_record = {
         "id": f"upd-{uuid.uuid4().hex[:8]}",
@@ -2198,41 +2210,46 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     sanitize_doc(history_record)
     IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(dict(history_record)))
 
-    if volunteer_id:
+    if volunteer_ids:
         notif_title, notif_msg = volunteer_notification_copy(ticket_number, new_status, remarks)
-        volunteer_notif = {
-            "id": f"notif-{uuid.uuid4().hex[:8]}",
-            "recipientUserId": volunteer_id,
-            "recipientRole": "VOLUNTEER",
-            "type": "TICKET_STATUS_UPDATED",
-            "eventType": event_type,
-            "resourceType": "ISSUE",
-            "resourceId": issue_id,
-            "issueId": issue_id,
-            "ticketNumber": ticket_number,
-            "status": new_status,
-            "title": notif_title,
-            "message": notif_msg,
-            "priority": "HIGH" if new_status in ("RESOLVED", "REJECTED") else "NORMAL",
-            "isRead": False,
-            "readAt": None,
-            "createdAt": now_str,
-        }
         volunteer_notif_status = "CREATED"
-        try:
-            await db.notifications.insert_one(sanitize_doc(dict(volunteer_notif)))
-            await db.field_notifications.insert_one(sanitize_doc(dict(volunteer_notif)))
-        except Exception as e:
-            log_mongo_notice("insert volunteer notification", e)
-            volunteer_notif_status = "CREATED_IN_MEMORY"
-        sanitize_doc(volunteer_notif)
-        IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(dict(volunteer_notif)))
+        for recipient_id in volunteer_ids:
+            volunteer_notif = {
+                "id": f"notif-{uuid.uuid4().hex[:8]}",
+                "recipientUserId": recipient_id,
+                "recipientRole": "VOLUNTEER",
+                "volunteerId": recipient_id,
+                "type": "TICKET_STATUS_UPDATED",
+                "eventType": event_type,
+                "resourceType": "ISSUE",
+                "resourceId": issue_id,
+                "issueId": issue_id,
+                "ticketNumber": ticket_number,
+                "status": new_status,
+                "title": notif_title,
+                "message": notif_msg,
+                "priority": "HIGH" if new_status in ("RESOLVED", "REJECTED") else "NORMAL",
+                "isRead": False,
+                "readAt": None,
+                "createdAt": now_str,
+            }
+            try:
+                await db.notifications.insert_one(sanitize_doc(dict(volunteer_notif)))
+                await db.field_notifications.insert_one(sanitize_doc(dict(volunteer_notif)))
+            except Exception as e:
+                log_mongo_notice("insert volunteer notification", e)
+                volunteer_notif_status = "CREATED_IN_MEMORY"
+            sanitize_doc(volunteer_notif)
+            IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(dict(volunteer_notif)))
 
     complainant_name = issue.get("reportedBy") or "Citizen"
-    complainant_phone = issue.get("reporterPhone") or issue.get("citizenPhone") or ""
+    complainant_phone = complainant_phone_from_issue(issue, payload)
     wa_text = complainant_whatsapp_text(complainant_name, ticket_number, new_status, remarks)
     correlation_id = f"{issue_id}:{event_type}:{now_str}"
     audit_id = f"wa-stat-{uuid.uuid4().hex[:8]}"
+    status_label = new_status.replace("_", " ")
+    template_dept = f"{status_label} · {completed_dept}"[:60]
+    template_location = (remarks or issue.get("mandalName") or issue.get("villageName") or "Constituency")[:60]
 
     pending_audit = {
         "id": audit_id,
@@ -2241,7 +2258,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "recipientType": "COMPLAINT_PERSON",
         "recipientReference": mask_phone(complainant_phone),
         "channel": "WHATSAPP",
-        "templateName": "complainant_status_update",
+        "templateName": os.environ.get("WHATSAPP_TEMPLATE_NAME", "officer_ticket_alert_v1"),
         "providerMessageId": None,
         "status": "PENDING",
         "attempt": 1,
@@ -2259,10 +2276,11 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     sanitize_doc(pending_audit)
     IN_MEMORY_NOTIFICATION_AUDITS.insert(0, sanitize_doc(dict(pending_audit)))
 
+    # Use the same approved Cloud template that already delivers officer alerts.
+    # Session text is rejected outside the 24h window, so do not send TEXT first.
     wa_payload = {
         "recipientPhone": complainant_phone,
-        "messageKind": "TEXT",
-        "templateName": "complainant_status_update",
+        "messageKind": "TEMPLATE",
         "event": event_type,
         "eventType": event_type,
         "ticketNumber": ticket_number,
@@ -2270,19 +2288,30 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "issueId": issue_id,
         "textMessage": wa_text,
         "correlationId": correlation_id,
-        "complainantName": complainant_name,
         "officerName": complainant_name,
-        "statusLabel": new_status.replace("_", " "),
+        "leaderName": "LeaderLens",
+        "deptName": template_dept,
+        "mandalName": template_location,
+        "statusLabel": status_label,
         "newStatus": new_status,
         "remarks": remarks,
-        "deptName": completed_dept,
-        "mandalName": issue.get("mandalName") or new_status.replace("_", " "),
     }
 
     whatsapp_result = await whatsapp_client.send_whatsapp_notification(wa_payload)
     wa_status = whatsapp_result.get("status") or "FAILED"
     if wa_status not in ("SENT", "DELIVERED", "FAILED", "PENDING"):
         wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
+
+    volunteer_phone = volunteer_phone_from_issue(issue)
+    if volunteer_phone and volunteer_phone != complainant_phone:
+        volunteer_wa_payload = dict(wa_payload)
+        volunteer_wa_payload["recipientPhone"] = volunteer_phone
+        volunteer_wa_payload["officerName"] = issue.get("assignedVolunteerName") or "Volunteer"
+        volunteer_wa_payload["correlationId"] = f"{correlation_id}:volunteer"
+        try:
+            await whatsapp_client.send_whatsapp_notification(volunteer_wa_payload)
+        except Exception as vol_wa_err:
+            logger.warning(f"Volunteer WhatsApp dispatch failed: {vol_wa_err}")
     patch = {
         "status": wa_status,
         "providerMessageId": whatsapp_result.get("providerMessageId"),
@@ -2318,6 +2347,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
             "status": volunteer_notif_status,
             "id": volunteer_notif.get("id") if volunteer_notif else None,
             "resourceId": issue_id,
+            "recipientUserIds": volunteer_ids,
         },
         "complainantNotification": {
             "channel": "WHATSAPP",
@@ -2608,7 +2638,10 @@ async def get_field_notifications(recipientUserId: Optional[str] = Query(None), 
     try:
         query = {}
         if recipientUserId:
-            query["recipientUserId"] = recipientUserId
+            query["$or"] = [
+                {"recipientUserId": recipientUserId},
+                {"volunteerId": recipientUserId, "type": "TICKET_STATUS_UPDATED"},
+            ]
         elif recipientRole:
             query["recipientRole"] = recipientRole
         res = await db.notifications.find(query, {"_id": 0}).sort("createdAt", -1).to_list(100)
@@ -2622,7 +2655,11 @@ async def get_field_notifications(recipientUserId: Optional[str] = Query(None), 
 
     combined = list(IN_MEMORY_NOTIFICATIONS) + db_notifs
     if recipientUserId:
-        combined = [n for n in combined if n.get("recipientUserId") == recipientUserId]
+        combined = [
+            n for n in combined
+            if n.get("recipientUserId") == recipientUserId
+            or (n.get("volunteerId") == recipientUserId and n.get("type") == "TICKET_STATUS_UPDATED")
+        ]
     elif recipientRole:
         combined = [n for n in combined if n.get("recipientRole") == recipientRole]
 

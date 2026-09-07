@@ -19,6 +19,8 @@ def _issue(volunteer_id="vol-a", status="ASSIGNED"):
         "id": "iss-e2e-1",
         "status": status,
         "assignedVolunteerId": volunteer_id,
+        "createdBy": volunteer_id,
+        "createdByRole": "VOLUNTEER",
         "assignedVolunteerName": "Volunteer A",
         "reporterPhone": "9876543210",
         "reportedBy": "Complaint Person A",
@@ -61,7 +63,8 @@ def test_officer_status_creates_volunteer_notification_and_audit(monkeypatch):
     monkeypatch.setattr(srv, "db", _DB())
 
     async def fake_wa(payload):
-        assert payload.get("messageKind") == "TEXT"
+        assert payload.get("messageKind") == "TEMPLATE"
+        assert payload.get("recipientPhone") in ("9876543210", "919876543210")
         return {
             "success": False,
             "status": "FAILED",
@@ -196,4 +199,45 @@ def test_volunteer_b_does_not_receive_volunteer_a_notification(monkeypatch):
     )
     recipients = {n.get("recipientUserId") for n in srv.IN_MEMORY_NOTIFICATIONS}
     assert "vol-a" in recipients
+    assert "vol-b" not in recipients
+
+
+def test_status_notifies_created_by_when_assignee_is_demo(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    srv.IN_MEMORY_NOTIFICATIONS.clear()
+    srv.IN_MEMORY_ISSUE_HISTORY.clear()
+    srv.IN_MEMORY_NOTIFICATION_AUDITS.clear()
+    srv.IN_MEMORY_STATUS_IDEMPOTENCY.clear()
+
+    issue = _issue(volunteer_id="usr-demo-volunteer")
+    issue["createdBy"] = "vol-real"
+    issue["createdByRole"] = "VOLUNTEER"
+    mock_issues = MagicMock()
+    mock_issues.find_one = AsyncMock(return_value=dict(issue))
+    mock_issues.update_one = AsyncMock(return_value=MagicMock(matched_count=1, upserted_id=None))
+    mock_col = MagicMock()
+    mock_col.insert_one = AsyncMock(return_value=None)
+    mock_col.find = MagicMock(return_value=_Cursor([]))
+    mock_col.find_one = AsyncMock(return_value=None)
+
+    class _DB:
+        field_issues = mock_issues
+        issue_history = mock_col
+        work_updates = mock_col
+        notifications = mock_col
+        field_notifications = mock_col
+        notification_audits = mock_col
+
+    monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(
+        srv.whatsapp_client,
+        "send_whatsapp_notification",
+        AsyncMock(return_value={"success": False, "status": "FAILED", "errorCode": "MISSING_CREDENTIALS"}),
+    )
+    asyncio.run(srv.update_field_issue_status("iss-e2e-1", {"status": "IN_PROGRESS", "remarks": "started"}))
+    recipients = {n.get("recipientUserId") for n in srv.IN_MEMORY_NOTIFICATIONS}
+    assert "vol-real" in recipients
     assert "vol-b" not in recipients

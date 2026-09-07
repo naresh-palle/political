@@ -107,6 +107,50 @@ def mask_phone(phone: str) -> str:
     return f"{digits[:-4]}****{digits[-4:]}" if len(digits) > 4 else f"****{digits}"
 
 
+def first_phone(*values: Any) -> str:
+    for value in values:
+        if not value:
+            continue
+        digits = "".join(ch for ch in str(value) if ch.isdigit())
+        if len(digits) >= 10:
+            return digits
+    return ""
+
+
+def complainant_phone_from_issue(issue: Dict[str, Any], payload: Optional[Dict[str, Any]] = None) -> str:
+    payload = payload or {}
+    return first_phone(
+        issue.get("reporterPhone"),
+        issue.get("citizenPhone"),
+        issue.get("contactPhone"),
+        issue.get("phone"),
+        issue.get("mobile"),
+        issue.get("reporterMobile"),
+        payload.get("reporterPhone"),
+        payload.get("citizenPhone"),
+    )
+
+
+def volunteer_recipient_ids(issue: Dict[str, Any]) -> list:
+    ids: list = []
+    assigned = issue.get("assignedVolunteerId")
+    created = issue.get("createdBy")
+    created_role = (issue.get("createdByRole") or "VOLUNTEER").upper()
+    if assigned and str(assigned) != "system":
+        ids.append(str(assigned))
+    if created and created_role == "VOLUNTEER" and str(created) != "system" and str(created) not in ids:
+        ids.append(str(created))
+    return ids
+
+
+def volunteer_phone_from_issue(issue: Dict[str, Any]) -> str:
+    return first_phone(
+        issue.get("assignedVolunteerPhone"),
+        issue.get("volunteerPhone"),
+        issue.get("createdByPhone"),
+    )
+
+
 def ticket_display_number(issue: Dict[str, Any]) -> str:
     raw = issue.get("ticketNumber") or issue.get("id") or "LL-TICKET"
     raw = str(raw)

@@ -40,6 +40,30 @@ def test_mask_phone():
     assert "987654" not in mask_phone("919876543210") or "****" in mask_phone("919876543210")
 
 
+def test_volunteer_recipient_ids_include_creator():
+    from backend.services.officer_status_workflow import volunteer_recipient_ids
+
+    ids = volunteer_recipient_ids(
+        {
+            "assignedVolunteerId": "usr-demo-volunteer",
+            "createdBy": "vol-real",
+            "createdByRole": "VOLUNTEER",
+        }
+    )
+    assert "usr-demo-volunteer" in ids
+    assert "vol-real" in ids
+
+
+def test_complainant_phone_prefers_ticket_fields():
+    from backend.services.officer_status_workflow import complainant_phone_from_issue
+
+    phone = complainant_phone_from_issue(
+        {"reporterPhone": "", "citizenPhone": "9876543210"},
+        {"reporterPhone": "1111111111"},
+    )
+    assert phone.endswith("3210")
+
+
 def test_ticket_number():
     assert ticket_display_number({"id": "iss-ab12"}).startswith("LL-")
     assert normalize_status(" in_progress ") == "IN_PROGRESS"

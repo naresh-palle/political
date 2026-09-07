@@ -42,6 +42,7 @@ import {
 import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
+import { TicketGridCard } from "./TicketGridCard";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -1802,183 +1803,56 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             {paginatedOperations.map((issue) => {
               const timing = getTicketTimingDetails(issue);
+              const isAssignmentDisabled =
+                issue.status === "IN_PROGRESS" ||
+                issue.status === "COMPLETED" ||
+                issue.status === "RESOLVED" ||
+                issue.status === "CANT_BE_DONE" ||
+                (issue as any).status === "Can't be done";
+              const isAssignTabActive = activeTab === "PENDING" || window.location.hash.includes("assign");
 
               return (
-                <div
+                <TicketGridCard
                   key={issue.id}
-                  onClick={() => setSelectedIssue(issue)}
-                  className="p-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all cursor-pointer flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
-                >
-                  <div className="space-y-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-[10px] font-mono text-[#D4A24C] bg-[#070D15] px-1.5 py-0.5 rounded border border-[#D4A24C]/30 font-bold">
-                          #{issue.id}
-                        </span>
-                        <span
-                          className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                            issue.issueType === "GRIEVANCE"
-                              ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
-                              : "bg-sky-950/70 text-sky-300 border-sky-500/40"
-                          }`}
-                        >
-                          {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                            issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                              ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                              : issue.status === "IN_PROGRESS"
-                              ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                              : issue.status === "OVERDUE"
-                              ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
-                              : "bg-blue-950/60 text-blue-300 border-blue-500/40"
-                          }`}
-                        >
-                          {issue.status}
-                        </span>
-                      </div>
-
+                  issue={issue}
+                  timing={timing}
+                  departments={DEPARTMENTS}
+                  resolveDeptValue={resolveDeptValue}
+                  showAssignControls={isAssignTabActive && !isAssignmentDisabled}
+                  showAcCode
+                  extraBadges={
+                    <>
                       <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                          issue.priority === "URGENT"
-                            ? "text-red-400 bg-red-950/60 border border-red-500/40"
-                            : issue.priority === "HIGH"
-                            ? "text-orange-400 bg-orange-950/60 border border-orange-500/40"
-                            : "text-[#D8CFB8] bg-[#070D15]"
+                        className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                          issue.issueType === "GRIEVANCE"
+                            ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
+                            : "bg-sky-950/70 text-sky-300 border-sky-500/40"
                         }`}
                       >
-                        {issue.priority}
+                        {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
                       </span>
-                    </div>
-
-                    <h3 className="font-display text-[15px] font-semibold text-[#F5EFE0] line-clamp-1 group-hover:text-[#D4A24C] transition-colors">
-                      {issue.title}
-                    </h3>
-                    <p className="text-[12px] text-[#A69B80] line-clamp-2 leading-relaxed">
-                      {issue.description}
-                    </p>
-                  </div>
-
-                  {/* Registered & Closed Timestamps + Duration Chip */}
-                  <div className="p-2 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between text-[10.5px] font-mono">
-                    <div>
-                      <span className="text-[#8E9CAE] block text-[9.5px]">Reg: {timing.registeredTimeFormatted}</span>
-                      {timing.isClosed ? (
-                        <span className="text-emerald-400 font-semibold block text-[9.5px]">Done: {timing.closedTimeFormatted}</span>
-                      ) : (
-                        <span className="text-amber-400 block font-semibold text-[9.5px]">Status: Open</span>
-                      )}
-                    </div>
-                    <div
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
-                        timing.isClosed
-                          ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
-                          : issue.status === "OVERDUE"
-                          ? "bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse"
-                          : "bg-blue-950/80 text-blue-300 border-blue-500/40"
-                      }`}
-                    >
-                      {timing.isClosed ? `⏱️ Closed in ${timing.durationText}` : `⏱️ Open ${timing.durationText}`}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-1.5 border-t border-[#223348]/60 text-[11px]">
-                    <div className="flex items-center justify-between text-[#D8CFB8]">
-                      <span className="flex items-center gap-1 truncate">
-                        <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                        <strong>{issue.mandalName}</strong> · {issue.villageName}
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                          issue.status === "COMPLETED" || issue.status === "RESOLVED"
+                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
+                            : issue.status === "IN_PROGRESS"
+                            ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
+                            : issue.status === "OVERDUE"
+                            ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
+                            : "bg-blue-950/60 text-blue-300 border-blue-500/40"
+                        }`}
+                      >
+                        {issue.status}
                       </span>
-                      <span className="text-[#8E9CAE] font-mono text-[10px] shrink-0">AC-140</span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[#8E9CAE]">
-                      <span>Reporter: <strong className="text-[#F5EFE0]">{issue.reportedBy}</strong></span>
-                    </div>
-
-                    {/* Direct Assign Complaint (Government Department) */}
-                    {(() => {
-                      const isAssignmentDisabled =
-                        issue.status === "IN_PROGRESS" ||
-                        issue.status === "COMPLETED" ||
-                        issue.status === "RESOLVED" ||
-                        issue.status === "CANT_BE_DONE" ||
-                        (issue as any).status === "Can't be done";
-
-                      const isAssignTabActive = activeTab === "PENDING" || window.location.hash.includes("assign");
-
-                      if (!isAssignTabActive || isAssignmentDisabled) {
-                        const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
-                        return (
-                          <div className="space-y-1.5 pt-2 border-t border-[#223348]/40">
-                            <div className="flex items-center justify-between text-[11px]">
-                              <span className="text-[#8E9CAE]">Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong></span>
-                              <span className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded ${
-                                isUnresolved ? "bg-amber-950/80 text-amber-300 border border-amber-500/40" : "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
-                              }`}>
-                                {isUnresolved ? "🟡 Unresolved" : "🟢 Resolved"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between text-[#8E9CAE] gap-2 pt-1">
-                              <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
-                                <span>🏛️</span> Assigned Dept:
-                              </span>
-                              <span className="text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2.5 py-1 truncate max-w-[200px]" title={issue.department || "General Administration"}>
-                                {issue.department || "General Administration"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="space-y-1.5 pt-1 border-t border-[#223348]/40" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-between text-[10.5px] text-[#8E9CAE]">
-                            <span>Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong></span>
-                            <span className="text-[10px] text-amber-400 font-mono font-bold">Unresolved</span>
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-[10.5px] font-bold text-[#D4A24C] shrink-0 flex items-center gap-1">
-                              <span>🏛️</span> Assign Complaint:
-                            </span>
-                            <select
-                              value={resolveDeptValue(issue.department)}
-                              onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                              className="bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer truncate max-w-[190px]"
-                            >
-                              <option value="">-- Select Department --</option>
-                              {DEPARTMENTS.map((dept) => (
-                                <option key={dept} value={dept}>
-                                  {dept}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setAssignModalIssue(issue);
-                            }}
-                            className="w-full mt-1.5 py-1.5 px-3 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
-                          >
-                            <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
-                            Assign & Notify on WhatsApp
-                          </button>
-                        </div>
-                      );
-                    })()}
-
-                    {issue.lastStatusRemarks && (
-                      <div className="p-2 rounded bg-[#070D15] text-[10px] text-[#E2DCBE] line-clamp-1 border border-[#223348]/50">
-                        <strong className="text-[#D4A24C]">Update: </strong>{issue.lastStatusRemarks}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                    </>
+                  }
+                  onOpen={() => setSelectedIssue(issue)}
+                  onAssignDepartment={(id, dept) => handleAssignDepartment(id, dept)}
+                  onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
+                />
               );
             })}
           </div>

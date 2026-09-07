@@ -1033,7 +1033,12 @@ export const politicalApiService = {
 
     // Apply filtering
     if (params?.userRole === "VOLUNTEER" && params?.userId) {
-      list = list.filter((i: any) => i.assignedVolunteerId === params.userId || !i.assignedVolunteerId);
+      list = list.filter(
+        (i: any) =>
+          i.assignedVolunteerId === params.userId ||
+          i.createdBy === params.userId ||
+          i.volunteerId === params.userId
+      );
     } else if (params?.userRole === "DIRECTOR" && (params?.userId || params?.directorId)) {
       const dId = params.directorId || params.userId;
       list = list.filter((i: any) => i.directorId === dId || !i.directorId);
@@ -1336,7 +1341,11 @@ export const politicalApiService = {
     });
 
     if (recipientUserId) {
-      list = list.filter((n: any) => n.recipientUserId === recipientUserId);
+      list = list.filter(
+        (n: any) =>
+          n.recipientUserId === recipientUserId ||
+          (n.volunteerId === recipientUserId && n.type === "TICKET_STATUS_UPDATED")
+      );
     } else if (recipientRole) {
       list = list.filter((n: any) => n.recipientRole === recipientRole);
     }
