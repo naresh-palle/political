@@ -27,13 +27,11 @@ import {
   Layers,
   Sparkles,
   User,
-  Phone,
   Building2,
   FileText,
   Upload,
   X,
   Tag,
-  Shield,
   Briefcase,
   Paperclip,
   Check,
@@ -1000,8 +998,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
   return (
           <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
-      {!isAssignTicketsMode ? (
-        /* SCREENSHOT 1 ONLY: Ground Intake View */
         <div className="space-y-5">
           {/* 1. Volunteer Header Strip with all Assigned Geography Details moved to Top */}
           <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
@@ -1053,7 +1049,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
                 <User className="w-3.5 h-3.5 text-[#D4A24C]" />
                 <span>Supervising Manager:</span>
-                <strong className="text-[#D4A24C]">{currentUser.directorName?.replace("Director", "Manager") || "Demo Manager"}</strong>
+                <strong className="text-[#D4A24C]">{currentUser.directorName?.replace("Director", "Manager") || "Manager1"}</strong>
               </div>
             </div>
           </div>
@@ -1252,27 +1248,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
           )}
         </div>
-      ) : (
-        /* SCREENSHOT 2: Full Assign Tickets / Complaints Stream */
-        <div className="space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D]">
-            <div className="flex items-center gap-2 min-w-0">
-              <Shield className="w-5 h-5 text-[#D4A24C] shrink-0" />
-              <h2 className="text-base font-bold font-sans tracking-normal text-[#F5EFE0] leading-snug">
-                Assign Tickets / Complaints
-              </h2>
-            </div>
-            <button
-              onClick={() => {
-                setFilterStatus("ALL");
-                window.location.hash = "#/field-ops";
-              }}
-              className="text-xs text-[#D4A24C] hover:underline font-semibold cursor-pointer shrink-0 self-start sm:self-auto"
-            >
-              ← Back to Ground Intake
-            </button>
-          </div>
 
+        <div className="space-y-5">
           {issues.some((i) => i.lastStatusRemarks) && (
             <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40">
               <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C] mb-2">
@@ -1539,7 +1516,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
             {paginatedIssues.map((issue) => {
               const timing = getTicketTimingDetails(issue);
               const showAssign = isTicketOpenForAssign(issue.status);
@@ -1822,7 +1799,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         )}
       </div>
       </div>
-      )}
 
       {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
       {isAddModalOpen && (
@@ -2159,26 +2135,26 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                    <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="min-w-0">
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
                         Complainant Name / పేరు *
                       </label>
-                      <input
-                        type="text"
+                      <textarea
                         required
+                        rows={2}
                         placeholder="Full Name (English or Telugu)..."
                         value={newReportedBy}
                         onChange={(e) => setNewReportedBy(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                        className="w-full min-w-0 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none break-words whitespace-pre-wrap resize-none"
                       />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
                         Phone Number / ఫోన్ సంఖ్య *
                       </label>
-                      <div className="flex items-center">
+                      <div className="flex items-center min-w-0">
                         <span className="px-3 py-2 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
                           +91
                         </span>
@@ -2189,7 +2165,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           placeholder="10 Digits..."
                           value={newReporterPhone}
                           onChange={(e) => setNewReporterPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
+                          className="w-full min-w-0 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
                         />
                       </div>
                     </div>

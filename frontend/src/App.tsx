@@ -21,7 +21,7 @@ import { DataConfidenceSection } from "./components/audit/DataConfidenceSection"
 import { PresentationMode } from "./components/audit/PresentationMode";
 import { FieldOpsManager } from "./components/fieldops/FieldOpsManager";
 import { AuditReport, UserProfile } from "./types";
-import { buildCompleteAudit, USER_PROFILES } from "./services/mockData";
+import { buildCompleteAudit, USER_PROFILES, hydrateStoredUserProfile } from "./services/mockData";
 import { PartyThemeProvider, usePartyTheme } from "./context/PartyThemeContext";
 
 // Lazy-loaded heavy route chunks for instant initial render
@@ -178,7 +178,7 @@ function AppInner() {
       const savedProduct = localStorage.getItem(PRODUCT_STORAGE_KEY);
       if (
         savedProduct &&
-        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts"].includes(savedProduct)
+        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts", "assigntickets"].includes(savedProduct)
       ) {
         return savedProduct as ActiveProductType;
       }
@@ -190,11 +190,24 @@ function AppInner() {
     try {
       const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
       if (savedUser) {
-        return JSON.parse(savedUser);
+        return hydrateStoredUserProfile(JSON.parse(savedUser));
       }
     } catch {}
     return USER_PROFILES[0];
   });
+
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (!savedUser) return;
+      const parsed = JSON.parse(savedUser) as UserProfile;
+      const hydrated = hydrateStoredUserProfile(parsed);
+      if (hydrated.name !== parsed.name || hydrated.directorName !== parsed.directorName) {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(hydrated));
+        setCurrentProfile(hydrated);
+      }
+    } catch {}
+  }, []);
 
   const [auditData, setAuditData] = useState<AuditReport | null>(null);
 
@@ -287,11 +300,14 @@ function AppInner() {
   // - Political Admin & Director: Field Operations, Grievances, User Management (governance), Contact Database (contacts)
   // - Volunteer: Field Operations, Grievances, Contact Database (contacts)
   useEffect(() => {
-    if (isVolunteer && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
-      setActiveProduct("fieldops");
+    if (isVolunteer && (activeProduct === "fieldops" || !["assigntickets", "grievances", "contacts"].includes(activeProduct))) {
+      setActiveProduct("assigntickets");
       try {
-        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "assigntickets");
       } catch {}
+      if (!window.location.hash.toLowerCase().includes("assign-tickets")) {
+        window.location.hash = "#/assign-tickets?status=ALL";
+      }
     } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
@@ -303,7 +319,7 @@ function AppInner() {
   const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets") => {
     let targetProduct = product;
     if (isVolunteer) {
-      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts"].includes(product) ? "assigntickets" : product;
     } else if (isPoliticalAdmin || isDirector) {
       targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
     } else if (!isPlatformAdmin) {
@@ -317,12 +333,17 @@ function AppInner() {
 
   const handleAuthenticated = (user: UserProfile) => {
     setCurrentProfile(user);
-    const defaultProd = "fieldops";
+    const role = user.primaryRole || user.roleId || user.role;
+    const isVol = role === "VOLUNTEER" || role === "volunteer";
+    const defaultProd: ActiveProductType = isVol ? "assigntickets" : "fieldops";
     setActiveProduct(defaultProd);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, defaultProd);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     } catch {}
+    if (isVol) {
+      window.location.hash = "#/assign-tickets?status=ALL";
+    }
     setRoute("app");
   };
 
@@ -349,9 +370,9 @@ function AppInner() {
     );
 
     if (userRole === "VOLUNTEER" && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
-      setActiveProduct("fieldops");
+      setActiveProduct("assigntickets");
       try {
-        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "assigntickets");
       } catch {}
     } else if ((userRole === "POLITICAL_ADMIN" || userRole === "DIRECTOR") && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");

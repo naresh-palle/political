@@ -30,7 +30,7 @@ import {
 export const USER_PROFILES: UserProfile[] = [
   {
     id: "usr-superadmin",
-    name: "Srikar Varma",
+    name: "Naresh Palle",
     email: "admin@leaderslens.ai",
     phone: "+91 98850 12340",
     demoPassword: "SuperAdmin@2026",
@@ -61,7 +61,7 @@ export const USER_PROFILES: UserProfile[] = [
   },
   {
     id: "usr-demo-admin",
-    name: "B. C. Janardhan Reddy (MLA)",
+    name: "B. C. Janardhan Reddy (MLA) · Minister R&B",
     email: "demo.admin@leaderslens.ai",
     phone: "+91 98850 44001",
     demoPassword: "DemoAdmin@2026",
@@ -98,7 +98,7 @@ export const USER_PROFILES: UserProfile[] = [
   },
   {
     id: "usr-demo-director",
-    name: "Demo Manager",
+    name: "Manager1",
     email: "demo.manager@leaderslens.ai",
     phone: "+91 98850 44002",
     demoPassword: "DemoManager@2026",
@@ -136,7 +136,7 @@ export const USER_PROFILES: UserProfile[] = [
   },
   {
     id: "usr-demo-volunteer",
-    name: "Demo Volunteer",
+    name: "Volunteer1",
     email: "demo.volunteer@leaderslens.ai",
     phone: "+91 98850 44003",
     demoPassword: "DemoVolunteer@2026",
@@ -153,7 +153,7 @@ export const USER_PROFILES: UserProfile[] = [
     partyColor: "#D4A24C",
     partyEmoji: "🏛️",
     directorId: "usr-demo-director",
-    directorName: "Demo Manager",
+    directorName: "Manager1",
     stateId: "AP",
     stateName: "Andhra Pradesh",
     parliamentConstituencyId: "NDL-PC",
@@ -178,6 +178,14 @@ export const USER_PROFILES: UserProfile[] = [
     }
   }
 ];
+
+export function hydrateStoredUserProfile(saved: UserProfile): UserProfile {
+  const email = saved.email?.trim().toLowerCase();
+  const canonical = USER_PROFILES.find(
+    (u) => (saved.id && u.id === saved.id) || (!!email && u.email.toLowerCase() === email)
+  );
+  return canonical ? { ...saved, ...canonical } : saved;
+}
 
 export const MOCK_POLITICAL_PARTIES: PoliticalParty[] = [
   {

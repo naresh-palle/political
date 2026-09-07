@@ -181,7 +181,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Products - Top Menu Bar */}
           <nav data-testid="global-nav" className="hidden lg:flex items-center flex-wrap justify-center gap-1.5 max-w-full">
-            {/* Tab 1: Ground Intake & Issues */}
+            {!isVolunteer && (
             <button
               onClick={() => {
                 window.location.hash = "#/field-ops";
@@ -196,6 +196,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <ClipboardList className="w-3.5 h-3.5" />
               <span>Ground Intake & Issues</span>
             </button>
+            )}
 
             {/* Tab 2: Assign Tickets / Complaints */}
             <button
@@ -206,10 +207,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeProduct === "assigntickets"
                   ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                  : "text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
+                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
               }`}
             >
-              <Shield className="w-3.5 h-3.5 text-[#D4A24C]" />
+              <Shield className="w-3.5 h-3.5" />
               <span>Assign Tickets / Complaints</span>
             </button>
 
@@ -394,13 +395,27 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Horizontal Navigation Tabs */}
         <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
+          {!isVolunteer && (
           <button
             onClick={() => onProductChange("fieldops")}
             className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
               activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
             }`}
           >
-            {isVolunteer ? "Ground Intake & Issues" : isDirector ? "Grievances" : "Field Ops"}
+            {isDirector ? "Grievances" : "Field Ops"}
+          </button>
+          )}
+
+          <button
+            onClick={() => {
+              window.location.hash = "#/assign-tickets?status=ALL";
+              onProductChange("assigntickets");
+            }}
+            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              activeProduct === "assigntickets" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
+            }`}
+          >
+            Assign Tickets
           </button>
 
           <button
