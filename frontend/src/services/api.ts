@@ -970,7 +970,7 @@ export const politicalApiService = {
     priority?: string;
     q?: string;
   }): Promise<any[]> {
-    const TICKET_SEED = "ll-officers-2026-09-07";
+    const TICKET_SEED = "ll-open-tickets-2026-09-07";
     const RETIRED_MOCK_IDS = new Set([
       "iss-bng-101",
       "iss-bng-102",
@@ -1010,14 +1010,22 @@ export const politicalApiService = {
       // Fallback
     }
 
-    if (!list || list.length === 0) {
-      try {
-        const res = await fetch("./data/field_issues.json");
-        if (res.ok) {
-          list = await res.json();
+    try {
+      const res = await fetch("./data/field_issues.json");
+      if (res.ok) {
+        const seedList = await res.json();
+        if (Array.isArray(seedList)) {
+          const byId = new Map<string, any>();
+          seedList.forEach((i: any) => {
+            if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, i);
+          });
+          list.forEach((i: any) => {
+            if (i?.id && !RETIRED_MOCK_IDS.has(i.id)) byId.set(i.id, { ...(byId.get(i.id) || {}), ...i });
+          });
+          list = Array.from(byId.values());
         }
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
 
     // Merge with locally created/updated issues from localStorage so status updates (IN_PROGRESS, RESOLVED, etc.) take precedence
     try {
