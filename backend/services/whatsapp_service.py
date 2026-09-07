@@ -111,8 +111,11 @@ class WhatsAppMessageBuilder:
             "officerDesignation": officer_designation,
             "leaderName": leader_name,
             "acName": ac_name,
+            "mandalName": mandal_name or "Banaganapalle",
             "deptName": dept_name,
             "ticketNumber": ticket_number,
+            "rawTicketId": ticket_id.replace("#", ""),
+            "reporterPhone": ticket.get("reporterPhone") or ticket.get("citizenPhone"),
             "textMessage": text_message,
             "templateVariables": template_variables,
             "secureTicketLink": secure_link
@@ -130,7 +133,7 @@ class WhatsAppCloudApiClient:
         self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "EAAPfoO339fkBSerKDXs1dhvenNkaxhO6oRbDbfB8XGMzZAx8vv2HBPcQnPNjCo5tkUsZArIbj1sZAkC9wlZCJZApHBzPEbAZA4qiWhzzRZAfDTFsmZAQg2ZCZAlpZCpKyFjEfJF2W5dY0naIK2GZCVgDKbdyOnFmqpRZBmzHyaKWIycfF2QaExXZB6zrbyayyMzMgg0ZAclGgZDZD")
         self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "1439753914880297")
         self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v21.0")
-        self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "hello_world")
+        self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "officer_ticket_alert_v1")
 
     async def send_whatsapp_notification(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         phone = payload.get("recipientPhone", "").replace("+", "").replace(" ", "").replace("-", "")
@@ -176,6 +179,48 @@ class WhatsAppCloudApiClient:
                 "template": {
                     "name": "hello_world",
                     "language": {"code": "en_US"}
+                }
+            }
+        elif self.template_name.strip().lower() == "officer_ticket_alert_v1":
+            clean_ticket_id = (payload.get("rawTicketId") or payload.get("ticketNumber") or "iss-1002").replace("#", "")
+            officer_name = payload.get("officerName", "Department Officer")
+            leader_name = payload.get("leaderName", "Hon. B. C. Janardhan Reddy (MLA)")
+            dept_name = payload.get("deptName", "Panchayat Raj")
+            mandal_name = payload.get("mandalName", "Banaganapalle")
+
+            request_body = {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": phone,
+                "type": "template",
+                "template": {
+                    "name": "officer_ticket_alert_v1",
+                    "language": {"code": "en_US"},
+                    "components": [
+                        {
+                            "type": "header",
+                            "parameters": [
+                                {"type": "text", "text": leader_name}
+                            ]
+                        },
+                        {
+                            "type": "body",
+                            "parameters": [
+                                {"type": "text", "text": officer_name},
+                                {"type": "text", "text": clean_ticket_id},
+                                {"type": "text", "text": dept_name},
+                                {"type": "text", "text": mandal_name}
+                            ]
+                        },
+                        {
+                            "type": "button",
+                            "sub_type": "url",
+                            "index": "0",
+                            "parameters": [
+                                {"type": "text", "text": clean_ticket_id}
+                            ]
+                        }
+                    ]
                 }
             }
         else:

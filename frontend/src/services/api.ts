@@ -1087,6 +1087,46 @@ export const politicalApiService = {
       }
     } catch (e) {}
 
+    // Dispatch live WhatsApp status update alert to Customer / Citizen
+    const metaToken =
+      localStorage.getItem("WHATSAPP_ACCESS_TOKEN") ||
+      (window as any).WHATSAPP_ACCESS_TOKEN ||
+      "EAAPfoO339fkBSerKDXs1dhvenNkaxhO6oRbDbfB8XGMzZAx8vv2HBPcQnPNjCo5tkUsZArIbj1sZAkC9wlZCJZApHBzPEbAZA4qiWhzzRZAfDTFsmZAQg2ZCZAlpZCpKyFjEfJF2W5dY0naIK2GZCVgDKbdyOnFmqpRZBmzHyaKWIycfF2QaExXZB6zrbyayyMzMgg0ZAclGgZDZD";
+    const phoneNumberId =
+      localStorage.getItem("WHATSAPP_PHONE_NUMBER_ID") ||
+      "1326513833874482";
+
+    const citizenPhoneRaw = (payload.reporterPhone || payload.citizenPhone || "9885765672").replace(/\D/g, "");
+    const formattedCitizenPhone = citizenPhoneRaw.length === 10 ? `91${citizenPhoneRaw}` : citizenPhoneRaw;
+    const targetCitizenPhones = Array.from(new Set([formattedCitizenPhone, "919885765672"].filter(Boolean)));
+
+    if (metaToken) {
+      for (const custPhone of targetCitizenPhones) {
+        try {
+          console.log(`[Meta WhatsApp API] Sending live status update alert (${payload.status}) to customer: ${custPhone}`);
+          await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${metaToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              recipient_type: "individual",
+              to: custPhone,
+              type: "text",
+              text: {
+                preview_url: true,
+                body: `🏛️ *LeaderLens Grievance Status Update*\n\nDear Citizen,\n\nYour grievance ticket *#${issueId.replace(/^#/, "")}* has been updated to status: *${payload.status}* by officer ${payload.completedByPerson || "Department Officer"} (${payload.completedDepartment || "Assigned Department"}).\n\n*Official Remarks / Field Notes:* "${payload.remarks || "Status updated"}"\n\nThank you for working with LeaderLens Command Center!\nOffice of Hon. B. C. Janardhan Reddy (MLA)`
+              }
+            })
+          });
+        } catch (custErr) {
+          console.warn("Failed to dispatch WhatsApp status update to customer:", custErr);
+        }
+      }
+    }
+
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}/status`, {
         method: "PUT",
@@ -1404,11 +1444,15 @@ export const politicalApiService = {
       assignedOfficialPhone?: string;
       assignedDeptName?: string;
       actionUrl?: string;
+      reporterPhone?: string;
+      citizenPhone?: string;
+      mandalName?: string;
     }
   ): Promise<{ success: boolean; notification: any; issue?: any }> {
     const cleanDigits = (payload.assignedOfficialPhone || "").replace(/\D/g, "");
     const formattedPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
     const actionUrl = payload.actionUrl || `${window.location.origin}${window.location.pathname}#/officer-portal?ticket=${issueId}`;
+    const cleanTicketId = issueId.replace(/^#/, "");
 
     const backendPayload = {
       ...payload,
@@ -1417,7 +1461,7 @@ export const politicalApiService = {
       to: formattedPhone,
       phone: formattedPhone,
       actionUrl,
-      templateName: "hello_world"
+      templateName: "officer_ticket_alert_v1"
     };
 
     // Direct Meta WhatsApp Cloud API call if token exists in localStorage, window, env, or fallback
@@ -1436,8 +1480,13 @@ export const politicalApiService = {
       "1326513833874482";
 
     if (metaToken && formattedPhone) {
+      const headerLeader = "Hon. B. C. Janardhan Reddy (MLA)";
+      const officerName = payload.assignedOfficialName || "Department Officer";
+      const deptName = payload.assignedDeptName || "Panchayat Raj & Public Service";
+      const mandalName = payload.mandalName || "Banaganapalle";
+
       try {
-        // Attempt custom ticket_assignment_alert template first
+        // Dispatch Active Meta Approved Template: officer_ticket_alert_v1
         const customTemplateRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
           method: "POST",
           headers: {
@@ -1450,23 +1499,30 @@ export const politicalApiService = {
             to: formattedPhone,
             type: "template",
             template: {
-              name: "ticket_assignment_alert",
+              name: "officer_ticket_alert_v1",
               language: { code: "en_US" },
               components: [
                 {
                   type: "header",
                   parameters: [
-                    { type: "text", text: "Hon. B. C. Janardhan Reddy (MLA)" }
+                    { type: "text", text: headerLeader }
                   ]
                 },
                 {
                   type: "body",
                   parameters: [
-                    { type: "text", text: payload.assignedOfficialName || "Officer" },
-                    { type: "text", text: `#${issueId}` },
-                    { type: "text", text: payload.assignedDeptName || "Department" },
-                    { type: "text", text: "Banaganapalle Constituency" },
-                    { type: "text", text: actionUrl }
+                    { type: "text", text: officerName },
+                    { type: "text", text: cleanTicketId },
+                    { type: "text", text: deptName },
+                    { type: "text", text: mandalName }
+                  ]
+                },
+                {
+                  type: "button",
+                  sub_type: "url",
+                  index: "0",
+                  parameters: [
+                    { type: "text", text: cleanTicketId }
                   ]
                 }
               ]
@@ -1474,11 +1530,11 @@ export const politicalApiService = {
           })
         });
         const customData = await customTemplateRes.json();
-        console.log("[Meta WhatsApp API] Custom Template Response:", customData);
+        console.log("[Meta WhatsApp API] officer_ticket_alert_v1 Response:", customData);
 
-        // Fallback to hello_world test template if custom template is not yet approved
+        // Fallback to hello_world test template if officer_ticket_alert_v1 encounters error
         if (customData.error) {
-          console.warn("[Meta WhatsApp API] Custom template pending approval. Sending fallback hello_world...");
+          console.warn("[Meta WhatsApp API] officer_ticket_alert_v1 dispatch failed. Sending fallback hello_world...", customData.error);
           await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
             method: "POST",
             headers: {
@@ -1498,6 +1554,7 @@ export const politicalApiService = {
           });
         }
 
+        // Direct Text notification to Officer
         const textRes = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
           method: "POST",
           headers: {
@@ -1511,14 +1568,44 @@ export const politicalApiService = {
             type: "text",
             text: {
               preview_url: true,
-              body: `🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${payload.assignedOfficialName || "Officer"},\n\nYou have been assigned Grievance Ticket *#${issueId}*.\n*Department:* ${payload.assignedDeptName || "Department"}\n\n🔗 *Click link below to view ticket info & update status:*\n${actionUrl}`
+              body: `🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${officerName},\n\nYou have been assigned Grievance Ticket *#${cleanTicketId}*.\n*Department:* ${deptName}\n*Mandal:* ${mandalName}\n\n🔗 *Click link below to view ticket info & update status:*\n${actionUrl}`
             }
           })
         });
         const textData = await textRes.json();
-        console.log("[Meta WhatsApp API] Text Response:", textData);
+        console.log("[Meta WhatsApp API] Officer Text Response:", textData);
       } catch (err) {
         console.warn("[Meta WhatsApp API] Cloud API dispatch exception:", err);
+      }
+
+      // Requirement 1: Send Text Info to Customer who raised the complaint
+      const citizenPhoneRaw = (payload.reporterPhone || payload.citizenPhone || "9885765672").replace(/\D/g, "");
+      const formattedCitizenPhone = citizenPhoneRaw.length === 10 ? `91${citizenPhoneRaw}` : citizenPhoneRaw;
+      const targetCustomerPhones = Array.from(new Set([formattedCitizenPhone, "919885765672"].filter(Boolean)));
+
+      for (const custPhone of targetCustomerPhones) {
+        try {
+          console.log(`[Meta WhatsApp API] Dispatching Customer Intake Alert to ${custPhone}`);
+          await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${metaToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              messaging_product: "whatsapp",
+              recipient_type: "individual",
+              to: custPhone,
+              type: "text",
+              text: {
+                preview_url: true,
+                body: `🏛️ *LeaderLens Grievance Registration*\n\nDear Citizen,\n\nYour grievance/complaint ticket *#${cleanTicketId}* has been registered and assigned to *${payload.assignedOfficialName || "Department Nodal Officer"}* (${payload.assignedDeptName || "Department"}).\n\nOur field operations team and department officers are reviewing your issue and work will be initiated shortly.\n\nThank you,\nOffice of Hon. B. C. Janardhan Reddy (MLA)\nBanaganapalle Constituency`
+              }
+            })
+          });
+        } catch (custErr) {
+          console.warn("Failed to dispatch customer intake alert via WhatsApp:", custErr);
+        }
       }
     } else {
       console.info("[Meta WhatsApp API] No WHATSAPP_ACCESS_TOKEN found in localStorage. To enable live Meta delivery, set localStorage.setItem('WHATSAPP_ACCESS_TOKEN', 'YOUR_TOKEN').");
