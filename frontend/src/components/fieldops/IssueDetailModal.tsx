@@ -26,6 +26,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
+import { isTicketOpenForAssign } from "../../utils/ticketActions";
 
 interface IssueDetailModalProps {
   issue: FieldIssue;
@@ -200,7 +201,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     currentUser.roleId === "ADMIN" ||
     currentUser.role === "super_admin";
 
-  const canUpdateWork = isAdmin || isDirector || isVolunteer;
+  const canAssign = (isAdmin || isDirector || isVolunteer) && isTicketOpenForAssign(issue.status);
+  const canUpdateProof = isAdmin || isDirector;
 
   return (
     <div
@@ -248,14 +250,16 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0 ml-2">
-            <button
-              type="button"
-              onClick={() => setAssignModalIssue(issue)}
-              className="px-3 py-1.5 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-xs font-bold border border-[#D4A24C]/40 flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
-              <span className="hidden sm:inline">Assign & WhatsApp</span>
-            </button>
+            {canAssign && (
+              <button
+                type="button"
+                onClick={() => setAssignModalIssue(issue)}
+                className="px-3 py-1.5 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-xs font-bold border border-[#D4A24C]/40 flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+                <span className="hidden sm:inline">Assign & WhatsApp</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -408,7 +412,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   </div>
                 </div>
 
-                {canUpdateWork && (
+                {canUpdateProof && (
                   <button
                     onClick={() => setIsUpdateModalOpen(true)}
                     className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer mt-1"

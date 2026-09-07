@@ -1231,20 +1231,7 @@ export const politicalApiService = {
     } catch (e) {
       // Fallback
     }
-    return [
-      {
-        id: `upd-hist-1`,
-        issueId,
-        volunteerId: "usr-vol-ramesh",
-        volunteerName: "Ramesh Babu",
-        previousStatus: "NONE",
-        newStatus: "NEW",
-        updateDate: "25 Aug 2026",
-        remarks: "Original complaint intake registered and verified on ground.",
-        attachments: [],
-        createdAt: "2026-08-25T09:15:00Z"
-      }
-    ];
+    return [];
   },
 
   async createNotification(notification: Partial<FieldNotification>): Promise<FieldNotification> {

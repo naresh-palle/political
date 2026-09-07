@@ -9,6 +9,7 @@ import {
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
+import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Plus,
@@ -1502,13 +1503,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
             {paginatedIssues.map((issue) => {
               const timing = getTicketTimingDetails(issue);
-              const isAssignmentDisabled =
-                issue.status === "IN_PROGRESS" ||
-                issue.status === "COMPLETED" ||
-                issue.status === "RESOLVED" ||
-                issue.status === "CANT_BE_DONE" ||
-                (issue as any).status === "Can't be done";
-              const isAssignTabActive = filterStatus === "NEW" || window.location.hash.includes("assign-tickets");
+              const showAssign = isTicketOpenForAssign(issue.status);
 
               return (
                 <TicketGridCard
@@ -1517,7 +1512,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   timing={timing}
                   departments={DEPARTMENTS}
                   resolveDeptValue={resolveDeptValue}
-                  showAssignControls={isAssignTabActive && !isAssignmentDisabled}
+                  showAssignControls={showAssign}
+                  showProofCount={false}
                   onOpen={() => setSelectedIssue(issue)}
                   onAssignDepartment={handleAssignDepartment}
                   onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
@@ -1545,12 +1541,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 <tbody className="divide-y divide-[#223348]/50">
                   {paginatedIssues.map((issue) => {
                     const timing = getTicketTimingDetails(issue);
-                    const isAssignmentDisabled =
-                      issue.status === "IN_PROGRESS" ||
-                      issue.status === "COMPLETED" ||
-                      issue.status === "RESOLVED" ||
-                      issue.status === "CANT_BE_DONE" ||
-                      (issue as any).status === "Can't be done";
 
                     return (
                       <tr
@@ -1611,10 +1601,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         {/* Assign Complaint / Resolved Department & WhatsApp Action */}
                         <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                           {(() => {
-                            const isAssignTabActive = filterStatus === "NEW" || window.location.hash.includes("assign-tickets");
+                            const canAssign = isTicketOpenForAssign(issue.status);
                             const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
 
-                            if (!isAssignTabActive || isAssignmentDisabled) {
+                            if (!canAssign) {
                               return (
                                 <div>
                                   <div className="flex items-center justify-between mb-1">

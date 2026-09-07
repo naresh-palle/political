@@ -70,14 +70,40 @@ const HASH_TO_PRODUCT_MAP: Record<string, ActiveProductType> = {
 function isOfficerPortalLocation(): boolean {
   const hash = (window.location.hash || "").toLowerCase();
   const path = (window.location.pathname || "").toLowerCase();
-  const search = (window.location.search || "").toLowerCase();
   return (
     hash.includes("#/officer-portal") ||
     hash.includes("#/ticket-action") ||
     path.includes("/officer-portal") ||
-    path.includes("/ticket-action") ||
-    search.includes("ticket=")
+    path.includes("/ticket-action")
   );
+}
+
+function canonicalizeAppUrl(route: "auth" | "app", activeProduct: ActiveProductType): string {
+  let path = window.location.pathname || "/";
+  path = path.replace(/\/login\/?$/i, "/");
+  path = path.replace(/login\.html$/i, "");
+  const parts = path.split("/").filter(Boolean);
+  const kept = parts.filter((seg) => {
+    const decoded = decodeURIComponent(seg);
+    if (/^iss-/i.test(decoded)) return false;
+    if (/grievance/i.test(decoded)) return false;
+    if (decoded.includes("#")) return false;
+    return true;
+  });
+  path = kept.length ? `/${kept.join("/")}` : "/";
+  if (!path.endsWith("/") && !path.split("/").pop()?.includes(".")) {
+    path = `${path}/`;
+  }
+
+  if (route === "auth") {
+    return `${path}#/login`;
+  }
+  const statusMatch = (window.location.hash.match(/[?&]status=([A-Z_]+)/i) || [])[1];
+  let hash = PRODUCT_TO_HASH_MAP[activeProduct] || "#/field-ops";
+  if (activeProduct === "assigntickets" && statusMatch) {
+    hash = `#/assign-tickets?status=${statusMatch.toUpperCase()}`;
+  }
+  return `${path}${hash}`;
 }
 
 function canonicalizeOfficerPortalUrl(): string {
@@ -92,7 +118,6 @@ function canonicalizeOfficerPortalUrl(): string {
   let path = window.location.pathname || "/";
   path = path.replace(/\/login\/?$/i, "/");
   if (!path.endsWith("/")) {
-    // Keep directory roots like /political/ ; strip accidental /login.html
     path = path.replace(/login\.html$/i, "");
   }
   const ticketQs = ticket ? `?ticket=${encodeURIComponent(ticket)}` : "";
@@ -199,22 +224,21 @@ function AppInner() {
 
   // URL Hash Synchronization & Browser Title Sync
   useEffect(() => {
+    const canonical = isOfficerPortal
+      ? canonicalizeOfficerPortalUrl()
+      : canonicalizeAppUrl(route, activeProduct);
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (current !== canonical) {
+      window.history.replaceState(null, "", canonical);
+    }
     if (isOfficerPortal) {
       document.title = "Department Ticket Action | Leader's Lens";
-      const canonical = canonicalizeOfficerPortalUrl();
-      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      if (current !== canonical) {
-        window.history.replaceState(null, "", canonical);
-      }
       return;
     }
 
-    let targetHash = "#/field-ops";
     if (route === "auth") {
-      targetHash = "#/login";
       document.title = "Login & Security | Leader's Lens";
     } else {
-      targetHash = PRODUCT_TO_HASH_MAP[activeProduct] || "#/field-ops";
       const titles: Record<ActiveProductType, string> = {
         fieldops: "Field Operations Command | Leader's Lens",
         assigntickets: "Assign Tickets & Complaints | Leader's Lens",
@@ -226,11 +250,6 @@ function AppInner() {
         pitch: "Audit & Strategy Command | Leader's Lens"
       };
       document.title = titles[activeProduct] || "Leader's Lens";
-    }
-
-    const currentBaseHash = window.location.hash.split("?")[0];
-    if (currentBaseHash !== targetHash && !window.location.hash.includes("?status=")) {
-      window.history.replaceState(null, "", targetHash);
     }
   }, [route, activeProduct, isOfficerPortal]);
 

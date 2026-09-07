@@ -25,6 +25,7 @@ import {
   FileText
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
+import { isTicketOpenForAssign } from "../../utils/ticketActions";
 
 interface IssueDetailViewProps {
   issue: FieldIssue;
@@ -34,7 +35,7 @@ interface IssueDetailViewProps {
 }
 
 export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
-  issue,
+  issue: issueProp,
   currentUser,
   onBack,
   onIssueUpdated
@@ -46,7 +47,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
 
   // Update Form State
   const [updateStatus, setUpdateStatus] = useState<IssueStatus>(
-    (issue.status as IssueStatus) || "IN_PROGRESS"
+    (issueProp.status as IssueStatus) || "IN_PROGRESS"
   );
   const [updateRemarks, setUpdateRemarks] = useState("");
   const [updateProofFiles, setUpdateProofFiles] = useState<{ name: string; url: string; type: "image" | "pdf" }[]>([]);
@@ -55,6 +56,31 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
   );
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [liveIssue, setLiveIssue] = useState<FieldIssue>(issueProp);
+  const issue = liveIssue;
+
+  useEffect(() => {
+    setLiveIssue(issueProp);
+    let cancelled = false;
+    const loadLive = async () => {
+      try {
+        const fresh = await politicalApiService.getFieldIssueById(
+          issueProp.id,
+          currentUser.id,
+          currentUser.primaryRole
+        );
+        if (!cancelled && fresh) {
+          setLiveIssue({ ...issueProp, ...fresh, status: fresh.status || issueProp.status });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    loadLive();
+    return () => {
+      cancelled = true;
+    };
+  }, [issueProp.id, issueProp.status, issueProp.updatedAt, issueProp.lastStatusRemarks]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -100,8 +126,28 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
   const loadTimeline = async () => {
     setLoadingHistory(true);
     try {
-      const records = await politicalApiService.getIssueHistory(issue.id);
-      setHistory(records);
+      const records = await politicalApiService.getIssueHistory(issueProp.id);
+      const list = Array.isArray(records) ? records : [];
+      const remarks = (liveIssue.lastStatusRemarks || issueProp.lastStatusRemarks || "").trim();
+      const status = liveIssue.status || issueProp.status;
+      const alreadyHasRemarks = list.some(
+        (r: WorkUpdateRecord) => (r.remarks || "").trim() === remarks && remarks.length > 0
+      );
+      if (remarks && !alreadyHasRemarks && ["IN_PROGRESS", "RESOLVED", "REJECTED", "ASSIGNED"].includes(String(status).toUpperCase())) {
+        list.push({
+          id: `officer-${issueProp.id}-${status}`,
+          issueId: issueProp.id,
+          volunteerId: "dept-officer",
+          volunteerName: liveIssue.completedByPerson || liveIssue.assignedOfficialName || "Department Officer",
+          previousStatus: "ASSIGNED",
+          newStatus: status,
+          updateDate: (liveIssue.lastStatusUpdateAt || liveIssue.updatedAt || "").slice(0, 10),
+          remarks,
+          attachments: [],
+          createdAt: liveIssue.lastStatusUpdateAt || liveIssue.updatedAt || new Date().toISOString()
+        } as WorkUpdateRecord);
+      }
+      setHistory(list);
     } catch (e) {
       console.error(e);
     } finally {
@@ -259,7 +305,8 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     currentUser.roleId === "ADMIN" ||
     currentUser.role === "super_admin";
 
-  const canUpdateWork = isAdmin || isDirector || isVolunteer;
+  const canAssign = (isAdmin || isDirector || isVolunteer) && isTicketOpenForAssign(liveIssue.status);
+  const canUpdateProof = isAdmin || isDirector;
 
   return (
     <div className="w-full max-w-7xl mx-auto py-2 sm:py-4 space-y-4 animate-fadeIn text-[#F5EFE0]">
@@ -282,23 +329,23 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {canUpdateWork && (
-            <>
-              <button
-                onClick={() => setIsAssignModalOpen(true)}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
-              >
-                <MessageCircle className="w-4 h-4 fill-white/20" />
-                <span>Assign & Notify via WhatsApp</span>
-              </button>
-              <button
-                onClick={() => setIsUpdateModalOpen(true)}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
-              >
-                <Camera className="w-4 h-4" />
-                <span>Update Status & Proof</span>
-              </button>
-            </>
+          {canAssign && (
+            <button
+              onClick={() => setIsAssignModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
+            >
+              <MessageCircle className="w-4 h-4 fill-white/20" />
+              <span>Assign & Notify via WhatsApp</span>
+            </button>
+          )}
+          {canUpdateProof && (
+            <button
+              onClick={() => setIsUpdateModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Update Status & Proof</span>
+            </button>
           )}
         </div>
       </div>
@@ -412,7 +459,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           <p className="text-sm text-[#F5EFE0] leading-relaxed whitespace-pre-wrap break-words">
             {issue.lastStatusRemarks?.trim()
               || (issue as any).rejectionReason
-              || "No officer comment has been recorded for this status yet."}
+              || "Waiting for the department officer to add a status comment."}
           </p>
           {issue.lastStatusUpdateAt && (
             <span className="text-[11px] font-mono text-[#8E9CAE] block">
@@ -593,7 +640,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
               </div>
             </div>
 
-            {canUpdateWork && (
+            {canUpdateProof && (
               <button
                 onClick={() => setIsUpdateModalOpen(true)}
                 className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer mt-2"

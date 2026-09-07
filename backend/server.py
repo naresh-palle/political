@@ -1492,10 +1492,13 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     try:
         issue = await db.field_issues.find_one({"id": issue_id}, {"_id": 0})
         if issue:
-            # RBAC verification
-            if userRole == "VOLUNTEER" and userId and issue.get("assignedVolunteerId") != userId:
-                raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
-            if userRole == "DIRECTOR" and userId and issue.get("directorId") != userId:
+            mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
+            if mem:
+                issue = {**issue, **mem}
+            if userRole == "VOLUNTEER" and userId:
+                if issue.get("assignedVolunteerId") != userId and issue.get("createdBy") != userId:
+                    raise HTTPException(status_code=403, detail="Forbidden: You do not have access to this issue.")
+            if userRole == "DIRECTOR" and userId and issue.get("directorId") and issue.get("directorId") != userId:
                 raise HTTPException(status_code=403, detail="Forbidden: This issue does not belong to your assigned team.")
             return sanitize_doc(issue)
     except HTTPException:
@@ -1738,26 +1741,30 @@ async def add_work_update(issue_id: str, payload: dict):
 
 @api_router.get("/field-ops/issues/{issue_id}/history")
 async def get_issue_history(issue_id: str):
+    db_history = []
     try:
-        history = await db.work_updates.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
-        if history:
-            return history
+        res = await db.issue_history.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
+        if res:
+            db_history = list(res)
     except Exception as e:
-        logger.warning(f"MongoDB get work_updates: {e}")
-    return [
-        {
-            "id": "upd-init",
-            "issueId": issue_id,
-            "volunteerId": "usr-vol-ramesh",
-            "volunteerName": "Ramesh Babu",
-            "previousStatus": "NONE",
-            "newStatus": "NEW",
-            "updateDate": "25 Aug 2026",
-            "remarks": "Original complaint intake registered and verified on ground.",
-            "attachments": [],
-            "createdAt": "2026-08-25T09:15:00Z"
-        }
-    ]
+        log_mongo_notice("get_issue_history", e)
+    try:
+        extra = await db.work_updates.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
+        if extra:
+            db_history = db_history + list(extra)
+    except Exception as e:
+        log_mongo_notice("get_work_updates", e)
+
+    in_mem = [h for h in IN_MEMORY_ISSUE_HISTORY if h.get("issueId") == issue_id]
+    combined = in_mem + db_history
+    seen = set()
+    deduped = []
+    for h in combined:
+        hid = h.get("id")
+        if hid and hid not in seen:
+            seen.add(hid)
+            deduped.append(h)
+    return sanitize_doc(deduped)
 
 @api_router.get("/field-ops/notifications")
 async def get_field_notifications(recipientUserId: Optional[str] = Query(None), recipientRole: Optional[str] = Query(None)):
@@ -2631,48 +2638,6 @@ async def get_issue_notifications(issue_id: str):
             seen.add(a.get("id"))
             deduped.append(a)
     return sanitize_doc(deduped)
-
-@api_router.get("/field-ops/issues/{issue_id}/history")
-async def get_issue_history(issue_id: str):
-    db_history = []
-    try:
-        res = await db.issue_history.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
-        if res:
-            db_history = res
-    except Exception as e:
-        log_mongo_notice("get_issue_history", e)
-    try:
-        extra = await db.work_updates.find({"issueId": issue_id}, {"_id": 0}).sort("createdAt", 1).to_list(100)
-        if extra:
-            db_history = db_history + extra
-    except Exception as e:
-        log_mongo_notice("get_work_updates", e)
-        
-    in_mem = [h for h in IN_MEMORY_ISSUE_HISTORY if h.get("issueId") == issue_id]
-    combined = in_mem + db_history
-    seen = set()
-    deduped = []
-    for h in combined:
-        if h.get("id") not in seen:
-            seen.add(h.get("id"))
-            deduped.append(h)
-            
-    if deduped:
-        return sanitize_doc(deduped)
-        
-    fallback = [
-        {
-            "id": "upd-hist-1",
-            "issueId": issue_id,
-            "actorType": "SYSTEM",
-            "previousStatus": "NONE",
-            "newStatus": "NEW",
-            "updateDate": "25 Aug 2026",
-            "remarks": "Original grievance ticket registered and assigned to field operations.",
-            "createdAt": "2026-08-25T09:15:00Z"
-        }
-    ]
-    return sanitize_doc(fallback)
 
 @api_router.post("/field-ops/notifications")
 async def create_field_notification(payload: dict):

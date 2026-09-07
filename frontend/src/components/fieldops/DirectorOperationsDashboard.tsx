@@ -43,6 +43,7 @@ import { AiTicketsPdfReportModal } from "./AiTicketsPdfReportModal";
 import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
+import { isTicketOpenForAssign } from "../../utils/ticketActions";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -1806,13 +1807,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
             {paginatedOperations.map((issue) => {
               const timing = getTicketTimingDetails(issue);
-              const isAssignmentDisabled =
-                issue.status === "IN_PROGRESS" ||
-                issue.status === "COMPLETED" ||
-                issue.status === "RESOLVED" ||
-                issue.status === "CANT_BE_DONE" ||
-                (issue as any).status === "Can't be done";
-              const isAssignTabActive = activeTab === "PENDING" || window.location.hash.includes("assign");
+              const showAssign = isTicketOpenForAssign(issue.status);
 
               return (
                 <TicketGridCard
@@ -1821,7 +1816,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   timing={timing}
                   departments={DEPARTMENTS}
                   resolveDeptValue={resolveDeptValue}
-                  showAssignControls={isAssignTabActive && !isAssignmentDisabled}
+                  showAssignControls={showAssign}
+                  showProofCount={false}
                   showAcCode
                   extraBadges={
                     <>
@@ -1875,12 +1871,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <tbody className="divide-y divide-[#223348]/50">
                 {paginatedOperations.map((issue) => {
                   const timing = getTicketTimingDetails(issue);
-                  const isAssignmentDisabled =
-                    issue.status === "IN_PROGRESS" ||
-                    issue.status === "COMPLETED" ||
-                    issue.status === "RESOLVED" ||
-                    issue.status === "CANT_BE_DONE" ||
-                    (issue as any).status === "Can't be done";
 
                   return (
                     <tr
@@ -1982,10 +1972,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                       {/* 6. Assign Complaint / Resolved Department & WhatsApp Action */}
                       <td className="py-3 px-3 align-top" onClick={(e) => e.stopPropagation()}>
                         {(() => {
-                          const isAssignTabActive = activeTab === "PENDING" || window.location.hash.includes("assign");
+                          const canAssign = isTicketOpenForAssign(issue.status);
                           const isUnresolved = issue.status !== "COMPLETED" && issue.status !== "RESOLVED";
 
-                          if (!isAssignTabActive || isAssignmentDisabled) {
+                          if (!canAssign) {
                             return (
                               <div>
                                 <div className="flex items-center justify-between mb-1">
