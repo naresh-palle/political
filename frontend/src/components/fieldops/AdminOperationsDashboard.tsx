@@ -13,7 +13,7 @@ import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
-import { assignmentSafeStatus, countByKpi, kpiBucket } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket } from "../../utils/ticketKpi";
 import {
   ShieldCheck,
   Users,
@@ -44,6 +44,40 @@ interface AdminDashboardProps {
   onUpdateProfile?: (updated: UserProfile) => void;
   initialFilterStatus?: string;
 }
+
+const DashboardKpi = ({
+  label,
+  value,
+  tone,
+  onClick,
+  icon
+}: {
+  label: string;
+  value: number;
+  tone: string;
+  onClick?: () => void;
+  icon?: React.ReactNode;
+}) => {
+  const full = Number(value || 0).toLocaleString("en-IN");
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={`${label}: ${full}`}
+      className={`min-w-0 px-2 py-1.5 rounded-lg border text-left transition-all ${
+        onClick ? "cursor-pointer" : "cursor-default"
+      } ${tone}`}
+    >
+      <span className="flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold leading-tight truncate">
+        {icon}
+        <span className="truncate">{label}</span>
+      </span>
+      <span className="block font-display text-base font-bold tabular-nums leading-tight truncate">
+        {formatDashboardCount(value)}
+      </span>
+    </button>
+  );
+};
 
 export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   currentUser,
@@ -315,7 +349,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign");
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
+    <div className="w-full max-w-7xl mx-auto py-3 sm:py-4 px-3 sm:px-4 lg:px-6 space-y-3 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
       {!isAssignTicketsMode && (
       <>
       {/* Executive Command Header */}
@@ -416,214 +450,168 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       ) : (
         /* LEVEL 2: POLITICAL ADMIN (MLA) MASTER BANNER */
-        <div className="p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-5">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="flex flex-col items-center gap-3 flex-shrink-0">
-                <div
-                  className="relative cursor-pointer"
-                  onClick={() => setIsEditProfileOpen(true)}
-                  title="Click to change profile picture"
-                >
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg hover:brightness-90 transition-all"
-                  />
-                  <span className="absolute -bottom-1.5 -right-1.5 z-10 px-1.5 py-0.5 rounded-full bg-[#071322] border border-[#D4A24C] text-xs font-mono leading-none">
-                    {currentUser.partyEmoji || "🏛️"}
+        <div className="p-3.5 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+              <div
+                className="relative cursor-pointer"
+                onClick={() => setIsEditProfileOpen(true)}
+                title="Click to change profile picture"
+              >
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-[#D4A24C] shadow-lg hover:brightness-90 transition-all"
+                />
+                <span className="absolute -bottom-1 -right-1 z-10 px-1 py-0.5 rounded-full bg-[#071322] border border-[#D4A24C] text-[10px] font-mono leading-none">
+                  {currentUser.partyEmoji || "🏛️"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditProfileOpen(true)}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
+                title="Edit profile photo"
+              >
+                <Camera className="w-3 h-3" />
+                <span>Edit Photo</span>
+              </button>
+            </div>
+
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                  POLITICAL ADMIN
+                </span>
+                {currentUser.partyName && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1">
+                    <span>{currentUser.partyEmoji}</span>
+                    <span>{currentUser.partyName} ({currentUser.partyAbbr})</span>
                   </span>
-                </div>
+                )}
+                {currentUser.assignedConstituency && (
+                <span className="text-[10px] font-medium text-[#8E9CAE] bg-[#071322]/70 px-2 py-0.5 rounded-full border border-[#22405E]">
+                  {currentUser.assignedConstituency}
+                </span>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
-                  title="Edit profile photo"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
+                  title="Edit Profile Details"
                 >
-                  <Camera className="w-3 h-3" />
-                  <span>Edit Photo</span>
+                  <Edit3 className="w-3 h-3" />
+                  <span>Edit Profile</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("DRILLDOWN")}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider transition-all cursor-pointer ${
+                    viewMode === "DRILLDOWN"
+                      ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                      : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  }`}
+                >
+                  Constituency Tree
                 </button>
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
-                    POLITICAL ADMIN
-                  </span>
-                  {currentUser.partyName && (
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1.5">
-                      <span>{currentUser.partyEmoji}</span>
-                      <span>{currentUser.partyName} ({currentUser.partyAbbr})</span>
-                    </span>
-                  )}
-                  {currentUser.assignedConstituency && (
-                  <span className="text-xs font-medium text-[#8E9CAE] bg-[#071322]/70 px-2.5 py-0.5 rounded-full border border-[#22405E]">
-                    {currentUser.assignedConstituency}
-                  </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsEditProfileOpen(true)}
-                    className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-xs font-semibold transition-all cursor-pointer"
-                    title="Edit Profile Details"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Edit Profile</span>
-                  </button>
-                </div>
+              <h1 className="font-display text-xl sm:text-2xl text-[#F5EFE0] font-normal leading-tight">
+                {currentUser.name}
+              </h1>
 
-                <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal">
-                  {currentUser.name}
-                </h1>
-
-                {currentUser.designation && (
-                <p className="text-xs sm:text-sm text-[#D8CFB8] leading-relaxed">
-                  {currentUser.designation}
-                </p>
-                )}
-                <p className="text-xs text-[#8E9CAE] flex flex-wrap items-center gap-x-3">
-                  {currentUser.email && <span>✉️ {currentUser.email}</span>}
-                  {currentUser.phone && <span>📞 {currentUser.phone}</span>}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
-              <button
-                onClick={() => setViewMode("DRILLDOWN")}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-                  viewMode === "DRILLDOWN"
-                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
-                }`}
-              >
-                Constituency Tree
-              </button>
-              <button
-                onClick={() => goAssignTickets("ALL")}
-                className="px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
-              >
-                Constituency Issues ({totalIssues})
-              </button>
-              {isPlatformSuperAdmin && (
-              <button
-                onClick={() => setViewMode("DIRECTORS")}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-                  viewMode === "DIRECTORS"
-                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
-                }`}
-              >
-                My Managers ({directors.length})
-              </button>
+              {currentUser.designation && (
+              <p className="text-xs text-[#D8CFB8] leading-snug line-clamp-1">
+                {currentUser.designation}
+              </p>
               )}
-              <button
-                onClick={() => setViewMode("VOLUNTEERS")}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
-                  viewMode === "VOLUNTEERS"
-                    ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                    : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
-                }`}
-              >
-                Squad Volunteers ({volunteerCount})
-              </button>
+              <p className="text-[11px] text-[#8E9CAE] flex flex-wrap items-center gap-x-3">
+                {currentUser.email && <span>✉️ {currentUser.email}</span>}
+                {currentUser.phone && <span>📞 {currentUser.phone}</span>}
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* KPI Overview Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
-        <div
-          onClick={() => goAssignTickets("ALL")}
-          className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/35 hover:border-[#D4A24C]/80 cursor-pointer transition-all"
-        >
-          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Tickets</span>
-          <div className="font-display text-2xl font-bold text-[#D4A24C] mt-1">{totalIssues}</div>
-          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">All</span>
+      {/* KPI Overview Strip — compact so million-scale counts stay on one line */}
+      <div className="space-y-1.5 p-2 rounded-xl bg-[#091422] border border-[#22354D] shadow-xl">
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-1.5">
+          <DashboardKpi
+            label="Total Tickets"
+            value={totalIssues}
+            onClick={() => goAssignTickets("ALL")}
+            tone="bg-[#071322]/45 text-[#D4A24C] border-[#D4A24C]/35 hover:border-[#D4A24C]/80"
+          />
+          <DashboardKpi
+            label="Open / Unassigned"
+            value={pendingCount}
+            onClick={() => goAssignTickets("OPEN_UNASSIGNED")}
+            tone="bg-amber-950/40 text-amber-300 border-amber-500/40 hover:border-amber-400/70"
+          />
+          <DashboardKpi
+            label="Assigned"
+            value={assignedCount}
+            onClick={() => goAssignTickets("ASSIGNED")}
+            tone="bg-violet-950/40 text-violet-200 border-violet-500/40 hover:border-violet-400/70"
+          />
+          <DashboardKpi
+            label="In Progress"
+            value={inProgressCount}
+            onClick={() => goAssignTickets("IN_PROGRESS")}
+            tone="bg-sky-950/40 text-sky-300 border-sky-500/40 hover:border-sky-400/70"
+          />
+          <DashboardKpi
+            label="Overdue"
+            value={overdueCount}
+            onClick={() => goAssignTickets("OVERDUE")}
+            icon={<AlertTriangle className="w-2.5 h-2.5 shrink-0" />}
+            tone="bg-rose-950/40 text-rose-300 border-rose-500/40 hover:border-rose-400/80"
+          />
+          <DashboardKpi
+            label="Resolved / Closed"
+            value={completedCount}
+            onClick={() => goAssignTickets("RESOLVED")}
+            tone="bg-emerald-950/40 text-emerald-300 border-emerald-500/40 hover:border-emerald-400/70"
+          />
+          <DashboardKpi
+            label="Rejected"
+            value={rejectedCount}
+            onClick={() => goAssignTickets("REJECTED")}
+            tone="bg-slate-800/50 text-slate-200 border-slate-500/40 hover:border-slate-400/70"
+          />
         </div>
-
-        <div
-          onClick={() => goAssignTickets("OPEN_UNASSIGNED")}
-          className="p-4 rounded-xl bg-amber-950/40 backdrop-blur-xl border border-amber-500/40 hover:border-amber-400/70 cursor-pointer transition-all"
-        >
-          <span className="text-[10px] uppercase tracking-wider text-amber-300 block font-semibold">Open / Unassigned</span>
-          <div className="font-display text-2xl font-bold text-amber-400 mt-1">{pendingCount}</div>
-          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Pending</span>
-        </div>
-
-        <div
-          onClick={() => goAssignTickets("ASSIGNED")}
-          className="p-4 rounded-xl bg-violet-950/40 backdrop-blur-xl border border-violet-500/40 hover:border-violet-400/70 cursor-pointer transition-all"
-        >
-          <span className="text-[10px] uppercase tracking-wider text-violet-300 block font-semibold">Assigned</span>
-          <div className="font-display text-2xl font-bold text-violet-200 mt-1">{assignedCount}</div>
-          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Officer</span>
-        </div>
-
-        <div
-          onClick={() => goAssignTickets("IN_PROGRESS")}
-          className="p-4 rounded-xl bg-sky-950/40 backdrop-blur-xl border border-sky-500/40 hover:border-sky-400/70 cursor-pointer transition-all"
-        >
-          <span className="text-[10px] uppercase tracking-wider text-sky-300 block font-semibold">In Progress</span>
-          <div className="font-display text-2xl font-bold text-sky-400 mt-1">{inProgressCount}</div>
-          <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">Ground</span>
-        </div>
-
-        <div
-          onClick={() => goAssignTickets("OVERDUE")}
-          className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40 hover:border-rose-400/80 cursor-pointer transition-all"
-        >
-          <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" /> Overdue Alerts
-          </span>
-          <div className="font-display text-2xl font-bold text-rose-400 mt-1">{overdueCount}</div>
-          <span className="text-[10px] text-rose-300 mt-0.5 block">Urgent</span>
-        </div>
-
-        <div
-          onClick={() => goAssignTickets("RESOLVED")}
-          className="p-4 rounded-xl bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/40 hover:border-emerald-400/70 cursor-pointer transition-all"
-        >
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Resolved / Closed</span>
-          <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{completedCount}</div>
-          <span className="text-[10px] text-emerald-400 mt-0.5 block">Closed</span>
-        </div>
-
-        <div
-          onClick={() => goAssignTickets("REJECTED")}
-          className="p-4 rounded-xl bg-slate-800/50 backdrop-blur-xl border border-slate-500/40 hover:border-slate-400/70 cursor-pointer transition-all"
-        >
-          <span className="text-[10px] uppercase tracking-wider text-slate-300 block font-semibold">Rejected</span>
-          <div className="font-display text-2xl font-bold text-slate-200 mt-1">{rejectedCount}</div>
-          <span className="text-[10px] text-slate-400 mt-0.5 block">Closed</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
-        <div className="p-4 rounded-xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/35">
-          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">Total Volunteers</span>
-          <div className="font-display text-2xl font-bold text-[#D4A24C] mt-1">{volunteerCount}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/40">
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">Active Volunteers</span>
-          <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{activeVolunteerCount}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-violet-950/40 backdrop-blur-xl border border-violet-500/40">
-          <span className="text-[10px] uppercase tracking-wider text-violet-300 block font-semibold">Assigned to Dept</span>
-          <div className="font-display text-2xl font-bold text-violet-200 mt-1">{assignedToDeptCount}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-sky-950/40 backdrop-blur-xl border border-sky-500/40">
-          <span className="text-[10px] uppercase tracking-wider text-sky-300 block font-semibold">With Pending Work</span>
-          <div className="font-display text-2xl font-bold text-sky-400 mt-1">{dashStats?.volunteersWithPending ?? 0}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-rose-950/40 backdrop-blur-xl border border-rose-500/40">
-          <span className="text-[10px] uppercase tracking-wider text-rose-300 block font-semibold">With Overdue Work</span>
-          <div className="font-display text-2xl font-bold text-rose-400 mt-1">{dashStats?.volunteersWithOverdue ?? 0}</div>
-        </div>
-        <div className="p-4 rounded-xl bg-emerald-950/35 backdrop-blur-xl border border-emerald-500/35">
-          <span className="text-[10px] uppercase tracking-wider text-emerald-300 block font-semibold">With Completed Work</span>
-          <div className="font-display text-2xl font-bold text-emerald-400 mt-1">{dashStats?.volunteersWithCompleted ?? 0}</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-1.5">
+          <DashboardKpi
+            label="Total Volunteers"
+            value={volunteerCount}
+            tone="bg-[#071322]/45 text-[#D4A24C] border-[#D4A24C]/35"
+          />
+          <DashboardKpi
+            label="Active Volunteers"
+            value={activeVolunteerCount}
+            tone="bg-emerald-950/40 text-emerald-300 border-emerald-500/40"
+          />
+          <DashboardKpi
+            label="Assigned to Dept"
+            value={assignedToDeptCount}
+            tone="bg-violet-950/40 text-violet-200 border-violet-500/40"
+          />
+          <DashboardKpi
+            label="Pending Work"
+            value={dashStats?.volunteersWithPending ?? 0}
+            tone="bg-sky-950/40 text-sky-300 border-sky-500/40"
+          />
+          <DashboardKpi
+            label="Overdue Work"
+            value={dashStats?.volunteersWithOverdue ?? 0}
+            tone="bg-rose-950/40 text-rose-300 border-rose-500/40"
+          />
+          <DashboardKpi
+            label="Completed Work"
+            value={dashStats?.volunteersWithCompleted ?? 0}
+            tone="bg-emerald-950/35 text-emerald-300 border-emerald-500/35"
+          />
         </div>
       </div>
 

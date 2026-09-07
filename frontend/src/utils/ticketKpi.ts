@@ -104,6 +104,19 @@ export function countByKpi<T extends AssigneeFields>(issues: T[]) {
   return counts;
 }
 
+/** Compact counts so KPI chips stay readable up through lakhs and crores. */
+export function formatDashboardCount(value: number): string {
+  const n = Math.max(0, Math.floor(Number(value) || 0));
+  const compact = (raw: number, suffix: string) => {
+    const digits = raw >= 100 ? 0 : raw >= 10 ? 1 : 2;
+    return `${raw.toFixed(digits).replace(/\.?0+$/, "")}${suffix}`;
+  };
+  if (n >= 10_000_000) return compact(n / 10_000_000, "Cr");
+  if (n >= 100_000) return compact(n / 100_000, "L");
+  if (n >= 10_000) return compact(n / 1_000, "k");
+  return n.toLocaleString("en-IN");
+}
+
 export function assignmentSafeStatus(current?: string | null): string {
   const status = normalizeIssueStatus(current);
   if (["IN_PROGRESS", "OVERDUE", "RESOLVED", "COMPLETED", "REJECTED", "CLOSED"].includes(status)) {
