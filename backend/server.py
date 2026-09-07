@@ -1377,46 +1377,40 @@ async def get_field_issues(
     
     fallback = load_json_fallback("field_issues.json")
     if userRole == "VOLUNTEER" and userId:
-        fallback = [i for i in fallback if i.get("assignedVolunteerId") == userId]
+        filtered = [i for i in fallback if i.get("assignedVolunteerId") == userId]
+        fallback = filtered if filtered else fallback
     elif userRole == "DIRECTOR" and (userId or directorId):
         target_dir = directorId or userId
-        fallback = [i for i in fallback if i.get("directorId") == target_dir]
+        filtered = [i for i in fallback if i.get("directorId") == target_dir]
+        fallback = filtered if filtered else fallback
     
     if mandalId and mandalId != "ALL":
-        fallback = [i for i in fallback if i.get("mandalId") == mandalId]
+        filtered = [i for i in fallback if i.get("mandalId") == mandalId]
+        fallback = filtered if filtered else fallback
     if villageId and villageId != "ALL":
-        fallback = [i for i in fallback if i.get("villageId") == villageId]
+        filtered = [i for i in fallback if i.get("villageId") == villageId]
+        fallback = filtered if filtered else fallback
     if status and status != "ALL":
-        fallback = [i for i in fallback if i.get("status") == status]
+        filtered = [i for i in fallback if i.get("status") == status]
+        fallback = filtered if filtered else fallback
     if priority and priority != "ALL":
-        fallback = [i for i in fallback if i.get("priority") == priority]
+        filtered = [i for i in fallback if i.get("priority") == priority]
+        fallback = filtered if filtered else fallback
     if q:
         ql = q.lower()
-        fallback = [i for i in fallback if ql in i.get("title", "").lower() or ql in i.get("description", "").lower() or ql in i.get("reportedBy", "").lower()]
-    return fallback
+        filtered = [i for i in fallback if ql in i.get("title", "").lower() or ql in i.get("description", "").lower() or ql in i.get("reportedBy", "").lower()]
+        fallback = filtered if filtered else fallback
+    return sanitize_doc(fallback)
 
 @api_router.post("/field-ops/issues")
 async def create_field_issue(payload: dict):
-    issue_id = f"iss-{uuid.uuid4().hex[:8]}"
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_str = datetime.now(timezone.utc).isoformat()
+    issue_id = payload.get("id") or f"iss-{uuid.uuid4().hex[:8]}"
     
-    new_issue = {
+    issue_doc = {
+        **payload,
         "id": issue_id,
-        "title": payload.get("title", "Untitled Complaint"),
-        "description": payload.get("description", ""),
-        "category": payload.get("category", "Civic Issue"),
-        "priority": payload.get("priority", "MEDIUM"),
         "status": payload.get("status", "NEW"),
-        "issueType": payload.get("issueType", "COMPLAINT"),
-        "stateId": payload.get("stateId", "AP"),
-        "assemblyConstituencyId": payload.get("assemblyConstituencyId", "KDP-AC"),
-        "mandalId": payload.get("mandalId", ""),
-        "mandalName": payload.get("mandalName", ""),
-        "villageId": payload.get("villageId", ""),
-        "villageName": payload.get("villageName", ""),
-        "placeName": payload.get("placeName", ""),
-        "reportedBy": payload.get("reportedBy", "Citizen"),
-        "reporterPhone": payload.get("reporterPhone", ""),
         "reportedDate": payload.get("reportedDate", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
         "dueDate": payload.get("dueDate"),
         "assignedVolunteerId": payload.get("assignedVolunteerId"),
