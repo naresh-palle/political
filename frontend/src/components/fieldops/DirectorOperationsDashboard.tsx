@@ -37,7 +37,8 @@ import {
   Eye,
   ClipboardList,
   Building2,
-  MessageCircle
+  MessageCircle,
+  Mail
 } from "lucide-react";
 import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
@@ -1525,8 +1526,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         </div>
       )}
 
-      <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
-
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
@@ -1540,7 +1539,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             No volunteers are assigned to this manager.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
             {volunteers.map((vol) => {
               const summary = volunteerSummaries.find((s: any) => s.id === vol.id);
               const volIssues = assignedTickets.filter((i) => i.assignedVolunteerId === vol.id);
@@ -1548,24 +1547,53 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               const pendingCountVol = summary?.pendingTickets ?? volIssues.filter((i) => kpiBucket(i) === "OPEN_UNASSIGNED" || kpiBucket(i) === "ASSIGNED").length;
               const volOverdue = summary?.overdueTickets ?? volIssues.filter((i) => i.status === "OVERDUE").length;
               const volCompleted = summary?.completedTickets ?? volIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(String(i.status))).length;
+              const phone = summary?.phone || vol.phone || "";
+              const email = summary?.email || vol.email || "";
+              const area = summary?.area || vol.assignedMandalName || vol.assignedConstituency || "";
+              const villages = (summary?.villages || vol.assignedVillageNames || []).filter(Boolean);
               return (
                 <div
                   key={vol.id}
-                  onClick={() => {
-                    setFilterVolunteerId(vol.id);
-                    window.location.hash = "#/assign-tickets?status=ALL";
-                  }}
-                  className="p-4 rounded-xl border bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/50 cursor-pointer space-y-3"
+                  className="h-full p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2"
                 >
-                  <div className="min-w-0">
-                    <h4 className="font-semibold text-[13px] text-[#F5EFE0] truncate">{vol.name}</h4>
-                    <span className="text-[10px] text-[#CBD5E1] block truncate">
-                      {summary?.area || vol.assignedMandalName || vol.assignedConstituency || "Unassigned area"}
-                    </span>
-                    <span className="text-[10px] text-[#D4A24C] uppercase font-bold">
-                      {vol.status || "ACTIVE"}
-                    </span>
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="font-display text-base font-bold text-[#F5EFE0] truncate">{vol.name}</h3>
+                        <p className="text-xs text-[#CBD5E1] truncate">
+                          {vol.designation || vol.roleTitle || "Field Volunteer"}
+                        </p>
+                      </div>
+                      <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-bold uppercase">
+                        {vol.status || "ACTIVE"}
+                      </span>
+                    </div>
+
+                    <div className="pt-2 space-y-1 text-xs text-[#8E9CAE]">
+                      {area ? (
+                        <div className="flex items-center gap-1.5 text-[#CBD5E1]">
+                          <Building2 className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+                          <span className="truncate">{area}</span>
+                        </div>
+                      ) : null}
+                      {villages.length > 0 ? (
+                        <div className="flex items-center gap-1.5 text-[#CBD5E1]">
+                          <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+                          <span className="truncate">{villages.join(", ")}</span>
+                        </div>
+                      ) : null}
+                      {email ? (
+                        <a
+                          href={`mailto:${email}`}
+                          className="flex items-center gap-1.5 text-[#CBD5E1] hover:text-[#D4A24C] truncate"
+                        >
+                          <Mail className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+                          <span className="truncate">{email}</span>
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
+
                   <div className="grid grid-cols-4 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
                     <div className="p-1 rounded bg-[#0B131E]/80">
                       <span className="text-[#8E9CAE] block font-semibold">Assigned</span>
@@ -1584,9 +1612,33 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                       <strong className="text-emerald-400">{volCompleted}</strong>
                     </div>
                   </div>
-                  {summary?.lastActivity && (
-                    <p className="text-[10px] text-[#8E9CAE]">Last update: {new Date(summary.lastActivity).toLocaleString()}</p>
-                  )}
+
+                  <div className="pt-2 border-t border-[#223348]/70 flex flex-wrap items-center gap-1.5">
+                    {phone ? (
+                      <>
+                        <a
+                          href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(vol.name)}%20garu,%20greetings%20from%20Leader%27s%20Lens%20Office.`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                          title="Send WhatsApp Message"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span className="text-[11px] hidden sm:inline">WhatsApp</span>
+                        </a>
+                        <a
+                          href={`tel:${phone}`}
+                          className="p-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
+                          title="Direct Phone Call"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                          <span className="text-[11px] font-mono">{phone}</span>
+                        </a>
+                      </>
+                    ) : (
+                      <span className="text-[11px] text-[#8E9CAE]">No phone on file</span>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -1594,50 +1646,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         )}
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-[#D4A24C]" />
-            Assigned Tickets
-          </h2>
-          <button
-            type="button"
-            onClick={() => {
-              window.location.hash = "#/assign-tickets?status=ALL";
-            }}
-            className="text-xs font-semibold text-[#D4A24C] hover:underline"
-          >
-            View all
-          </button>
-        </div>
-        {assignedTickets.length === 0 ? (
-          <div className="p-6 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
-            No tickets are currently assigned to your volunteers.
-          </div>
-        ) : (
-          <div className={TICKET_GRID_CLASS}>
-            {assignedTickets.slice(0, 8).map((issue) => {
-              const timing = getTicketTimingDetails(issue);
-              return (
-                <TicketGridCard
-                  key={issue.id}
-                  issue={issue}
-                  timing={timing}
-                  showAssignControls={false}
-                  volunteerName={issue.assignedVolunteerName || "Unassigned"}
-                  extraBadges={
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
-                      {issue.assignedVolunteerName || "Volunteer"}
-                    </span>
-                  }
-                  onOpen={() => setSelectedIssue(issue)}
-                  onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
 
       </>
       )}
