@@ -1005,13 +1005,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
               <div className="flex items-start sm:items-center gap-4">
-                {currentUser.avatar && (
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg shrink-0"
-                  />
-                )}
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">

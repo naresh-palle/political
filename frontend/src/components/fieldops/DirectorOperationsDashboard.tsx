@@ -771,11 +771,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       {/* Manager Command Strip */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-2xl">
         <div className="flex items-center gap-4">
-          <img
-            src={currentUser.avatar}
-            alt={currentUser.name}
-            className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg"
-          />
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">

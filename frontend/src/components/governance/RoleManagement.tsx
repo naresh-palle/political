@@ -430,11 +430,13 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       {/* Executive Command Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#D4A24C]/40 shadow-xl">
         <div className="flex items-center gap-4">
-          <img
-            src={currentProfile.avatar}
-            alt={currentProfile.name}
-            className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C]"
-          />
+          {(isSuperAdmin || isPoliticalAdmin) && currentProfile.avatar && (
+            <img
+              src={currentProfile.avatar}
+              alt={currentProfile.name}
+              className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C]"
+            />
+          )}
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">

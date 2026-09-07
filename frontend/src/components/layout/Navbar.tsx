@@ -315,11 +315,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer shadow-sm"
               >
-                <img
-                  src={currentProfile.avatar}
-                  alt={currentProfile.name}
-                  className="w-7 h-7 rounded-lg object-cover border border-[#D4A24C]/50"
-                />
+                {(isPlatformAdmin || isPoliticalAdmin) && currentProfile.avatar && (
+                  <img
+                    src={currentProfile.avatar}
+                    alt={currentProfile.name}
+                    className="w-7 h-7 rounded-lg object-cover border border-[#D4A24C]/50"
+                  />
+                )}
                 <div className="hidden sm:flex flex-col text-left">
                   <span className="text-xs font-bold text-[#F5EFE0] leading-none">
                     {currentProfile.name.split(" ")[0]}
