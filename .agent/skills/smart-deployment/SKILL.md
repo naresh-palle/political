@@ -1,39 +1,38 @@
 ---
 name: smart-deployment
 description: >-
-  Intelligent target-based deployment protocol for Leader's Lens.
-  Automatically determines whether changes affect GitHub Pages (frontend), Render (backend), or both,
-  and executes the targeted deployment pipeline accordingly.
+  After every code change, commit, push git, deploy GitHub Pages, and deploy
+  Render via origin/main. Also run complete-commit-deploy. Use on any frontend,
+  backend, or full-stack edit.
 ---
 
 # Smart Deployment Protocol
 
-When implementation is **complete**, also run `.cursor/skills/complete-commit-deploy/SKILL.md` (commit, GitHub Pages, Render).
+**Required on every code change.** Run `.cursor/skills/complete-commit-deploy/SKILL.md` in the same turn: update skills if the ship workflow changed, commit, push git, GitHub Pages, Render.
 
-## Target Assessment Rules
+If this protocol itself changes, update this file plus the complete-commit-deploy skill, `AGENTS.md`, and `.agent/rules/deployment-rules.md`.
 
-When code modifications occur:
+## Always ship both production targets
 
-1. **GitHub Pages Deploy (Frontend Only)**:
-   - **Triggers**: Changes in rontend/src/, rontend/public/, rontend/index.html, rontend/package.json, docs/, *.css, UI components, or layouts.
-   - **Procedure**:
-     1. Build the production bundle: 
-pm run build in rontend/.
-     2. Sync rontend/dist/* to project root . and /docs/ with .nojekyll.
-     3. Deploy to gh-pages branch: 
-pm run deploy in rontend/.
-     4. Push commit to origin main.
+Do not leave work only on a feature branch.
 
-2. **Render Deploy (Backend Only)**:
-   - **Triggers**: Changes in ackend/, ackend/server.py, ackend/models/, ackend/requirements.txt, start.sh, uild.sh, 
-ender.yaml.
-   - **Procedure**:
-     1. Commit all backend changes to git.
-     2. Push commit to origin main to trigger Render's webhook auto-deploy for https://political-ddmj.onrender.com/.
+1. **Git** — commit and `git push -u origin <branch>`. Open or update the PR.
+2. **GitHub Pages** — `cd frontend && npm run build && npm run deploy`.
+   Site: https://leaderslensconsulting.com
+3. **Render** — update **`origin/main`** so https://political-ddmj.onrender.com/ auto-deploys.
 
-3. **Dual Deployment (Both)**:
-   - **Triggers**: Changes affecting both layers (e.g. rontend/src/types/index.ts + ackend/models/, pi.ts + server.py, geography master dataset generator, seed scripts, root configs).
-   - **Procedure**:
-     1. Execute Frontend Build & gh-pages deployment.
-     2. Sync rontend/dist to root and docs/.
-     3. Commit all changes and push to origin main (triggering Render).
+## Target notes
+
+### GitHub Pages (frontend)
+
+- **Triggers**: `frontend/src/`, `frontend/public/`, `frontend/index.html`, `frontend/package.json`, `docs/`, CSS, UI, layouts, or a production Pages sync.
+- **Procedure**: `npm run build` in `frontend/` (syncs `dist/` → root and `docs/` with `.nojekyll`), then `npm run deploy` (`gh-pages`). Commit synced Pages files and push.
+
+### Render (backend / Mongo)
+
+- **Triggers**: `backend/`, `requirements.txt`, `start.sh`, `build.sh`, `render.yaml`, API contracts, seed JSON used by the API.
+- **Procedure**: commit, then move the commit to `origin/main`. A branch-only push does not deploy Render.
+
+### Full-stack or mixed turns
+
+Run Pages **and** Render. Default when both layers moved, and also when the user asked to always deploy both.
