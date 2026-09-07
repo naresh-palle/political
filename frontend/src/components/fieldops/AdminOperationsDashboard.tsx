@@ -955,8 +955,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       {isAssignTicketsMode && (
       <div className="space-y-4">
         <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#223348] shadow-lg space-y-3">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            <div className="relative w-full lg:flex-1 lg:max-w-md">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="relative min-w-0 w-full">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
               <input
                 type="text"
@@ -976,13 +976,13 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               )}
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-2.5 w-full lg:w-auto">
-              <div className="flex items-center h-10 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
+            <div className="flex items-center justify-end gap-2.5 min-w-0">
+              <div className="flex items-center h-10 shrink-0 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
                 <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
+                  className="min-w-0 max-w-[11.5rem] bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
                 >
                   <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
                   <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
@@ -992,7 +992,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
                 </select>
               </div>
-              <div className="flex items-center h-10 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
+              <div className="flex items-center h-10 shrink-0 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
                 <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
                 <select
                   value={pageSize}
@@ -1005,7 +1005,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   <option value={100} className="bg-[#0B131E]">100 / page</option>
                 </select>
               </div>
-              <div className="flex items-center h-10 p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
+              <div className="flex items-center h-10 shrink-0 p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
                 <button
                   type="button"
                   onClick={() => setTicketLayout("GRID")}
@@ -1036,11 +1036,11 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-2 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2 w-full text-xs">
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Status: All</option>
               <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
@@ -1054,7 +1054,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Dept: All</option>
               {availableDepartments.map((dept) => (
@@ -1064,7 +1064,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Type: All</option>
               {availableTypes.map((t) => (
@@ -1074,7 +1074,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Category: All</option>
               {availableCategories.map((c) => (
@@ -1084,7 +1084,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Priority: All</option>
               <option value="URGENT">Urgent</option>
@@ -1095,7 +1095,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterGender}
               onChange={(e) => setFilterGender(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Gender: All</option>
               <option value="Male">Male</option>
@@ -1104,7 +1104,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterAgeGroup}
               onChange={(e) => setFilterAgeGroup(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Age: All</option>
               <option value="20-30">Age: 20-30</option>
@@ -1115,7 +1115,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterMandal}
               onChange={(e) => setFilterMandal(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Mandal: All</option>
               {mandals.map((m) => (
@@ -1125,7 +1125,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <select
               value={filterVolunteer}
               onChange={(e) => setFilterVolunteer(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Assignee: All</option>
               {volunteers.map((vol) => (
