@@ -548,96 +548,105 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       </div>
 
       {/* Submodal: Submit Work Update & Upload Proof */}
-      {isUpdateModalOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-          <div className="bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl w-full max-w-md p-5 shadow-2xl text-[#F5EFE0] space-y-4 animate-scaleUp">
-            <div className="flex items-center justify-between border-b border-[#223348] pb-3">
-              <h3 className="font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#D4A24C]" />
-                Update Status & Proof
+      {isUpdateModalOpen && createPortal(
+        <div
+          className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md animate-fadeIn"
+          onClick={() => setIsUpdateModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#071322]/60">
+              <h3 className="min-w-0 font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
+                <Camera className="w-4 h-4 text-[#D4A24C] shrink-0" />
+                <span className="truncate">Update Status & Proof</span>
               </h3>
               <button
+                type="button"
                 onClick={() => setIsUpdateModalOpen(false)}
-                className="w-7 h-7 rounded-lg bg-[#131E2D] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
+                className="w-8 h-8 shrink-0 rounded-xl bg-[#131E2D] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {errorMsg && (
-              <div className="p-2.5 bg-red-950/60 border border-red-500/40 rounded-lg text-xs text-red-300">
-                {errorMsg}
-              </div>
-            )}
+            <form onSubmit={handleWorkUpdateSubmit} className="flex min-h-0 flex-1 flex-col text-xs">
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                {errorMsg && (
+                  <div className="p-2.5 bg-red-950/60 border border-red-500/40 rounded-lg text-xs text-red-300">
+                    {errorMsg}
+                  </div>
+                )}
 
-            <form onSubmit={handleWorkUpdateSubmit} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  New Status
-                </label>
-                <select
-                  value={updateStatus}
-                  onChange={(e) => setUpdateStatus(e.target.value as IssueStatus)}
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                >
-                  <option value="IN_PROGRESS">IN_PROGRESS (Work Active on Site)</option>
-                  <option value="COMPLETED">COMPLETED (Work Finished & Verified)</option>
-                  <option value="RESOLVED">RESOLVED (Complaint Addressed)</option>
-                  <option value="ON_HOLD">ON_HOLD (Awaiting Department Approval)</option>
-                  <option value="REJECTED">REJECTED (Invalid / Duplicate)</option>
-                </select>
+                <div className="min-w-0">
+                  <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
+                    New Status
+                  </label>
+                  <select
+                    value={updateStatus}
+                    onChange={(e) => setUpdateStatus(e.target.value as IssueStatus)}
+                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                  >
+                    <option value="IN_PROGRESS">IN_PROGRESS (Work Active on Site)</option>
+                    <option value="COMPLETED">COMPLETED (Work Finished & Verified)</option>
+                    <option value="RESOLVED">RESOLVED (Complaint Addressed)</option>
+                    <option value="ON_HOLD">ON_HOLD (Awaiting Department Approval)</option>
+                    <option value="REJECTED">REJECTED (Invalid / Duplicate)</option>
+                  </select>
+                </div>
+
+                <div className="min-w-0">
+                  <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
+                    Update Date
+                  </label>
+                  <input
+                    type="date"
+                    value={updateDate}
+                    onChange={(e) => setUpdateDate(e.target.value)}
+                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
+                    Ground Remarks / Action Taken *
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={updateRemarks}
+                    onChange={(e) => setUpdateRemarks(e.target.value)}
+                    placeholder="Describe actions taken, coordination, or site completion notes..."
+                    className="w-full min-w-0 bg-[#0B131E] border border-[#223348] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed resize-y"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
+                    Photo / Proof URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={updateProofUrl}
+                    onChange={(e) => setUpdateProofUrl(e.target.value)}
+                    placeholder="https://images.unsplash.com/... or image URL"
+                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  Update Date
-                </label>
-                <input
-                  type="date"
-                  value={updateDate}
-                  onChange={(e) => setUpdateDate(e.target.value)}
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  Ground Remarks / Action Taken *
-                </label>
-                <textarea
-                  rows={3}
-                  value={updateRemarks}
-                  onChange={(e) => setUpdateRemarks(e.target.value)}
-                  placeholder="Describe actions taken, coordination, or site completion notes..."
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10.5px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  Photo / Proof URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  value={updateProofUrl}
-                  onChange={(e) => setUpdateProofUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/... or image URL"
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#223348]">
+              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#071322]/40">
                 <button
                   type="button"
                   onClick={() => setIsUpdateModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#131E2D] text-[#CBD5E1] hover:text-white cursor-pointer"
+                  className="h-10 px-4 rounded-xl bg-[#131E2D] text-[#CBD5E1] hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingUpdate}
-                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {submittingUpdate ? "Saving..." : "Submit Update"}
@@ -645,7 +654,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Assign Complaint & WhatsApp Modal */}

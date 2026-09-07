@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   FieldIssue,
   WorkUpdateRecord,
@@ -83,6 +84,15 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
       cancelled = true;
     };
   }, [issueProp.id, issueProp.status, issueProp.updatedAt, issueProp.lastStatusRemarks]);
+
+  useEffect(() => {
+    if (!isUpdateModalOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isUpdateModalOpen]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -705,137 +715,146 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
       )}
 
       {/* Submodal: Submit Work Update & Upload Proof */}
-      {isUpdateModalOpen && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
-          <div className="bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl w-full max-w-md p-6 shadow-2xl text-[#F5EFE0] space-y-4 animate-scaleUp">
-            <div className="flex items-center justify-between border-b border-[#223348] pb-3">
-              <h3 className="font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#D4A24C]" />
-                Update Work Status & Ground Proof
+      {isUpdateModalOpen && createPortal(
+        <div
+          className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md animate-fadeIn"
+          onClick={() => setIsUpdateModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#071322]/60">
+              <h3 className="min-w-0 font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
+                <Camera className="w-4 h-4 text-[#D4A24C] shrink-0" />
+                <span className="truncate">Update Work Status & Ground Proof</span>
               </h3>
               <button
+                type="button"
                 onClick={() => setIsUpdateModalOpen(false)}
-                className="w-8 h-8 rounded-xl bg-[#131E2D] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
+                className="w-8 h-8 shrink-0 rounded-xl bg-[#131E2D] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {errorMsg && (
-              <div className="p-3 bg-red-950/60 border border-red-500/40 rounded-xl text-xs text-red-300">
-                {errorMsg}
-              </div>
-            )}
+            <form onSubmit={handleWorkUpdateSubmit} className="flex min-h-0 flex-1 flex-col text-xs">
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                {errorMsg && (
+                  <div className="p-3 bg-red-950/60 border border-red-500/40 rounded-xl text-xs text-red-300">
+                    {errorMsg}
+                  </div>
+                )}
 
-            <form onSubmit={handleWorkUpdateSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  New Status
-                </label>
-                <select
-                  value={updateStatus}
-                  onChange={(e) => setUpdateStatus(e.target.value as IssueStatus)}
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                >
-                  <option value="IN_PROGRESS">IN_PROGRESS (Work Active on Site)</option>
-                  <option value="COMPLETED">COMPLETED (Work Finished & Verified)</option>
-                  <option value="RESOLVED">RESOLVED (Complaint Addressed)</option>
-                  <option value="ON_HOLD">ON_HOLD (Awaiting Department Approval)</option>
-                  <option value="REJECTED">REJECTED (Invalid / Duplicate)</option>
-                </select>
-              </div>
+                <div className="min-w-0">
+                  <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
+                    New Status
+                  </label>
+                  <select
+                    value={updateStatus}
+                    onChange={(e) => setUpdateStatus(e.target.value as IssueStatus)}
+                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                  >
+                    <option value="IN_PROGRESS">IN_PROGRESS (Work Active on Site)</option>
+                    <option value="COMPLETED">COMPLETED (Work Finished & Verified)</option>
+                    <option value="RESOLVED">RESOLVED (Complaint Addressed)</option>
+                    <option value="ON_HOLD">ON_HOLD (Awaiting Department Approval)</option>
+                    <option value="REJECTED">REJECTED (Invalid / Duplicate)</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  Update Date
-                </label>
-                <input
-                  type="date"
-                  value={updateDate}
-                  onChange={(e) => setUpdateDate(e.target.value)}
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-2.5 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
-                />
-              </div>
+                <div className="min-w-0">
+                  <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
+                    Update Date
+                  </label>
+                  <input
+                    type="date"
+                    value={updateDate}
+                    onChange={(e) => setUpdateDate(e.target.value)}
+                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
-                  Ground Remarks / Action Taken *
-                </label>
-                <textarea
-                  rows={3}
-                  value={updateRemarks}
-                  onChange={(e) => setUpdateRemarks(e.target.value)}
-                  placeholder="Describe actions taken, coordination, or site completion notes..."
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed"
-                />
-              </div>
+                <div className="min-w-0">
+                  <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold mb-1">
+                    Ground Remarks / Action Taken *
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={updateRemarks}
+                    onChange={(e) => setUpdateRemarks(e.target.value)}
+                    placeholder="Describe actions taken, coordination, or site completion notes..."
+                    className="w-full min-w-0 bg-[#0B131E] border border-[#223348] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed resize-y"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold">
-                  Proof Attachments (Photos & PDF Documents)
-                </label>
-                <div className="p-3.5 rounded-xl bg-[#0B131E] border border-[#223348] space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label
-                      htmlFor="issue-detail-file-input"
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#142B45] hover:bg-[#1C3B5E] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all"
-                    >
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>Select Photos / PDFs</span>
-                    </label>
-                    <input
-                      id="issue-detail-file-input"
-                      type="file"
-                      accept="image/*,.pdf,application/pdf"
-                      multiple
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
+                <div className="min-w-0 space-y-2">
+                  <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold">
+                    Proof Attachments (Photos & PDF Documents)
+                  </label>
+                  <div className="p-3.5 rounded-xl bg-[#0B131E] border border-[#223348] space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label
+                        htmlFor="issue-detail-file-input"
+                        className="inline-flex items-center gap-2 h-10 px-3 rounded-xl bg-[#142B45] hover:bg-[#1C3B5E] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Select Photos / PDFs</span>
+                      </label>
+                      <input
+                        id="issue-detail-file-input"
+                        type="file"
+                        accept="image/*,.pdf,application/pdf"
+                        multiple
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      {updateProofFiles.length > 0 && (
+                        <span className="text-xs text-emerald-400 font-mono font-semibold">
+                          ✓ {updateProofFiles.length} file{updateProofFiles.length > 1 ? "s" : ""} selected
+                        </span>
+                      )}
+                    </div>
+
                     {updateProofFiles.length > 0 && (
-                      <span className="text-xs text-emerald-400 font-mono font-semibold">
-                        ✓ {updateProofFiles.length} file{updateProofFiles.length > 1 ? "s" : ""} selected
-                      </span>
+                      <div className="grid grid-cols-3 gap-2 pt-1">
+                        {updateProofFiles.map((file, idx) => (
+                          <div key={idx} className="relative group rounded-lg overflow-hidden border border-[#223348] bg-[#071322] aspect-square flex flex-col items-center justify-center p-1">
+                            {file.type === "pdf" ? (
+                              <div className="flex flex-col items-center justify-center text-center p-1">
+                                <FileText className="w-6 h-6 text-rose-400 mb-0.5" />
+                                <span className="text-[9px] text-[#F5EFE0] line-clamp-1 font-mono">{file.name}</span>
+                              </div>
+                            ) : (
+                              <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => removeProofFile(idx)}
+                              className="absolute top-1 right-1 p-0.5 rounded-full bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-
-                  {updateProofFiles.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 pt-2">
-                      {updateProofFiles.map((file, idx) => (
-                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-[#223348] bg-[#071322] aspect-square flex flex-col items-center justify-center p-1">
-                          {file.type === "pdf" ? (
-                            <div className="flex flex-col items-center justify-center text-center p-1">
-                              <FileText className="w-6 h-6 text-rose-400 mb-0.5" />
-                              <span className="text-[9px] text-[#F5EFE0] line-clamp-1 font-mono">{file.name}</span>
-                            </div>
-                          ) : (
-                            <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removeProofFile(idx)}
-                            className="absolute top-1 right-1 p-0.5 rounded-full bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#223348]">
+              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#071322]/40">
                 <button
                   type="button"
                   onClick={() => setIsUpdateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#131E2D] text-[#CBD5E1] hover:text-white cursor-pointer"
+                  className="h-10 px-4 rounded-xl bg-[#131E2D] text-[#CBD5E1] hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingUpdate}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {submittingUpdate ? "Saving..." : "Submit Update"}
@@ -843,7 +862,8 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Assign Complaint & WhatsApp Modal */}
