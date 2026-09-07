@@ -9,6 +9,7 @@ import {
   WorkUpdateRecord
 } from "../../types";
 import { politicalApiService } from "../../services/api";
+import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Users,
@@ -103,6 +104,27 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   // Selected Issue for Full-Page Detail View & Assign WhatsApp Modal
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
   const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
+
+  useEffect(() => {
+    const openTicketFromHash = async () => {
+      const ticketId = getTicketIdFromHash();
+      if (!ticketId) return;
+      const found = issues.find((i) => i.id === ticketId);
+      if (found) {
+        setSelectedIssue(found);
+        return;
+      }
+      try {
+        const remote = await politicalApiService.getFieldIssueById(ticketId);
+        if (remote) setSelectedIssue(remote);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    openTicketFromHash();
+    window.addEventListener("hashchange", openTicketFromHash);
+    return () => window.removeEventListener("hashchange", openTicketFromHash);
+  }, [issues]);
 
   // Filters & Sorting State
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
@@ -749,7 +771,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         <IssueDetailView
           issue={selectedIssue}
           currentUser={currentUser}
-          onBack={() => setSelectedIssue(null)}
+          onBack={() => {
+            setSelectedIssue(null);
+            clearTicketIdFromHash();
+          }}
           onIssueUpdated={loadDirectorData}
         />
       </div>

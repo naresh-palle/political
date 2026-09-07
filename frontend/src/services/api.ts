@@ -40,6 +40,19 @@ const TICKET_SEED = "ll-open-tickets-v2-2026-09-07";
 let cachedSeedIssues: any[] | null = null;
 let seedIssuesPromise: Promise<any[]> | null = null;
 let fieldIssuesInflight: Promise<any[]> | null = null;
+let fieldIssuesInflightKey = "";
+
+function findLocalCreatedIssue(issueId: string): any | null {
+  try {
+    const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+    if (!savedRaw) return null;
+    const savedList = JSON.parse(savedRaw);
+    if (!Array.isArray(savedList)) return null;
+    return savedList.find((i: any) => i?.id === issueId) || null;
+  } catch {
+    return null;
+  }
+}
 
 async function loadSeedIssues(): Promise<any[]> {
   if (cachedSeedIssues) return cachedSeedIssues;
@@ -1038,19 +1051,21 @@ export const politicalApiService = {
       }
     } catch (e) {}
 
-    if (fieldIssuesInflight) return fieldIssuesInflight;
+    const qp = new URLSearchParams();
+    if (params?.userId) qp.append("userId", params.userId);
+    if (params?.userRole) qp.append("userRole", params.userRole);
+    if (params?.directorId) qp.append("directorId", params.directorId);
+    if (params?.mandalId) qp.append("mandalId", params.mandalId);
+    if (params?.villageId) qp.append("villageId", params.villageId);
+    if (params?.status) qp.append("status", params.status);
+    if (params?.priority) qp.append("priority", params.priority);
+    if (params?.q) qp.append("q", params.q);
 
+    const inflightKey = qp.toString();
+    if (fieldIssuesInflight && fieldIssuesInflightKey === inflightKey) return fieldIssuesInflight;
+
+    fieldIssuesInflightKey = inflightKey;
     fieldIssuesInflight = (async () => {
-      const qp = new URLSearchParams();
-      if (params?.userId) qp.append("userId", params.userId);
-      if (params?.userRole) qp.append("userRole", params.userRole);
-      if (params?.directorId) qp.append("directorId", params.directorId);
-      if (params?.mandalId) qp.append("mandalId", params.mandalId);
-      if (params?.villageId) qp.append("villageId", params.villageId);
-      if (params?.status) qp.append("status", params.status);
-      if (params?.priority) qp.append("priority", params.priority);
-      if (params?.q) qp.append("q", params.q);
-
       const remotePromise = (async () => {
         try {
           const res = await fetchWithTimeout(
@@ -1095,6 +1110,7 @@ export const politicalApiService = {
       return list;
     })().finally(() => {
       fieldIssuesInflight = null;
+      fieldIssuesInflightKey = "";
     });
 
     return fieldIssuesInflight;
@@ -1227,16 +1243,21 @@ export const politicalApiService = {
     return { success: false, message: "Invalid 6-digit OTP code" };
   },
 
-  async getFieldIssueById(issueId: string, userId?: string, userRole?: string): Promise<any> {
+  async getFieldIssueById(issueId: string, _userId?: string, _userRole?: string): Promise<any> {
+    const local = findLocalCreatedIssue(issueId);
+    if (local) return local;
     try {
-      const qp = new URLSearchParams();
-      if (userId) qp.append("userId", userId);
-      if (userRole) qp.append("userRole", userRole);
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}?${qp.toString()}`);
+      const res = await fetchWithTimeout(
+        `${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}`
+      );
       if (res.ok) return await res.json();
     } catch (e) {
       // Fallback
     }
+    const seedList = await loadSeedIssues();
+    const merged = mergeFieldIssueLists(seedList, []);
+    const fromLocal = merged.find((i: any) => i.id === issueId);
+    if (fromLocal) return fromLocal;
     const issues = await this.getFieldIssues();
     const found = issues.find((i: any) => i.id === issueId);
     if (found) return found;

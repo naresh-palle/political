@@ -206,7 +206,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 z-[200000] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fadeIn"
       onClick={onClose}
     >
       <div

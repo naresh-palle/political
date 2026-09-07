@@ -99,10 +99,17 @@ function canonicalizeAppUrl(route: "auth" | "app", activeProduct: ActiveProductT
     return `${path}#/login`;
   }
   const statusMatch = (window.location.hash.match(/[?&]status=([A-Z_]+)/i) || [])[1];
+  const ticketMatch = (window.location.hash.match(/[?&]ticket=([^&]+)/i) || [])[1];
   let hash = PRODUCT_TO_HASH_MAP[activeProduct] || "#/field-ops";
+  const qs = new URLSearchParams();
   if (activeProduct === "assigntickets" && statusMatch) {
-    hash = `#/assign-tickets?status=${statusMatch.toUpperCase()}`;
+    qs.set("status", statusMatch.toUpperCase());
   }
+  if (ticketMatch) {
+    qs.set("ticket", decodeURIComponent(ticketMatch));
+  }
+  const query = qs.toString();
+  if (query) hash = `${hash}?${query}`;
   return `${path}${hash}`;
 }
 

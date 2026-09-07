@@ -11,6 +11,7 @@ import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { countByKpi, kpiBucket } from "../../utils/ticketKpi";
+import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Plus,
@@ -349,6 +350,27 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     window.addEventListener("hashchange", syncStatus);
     return () => window.removeEventListener("hashchange", syncStatus);
   }, []);
+
+  useEffect(() => {
+    const openTicketFromHash = async () => {
+      const ticketId = getTicketIdFromHash();
+      if (!ticketId) return;
+      const found = issues.find((i) => i.id === ticketId);
+      if (found) {
+        setSelectedIssue(found);
+        return;
+      }
+      try {
+        const remote = await politicalApiService.getFieldIssueById(ticketId);
+        if (remote) setSelectedIssue(remote);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    openTicketFromHash();
+    window.addEventListener("hashchange", openTicketFromHash);
+    return () => window.removeEventListener("hashchange", openTicketFromHash);
+  }, [issues]);
 
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
@@ -967,7 +989,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         <IssueDetailView
           issue={selectedIssue}
           currentUser={currentUser}
-          onBack={() => setSelectedIssue(null)}
+          onBack={() => {
+            setSelectedIssue(null);
+            clearTicketIdFromHash();
+          }}
           onIssueUpdated={loadVolunteerData}
         />
       </div>

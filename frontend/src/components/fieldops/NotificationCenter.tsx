@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FieldNotification, FieldIssue, UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
+import { setTicketIdInHash } from "../../utils/ticketHash";
 import { IssueDetailModal } from "./IssueDetailModal";
 import {
   Bell,
@@ -136,24 +137,37 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     setSelectedNotification({ ...item, isRead: true });
   };
 
-  const handleInspectIssue = async (item: FieldNotification) => {
-    const resourceId = (item as any).resourceId || item.issueId;
-    if (!resourceId) return;
+  const extractLinkedIssueId = (item: FieldNotification): string => {
+    const extra = item as any;
+    const candidates = [extra.issueId, extra.resourceId, extra.ticketNumber, extra.message, extra.title];
+    for (const value of candidates) {
+      if (!value || typeof value !== "string") continue;
+      const trimmed = value.trim();
+      if (/^iss-[a-zA-Z0-9-]+$/i.test(trimmed)) return trimmed;
+      const match = trimmed.match(/iss-[a-zA-Z0-9-]+/i);
+      if (match) return match[0];
+    }
+    return "";
+  };
 
+  const handleInspectIssue = async (item: FieldNotification, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    const issueId = extractLinkedIssueId(item);
+    if (!issueId) return;
+
+    setLoadingIssue(true);
+    setSelectedNotification(null);
+    onClose();
     if (onSelectIssue) {
-      onSelectIssue(resourceId);
-      setSelectedNotification(null);
-      onClose();
+      onSelectIssue(issueId);
+      setLoadingIssue(false);
       return;
     }
 
-    setLoadingIssue(true);
+    setTicketIdInHash(issueId);
     try {
-      const found = await politicalApiService.getFieldIssueById(
-        resourceId,
-        currentUser.id,
-        currentUser.primaryRole
-      );
+      const found = await politicalApiService.getFieldIssueById(issueId);
       if (found) {
         setSelectedIssue(found);
       }
@@ -364,7 +378,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       {/* Full Notification Detail Popup Modal */}
       {selectedNotification && (
         <div 
-          className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
+          className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-sm flex items-start justify-center pt-[5.5rem] sm:pt-24 pb-6 px-3 sm:px-4 overflow-y-auto animate-fadeIn"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedNotification(null);
           }}
@@ -440,14 +454,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </div>
 
               {/* Linked Issue Card (if available) */}
-              {((selectedNotification as any).resourceId || selectedNotification.issueId) && (
-                <div className="p-4 bg-gradient-to-r from-[#122A44] to-[#0F2338] border border-[#D4A24C]/60 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
-                  <div>
+              {(extractLinkedIssueId(selectedNotification) || (selectedNotification as any).resourceId || selectedNotification.issueId) && (
+                <div className="p-4 bg-gradient-to-r from-[#122A44] to-[#0F2338] border border-[#D4A24C]/60 rounded-xl flex flex-col gap-3 shadow-md">
+                  <div className="min-w-0">
                     <div className="flex items-center gap-1.5 text-xs text-[#D4A24C] font-bold">
                       <Tag className="w-3.5 h-3.5" /> Associated Ground Issue
                     </div>
-                    <div className="text-sm font-bold text-white mt-0.5 font-mono">
-                      Ticket {(selectedNotification as any).ticketNumber || selectedNotification.issueId}
+                    <div className="text-sm font-bold text-white mt-0.5 font-mono break-all">
+                      Ticket {extractLinkedIssueId(selectedNotification) || (selectedNotification as any).ticketNumber || selectedNotification.issueId}
                     </div>
                     {(selectedNotification as any).status && (
                       <div className="text-[11px] text-[#F5EFE0] mt-1">
@@ -462,11 +476,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   <button
                     type="button"
                     disabled={loadingIssue}
-                    onClick={() => handleInspectIssue(selectedNotification)}
-                    className="px-4 py-2 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:from-[#D26A0F] hover:to-[#C99640] text-[#0B1A2C] text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow"
+                    onClick={(e) => handleInspectIssue(selectedNotification, e)}
+                    className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:from-[#D26A0F] hover:to-[#C99640] text-[#0B1A2C] text-xs font-bold rounded-lg transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow whitespace-nowrap"
                   >
-                    {loadingIssue ? "Loading..." : "Inspect Ground Issue"}
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    {loadingIssue ? "Opening ticket..." : "Inspect Ground Issue"}
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                   </button>
                 </div>
               )}

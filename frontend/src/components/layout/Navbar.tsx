@@ -5,6 +5,7 @@ import { usePartyTheme } from "../../context/PartyThemeContext";
 import { NotificationCenter } from "../fieldops/NotificationCenter";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { politicalApiService } from "../../services/api";
+import { setTicketIdInHash } from "../../utils/ticketHash";
 import {
   Sparkles,
   Shield,
@@ -452,6 +453,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           currentUser={currentProfile}
           isOpen={isNotifOpen}
           onUnreadCountChange={(count) => setUnreadCount(count)}
+          onSelectIssue={(issueId) => {
+            setIsNotifOpen(false);
+            loadUnreadNotifications();
+            setTicketIdInHash(issueId);
+          }}
           onClose={() => {
             setIsNotifOpen(false);
             loadUnreadNotifications();
