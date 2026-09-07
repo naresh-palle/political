@@ -56,6 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [logoError, setLogoError] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
 
   const primaryRole = currentProfile.primaryRole || (
@@ -110,10 +111,30 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, [isUserMenuOpen]);
 
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const syncNavHeight = () => {
+      document.documentElement.style.setProperty("--ll-nav-h", `${el.offsetHeight}px`);
+    };
+    syncNavHeight();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(syncNavHeight) : null;
+    ro?.observe(el);
+    window.addEventListener("resize", syncNavHeight);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", syncNavHeight);
+    };
+  }, [isNotifOpen]);
+
   return (
-    <header data-testid="global-navbar" className="sticky top-0 z-40 w-full bg-[#0B1A2C]/95 backdrop-blur-xl border-b border-[#D4A24C]/20 transition-all no-print">
+    <header
+      ref={headerRef}
+      data-testid="global-navbar"
+      className="sticky top-0 z-40 w-full bg-[#0B1A2C]/95 backdrop-blur-xl border-b border-[#D4A24C]/20 transition-all no-print overflow-visible"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-[64px]">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 min-h-[64px] py-2">
           {/* Left Brand */}
           <div className="flex items-center space-x-5 min-w-0">
             <div
@@ -159,7 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Center Navigation Products - Top Menu Bar */}
-          <nav data-testid="global-nav" className="hidden lg:flex items-center space-x-1.5">
+          <nav data-testid="global-nav" className="hidden lg:flex items-center flex-wrap justify-center gap-1.5 max-w-full">
             {/* Tab 1: Ground Intake & Issues */}
             <button
               onClick={() => {
@@ -274,7 +295,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right Meta, Notifications & User Persona */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0 ml-auto lg:ml-0">
             <button
               onClick={() => setIsNotifOpen(true)}
               className="relative p-2 rounded-lg bg-[#142B45] border border-[#D4A24C]/25 text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors cursor-pointer"

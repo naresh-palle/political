@@ -44,7 +44,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
   return (
     <article
       onClick={onOpen}
-      className="h-full min-w-0 p-4 sm:p-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all cursor-pointer flex flex-col shadow-lg group"
+      className="min-w-0 p-4 sm:p-5 pb-5 rounded-2xl bg-[#0E1724] border border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D] transition-all cursor-pointer flex flex-col gap-3 shadow-lg group"
     >
       <header className="flex items-start justify-between gap-3 min-w-0">
         <span className="min-w-0 truncate text-[11px] font-mono text-[#D4A24C] font-semibold" title={`#${issue.id}`}>
@@ -146,11 +146,11 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         )}
       </div>
 
-      <div className="mt-2 p-2.5 rounded-xl bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
+      <div className="mt-0 p-2.5 rounded-xl bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
         <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]">
           Officer status comment · {formatIssueStatus(issue.status)}
         </div>
-        <p className="mt-1 text-[12px] text-[#F5EFE0] leading-relaxed whitespace-pre-wrap break-words">
+        <p className="mt-1 text-[12px] text-[#F5EFE0] leading-snug break-words line-clamp-3">
           {issue.lastStatusRemarks?.trim()
             || (issue as any).rejectionReason
             || (issue as any).notes
@@ -163,7 +163,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         )}
       </div>
 
-      <div className="mt-auto pt-3 space-y-2 min-w-0" onClick={(e) => e.stopPropagation()}>
+      <div className="pt-3 mt-1 border-t border-[#223348]/60 space-y-2 min-w-0" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-2 text-[11px] min-w-0">
           <span className="min-w-0 truncate text-[#8E9CAE]">
             Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong>

@@ -230,12 +230,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   return (
     <>
       <div 
-        className="fixed inset-0 z-[9999] flex items-start justify-end p-3 sm:p-6 bg-black/60 backdrop-blur-xs"
+        className="fixed inset-x-0 bottom-0 z-[9999] flex items-start justify-end p-3 sm:p-4 bg-black/50"
+        style={{ top: "var(--ll-nav-h, 64px)" }}
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
-        <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[85vh] text-[#F5EFE0] animate-slideInRight overflow-hidden mt-14">
+        <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[calc(100vh-var(--ll-nav-h,64px)-1.5rem)] text-[#F5EFE0] animate-slideInRight overflow-hidden">
           {/* Header */}
           <div className="p-4 border-b border-[#22405E] bg-[#0F2338] flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -378,7 +379,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       {/* Full Notification Detail Popup Modal */}
       {selectedNotification && (
         <div 
-          className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-sm flex items-start justify-center pt-[5.5rem] sm:pt-24 pb-6 px-3 sm:px-4 overflow-y-auto animate-fadeIn"
+          className="fixed inset-x-0 bottom-0 z-[100000] bg-black/80 backdrop-blur-sm flex items-start justify-center pt-4 sm:pt-6 pb-6 px-3 sm:px-4 overflow-y-auto animate-fadeIn"
+          style={{ top: "var(--ll-nav-h, 64px)" }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedNotification(null);
           }}

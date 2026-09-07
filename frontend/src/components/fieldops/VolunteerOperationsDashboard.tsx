@@ -1002,7 +1002,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign");
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
+          <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
       {!isAssignTicketsMode ? (
         /* SCREENSHOT 1 ONLY: Ground Intake View */
         <div className="space-y-5">
@@ -1258,17 +1258,19 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       ) : (
         /* SCREENSHOT 2: Full Assign Tickets / Complaints Stream */
         <div className="space-y-5">
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-[#091422] border border-[#22354D]">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#D4A24C]" />
-              <h2 className="text-base font-bold font-display text-[#F5EFE0]">🏛️ Assign Tickets / Complaints</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D]">
+            <div className="flex items-center gap-2 min-w-0">
+              <Shield className="w-5 h-5 text-[#D4A24C] shrink-0" />
+              <h2 className="text-base font-bold font-sans tracking-normal text-[#F5EFE0] leading-snug">
+                Assign Tickets / Complaints
+              </h2>
             </div>
             <button
               onClick={() => {
                 setFilterStatus("ALL");
                 window.location.hash = "#/field-ops";
               }}
-              className="text-xs text-[#D4A24C] hover:underline font-semibold cursor-pointer"
+              className="text-xs text-[#D4A24C] hover:underline font-semibold cursor-pointer shrink-0 self-start sm:self-auto"
             >
               ← Back to Ground Intake
             </button>
@@ -1286,10 +1288,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           )}
 
           {/* 2. Filter & Sort Master Toolbar */}
-          <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
-        {/* Row 1: Search, Sort & View Mode */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-          <div className="relative w-full lg:w-96">
+          <div className="p-4 rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg space-y-3 overflow-visible">
+        <div className="flex flex-col xl:flex-row xl:items-stretch gap-3">
+          <div className="relative w-full xl:flex-1 min-w-0">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
             <input
               type="text"
@@ -1308,7 +1309,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 w-full lg:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto xl:shrink-0">
             {/* Sort Options Dropdown */}
             <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
               <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
@@ -1541,7 +1542,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         ) : viewMode === "GRID" ? (
           /* GRID VIEW */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
             {paginatedIssues.map((issue) => {
               const timing = getTicketTimingDetails(issue);
               const showAssign = isTicketOpenForAssign(issue.status);
