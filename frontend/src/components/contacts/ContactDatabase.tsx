@@ -1054,35 +1054,15 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Occupation</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Farmer / Booth Convener"
-                    value={newContact.occupation || ""}
-                    onChange={(e) => setNewContact({ ...newContact, occupation: e.target.value })}
-                    className={FIELD_CLASS}
-                  />
-                </div>
-                <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Political alignment</label>
-                  <select
-                    value={newContact.politicalAlignment || "STRONG_SUPPORTER"}
-                    onChange={(e) =>
-                      setNewContact({
-                        ...newContact,
-                        politicalAlignment: e.target.value as ContactRecord["politicalAlignment"]
-                      })
-                    }
-                    className={FIELD_CLASS}
-                  >
-                    <option value="STRONG_SUPPORTER">Strong supporter</option>
-                    <option value="NEUTRAL_LEANING">Neutral / leaning</option>
-                    <option value="OFFICIAL">Official</option>
-                    <option value="CRITICAL_NEEDS_REACH">Needs reach</option>
-                  </select>
-                </div>
+              <div className="min-w-0">
+                <label className="text-[#8E9CAE] block mb-1 font-medium">Occupation</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Farmer / Booth Convener"
+                  value={newContact.occupation || ""}
+                  onChange={(e) => setNewContact({ ...newContact, occupation: e.target.value })}
+                  className={FIELD_CLASS}
+                />
               </div>
 
               <div>
@@ -1168,12 +1148,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.occupation}</strong>
               </div>
               ) : null}
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[10px] text-[#8E9CAE] block">Political alignment</span>
-                <strong className="text-[#F5EFE0] whitespace-normal break-words">
-                  {selectedContact.politicalAlignment.replace(/_/g, " ")}
-                </strong>
-              </div>
               {!hidePhone && selectedContact.voterId ? (
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                 <span className="text-[10px] text-[#8E9CAE] block">Voter ID</span>
