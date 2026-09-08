@@ -306,7 +306,7 @@ function AppInner() {
   // Role routing enforcement:
   // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
   // - Political Admin: Home (fieldops), Assign Tickets, Contact Database, Director User Management
-  // - Manager: Home (fieldops), Assign Tickets, Contact Database, Squad Volunteer Management
+  // - Manager: Home (fieldops), Assign Tickets, Contact Database (no Squad Volunteer / governance)
   // - Volunteer: Home (fieldops), Contact Database — Add Complaint lives on Home, not Assign Tickets
   useEffect(() => {
     if (isVolunteer && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
@@ -317,11 +317,20 @@ function AppInner() {
       if (!window.location.hash.toLowerCase().includes("field-ops") && !window.location.hash.toLowerCase().includes("contact")) {
         window.location.hash = "#/field-ops";
       }
-    } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
+    } else if (isPoliticalAdmin && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
+    } else if (isDirector && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
+      setActiveProduct("fieldops");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+      } catch {}
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes("user-management") || hash.includes("governance")) {
+        window.location.hash = "#/field-ops";
+      }
     }
   }, [isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
@@ -329,8 +338,10 @@ function AppInner() {
     let targetProduct = product;
     if (isVolunteer) {
       targetProduct = ["fieldops", "grievances", "contacts"].includes(product) ? product : "fieldops";
-    } else if (isPoliticalAdmin || isDirector) {
+    } else if (isPoliticalAdmin) {
       targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
+    } else if (isDirector) {
+      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts"].includes(product) ? "fieldops" : product;
     } else if (!isPlatformAdmin) {
       targetProduct = ["contacts", "fieldops", "assigntickets", "grievances"].includes(product) ? product : "fieldops";
     }
@@ -379,7 +390,12 @@ function AppInner() {
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if ((userRole === "POLITICAL_ADMIN" || userRole === "DIRECTOR") && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
+    } else if (userRole === "POLITICAL_ADMIN" && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
+      setActiveProduct("fieldops");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+      } catch {}
+    } else if (userRole === "DIRECTOR" && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -549,7 +565,7 @@ function AppInner() {
                 {activeProduct === "webbuilder" && isAdmin && <CampaignWebsiteGenerator />}
 
                 {/* Module 6: ROLE-BASED ACCESS & GOVERNANCE (ADMIN ONLY) */}
-                {activeProduct === "governance" && isAdmin && (
+                {activeProduct === "governance" && (isPlatformAdmin || isPoliticalAdmin) && (
                   <RoleManagement
                     currentProfile={currentProfile}
                     onSwitchProfile={handleSwitchProfile}

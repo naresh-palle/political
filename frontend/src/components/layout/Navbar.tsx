@@ -267,23 +267,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {isDirector && (
-              <button
-                onClick={() => {
-                  window.location.hash = "#/user-management";
-                  onProductChange("governance");
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeProduct === "governance"
-                    ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                    : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-                }`}
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Squad Volunteer</span>
-              </button>
-            )}
-
             {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("pitch")}
@@ -417,7 +400,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   )}
 
-                  {(isPlatformAdmin || isDirector) && (
+                  {isPlatformAdmin && (
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
@@ -426,7 +409,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-medium text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
                     >
                       <UserCheck className="w-4 h-4 text-[#D4A24C]" />
-                      <span>{isPlatformAdmin ? "Admin User Governance" : "Squad Volunteer"}</span>
+                      <span>Admin User Governance</span>
                     </button>
                   )}
 
@@ -509,20 +492,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               Director User Management
-            </button>
-          )}
-
-          {isDirector && (
-            <button
-              onClick={() => {
-                window.location.hash = "#/user-management";
-                onProductChange("governance");
-              }}
-              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-              }`}
-            >
-              Squad Volunteer
             </button>
           )}
 
