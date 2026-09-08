@@ -53,7 +53,7 @@ const ASSIGN_TH =
 const ASSIGN_TD =
   "py-2.5 px-2 align-top min-w-0 whitespace-normal break-words [overflow-wrap:anywhere] border-b border-[#223348]";
 const ASSIGN_TR = "cursor-pointer hover:bg-[#0E1724]/50";
-const ASSIGN_GRID_CLASS = "grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 overflow-visible";
+const ASSIGN_GRID_CLASS = "grid grid-cols-1 md:grid-cols-2 gap-4 overflow-visible";
 const ASSIGN_OPTION_CLASS = "bg-[#0B131E] text-[#F5EFE0]";
 
 export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({

@@ -62,7 +62,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       onClick={onOpen}
       className={
         plain
-          ? "h-full min-w-0 p-3 border-0 bg-transparent hover:bg-[#0E1724]/40 transition-colors cursor-pointer flex flex-col gap-1.5 group overflow-visible"
+          ? "h-full min-w-0 p-3 rounded-lg bg-[#0B131E] ring-1 ring-[#223348] hover:bg-[#0E1724] transition-colors cursor-pointer flex flex-col gap-1.5 group overflow-visible"
           : `h-full min-w-0 p-2.5 rounded-xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-1.5 shadow-md group ${surface.card}`
       }
     >
