@@ -21,6 +21,8 @@ If this change affects how we ship (git, Pages, Render, quality gates), update:
 - `.agent/rules/deployment-rules.md`
 - `AGENTS.md`
 
+If this change affects screens, layout, or rendered fields, also follow `.cursor/skills/cross-device-ui-parity/SKILL.md` (and its `.agent/skills/cross-device-ui-parity/` pointer).
+
 Keep those files in the same commit as the related code when the workflow itself changed.
 
 ## 1. Quality gates
@@ -28,6 +30,7 @@ Keep those files in the same commit as the related code when the workflow itself
 - From `frontend/`: `npm run build` (TypeScript + Vite + `sync_build.js`). Fix errors before committing.
 - Confirm `.nojekyll` and `404.html` exist in repo root and `docs/`.
 - If `backend/` changed: `PYTHONPATH=<repo> python3 -m pytest backend/tests -n 0`.
+- **Every screen size.** Laptop, desktop, tablet, iPad, and mobile must show the **same alignment** and the **same information**. Do not hide fields on smaller viewports. Verify the changed flow at those widths before you call UI work done. Canonical rule: `.cursor/skills/cross-device-ui-parity/SKILL.md`.
 
 ## 2. Commit and push git
 

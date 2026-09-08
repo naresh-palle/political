@@ -10,6 +10,8 @@ description: >-
 
 **Required on every code change.** Run `.cursor/skills/complete-commit-deploy/SKILL.md` in the same turn: update skills if the ship workflow changed, commit, push git, GitHub Pages, Render.
 
+**Required on every UI change.** Run `.cursor/skills/cross-device-ui-parity/SKILL.md`: laptop, desktop, tablet, iPad, and mobile must show the same alignment and the same information. Do not hide fields on smaller screens.
+
 If this protocol itself changes, update this file plus the complete-commit-deploy skill, `AGENTS.md`, and `.agent/rules/deployment-rules.md`.
 
 ## Always ship both production targets

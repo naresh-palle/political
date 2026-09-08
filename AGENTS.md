@@ -3,6 +3,7 @@
 ## 1. Zero Broken Deployments
 - Whenever code changes are made, run `npm run build` in `frontend/` to confirm zero TypeScript and Vite bundle errors before pushing.
 - Always ensure `.nojekyll` and `404.html` exist in `docs/` and root `.` so GitHub Pages routing never shows a 404.
+- **Every screen size (required).** Laptop, desktop, tablet, iPad, and mobile must show the same alignment and the same information. Do not hide, drop, or relocate fields on smaller viewports. Follow `.cursor/skills/cross-device-ui-parity/SKILL.md` on every UI / layout / rendered-data change.
 
 ## 2. Every code change (required)
 Read and follow `.cursor/skills/complete-commit-deploy/SKILL.md` in the same turn:
