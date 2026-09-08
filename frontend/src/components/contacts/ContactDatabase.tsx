@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { MandalInfo, UserProfile, VillageInfo } from "../../types";
 import {
@@ -17,6 +17,7 @@ import {
 import { downloadContactWorkbook } from "../../utils/contactExcelExport";
 import { politicalApiService } from "../../services/api";
 import { PGRS_DEPARTMENTS_LIST } from "../fieldops/VolunteerOperationsDashboard";
+import ManagerVolunteerRoster, { VolunteerIdentity } from "./ManagerVolunteerRoster";
 
 export interface ContactRecord {
   id: string;
@@ -147,9 +148,39 @@ function isVolunteerUser(user: UserProfile): boolean {
   return role === "VOLUNTEER" || user.role === "volunteer";
 }
 
+function isManagerUser(user: UserProfile): boolean {
+  const role = ROLE_TOKEN(user);
+  return (
+    role === "DIRECTOR" ||
+    role === "CAMPAIGN_MANAGER" ||
+    role === "CAMPAIGN_DIRECTOR" ||
+    role === "MANAGER"
+  );
+}
+
+function contactMatchesVolunteer(contact: ContactRecord, identities: VolunteerIdentity[]) {
+  const name = String(contact.name || "").trim().toLowerCase();
+  const phone = String(contact.phone || "").replace(/\D/g, "").slice(-10);
+  return identities.some((v) => {
+    const vn = String(v.name || "").trim().toLowerCase();
+    const vp = String(v.phone || "").replace(/\D/g, "").slice(-10);
+    if (vn && name && vn === name) return true;
+    if (vp.length >= 10 && phone.length >= 10 && vp === phone) return true;
+    return false;
+  });
+}
+
 export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ currentUser }) => {
   const canManageContacts = canUserManageContacts(currentUser);
   const hidePhone = isVolunteerUser(currentUser);
+  const showManagerVolunteers = isManagerUser(currentUser);
+  const [volunteerIdentities, setVolunteerIdentities] = useState<VolunteerIdentity[]>([]);
+  const handleVolunteerIdentities = useCallback((identities: VolunteerIdentity[]) => {
+    setVolunteerIdentities((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(identities)) return prev;
+      return identities;
+    });
+  }, []);
 
   const [contacts, setContacts] = useState<ContactRecord[]>(() => {
     try {
@@ -204,6 +235,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     }
   }, [contacts]);
 
+  useEffect(() => {
+    if (!showManagerVolunteers || volunteerIdentities.length === 0) return;
+    setContacts((prev) => {
+      const next = prev.filter((c) => !contactMatchesVolunteer(c, volunteerIdentities));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [showManagerVolunteers, volunteerIdentities]);
+
   const mandalsList = useMemo(() => {
     if (mandals.length > 0) {
       return mandals.map((m) => ({ id: m.id, name: m.name }));
@@ -233,8 +272,13 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     return category === selected;
   };
 
+  const directoryContacts = useMemo(() => {
+    if (!showManagerVolunteers || volunteerIdentities.length === 0) return contacts;
+    return contacts.filter((c) => !contactMatchesVolunteer(c, volunteerIdentities));
+  }, [contacts, showManagerVolunteers, volunteerIdentities]);
+
   const filteredContacts = useMemo(() => {
-    return contacts.filter((c) => {
+    return directoryContacts.filter((c) => {
       if (!matchesSearchCategory(c.category, filterCategory)) return false;
       if (filterMandal !== "ALL" && c.mandalName !== filterMandal && c.mandalId !== filterMandal) return false;
       if (filterGender !== "ALL" && c.gender !== filterGender) return false;
@@ -260,25 +304,25 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       }
       return true;
     });
-  }, [contacts, filterCategory, filterMandal, filterGender, searchQuery, hidePhone]);
+  }, [directoryContacts, filterCategory, filterMandal, filterGender, searchQuery, hidePhone]);
 
   // Statistics
   const stats = useMemo(() => {
-    const influencers = contacts.filter((c) => c.category === "INFLUENCER").length;
-    const cadres = contacts.filter((c) => c.category === "CADRE" || c.category === "YOUTH_LEADER").length;
-    const officials = contacts.filter((c) => c.category === "GOVT_OFFICIAL").length;
-    const citizens = contacts.filter((c) => c.category === "CITIZEN" || c.category === "DWCRA_LEAD").length;
-    const supporters = contacts.filter((c) => c.politicalAlignment === "STRONG_SUPPORTER").length;
+    const influencers = directoryContacts.filter((c) => c.category === "INFLUENCER").length;
+    const cadres = directoryContacts.filter((c) => c.category === "CADRE" || c.category === "YOUTH_LEADER").length;
+    const officials = directoryContacts.filter((c) => c.category === "GOVT_OFFICIAL").length;
+    const citizens = directoryContacts.filter((c) => c.category === "CITIZEN" || c.category === "DWCRA_LEAD").length;
+    const supporters = directoryContacts.filter((c) => c.politicalAlignment === "STRONG_SUPPORTER").length;
 
     return {
-      total: contacts.length,
+      total: directoryContacts.length,
       influencers,
       cadres,
       officials,
       citizens,
       supporters
     };
-  }, [contacts]);
+  }, [directoryContacts]);
 
   const resolvedDepartment = () => {
     if (!isOfficer) return "";
@@ -425,7 +469,9 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             </span>
           </div>
           <p className="text-xs text-[#CBD5E1] mt-0.5">
-            {canManageContacts
+            {showManagerVolunteers
+              ? "Your volunteer team is listed here. Matching directory contacts were removed and replaced with this roster."
+              : canManageContacts
               ? "You can view, edit, or delete every contact in this directory."
               : "Verified Citizens, Community Influencers, Booth Agents, Nodal Officers & DWCRA Leaders"}
           </p>
@@ -450,6 +496,10 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
           </button>
         </div>
       </div>
+
+      {showManagerVolunteers ? (
+        <ManagerVolunteerRoster currentUser={currentUser} onIdentities={handleVolunteerIdentities} />
+      ) : null}
 
       {/* 2. Top Strategic KPI Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -493,6 +543,9 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       </div>
 
       {/* 3. Filter & Search Master Toolbar */}
+      {showManagerVolunteers ? (
+        <h2 className="font-display text-lg text-[#F5EFE0] pt-1">Constituency Directory</h2>
+      ) : null}
       <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           {/* Search Box */}
@@ -517,7 +570,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
           <div className="flex items-center gap-2.5 w-full lg:w-auto justify-between lg:justify-end">
             <span className="text-xs text-[#8E9CAE]">
-              Showing <strong className="text-[#D4A24C]">{filteredContacts.length}</strong> of {contacts.length} contacts
+              Showing <strong className="text-[#D4A24C]">{filteredContacts.length}</strong> of {directoryContacts.length} contacts
             </span>
 
             {/* View Mode */}

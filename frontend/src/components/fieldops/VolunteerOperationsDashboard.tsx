@@ -303,7 +303,7 @@ const PhoneField: React.FC<{
   </div>
 );
 
-const FIXED_MANDALS_TOWNS = [
+export const FIXED_MANDALS_TOWNS = [
   { id: "MDL-BNG-TWN", name: "Banaganapalle Town (Town)", type: "TOWN" },
   { id: "MDL-KKL-TWN", name: "Koilakuntla Town (Town)", type: "TOWN" },
   { id: "MDL-BNG-RUR", name: "Banaganapalle Mandal (Rural)", type: "MANDAL" },

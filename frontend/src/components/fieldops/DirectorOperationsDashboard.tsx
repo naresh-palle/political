@@ -12,7 +12,6 @@ import { politicalApiService } from "../../services/api";
 import { getAssignTicketsParamsFromHash, getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import {
-  Users,
   Search,
   MapPin,
   ChevronRight,
@@ -21,11 +20,9 @@ import {
   ChevronsRight,
   Phone,
   Eye,
-  Building2,
-  MessageCircle,
-  Mail
+  MessageCircle
 } from "lucide-react";
-import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
+import { PGRS_DEPARTMENTS_LIST, resolveDeptValue, FIXED_MANDALS_TOWNS } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
@@ -366,7 +363,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     if (volunteerId) params.set("volunteer", volunteerId);
     window.location.hash = `#/assign-tickets?${params.toString()}`;
   };
-  const volunteerSummaries = roleDashboard?.volunteers || [];
 
   // Granular Breakdown Metrics (Exact match for the handwritten schema)
   const analyticsMatrix = useMemo(() => {
@@ -779,6 +775,46 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     };
   };
 
+  const associatedMandals = useMemo(() => {
+    const catalog = [
+      ...FIXED_MANDALS_TOWNS.map((m) => ({ id: m.id, name: m.name })),
+      ...mandals.map((m) => ({ id: m.id, name: m.name }))
+    ];
+    const ids = (currentUser.assignedMandalIds || []).filter(Boolean);
+    const seen = new Set<string>();
+    const fromIds = ids
+      .map((id) => {
+        const found = catalog.find((m) => m.id === id);
+        return { id, name: found?.name || id };
+      })
+      .filter((m) => {
+        if (seen.has(m.id) || seen.has(m.name)) return false;
+        seen.add(m.id);
+        seen.add(m.name);
+        return true;
+      });
+    if (fromIds.length > 0) return fromIds;
+    if (currentUser.assignedMandalName) {
+      return [
+        {
+          id: currentUser.assignedMandalId || currentUser.assignedMandalName,
+          name: currentUser.assignedMandalName
+        }
+      ];
+    }
+    return catalog.filter((m) => {
+      if (seen.has(m.id) || seen.has(m.name)) return false;
+      seen.add(m.id);
+      seen.add(m.name);
+      return true;
+    });
+  }, [
+    currentUser.assignedMandalIds,
+    currentUser.assignedMandalId,
+    currentUser.assignedMandalName,
+    mandals
+  ]);
+
   // If an issue is selected, display the full-page dedicated IssueDetailView
   if (selectedIssue) {
     return (
@@ -804,8 +840,8 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       <>
       {/* Manager Command Strip */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-2xl">
-        <div className="flex items-center gap-4">
-          <div>
+        <div className="flex items-center gap-4 min-w-0 w-full">
+          <div className="min-w-0 w-full">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                 Campaign Manager
@@ -822,6 +858,26 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               {currentUser.email && <span>✉️ {currentUser.email}</span>}
               {currentUser.phone && <span>📞 {currentUser.phone}</span>}
             </p>
+            <div className="pt-3 mt-3 border-t border-[#22405E]/60 space-y-2">
+              <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
+                Associated Mandals
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {associatedMandals.length === 0 ? (
+                  <span className="text-xs text-[#8E9CAE]">No mandals assigned</span>
+                ) : (
+                  associatedMandals.map((mandal) => (
+                    <span
+                      key={mandal.id}
+                      className="inline-flex items-center px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#D4A24C]/35 text-xs text-[#F5EFE0]"
+                    >
+                      {mandal.name}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -867,135 +923,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           {dashboardError}
         </div>
       )}
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#D4A24C]" />
-            My Volunteers
-          </h2>
-          <span className="text-xs text-[#CBD5E1]">{volunteers.length} reporting to you</span>
-        </div>
-        {volunteers.length === 0 ? (
-          <div className="p-6 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
-            No volunteers are assigned to this manager.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
-            {volunteers.map((vol) => {
-              const summary = volunteerSummaries.find((s: any) => s.id === vol.id);
-              const volIssues = assignedTickets.filter((i) => i.assignedVolunteerId === vol.id);
-              const assignedCount = summary?.assignedTickets ?? volIssues.length;
-              const pendingCountVol = summary?.pendingTickets ?? volIssues.filter((i) => kpiBucket(i) === "OPEN_UNASSIGNED" || kpiBucket(i) === "ASSIGNED").length;
-              const volOverdue = summary?.overdueTickets ?? volIssues.filter((i) => i.status === "OVERDUE").length;
-              const volCompleted = summary?.completedTickets ?? volIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(String(i.status))).length;
-              const phone = summary?.phone || vol.phone || "";
-              const email = summary?.email || vol.email || "";
-              const area = summary?.area || vol.assignedMandalName || vol.assignedConstituency || "";
-              const villages = (summary?.villages || vol.assignedVillageNames || []).filter(Boolean);
-              return (
-                <div
-                  key={vol.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => goAssignTickets("ALL", vol.id, true)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") goAssignTickets("ALL", vol.id, true);
-                  }}
-                  className="h-full p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2 cursor-pointer"
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="font-display text-base font-bold text-[#F5EFE0] truncate">{vol.name}</h3>
-                        <p className="text-xs text-[#CBD5E1] truncate">
-                          {vol.designation || vol.roleTitle || "Field Volunteer"}
-                        </p>
-                      </div>
-                      <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-bold uppercase">
-                        {vol.status || "ACTIVE"}
-                      </span>
-                    </div>
-
-                    <div className="pt-2 space-y-1 text-xs text-[#8E9CAE]">
-                      {area ? (
-                        <div className="flex items-center gap-1.5 text-[#CBD5E1]">
-                          <Building2 className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                          <span className="truncate">{area}</span>
-                        </div>
-                      ) : null}
-                      {villages.length > 0 ? (
-                        <div className="flex items-center gap-1.5 text-[#CBD5E1]">
-                          <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                          <span className="truncate">{villages.join(", ")}</span>
-                        </div>
-                      ) : null}
-                      {email ? (
-                        <a
-                          href={`mailto:${email}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-1.5 text-[#CBD5E1] hover:text-[#D4A24C] truncate"
-                        >
-                          <Mail className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                          <span className="truncate">{email}</span>
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
-                    <div className="p-1 rounded bg-[#0B131E]/80">
-                      <span className="text-[#8E9CAE] block font-semibold">Assigned</span>
-                      <strong className="text-[#F5EFE0]">{assignedCount}</strong>
-                    </div>
-                    <div className="p-1 rounded bg-[#0B131E]/80">
-                      <span className="text-amber-300 block font-semibold">Pending</span>
-                      <strong className="text-amber-200">{pendingCountVol}</strong>
-                    </div>
-                    <div className="p-1 rounded bg-[#0B131E]/80">
-                      <span className="text-rose-300 block font-semibold">Overdue</span>
-                      <strong className={volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}>{volOverdue}</strong>
-                    </div>
-                    <div className="p-1 rounded bg-[#0B131E]/80">
-                      <span className="text-emerald-300 block font-semibold">Done</span>
-                      <strong className="text-emerald-400">{volCompleted}</strong>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-[#223348]/70 flex flex-wrap items-center gap-1.5">
-                    {phone ? (
-                      <>
-                        <a
-                          href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(vol.name)}%20garu,%20greetings%20from%20Leaders%20Lens%20Office.`}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
-                          title="Send WhatsApp Message"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span className="text-[11px] hidden sm:inline">WhatsApp</span>
-                        </a>
-                        <a
-                          href={`tel:${phone}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
-                          title="Direct Phone Call"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                          <span className="text-[11px] font-mono">{phone}</span>
-                        </a>
-                      </>
-                    ) : (
-                      <span className="text-[11px] text-[#8E9CAE]">No phone on file</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
       <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
 
