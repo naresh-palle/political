@@ -13,27 +13,13 @@ import { getAssignTicketsParamsFromHash, getTicketIdFromHash, clearTicketIdFromH
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Users,
-  AlertTriangle,
-  Clock,
-  CheckCircle2,
-  Filter,
   Search,
   MapPin,
-  Calendar,
-  AlertCircle,
-  Camera,
-  Layers,
   ChevronRight,
   ChevronLeft,
   ChevronsLeft,
   ChevronsRight,
-  ShieldCheck,
   Phone,
-  UserCheck,
-  Flame,
-  FileCheck,
-  LayoutGrid,
-  List,
   Eye,
   Building2,
   MessageCircle,
@@ -41,12 +27,12 @@ import {
 } from "lucide-react";
 import { PGRS_DEPARTMENTS_LIST, resolveDeptValue } from "./VolunteerOperationsDashboard";
 import { AssignComplaintModal } from "./AssignComplaintModal";
-import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
+import { TicketGridCard } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
-import { assignmentSafeStatus, countByKpi, formatDashboardCount, isOverdueStatus, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_CONTROL, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -57,6 +43,17 @@ const DEPARTMENTS = [
   ...PGRS_DEPARTMENTS_LIST.map((d) => d.name),
   "Other Government Department (ఇతర ప్రభుత్వ శాఖ)"
 ];
+
+const ASSIGN_FILTER_CLASS =
+  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[#223348] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none";
+const ASSIGN_TABLE_CLASS =
+  "w-full max-w-full table-fixed text-left text-xs border-collapse [&_select]:min-w-0 [&_select]:max-w-full";
+const ASSIGN_TH =
+  "py-2 px-2 min-w-0 text-[#8E9CAE] font-semibold uppercase tracking-wider text-[10px] border-b border-[#223348] whitespace-normal break-words";
+const ASSIGN_TD =
+  "py-2.5 px-2 align-top min-w-0 whitespace-normal break-words [overflow-wrap:anywhere] border-b border-[#223348]";
+const ASSIGN_TR = "cursor-pointer hover:bg-[#0E1724]/50";
+const ASSIGN_GRID_CLASS = "grid grid-cols-1 md:grid-cols-2 gap-x-8";
 
 export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   currentUser,
@@ -70,7 +67,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [roleDashboard, setRoleDashboard] = useState<any>(null);
   const [dashboardError, setDashboardError] = useState("");
-  const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
+  const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("TABLE");
   const [operationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("FIELD_ISSUES");
 
   const getStatusFromUrl = (): string => {
@@ -369,13 +366,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
     window.location.hash = `#/assign-tickets?${params.toString()}`;
   };
   const volunteerSummaries = roleDashboard?.volunteers || [];
-  const totalOperationsCount = dashStats?.totalTickets ?? kpiCounts.total;
-  const pendingCount = kpiCounts.openUnassigned;
-  const completedCount = kpiCounts.resolvedClosed;
-  const cantBeDoneCount = allOperationsList.filter(
-    (i) => isOverdueStatus(i.status) || (i as any).status === "Can't be done"
-  ).length;
-  const overdueCount = kpiCounts.overdue;
 
   // Granular Breakdown Metrics (Exact match for the handwritten schema)
   const analyticsMatrix = useMemo(() => {
@@ -838,511 +828,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       </>
       )}
 
-      {isAssignTicketsMode && (
-      <>
-      <p className="text-xs text-[#8E9CAE]">
-        Assign departments and inspect tickets.
-      </p>
-      {false && (
-      <>
-      {/* 1. Official Tickets Master Summary Header Strip */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-xl space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#223348]/70 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#131E2D] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-display text-base sm:text-lg text-[#F5EFE0] font-semibold flex items-center gap-2">
-                Tickets Operational Overview
-              </h2>
-              <span className="text-[11px] text-[#8E9CAE]">
-                Constituency AC-140 · Live Real-time Ground Intelligence ({sortedAndFilteredOperations.length} Records)
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-xs text-[#CBD5E1] font-mono">
-            <span className="text-[#8E9CAE]">Stream:</span>
-            <strong className="text-[#D4A24C]">All Operations</strong>
-          </div>
-        </div>
-
-        {/* Tickets Top Row: Total / Completed / Pending / Can't be done */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div
-            onClick={() => setActiveTab("ALL")}
-            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
-              activeTab === "ALL"
-                ? "bg-[#131E2D] border-[#D4A24C] shadow-lg ring-1 ring-[#D4A24C]/50"
-                : "bg-[#0B131E] border-[#223348] hover:border-[#D4A24C]/40"
-            }`}
-          >
-            <span className="text-[10.5px] uppercase tracking-wider text-[#8E9CAE] block font-semibold">
-              Tickets — Total
-            </span>
-            <div className="font-display text-2xl sm:text-3xl font-bold text-[#F5EFE0] mt-1">
-              {totalOperationsCount}
-            </div>
-            <span className="text-[10px] text-[#8E9CAE] block mt-0.5">100% Volume</span>
-          </div>
-
-          <div
-            onClick={() => setActiveTab("COMPLETED")}
-            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
-              activeTab === "COMPLETED"
-                ? "bg-[#131E2D] border-[#D4A24C] shadow-lg ring-1 ring-[#D4A24C]/50"
-                : "bg-[#0B131E] border-[#223348] hover:border-emerald-500/40"
-            }`}
-          >
-            <span className="text-[10.5px] uppercase tracking-wider text-emerald-300 block font-semibold">
-              Completed / Resolved
-            </span>
-            <div className="font-display text-2xl sm:text-3xl font-bold text-emerald-400 mt-1">
-              {completedCount}
-            </div>
-            <span className="text-[10px] text-emerald-400/80 block mt-0.5">
-              {totalOperationsCount > 0 ? Math.round((completedCount / totalOperationsCount) * 100) : 100}% Resolved
-            </span>
-          </div>
-
-          <div
-            onClick={() => setActiveTab("OPEN_UNASSIGNED")}
-            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
-              activeTab === "OPEN_UNASSIGNED" || activeTab === "PENDING"
-                ? "bg-[#131E2D] border-[#D4A24C] shadow-lg ring-1 ring-[#D4A24C]/50"
-                : "bg-[#0B131E] border-[#223348] hover:border-blue-500/40"
-            }`}
-          >
-            <span className="text-[10.5px] uppercase tracking-wider text-blue-300 block font-semibold">
-              Open / Unassigned
-            </span>
-            <div className="font-display text-2xl sm:text-3xl font-bold text-blue-400 mt-1">
-              {pendingCount}
-            </div>
-            <span className="text-[10px] text-blue-300/80 block mt-0.5">Awaiting action</span>
-          </div>
-
-          <div
-            onClick={() => setActiveTab("CANT_BE_DONE")}
-            className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer ${
-              activeTab === "CANT_BE_DONE" || activeTab === "OVERDUE"
-                ? "bg-rose-950 border-rose-500 shadow-lg ring-1 ring-rose-500/50"
-                : "bg-[#0B131E] border-[#223348] hover:border-rose-500/40"
-            }`}
-          >
-            <span className="text-[10.5px] uppercase tracking-wider text-rose-300 block font-semibold flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3 text-rose-400" /> Can&apos;t be done / Overdue
-            </span>
-            <div className="font-display text-2xl sm:text-3xl font-bold text-rose-400 mt-1">
-              {cantBeDoneCount}
-            </div>
-            <span className="text-[10px] text-rose-300/80 block mt-0.5">SLA Escalations</span>
-          </div>
-        </div>
-
-        {/* 2. Demographic, Regional & Type Breakdown Matrix (5 Pillars) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
-          {/* Card 1: Priority Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Priority
-              </span>
-              <span className="text-[9.5px] text-[#8E9CAE]">SLA Tiers</span>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 text-xs flex-1">
-              <button
-                onClick={() => setFilterPriority(filterPriority === "LOW" ? "ALL" : "LOW")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
-                  filterPriority === "LOW"
-                    ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
-                    : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                }`}
-              >
-                <span className="text-[9.5px] text-[#8E9CAE] block">Low</span>
-                <strong className="text-xs text-[#F5EFE0] font-mono font-bold mt-0.5">
-                  {analyticsMatrix.priorityCounts.LOW}
-                </strong>
-              </button>
-
-              <button
-                onClick={() => setFilterPriority(filterPriority === "MEDIUM" ? "ALL" : "MEDIUM")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
-                  filterPriority === "MEDIUM"
-                    ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
-                    : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                }`}
-              >
-                <span className="text-[9.5px] text-amber-300/80 block">Medium</span>
-                <strong className="text-xs text-amber-400 font-mono font-bold mt-0.5">
-                  {analyticsMatrix.priorityCounts.MEDIUM}
-                </strong>
-              </button>
-
-              <button
-                onClick={() => setFilterPriority(filterPriority === "HIGH" ? "ALL" : "HIGH")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
-                  filterPriority === "HIGH"
-                    ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
-                    : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                }`}
-              >
-                <span className="text-[9.5px] text-orange-300/80 block">High</span>
-                <strong className="text-xs text-orange-400 font-mono font-bold mt-0.5">
-                  {analyticsMatrix.priorityCounts.HIGH}
-                </strong>
-              </button>
-
-              <button
-                onClick={() => setFilterPriority(filterPriority === "URGENT" ? "ALL" : "URGENT")}
-                className={`p-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
-                  filterPriority === "URGENT"
-                    ? "bg-[#131E2D] border-red-500 text-[#F5EFE0]"
-                    : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-red-500/40"
-                }`}
-              >
-                <span className="text-[9.5px] text-red-400/90 block">Urgent</span>
-                <strong className="text-xs text-red-400 font-mono font-bold mt-0.5">
-                  {analyticsMatrix.priorityCounts.URGENT}
-                </strong>
-              </button>
-            </div>
-          </div>
-
-          {/* Card 2: Gender Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Gender
-              </span>
-              <span className="text-[9.5px] text-[#8E9CAE]">Citizen Demo</span>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 text-xs flex-1">
-              <button
-                onClick={() => setFilterGender(filterGender === "Male" ? "ALL" : "Male")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                  filterGender === "Male"
-                    ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
-                    : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-[#8E9CAE] font-semibold">M (Male)</span>
-                  <span className="text-xs">👨</span>
-                </div>
-                <strong className="text-sm text-[#F5EFE0] font-mono font-bold block mt-1">
-                  {analyticsMatrix.genderCounts.male}
-                </strong>
-              </button>
-
-              <button
-                onClick={() => setFilterGender(filterGender === "Female" ? "ALL" : "Female")}
-                className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                  filterGender === "Female"
-                    ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
-                    : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-pink-300/90 font-semibold">F (Female)</span>
-                  <span className="text-xs">👩</span>
-                </div>
-                <strong className="text-sm text-pink-300 font-mono font-bold block mt-1">
-                  {analyticsMatrix.genderCounts.female}
-                </strong>
-              </button>
-            </div>
-          </div>
-
-          {/* Card 3: Age Groups Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Age
-              </span>
-              <span className="text-[9.5px] text-[#8E9CAE]">Cohorts</span>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 text-xs flex-1">
-              {(["20-30", "30-40", "40-50", "50+"] as const).map((ageGroup) => (
-                <button
-                  key={ageGroup}
-                  onClick={() => setFilterAgeGroup(filterAgeGroup === ageGroup ? "ALL" : ageGroup)}
-                  className={`p-1.5 px-2 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
-                    filterAgeGroup === ageGroup
-                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
-                      : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                  }`}
-                >
-                  <span className="text-[9.5px] text-[#8E9CAE] font-medium">{ageGroup}</span>
-                  <strong className="text-[11px] text-[#F5EFE0] font-mono font-bold">
-                    {analyticsMatrix.ageCounts[ageGroup]}
-                  </strong>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 4: Mandal-wise Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-2">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Mandal Wise
-              </span>
-              <span className="text-[9.5px] text-[#8E9CAE]">5 Sectors</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1 text-xs flex-1">
-              {analyticsMatrix.mandalCounts.map((m) => (
-                <button
-                  key={m.key}
-                  onClick={() => setFilterMandalId(filterMandalId === m.id ? "ALL" : m.id)}
-                  className={`p-1 rounded-lg border text-center transition-all cursor-pointer flex flex-col justify-center ${
-                    filterMandalId === m.id
-                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0]"
-                      : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                  }`}
-                >
-                  <span className="text-[9px] text-[#8E9CAE] block font-bold truncate">{m.key}</span>
-                  <strong className="text-[11px] text-[#D4A24C] font-mono font-bold block mt-0.5">
-                    {m.count}
-                  </strong>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 5: Type Breakdown */}
-          <div className="p-3.5 rounded-xl bg-[#0E1724] border border-[#223348] flex flex-col justify-between min-h-[150px]">
-            <div className="flex items-center justify-between border-b border-[#223348]/70 pb-1.5 mb-1.5 shrink-0">
-              <span className="text-[11px] uppercase font-bold text-[#D4A24C] tracking-wider">
-                Type
-              </span>
-              <span className="text-[9.5px] text-[#8E9CAE]">Nature of Issues</span>
-            </div>
-            <div className="max-h-[105px] overflow-y-auto space-y-1 text-xs pr-1 flex-1 no-scrollbar">
-              {analyticsMatrix.typeCounts.map((t) => (
-                <button
-                  key={t.name}
-                  onClick={() => setFilterType(filterType === t.name ? "ALL" : t.name)}
-                  title={t.name}
-                  className={`w-full p-1 px-2 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-1 ${
-                    filterType === t.name
-                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40"
-                      : "bg-[#070D15] border-[#223348]/60 text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                  }`}
-                >
-                  <span className="text-[10px] text-[#CBD5E1] truncate block">{t.name}</span>
-                  <strong className="text-[11px] text-[#D4A24C] font-mono font-bold shrink-0">{t.count}</strong>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Full Department Roster & Civic Intelligence Distribution */}
-        <div className="pt-3 border-t border-[#223348]/70 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
-              <span>🏛️</span> DEPARTMENT
-            </span>
-            <span className="text-[11px] text-[#8E9CAE]">
-              {analyticsMatrix.departmentCounts.length} active department categories across constituency
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setFilterDepartment("ALL")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                filterDepartment === "ALL"
-                  ? "bg-[#D4A24C] text-[#0B131E] font-bold border-[#D4A24C] shadow-sm"
-                  : "bg-[#0B131E]/80 border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/50"
-              }`}
-            >
-              All Grievances ({totalOperationsCount})
-            </button>
-
-            {analyticsMatrix.departmentCounts.map((dept) => {
-              const deptItems = allOperationsList.filter((i) => getItemDepartment(i) === dept.name);
-              const resolved = deptItems.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-              const isSelected = filterDepartment === dept.name;
-
-              return (
-                <button
-                  key={dept.name}
-                  onClick={() => setFilterDepartment(isSelected ? "ALL" : dept.name)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs border transition-all cursor-pointer flex items-center gap-2 ${
-                    isSelected
-                      ? "bg-[#131E2D] border-[#D4A24C] text-[#F5EFE0] ring-1 ring-[#D4A24C]/40 shadow-sm"
-                      : "bg-[#0B131E]/80 border-[#223348] text-[#CBD5E1] hover:border-[#D4A24C]/40"
-                  }`}
-                >
-                  <span className="font-medium text-[#F5EFE0]">{dept.name}</span>
-                  <span className="px-1.5 py-0.2 rounded bg-[#070D15] text-[#D4A24C] font-mono text-[10.5px] font-bold">
-                    {dept.count}
-                  </span>
-                  <span className="text-[10px] text-emerald-400">
-                    ({resolved}/{dept.count} fixed)
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Volunteer Force Management Strip */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#D4A24C]" />
-            Assign Complaint
-          </h2>
-          <div className="flex items-center gap-2">
-            {filterVolunteerId !== "ALL" && (
-              <button
-                onClick={() => setFilterVolunteerId("ALL")}
-                className="px-2.5 py-1 rounded-lg bg-[#D4A24C]/20 hover:bg-[#D4A24C]/30 text-[#D4A24C] text-[11px] font-semibold transition-colors cursor-pointer"
-              >
-                Clear Filter (Show All)
-              </button>
-            )}
-            <span className="text-xs text-[#CBD5E1]">
-              {volunteers.length} field agents reporting to you
-            </span>
-          </div>
-        </div>
-
-        {volunteers.length === 1 ? (
-          /* Single Volunteer Full-Width Command Card (Zero Blank Squeeze) */
-          <div
-            onClick={() => setFilterVolunteerId(filterVolunteerId === volunteers[0].id ? "ALL" : volunteers[0].id)}
-            className={`p-5 rounded-2xl border backdrop-blur-xl transition-all cursor-pointer shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-5 ${
-              filterVolunteerId === volunteers[0].id
-                ? "bg-[#131E2D] border-[#D4A24C] ring-2 ring-[#D4A24C]/40"
-                : "bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/60 hover:bg-[#131E2D]/85"
-            }`}
-          >
-            {/* Left: Volunteer Info */}
-            <div className="flex items-center gap-4 min-w-0">
-              <img
-                src={volunteers[0].avatar}
-                alt={volunteers[0].name}
-                className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-md shrink-0"
-              />
-              <div className="space-y-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display text-lg text-[#F5EFE0] font-semibold">
-                    {volunteers[0].name}
-                  </h3>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
-                    Active On Field
-                  </span>
-                  {filterVolunteerId === volunteers[0].id && (
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#D4A24C] text-[#0B131E]">
-                      Filtered
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-[#CBD5E1]">
-                  {volunteers[0].designation || volunteers[0].roleTitle || "Booth & Village Field Volunteer"}
-                </p>
-                <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8E9CAE] pt-0.5">
-                  <span className="flex items-center gap-1 text-[#D8CFB8]">
-                    <Building2 className="w-3.5 h-3.5 text-[#D4A24C]" />
-                    {volunteers[0].assignedMandalName || volunteers[0].assignedConstituency || ""}
-                  </span>
-                  <span className="flex items-center gap-1 text-[#D8CFB8]">
-                    <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
-                    {(volunteers[0].assignedVillageNames || []).join(", ")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Quick Performance KPIs */}
-            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end pt-3 md:pt-0 border-t md:border-t-0 border-[#223348]/60">
-              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px]">
-                <span className="text-[10px] text-[#8E9CAE] uppercase block font-semibold">Total Assigned</span>
-                <strong className="font-display text-base text-[#F5EFE0]">{allOperationsList.length}</strong>
-              </div>
-              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px]">
-                <span className="text-[10px] text-emerald-300 uppercase block font-semibold">Resolved</span>
-                <strong className="font-display text-base text-emerald-400">{completedCount}</strong>
-              </div>
-              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px]">
-                <span className="text-[10px] text-rose-300 uppercase block font-semibold">Overdue</span>
-                <strong className="font-display text-base text-rose-400">{overdueCount}</strong>
-              </div>
-              <div className="p-2.5 px-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-center min-w-[80px] hidden sm:block">
-                <span className="text-[10px] text-[#D4A24C] uppercase block font-semibold">Efficiency</span>
-                <strong className="font-display text-base text-[#D4A24C]">
-                  {allOperationsList.length > 0 ? Math.round((completedCount / allOperationsList.length) * 100) : 100}%
-                </strong>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Multi-volunteer grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            {volunteers.map((vol) => {
-              const volIssues = allOperationsList.filter((i) => i.assignedVolunteerName === vol.name || i.assignedVolunteerId === vol.id);
-              const volCompleted = volIssues.filter((i) => ["COMPLETED", "RESOLVED"].includes(i.status)).length;
-              const volOverdue = volIssues.filter((i) => i.status === "OVERDUE").length;
-
-              return (
-                <div
-                  key={vol.id}
-                  onClick={() => setFilterVolunteerId(filterVolunteerId === vol.id ? "ALL" : vol.id)}
-                  className={`p-4 rounded-xl border backdrop-blur-xl transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
-                    filterVolunteerId === vol.id
-                      ? "bg-[#131E2D] border-[#D4A24C] ring-2 ring-[#D4A24C]/40"
-                      : "bg-[#0E1724]/75 border-[#223348]/80 hover:border-[#D4A24C]/50 hover:bg-[#131E2D]/85"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={vol.avatar}
-                      alt={vol.name}
-                      className="w-10 h-10 rounded-xl object-cover border border-[#D4A24C]/40 shadow-sm shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <h4 className="font-semibold text-[13px] text-[#F5EFE0] truncate">
-                        {vol.name}
-                      </h4>
-                      <span className="text-[10px] text-[#CBD5E1] block truncate">
-                        {vol.assignedConstituency || "Village Agent"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
-                    <div className="p-1 rounded bg-[#0B131E]/80">
-                      <span className="text-[#8E9CAE] block font-semibold">Total</span>
-                      <strong className="text-[#F5EFE0]">{volIssues.length}</strong>
-                    </div>
-                    <div className="p-1 rounded bg-[#0B131E]/80">
-                      <span className="text-emerald-300 block font-semibold">Done</span>
-                      <strong className="text-emerald-400">{volCompleted}</strong>
-                    </div>
-                    <div className="p-1 rounded bg-[#0B131E]/80">
-                      <span className="text-rose-300 block font-semibold">Overdue</span>
-                      <strong className={volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}>
-                        {volOverdue}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-      </>
-      )}
-
-      </>
-      )}
 
       {!isAssignTicketsMode && (
       <>
@@ -1517,331 +1002,181 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       )}
 
       {isAssignTicketsMode && (
-      <>
-      {/* Filter & Sort Master Command Strip */}
-      <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#223348] shadow-lg space-y-3">
-        {/* Row 1: Search, Sort & View Mode */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-          <div className="relative w-full lg:w-96">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
-            <input
-              type="text"
-              placeholder="Search by ID, title, village, citizen, phone..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
-              >
-                ✕
-              </button>
-            )}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="font-display text-xl sm:text-2xl text-[#F5EFE0]">Assign Tickets</h1>
+            <p className="text-xs text-[#8E9CAE] mt-0.5">
+              {sortedAndFilteredOperations.length} tickets · assign departments and inspect records
+            </p>
           </div>
-
-          <div className="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 w-full lg:w-auto">
-            {/* Sort Options Dropdown */}
-            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
-              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs min-w-0">
+            <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
+              <Search className="w-3.5 h-3.5 absolute left-0 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
+              <input
+                type="text"
+                placeholder="Search ID, title, village, citizen, phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-9 bg-transparent border-0 border-b border-[#223348] focus:border-[#D4A24C] pl-6 pr-6 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              ) : null}
+            </div>
+            <label className="inline-flex items-center gap-1.5 text-[#8E9CAE] shrink-0">
+              Sort
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9"
               >
-                <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
-                <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
-                <option value="DUE_DATE" className="bg-[#0B131E]">Earliest Due (Urgent SLA)</option>
-                <option value="PRIORITY" className="bg-[#0B131E]">Highest Priority (Urgent → Low)</option>
-                <option value="STATUS" className="bg-[#0B131E]">By Lifecycle Status</option>
-                <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
+                <option value="NEWEST" className="bg-[#0B131E]">Newest first</option>
+                <option value="OLDEST" className="bg-[#0B131E]">Oldest first</option>
+                <option value="DUE_DATE" className="bg-[#0B131E]">Earliest due</option>
+                <option value="PRIORITY" className="bg-[#0B131E]">Highest priority</option>
+                <option value="STATUS" className="bg-[#0B131E]">By status</option>
+                <option value="TITLE" className="bg-[#0B131E]">Title A–Z</option>
               </select>
-            </div>
-
-            {/* Page Size Selector */}
-            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
-              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
+            </label>
+            <label className="inline-flex items-center gap-1.5 text-[#8E9CAE] shrink-0">
+              Show
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-transparent text-[#D4A24C] font-bold text-xs focus:outline-none cursor-pointer"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9"
               >
                 <option value={10} className="bg-[#0B131E]">10 / page</option>
                 <option value={25} className="bg-[#0B131E]">25 / page</option>
                 <option value={50} className="bg-[#0B131E]">50 / page</option>
                 <option value={100} className="bg-[#0B131E]">100 / page</option>
               </select>
-            </div>
-
-            {/* Grid vs Table View Toggle */}
-            <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
+            </label>
+            <div className="inline-flex items-center gap-3 text-[#8E9CAE] shrink-0">
               <button
-                onClick={() => setViewMode("GRID")}
-                title="Grid Cards View"
-                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "GRID"
-                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                    : "text-[#CBD5E1] hover:text-white"
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="text-[11px] hidden sm:inline">Grid</span>
-              </button>
-              <button
+                type="button"
                 onClick={() => setViewMode("TABLE")}
-                title="Data Table View"
-                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "TABLE"
-                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                    : "text-[#CBD5E1] hover:text-white"
-                }`}
+                className={`cursor-pointer ${viewMode === "TABLE" ? "text-[#D4A24C] font-semibold" : "hover:text-[#F5EFE0]"}`}
               >
-                <List className="w-3.5 h-3.5" />
-                <span className="text-[11px] hidden sm:inline">Table</span>
+                Table
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("GRID")}
+                className={`cursor-pointer ${viewMode === "GRID" ? "text-[#D4A24C] font-semibold" : "hover:text-[#F5EFE0]"}`}
+              >
+                Grid
               </button>
             </div>
           </div>
         </div>
 
-        {/* Row 2: Granular Filter Dropdowns (Status, Department, Type, Category, Priority, Gender, Age, Mandal, Assignee) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-2 pt-1 text-xs">
-          {/* Status Filter */}
-          <div>
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value as any)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Status: All</option>
-              <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
-              <option value="ASSIGNED">Status: Assigned</option>
-              <option value="IN_PROGRESS">Status: In Progress</option>
-              <option value="OVERDUE">Status: Overdue</option>
-              <option value="COMPLETED">Status: Resolved / Closed</option>
-              <option value="REJECTED">Status: Rejected</option>
-              <option value="CANT_BE_DONE">Status: Can't be done</option>
-            </select>
-          </div>
-
-          {/* Department Filter */}
-          <div>
-            <select
-              value={filterDepartment}
-              onChange={(e) => setFilterDepartment(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Dept: All</option>
-              {analyticsMatrix.departmentCounts.map((d) => (
-                <option key={d.name} value={d.name}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Type Filter */}
-          <div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Type: All</option>
-              {analyticsMatrix.typeCounts.map((t) => (
-                <option key={t.name} value={t.name}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Category: All</option>
-              {availableCategories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Priority Filter */}
-          <div>
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Priority: All</option>
-              <option value="URGENT">🔴 Urgent</option>
-              <option value="HIGH">🟠 High</option>
-              <option value="MEDIUM">🟡 Medium</option>
-              <option value="LOW">🟢 Low</option>
-            </select>
-          </div>
-
-          {/* Gender Filter */}
-          <div>
-            <select
-              value={filterGender}
-              onChange={(e) => setFilterGender(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Gender: All</option>
-              <option value="Male">👨 Male (M)</option>
-              <option value="Female">👩 Female (F)</option>
-            </select>
-          </div>
-
-          {/* Age Group Filter */}
-          <div>
-            <select
-              value={filterAgeGroup}
-              onChange={(e) => setFilterAgeGroup(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Age: All</option>
-              <option value="20-30">Age: 20-30</option>
-              <option value="30-40">Age: 30-40</option>
-              <option value="40-50">Age: 40-50</option>
-              <option value="50+">Age: 50+</option>
-            </select>
-          </div>
-
-          {/* Mandal Filter */}
-          <div>
-            <select
-              value={filterMandalId}
-              onChange={(e) => setFilterMandalId(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Mandal: All</option>
-              {mandals.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Assignee Filter */}
-          <div>
-            <select
-              value={filterVolunteerId}
-              onChange={(e) => setFilterVolunteerId(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Assignee: All</option>
-              {volunteers.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-x-3 gap-y-2 text-xs">
+          <select value={activeTab} onChange={(e) => setActiveTab(e.target.value as any)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Status: All</option>
+            <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
+            <option value="ASSIGNED">Status: Assigned</option>
+            <option value="IN_PROGRESS">Status: In Progress</option>
+            <option value="OVERDUE">Status: Overdue</option>
+            <option value="COMPLETED">Status: Resolved / Closed</option>
+            <option value="REJECTED">Status: Rejected</option>
+            <option value="CANT_BE_DONE">Status: Can't be done</option>
+          </select>
+          <select value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Dept: All</option>
+            {analyticsMatrix.departmentCounts.map((d) => (
+              <option key={d.name} value={d.name}>{d.name}</option>
+            ))}
+          </select>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Type: All</option>
+            {analyticsMatrix.typeCounts.map((t) => (
+              <option key={t.name} value={t.name}>{t.name}</option>
+            ))}
+          </select>
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Category: All</option>
+            {availableCategories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Priority: All</option>
+            <option value="URGENT">Urgent</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
+          </select>
+          <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Gender: All</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+          <select value={filterAgeGroup} onChange={(e) => setFilterAgeGroup(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Age: All</option>
+            <option value="20-30">Age: 20-30</option>
+            <option value="30-40">Age: 30-40</option>
+            <option value="40-50">Age: 40-50</option>
+            <option value="50+">Age: 50+</option>
+          </select>
+          <select value={filterMandalId} onChange={(e) => setFilterMandalId(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Mandal: All</option>
+            {mandals.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+          <select value={filterVolunteerId} onChange={(e) => setFilterVolunteerId(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL">Assignee: All</option>
+            {volunteers.map((v) => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
         </div>
 
-        {/* Row 3: Active Filter Chips & Clear All */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#223348]/70 text-xs">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase font-semibold text-[#8E9CAE]">Active Filters:</span>
-              {activeTab !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Status: {activeTab}
-                </span>
-              )}
-              {filterDepartment !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Dept: {filterDepartment}
-                </span>
-              )}
-              {filterType !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Type: {filterType}
-                </span>
-              )}
-              {filterCategory !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Category: {filterCategory}
-                </span>
-              )}
-              {filterPriority !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Priority: {filterPriority}
-                </span>
-              )}
-              {filterGender !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Gender: {filterGender}
-                </span>
-              )}
-              {filterAgeGroup !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Age: {filterAgeGroup}
-                </span>
-              )}
-              {filterReporterType !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Reporter: {filterReporterType}
-                </span>
-              )}
-              {filterMandalId !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Mandal Filtered
-                </span>
-              )}
-              {filterVolunteerId !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Volunteer Filtered
-                </span>
-              )}
-              {searchQuery && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Query: &quot;{searchQuery}&quot;
-                </span>
-              )}
-            </div>
-
-            <button
-              onClick={clearAllFilters}
-              className="text-[#D4A24C] hover:underline font-semibold text-[11px] cursor-pointer"
-            >
-              Reset / Clear All Filters
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#8E9CAE]">
+            <p className="min-w-0 whitespace-normal break-words">
+              {[
+                activeTab !== "ALL" ? `Status ${activeTab}` : "",
+                filterDepartment !== "ALL" ? `Dept ${filterDepartment}` : "",
+                filterType !== "ALL" ? `Type ${filterType}` : "",
+                filterCategory !== "ALL" ? `Category ${filterCategory}` : "",
+                filterPriority !== "ALL" ? `Priority ${filterPriority}` : "",
+                filterGender !== "ALL" ? `Gender ${filterGender}` : "",
+                filterAgeGroup !== "ALL" ? `Age ${filterAgeGroup}` : "",
+                filterReporterType !== "ALL" ? `Reporter ${filterReporterType}` : "",
+                filterMandalId !== "ALL" ? "Mandal filtered" : "",
+                filterVolunteerId !== "ALL" ? "Volunteer filtered" : "",
+                searchQuery ? `Search “${searchQuery}”` : ""
+              ].filter(Boolean).join(" · ")}
+            </p>
+            <button type="button" onClick={clearAllFilters} className="text-[#D4A24C] hover:underline font-semibold shrink-0 cursor-pointer">
+              Clear filters
             </button>
           </div>
         )}
-      </div>
 
-      {/* Issues Master Table / Cards */}
-      <div className="space-y-4">
         {loading ? (
-          <div className="p-12 text-center text-sm text-[#8E9CAE]">Loading operational grid...</div>
+          <div className="py-12 text-center text-sm text-[#8E9CAE]">Loading tickets…</div>
         ) : sortedAndFilteredOperations.length === 0 ? (
-          <div className="p-12 rounded-2xl bg-[#0E1724]/75 backdrop-blur-xl border border-[#223348]/80 text-center space-y-3">
-            <h3 className="text-base font-semibold text-[#F5EFE0]">No operational records match selected filters</h3>
-            <p className="text-xs text-[#8E9CAE]">Try adjusting your search keyword, category, or status criteria.</p>
-            <button
-              onClick={clearAllFilters}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs cursor-pointer shadow-md"
-            >
-              Reset All Filters
+          <div className="py-12 text-center space-y-2">
+            <h3 className="text-base font-semibold text-[#F5EFE0]">No tickets match these filters</h3>
+            <p className="text-xs text-[#8E9CAE]">Try a different search, category, or status.</p>
+            <button type="button" onClick={clearAllFilters} className="text-xs font-semibold text-[#D4A24C] hover:underline cursor-pointer">
+              Clear filters
             </button>
           </div>
         ) : viewMode === "GRID" ? (
-          /* GRID VIEW */
-          <div className={TICKET_GRID_CLASS}>
+          <div className={ASSIGN_GRID_CLASS}>
             {paginatedOperations.map((issue) => {
               const timing = getTicketTimingDetails(issue);
               const showAssign = isTicketOpenForAssign(issue.status);
-
               return (
                 <TicketGridCard
                   key={issue.id}
@@ -1852,15 +1187,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   showAssignControls={showAssign}
                   showProofCount={false}
                   showAcCode
+                  plain
                   extraBadges={
-                    <>
-                      <span className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
-                        {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
-                      </span>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
-                        {issue.status}
-                      </span>
-                    </>
+                    <span>
+                      {" · "}
+                      {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
+                    </span>
                   }
                   onOpen={() => setSelectedIssue(issue)}
                   onAssignDepartment={(id, dept) => handleAssignDepartment(id, dept)}
@@ -1870,144 +1202,110 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             })}
           </div>
         ) : (
-          /* TABLE VIEW */
-          <div className={TICKET_TABLE_SHELL}>
-            <table className={TICKET_TABLE_CLASS}>
+          <div className="w-full max-w-full overflow-x-hidden">
+            <table className={ASSIGN_TABLE_CLASS}>
               <thead>
-                <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>ID & Status</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[22%]`}>Issue Title</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Category / Dept</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Mandal / Location</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Reported By</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Assign & Notify</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Timeline</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[8%] text-right whitespace-nowrap`}>View</th>
+                <tr>
+                  <th className={`${ASSIGN_TH} w-[12%]`}>ID & Status</th>
+                  <th className={`${ASSIGN_TH} w-[22%]`}>Issue Title</th>
+                  <th className={`${ASSIGN_TH} w-[12%]`}>Category / Dept</th>
+                  <th className={`${ASSIGN_TH} w-[12%]`}>Mandal / Location</th>
+                  <th className={`${ASSIGN_TH} w-[10%]`}>Reported By</th>
+                  <th className={`${ASSIGN_TH} w-[14%]`}>Assign & Notify</th>
+                  <th className={`${ASSIGN_TH} w-[10%]`}>Timeline</th>
+                  <th className={`${ASSIGN_TH} w-[8%] text-right whitespace-nowrap`}>View</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedOperations.map((issue) => {
                   const timing = getTicketTimingDetails(issue);
                   const officerComment = issue.lastStatusRemarks?.trim();
-
+                  const canAssign = isTicketOpenForAssign(issue.status);
                   return (
-                    <tr
-                      key={issue.id}
-                      onClick={() => setSelectedIssue(issue)}
-                      className={TICKET_TABLE_ROW_CLASS}
-                    >
-                      <td className={TICKET_TABLE_CELL}>
-                        <div className="font-mono font-bold text-[#D4A24C] text-[11px]" title={formatTicketDisplay(issue)}>
+                    <tr key={issue.id} onClick={() => setSelectedIssue(issue)} className={ASSIGN_TR}>
+                      <td className={ASSIGN_TD}>
+                        <div className="font-mono font-semibold text-[#D4A24C] text-[11px]" title={formatTicketDisplay(issue)}>
                           <div>{rawTicketNumber(issue)}</div>
                           {constituencyShortName(issue) ? (
-                            <div className="text-[10px] text-[#8E9CAE] font-normal">
-                              ({constituencyShortName(issue)})
-                            </div>
+                            <div className="text-[10px] text-[#8E9CAE] font-normal">({constituencyShortName(issue)})</div>
                           ) : null}
                         </div>
-                        <span className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${UNIQUE_TICKET_SURFACE.badge}`}>
-                          {formatIssueStatus(issue.status)}
-                        </span>
+                        <div className="mt-0.5 text-[11px] text-[#CBD5E1]">{formatIssueStatus(issue.status)}</div>
                       </td>
-                      <td className={TICKET_TABLE_CELL}>
-                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors">
-                          {issue.title}
-                        </div>
+                      <td className={ASSIGN_TD}>
+                        <div className="font-semibold text-[#F5EFE0]">{issue.title}</div>
                         {issue.description ? (
-                          <div className="text-[11px] text-[#8E9CAE] mt-0.5">
-                            {issue.description}
-                          </div>
+                          <div className="text-[11px] text-[#8E9CAE] mt-0.5">{issue.description}</div>
                         ) : null}
                         {officerComment ? (
-                          <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0]">
-                            {officerComment}
-                          </div>
+                          <div className="mt-1 text-[11px] text-[#CBD5E1]">Officer: {officerComment}</div>
                         ) : null}
                       </td>
-                      <td className={TICKET_TABLE_CELL}>
-                        <div className="font-medium text-[#F5EFE0]">{issue.category}</div>
-                        {issue.department && (
-                          <div className="text-[10.5px] text-[#D4A24C] mt-0.5">
-                            {issue.department.split("(")[0]}
-                          </div>
-                        )}
+                      <td className={ASSIGN_TD}>
+                        <div className="text-[#F5EFE0]">{issue.category}</div>
+                        {issue.department ? (
+                          <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">{issue.department.split("(")[0]}</div>
+                        ) : null}
                       </td>
-                      <td className={TICKET_TABLE_CELL}>
-                        <div className="font-medium text-[#F5EFE0]">{issue.mandalName}</div>
+                      <td className={ASSIGN_TD}>
+                        <div className="text-[#F5EFE0]">{issue.mandalName}</div>
                         {(issue.villageName || issue.placeName) ? (
-                          <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">
-                            {issue.villageName || issue.placeName}
-                          </div>
+                          <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">{issue.villageName || issue.placeName}</div>
                         ) : null}
                       </td>
-                      <td className={TICKET_TABLE_CELL}>
-                        <div className="font-medium text-[#F5EFE0]">{issue.reportedBy}</div>
-                        <div className="text-[10.5px] text-[#D4A24C] mt-0.5">
+                      <td className={ASSIGN_TD}>
+                        <div className="text-[#F5EFE0]">{issue.reportedBy}</div>
+                        <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">
                           {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
                         </div>
                       </td>
-                      <td className={TICKET_TABLE_CELL} onClick={(e) => e.stopPropagation()}>
-                        {(() => {
-                          const canAssign = isTicketOpenForAssign(issue.status);
-                          if (!canAssign) {
-                            return (
-                              <div className="text-[11px] font-semibold text-[#F5EFE0]">
-                                {issue.department || "General Administration"}
-                              </div>
-                            );
-                          }
-
-                          return (
-                            <div className="space-y-1">
-                              <select
-                                value={resolveDeptValue(issue.department)}
-                                onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                                className={`${TICKET_TABLE_CONTROL} bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer`}
-                              >
-                                <option value="">-- Select Department --</option>
-                                {DEPARTMENTS.map((dept) => (
-                                  <option key={dept} value={dept}>
-                                    {dept}
-                                  </option>
-                                ))}
-                              </select>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setAssignModalIssue(issue);
-                                }}
-                                className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-normal"
-                              >
-                                <MessageCircle className="w-3 h-3 text-emerald-400 fill-emerald-400/20 shrink-0" />
-                                WhatsApp
-                              </button>
-                            </div>
-                          );
-                        })()}
+                      <td className={ASSIGN_TD} onClick={(e) => e.stopPropagation()}>
+                        {!canAssign ? (
+                          <div className="text-[11px] text-[#F5EFE0]">{issue.department || "General Administration"}</div>
+                        ) : (
+                          <div className="space-y-1">
+                            <select
+                              value={resolveDeptValue(issue.department)}
+                              onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
+                              className="w-full min-w-0 bg-transparent text-[#F5EFE0] text-[11px] border-0 border-b border-[#223348] focus:border-[#D4A24C] rounded-none px-0 py-1 outline-none cursor-pointer"
+                            >
+                              <option value="">-- Select Department --</option>
+                              {DEPARTMENTS.map((dept) => (
+                                <option key={dept} value={dept}>{dept}</option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAssignModalIssue(issue);
+                              }}
+                              className="text-[11px] font-semibold text-[#D4A24C] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <MessageCircle className="w-3 h-3 shrink-0" />
+                              WhatsApp
+                            </button>
+                          </div>
+                        )}
                       </td>
-                      <td className={`${TICKET_TABLE_CELL} font-mono text-[10px]`}>
-                        <div className="text-[#CBD5E1]">Reg: {timing.registeredTimeFormatted}</div>
-                        <div className="mt-0.5">
-                          {timing.isClosed ? (
-                            <span className="text-[#D4A24C] font-semibold">Done: {timing.closedTimeFormatted}</span>
-                          ) : (
-                            <span className="text-[#D4A24C]/90 font-semibold">Open {timing.durationText}</span>
-                          )}
+                      <td className={`${ASSIGN_TD} font-mono text-[10px] text-[#8E9CAE]`}>
+                        <div>Reg {timing.registeredTimeFormatted}</div>
+                        <div className="mt-0.5 text-[#CBD5E1]">
+                          {timing.isClosed ? `Done ${timing.closedTimeFormatted}` : `Open ${timing.durationText}`}
                         </div>
                       </td>
-                      <td className={`${TICKET_TABLE_CELL} text-right whitespace-nowrap [overflow-wrap:normal]`}>
+                      <td className={`${ASSIGN_TD} text-right whitespace-nowrap [overflow-wrap:normal]`}>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedIssue(issue);
                           }}
-                          className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-nowrap shrink-0"
+                          className="text-[11px] font-semibold text-[#D4A24C] hover:underline inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                           title="View ticket"
                         >
                           <Eye className="w-3 h-3 shrink-0" />
-                          <span className="hidden sm:inline">View</span>
+                          <span>View</span>
                         </button>
                       </td>
                     </tr>
@@ -2018,47 +1316,18 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         )}
 
-        {/* Global Pagination Bar */}
         {sortedAndFilteredOperations.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:px-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] text-xs">
-            <div className="text-[#8E9CAE] font-mono text-center sm:text-left">
-              Showing{" "}
-              <strong className="text-[#F5EFE0]">
-                {(currentPage - 1) * pageSize + 1}
-              </strong>{" "}
-              to{" "}
-              <strong className="text-[#F5EFE0]">
-                {Math.min(currentPage * pageSize, sortedAndFilteredOperations.length)}
-              </strong>{" "}
-              of{" "}
-              <strong className="text-[#D4A24C]">
-                {sortedAndFilteredOperations.length}
-              </strong>{" "}
-              records
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 text-xs text-[#8E9CAE]">
+            <div className="font-mono text-center sm:text-left">
+              Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, sortedAndFilteredOperations.length)} of {sortedAndFilteredOperations.length}
             </div>
-
-            <div className="flex items-center gap-1.5">
-              {/* First Page */}
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                title="First Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} title="First Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                 <ChevronsLeft className="w-3.5 h-3.5" />
               </button>
-
-              {/* Prev Page */}
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                title="Previous Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
+              <button type="button" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} title="Previous Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
-
-              {/* Page Number Pills */}
               <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
@@ -2066,16 +1335,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                     const prev = arr[idx - 1];
                     return (
                       <React.Fragment key={p}>
-                        {prev && p - prev > 1 && (
-                          <span className="px-1 text-[#8E9CAE]">...</span>
-                        )}
+                        {prev && p - prev > 1 ? <span>…</span> : null}
                         <button
+                          type="button"
                           onClick={() => setCurrentPage(p)}
-                          className={`w-7 h-7 rounded-lg font-mono font-bold text-xs transition-all cursor-pointer ${
-                            currentPage === p
-                              ? "bg-[#D4A24C] text-[#0B131E] shadow-sm"
-                              : "bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white"
-                          }`}
+                          className={`min-w-[1.5rem] cursor-pointer ${currentPage === p ? "text-[#D4A24C] font-bold" : "hover:text-[#F5EFE0]"}`}
                         >
                           {p}
                         </button>
@@ -2083,33 +1347,18 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                     );
                   })}
               </div>
-
-              {/* Next Page */}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                title="Next Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
+              <button type="button" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} title="Next Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
-
-              {/* Last Page */}
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                title="Last Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
+              <button type="button" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} title="Last Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                 <ChevronsRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         )}
       </div>
-
-      </>
       )}
+
 
       {/* Assign Complaint & WhatsApp Modal */}
       <AssignComplaintModal

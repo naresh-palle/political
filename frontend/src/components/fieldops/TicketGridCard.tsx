@@ -23,6 +23,8 @@ export interface TicketGridCardProps {
   showAcCode?: boolean;
   volunteerName?: string;
   assignButtonLabel?: string;
+  /** Manager Assign Tickets: same fields, no nested color chips or glow boxes. */
+  plain?: boolean;
   onOpen: () => void;
   onAssignDepartment?: (issueId: string, department: string) => void;
   onOpenWhatsAppAssign: () => void;
@@ -43,17 +45,26 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
   showAcCode = false,
   volunteerName,
   assignButtonLabel,
+  plain = false,
   onOpen,
   onAssignDepartment,
   onOpenWhatsAppAssign
 }) => {
   const departmentLabel = issue.department?.split("(")[0]?.trim() || issue.category;
   const surface = ticketStatusSurface(issue);
+  const officerNote =
+    issue.lastStatusRemarks?.trim() ||
+    (issue as { rejectionReason?: string }).rejectionReason ||
+    (issue as { notes?: string }).notes;
 
   return (
     <article
       onClick={onOpen}
-      className={`h-full min-w-0 p-2.5 rounded-xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-1.5 shadow-md group ${surface.card}`}
+      className={
+        plain
+          ? "h-full min-w-0 p-3 border-b border-[#223348] bg-transparent hover:bg-[#0E1724]/40 transition-colors cursor-pointer flex flex-col gap-1.5 group"
+          : `h-full min-w-0 p-2.5 rounded-xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-1.5 shadow-md group ${surface.card}`
+      }
     >
       <header className="flex items-start justify-between gap-2 min-w-0">
         <span className="min-w-0 text-[11px] font-mono text-[#D4A24C] font-semibold" title={formatTicketDisplay(issue)}>
@@ -65,30 +76,42 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           ) : null}
         </span>
         <span
-          className={`shrink-0 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-            issue.priority === "URGENT" || issue.priority === "HIGH"
-              ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
-              : "bg-[#0B131E] text-[#B9AF95] border border-[#223348]"
-          }`}
+          className={
+            plain
+              ? "shrink-0 text-[10px] uppercase tracking-wide text-[#8E9CAE]"
+              : `shrink-0 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                  issue.priority === "URGENT" || issue.priority === "HIGH"
+                    ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
+                    : "bg-[#0B131E] text-[#B9AF95] border border-[#223348]"
+                }`
+          }
         >
           {issue.priority}
         </span>
       </header>
 
-      <div className="flex flex-wrap items-center gap-1 min-w-0">
-        {extraBadges}
-        <span className="max-w-full truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
-          {issue.category}
-        </span>
-        {issue.department && (
-          <span
-            className="max-w-[min(100%,14rem)] truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#0B131E] text-[#8E9CAE] border border-[#223348]"
-            title={departmentLabel}
-          >
-            {departmentLabel}
+      {plain ? (
+        <div className="min-w-0 text-[11px] text-[#8E9CAE]">
+          <span className="text-[#CBD5E1]">{issue.category}</span>
+          {issue.department ? <span> · {departmentLabel}</span> : null}
+          {extraBadges}
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-1 min-w-0">
+          {extraBadges}
+          <span className="max-w-full truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
+            {issue.category}
           </span>
-        )}
-      </div>
+          {issue.department && (
+            <span
+              className="max-w-[min(100%,14rem)] truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#0B131E] text-[#8E9CAE] border border-[#223348]"
+              title={departmentLabel}
+            >
+              {departmentLabel}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="min-w-0">
         <h3 className="font-display text-sm font-semibold text-[#F5EFE0] line-clamp-2 leading-snug group-hover:text-[#D4A24C] transition-colors">
@@ -100,27 +123,43 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           </p>
         ) : null}
         {issue.schemeSubDetail ? (
-          <div className="mt-0.5 text-[10px] font-semibold text-[#D4A24C] bg-[#142B45]/80 border border-[#D4A24C]/30 px-2 py-0.5 rounded-md inline-block max-w-full truncate">
-            Scheme Details: {issue.schemeSubDetail}
-          </div>
+          plain ? (
+            <p className="mt-0.5 text-[11px] text-[#8E9CAE] truncate">Scheme: {issue.schemeSubDetail}</p>
+          ) : (
+            <div className="mt-0.5 text-[10px] font-semibold text-[#D4A24C] bg-[#142B45]/80 border border-[#D4A24C]/30 px-2 py-0.5 rounded-md inline-block max-w-full truncate">
+              Scheme Details: {issue.schemeSubDetail}
+            </div>
+          )
         ) : null}
       </div>
 
-      <div className="p-1.5 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between gap-2 min-w-0 text-[10px] font-mono">
-        <div className="min-w-0">
-          <span className="text-[#8E9CAE] block text-[9.5px] truncate">Reg: {timing.registeredTimeFormatted}</span>
-          {timing.isClosed ? (
-            <span className="text-emerald-400 font-semibold block text-[9.5px] truncate">Done: {timing.closedTimeFormatted}</span>
-          ) : (
-            <span className="text-amber-400 block font-semibold text-[9.5px]">Status: {formatIssueStatus(issue.status) || "Open"}</span>
-          )}
+      {plain ? (
+        <div className="min-w-0 text-[11px] text-[#8E9CAE] font-mono">
+          <span>Reg {timing.registeredTimeFormatted}</span>
+          <span className="mx-1.5 text-[#223348]">·</span>
+          <span>
+            {timing.isClosed
+              ? `Done ${timing.closedTimeFormatted} · Closed in ${timing.durationText}`
+              : `${formatIssueStatus(issue.status) || "Open"} · Open ${timing.durationText}`}
+          </span>
         </div>
-        <div
-          className={`shrink-0 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wider uppercase ${surface.badge} whitespace-normal break-words max-w-[9rem] text-center`}
-        >
-          {timing.isClosed ? `Closed in ${timing.durationText}` : `Open ${timing.durationText}`}
+      ) : (
+        <div className="p-1.5 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between gap-2 min-w-0 text-[10px] font-mono">
+          <div className="min-w-0">
+            <span className="text-[#8E9CAE] block text-[9.5px] truncate">Reg: {timing.registeredTimeFormatted}</span>
+            {timing.isClosed ? (
+              <span className="text-emerald-400 font-semibold block text-[9.5px] truncate">Done: {timing.closedTimeFormatted}</span>
+            ) : (
+              <span className="text-amber-400 block font-semibold text-[9.5px]">Status: {formatIssueStatus(issue.status) || "Open"}</span>
+            )}
+          </div>
+          <div
+            className={`shrink-0 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wider uppercase ${surface.badge} whitespace-normal break-words max-w-[9rem] text-center`}
+          >
+            {timing.isClosed ? `Closed in ${timing.durationText}` : `Open ${timing.durationText}`}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="space-y-0.5 text-xs min-w-0">
         <div className="flex items-center justify-between gap-2 text-[#8E9CAE] min-w-0">
@@ -158,31 +197,43 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
         )}
       </div>
 
-      {(issue.lastStatusRemarks?.trim() || (issue as any).rejectionReason || (issue as any).notes) && (
-      <div className="p-1.5 rounded-lg bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
-        <div className="text-[9.5px] font-bold uppercase tracking-wider text-[#D4A24C]">
-          Officer status comment · {formatIssueStatus(issue.status)}
-        </div>
-        <p className="mt-0.5 text-[11px] text-[#F5EFE0] leading-snug break-words line-clamp-2">
-          {issue.lastStatusRemarks?.trim()
-            || (issue as any).rejectionReason
-            || (issue as any).notes}
-        </p>
-        {issue.lastStatusUpdateAt && (
-          <div className="mt-0.5 text-[10px] font-mono text-[#8E9CAE]">
-            Updated {issue.lastStatusUpdateAt.replace("T", " ").slice(0, 16)}
+      {officerNote ? (
+        plain ? (
+          <p className="min-w-0 text-[11px] text-[#CBD5E1] leading-snug line-clamp-2">
+            Officer ({formatIssueStatus(issue.status)}): {officerNote}
+            {issue.lastStatusUpdateAt ? ` · ${issue.lastStatusUpdateAt.replace("T", " ").slice(0, 16)}` : ""}
+          </p>
+        ) : (
+          <div className="p-1.5 rounded-lg bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
+            <div className="text-[9.5px] font-bold uppercase tracking-wider text-[#D4A24C]">
+              Officer status comment · {formatIssueStatus(issue.status)}
+            </div>
+            <p className="mt-0.5 text-[11px] text-[#F5EFE0] leading-snug break-words line-clamp-2">
+              {officerNote}
+            </p>
+            {issue.lastStatusUpdateAt && (
+              <div className="mt-0.5 text-[10px] font-mono text-[#8E9CAE]">
+                Updated {issue.lastStatusUpdateAt.replace("T", " ").slice(0, 16)}
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      )}
+        )
+      ) : null}
 
-      <div className="mt-auto pt-1.5 border-t border-[#223348]/60 space-y-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`mt-auto pt-1.5 space-y-1 min-w-0 ${plain ? "border-t border-[#223348]/40" : "border-t border-[#223348]/60"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between gap-2 text-[11px] min-w-0">
           <span className="min-w-0 truncate text-[#8E9CAE]">
-            Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong>
+            Category: <strong className={plain ? "text-[#F5EFE0] font-semibold" : "text-[#D4A24C] font-semibold"}>{issue.category}</strong>
           </span>
           <span
-            className={`shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${surface.badge} whitespace-normal break-words max-w-[8rem] text-center`}
+            className={
+              plain
+                ? "shrink-0 text-[11px] text-[#CBD5E1] whitespace-normal break-words max-w-[8rem] text-right"
+                : `shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${surface.badge} whitespace-normal break-words max-w-[8rem] text-center`
+            }
           >
             {formatIssueStatus(issue.status)}
           </span>
@@ -190,11 +241,17 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
 
         {showAssignControls ? (
           <>
-            <label className="block text-[10px] font-bold text-[#D4A24C]">Assign Complaint</label>
+            <label className={`block text-[10px] font-semibold ${plain ? "text-[#8E9CAE]" : "font-bold text-[#D4A24C]"}`}>
+              Assign Complaint
+            </label>
             <select
               value={resolveDeptValue ? resolveDeptValue(issue.department) : issue.department || ""}
               onChange={(e) => onAssignDepartment?.(issue.id, e.target.value)}
-              className="w-full min-w-0 bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer"
+              className={
+                plain
+                  ? "w-full min-w-0 bg-transparent text-[#F5EFE0] text-[11px] border-b border-[#223348] focus:border-[#D4A24C] rounded-none px-0 py-1 outline-none cursor-pointer"
+                  : "w-full min-w-0 bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer"
+              }
             >
               <option value="">-- Select Department --</option>
               {departments.map((dept) => (
@@ -206,9 +263,15 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           </>
         ) : (
           <>
-            <label className="block text-[10px] font-bold text-[#D4A24C]">Assigned Dept</label>
+            <label className={`block text-[10px] font-semibold ${plain ? "text-[#8E9CAE]" : "font-bold text-[#D4A24C]"}`}>
+              Assigned Dept
+            </label>
             <div
-              className="w-full min-w-0 text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2 py-1 truncate"
+              className={
+                plain
+                  ? "w-full min-w-0 text-[11px] text-[#F5EFE0] truncate"
+                  : "w-full min-w-0 text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2 py-1 truncate"
+              }
               title={issue.department || "General Administration"}
             >
               {issue.department || "General Administration"}
@@ -220,9 +283,13 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           <button
             type="button"
             onClick={onOpenWhatsAppAssign}
-            className="w-full py-1.5 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
+            className={
+              plain
+                ? "w-full py-1 text-left text-[11px] font-semibold text-[#D4A24C] hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+                : "w-full py-1.5 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
+            }
           >
-            <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20 shrink-0" />
+            <MessageCircle className={`w-3.5 h-3.5 shrink-0 ${plain ? "" : "text-emerald-400 fill-emerald-400/20"}`} />
             <span className="truncate">{assignButtonLabel || "Assign & Notify on WhatsApp"}</span>
           </button>
         ) : null}
