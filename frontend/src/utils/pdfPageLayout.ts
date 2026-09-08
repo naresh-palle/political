@@ -23,11 +23,12 @@ export function pdfFromCanvas(
   const maxW = orientation === "landscape" ? 297 : 210;
   const maxH = orientation === "landscape" ? 210 : 297;
   const margin = 4.2;
+  const frame = 3.2;
   const innerW = maxW - margin * 2;
-  const imgW = innerW;
+  const imgW = innerW - frame * 2;
   const imgH = (canvas.height * imgW) / canvas.width;
   const img = canvas.toDataURL("image/jpeg", 0.93);
-  const maxInner = maxH - margin * 2;
+  const maxInner = maxH - margin * 2 - frame * 2;
 
   const slices: number[] = [];
   let remaining = imgH;
@@ -37,7 +38,7 @@ export function pdfFromCanvas(
     remaining -= slice;
   }
 
-  const firstH = Math.min(maxH, slices[0] + margin * 2);
+  const firstH = Math.min(maxH, slices[0] + margin * 2 + frame * 2);
   const pdf = new jsPDF({
     unit: "mm",
     format: [maxW, firstH],
@@ -46,19 +47,19 @@ export function pdfFromCanvas(
 
   let offset = 0;
   slices.forEach((slice, index) => {
-    const pageH = Math.min(maxH, slice + margin * 2);
+    const pageH = Math.min(maxH, slice + margin * 2 + frame * 2);
     if (index > 0) {
       pdf.addPage([maxW, pageH], maxW >= pageH ? "l" : "p");
     }
     const innerH = pageH - margin * 2;
     pdf.setFillColor(255, 255, 255);
     pdf.rect(0, 0, maxW, pageH, "F");
-    pdf.addImage(img, "JPEG", margin, margin - offset, imgW, imgH);
+    pdf.addImage(img, "JPEG", margin + frame, margin + frame - offset, imgW, imgH);
     pdf.setFillColor(255, 255, 255);
-    pdf.rect(0, 0, maxW, margin, "F");
-    pdf.rect(0, pageH - margin, maxW, margin, "F");
-    pdf.rect(0, 0, margin, pageH, "F");
-    pdf.rect(maxW - margin, 0, margin, pageH, "F");
+    pdf.rect(0, 0, maxW, margin + frame, "F");
+    pdf.rect(0, pageH - margin - frame, maxW, margin + frame, "F");
+    pdf.rect(0, 0, margin + frame, pageH, "F");
+    pdf.rect(maxW - margin - frame, 0, margin + frame, pageH, "F");
     drawFrame(pdf, margin, margin, innerW, innerH);
     offset += slice;
   });
