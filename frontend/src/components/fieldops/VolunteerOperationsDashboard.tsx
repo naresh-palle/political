@@ -2,49 +2,27 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   FieldIssue,
   UserProfile,
-  IssueCategory,
-  IssuePriority,
-  VillageInfo,
-  MandalInfo
+  IssuePriority
 } from "../../types";
 import { politicalApiService } from "../../services/api";
-import { formatIssueStatus } from "../../utils/statusLabels";
-import { assignmentSafeStatus, countByKpi, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE, volunteerAssignmentStatus } from "../../utils/ticketKpi";
-import { allocateTicketNumber, formatTicketDisplay, ticketSearchHaystack } from "../../utils/ticketNumberDisplay";
+import { countByKpi, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
+import { allocateTicketNumber, formatTicketDisplay } from "../../utils/ticketNumberDisplay";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import {
   Plus,
   MapPin,
-  Clock,
   CheckCircle2,
-  AlertTriangle,
   Camera,
   Send,
   Lock,
-  Search,
-  Calendar,
-  Layers,
-  Sparkles,
   User,
   Building2,
   FileText,
   Upload,
   X,
-  Tag,
-  Briefcase,
-  Paperclip,
-  Check,
-  LayoutGrid,
-  List,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight
+  Paperclip
 } from "lucide-react";
-import { AssignComplaintModal } from "./AssignComplaintModal";
-import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 
 export interface VolunteerDashboardProps {
   currentUser: UserProfile;
@@ -336,44 +314,13 @@ const FIXED_MANDALS_TOWNS = [
 ];
 
 export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = ({
-  currentUser,
-  initialFilterStatus
+  currentUser
 }) => {
   const [issues, setIssues] = useState<FieldIssue[]>([]);
-  const [volunteers, setVolunteers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Selected Issue for Full-Page Detail View
+  // Selected Issue for Full-Page Detail View (deep links only)
   const [selectedIssue, setSelectedIssue] = useState<FieldIssue | null>(null);
-
-  // View Mode: GRID vs TABLE
-  const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
-
-  const getStatusFromUrl = (): string => {
-    const hash = window.location.hash;
-    if (hash.includes("status=")) {
-      const match = hash.match(/status=([A-Z_]+)/i);
-      if (match && match[1]) {
-        return match[1].toUpperCase();
-      }
-    }
-    return "ALL";
-  };
-
-  // Filters & Sorting State
-  const [filterStatus, setFilterStatus] = useState<string>(() => getStatusFromUrl() || initialFilterStatus || "ALL");
-
-  useEffect(() => {
-    const syncStatus = () => {
-      const fromUrl = getStatusFromUrl();
-      if (fromUrl) {
-        setFilterStatus(fromUrl);
-      }
-    };
-    syncStatus();
-    window.addEventListener("hashchange", syncStatus);
-    return () => window.removeEventListener("hashchange", syncStatus);
-  }, []);
 
   useEffect(() => {
     const openTicketFromHash = async () => {
@@ -396,22 +343,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     return () => window.removeEventListener("hashchange", openTicketFromHash);
   }, [issues]);
 
-  const [filterCategory, setFilterCategory] = useState<string>("ALL");
-  const [filterPriority, setFilterPriority] = useState<string>("ALL");
-  const [filterReporterType, setFilterReporterType] = useState<string>("ALL");
-  const [dateFilter, setDateFilter] = useState<"ALL" | "TODAY" | "7DAYS" | "THIS_MONTH" | "CUSTOM">("ALL");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"NEWEST" | "OLDEST" | "DUE_DATE" | "PRIORITY" | "STATUS" | "TITLE">("NEWEST");
-
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-
   // Create Complaint Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [assignModalIssue, setAssignModalIssue] = useState<FieldIssue | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState<string>("Roads & Buildings");
   const [newDepartment, setNewDepartment] = useState<string>("8. Roads & Buildings (R&B) Department");
@@ -488,20 +421,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const loadVolunteerData = async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     try {
-      const [allUsers, issueList] = await Promise.all([
-        politicalApiService.getUsers(),
-        politicalApiService.getFieldIssues({
-          userId: currentUser.id,
-          userRole: "VOLUNTEER"
-        })
-      ]);
-
-      const volList = allUsers.filter(
-        (u) =>
-          (u.primaryRole === "VOLUNTEER" || u.roleId === "VOLUNTEER" || u.role === "volunteer") &&
-          u.status === "ACTIVE"
-      );
-      setVolunteers(volList.length > 0 ? volList : [currentUser]);
+      const issueList = await politicalApiService.getFieldIssues({
+        userId: currentUser.id,
+        userRole: "VOLUNTEER"
+      });
       setIssues(issueList);
       setSelectedIssue((prev) => {
         if (!prev) return prev;
@@ -510,7 +433,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
       });
     } catch (e) {
       console.error(e);
-      setVolunteers([currentUser]);
     } finally {
       if (!isSilent) setLoading(false);
     }
@@ -696,326 +618,18 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     }
   };
 
-  // Reset pagination to Page 1 when any filter or sort changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    filterStatus,
-    filterCategory,
-    filterPriority,
-    filterReporterType,
-    dateFilter,
-    startDate,
-    endDate,
-    searchQuery,
-    sortBy,
-    pageSize
-  ]);
-
-  // Filter & Sort issues
-  const sortedAndFilteredIssues = useMemo(() => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const thisMonthPrefix = todayStr.slice(0, 7); // "YYYY-MM"
-
-    let list = issues.filter((item) => {
-      const bucket = kpiBucket(item);
-      if (
-        (filterStatus === "OPEN_UNASSIGNED" ||
-          filterStatus === "UNRESOLVED" ||
-          filterStatus === "PENDING") &&
-        bucket !== "OPEN_UNASSIGNED"
-      )
-        return false;
-      if (filterStatus === "ASSIGNED" && bucket !== "ASSIGNED") return false;
-      if (filterStatus === "NEW" && item.status !== "NEW") return false;
-      if (filterStatus === "IN_PROGRESS" && bucket !== "IN_PROGRESS") return false;
-      if (filterStatus === "OVERDUE" && bucket !== "OVERDUE") return false;
-      if (filterStatus === "RESOLVED" && bucket !== "RESOLVED") return false;
-      if (filterStatus === "REJECTED" && bucket !== "REJECTED") return false;
-
-      // Category filter
-      if (filterCategory !== "ALL" && item.category !== filterCategory) return false;
-
-      // Priority filter
-      if (filterPriority !== "ALL" && item.priority !== filterPriority) return false;
-
-      // Reporter type filter
-      if (filterReporterType !== "ALL" && item.reporterType !== filterReporterType) return false;
-
-      // Date filter
-      const itemDate = item.reportedDate || (item.createdAt ? item.createdAt.split("T")[0] : "");
-
-      if (dateFilter === "TODAY") {
-        if (itemDate !== todayStr) return false;
-      } else if (dateFilter === "7DAYS") {
-        const d = new Date(itemDate || item.createdAt);
-        if (d < sevenDaysAgo) return false;
-      } else if (dateFilter === "THIS_MONTH") {
-        if (!itemDate.startsWith(thisMonthPrefix)) return false;
-      } else if (dateFilter === "CUSTOM") {
-        if (startDate && itemDate < startDate) return false;
-        if (endDate && itemDate > endDate) return false;
-      }
-
-      // Search filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          item.id.toLowerCase().includes(q) ||
-          ticketSearchHaystack(item).includes(q) ||
-          item.title.toLowerCase().includes(q) ||
-          (item.description || "").toLowerCase().includes(q) ||
-          (item.villageName || "").toLowerCase().includes(q) ||
-          (item.placeName || "").toLowerCase().includes(q) ||
-          (item.mandalName || "").toLowerCase().includes(q) ||
-          item.reportedBy.toLowerCase().includes(q) ||
-          (item.reporterPhone || "").includes(q) ||
-          (item.department || "").toLowerCase().includes(q) ||
-          (item.lastStatusRemarks || "").toLowerCase().includes(q) ||
-          (item.secondaryContactName || "").toLowerCase().includes(q) ||
-          (item.secondaryContactPhone || "").includes(q)
-        );
-      }
-
-      return true;
-    });
-
-    // Apply Sorting
-    return list.sort((a, b) => {
-      if (sortBy === "NEWEST") {
-        return new Date(b.createdAt || b.reportedDate).getTime() - new Date(a.createdAt || a.reportedDate).getTime();
-      }
-      if (sortBy === "OLDEST") {
-        return new Date(a.createdAt || a.reportedDate).getTime() - new Date(b.createdAt || b.reportedDate).getTime();
-      }
-      if (sortBy === "DUE_DATE") {
-        return new Date(a.dueDate || "9999-12-31").getTime() - new Date(b.dueDate || "9999-12-31").getTime();
-      }
-      if (sortBy === "PRIORITY") {
-        const weights: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
-        return (weights[b.priority] || 0) - (weights[a.priority] || 0);
-      }
-      if (sortBy === "TITLE") {
-        return a.title.localeCompare(b.title);
-      }
-      if (sortBy === "STATUS") {
-        return a.status.localeCompare(b.status);
-      }
-      return 0;
-    });
-  }, [
-    issues,
-    filterStatus,
-    filterCategory,
-    filterPriority,
-    filterReporterType,
-    dateFilter,
-    startDate,
-    endDate,
-    searchQuery,
-    sortBy
-  ]);
-
-  // Paginated Slicing
-  const totalPages = Math.ceil(sortedAndFilteredIssues.length / pageSize) || 1;
-  const paginatedIssues = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return sortedAndFilteredIssues.slice(start, start + pageSize);
-  }, [sortedAndFilteredIssues, currentPage, pageSize]);
-
   const kpiCounts = useMemo(() => countByKpi(issues), [issues]);
+  const kpiCards = [
+    { label: "Total Tickets", value: kpiCounts.total, hint: "All" },
+    { label: "Open / Unassigned", value: kpiCounts.openUnassigned, hint: "Pending" },
+    { label: "Assigned", value: kpiCounts.assigned, hint: "Officer" },
+    { label: "In Progress", value: kpiCounts.inProgress, hint: "Ground" },
+    { label: "Overdue Alerts", value: kpiCounts.overdue, hint: "Urgent" },
+    { label: "Resolved / Closed", value: kpiCounts.resolvedClosed, hint: "Closed" },
+    { label: "Rejected", value: kpiCounts.rejected, hint: "Closed" }
+  ];
 
-  const hasActiveFilters =
-    filterStatus !== "ALL" ||
-    filterCategory !== "ALL" ||
-    filterPriority !== "ALL" ||
-    filterReporterType !== "ALL" ||
-    dateFilter !== "ALL" ||
-    searchQuery.trim().length > 0 ||
-    sortBy !== "NEWEST";
-
-  const clearAllFilters = () => {
-    setFilterStatus("ALL");
-    setFilterCategory("ALL");
-    setFilterPriority("ALL");
-    setFilterReporterType("ALL");
-    setDateFilter("ALL");
-    setStartDate("");
-    setEndDate("");
-    setSearchQuery("");
-    setSortBy("NEWEST");
-  };
-
-  const handleAssignVolunteer = async (issueId: string, newVolunteerId: string) => {
-    const selectedVol = volunteers.find((v) => v.id === newVolunteerId);
-    const newVolName = selectedVol ? selectedVol.name : newVolunteerId === currentUser.id ? currentUser.name : "Unassigned";
-
-    setIssues((prev) =>
-      prev.map((item) => {
-        if (item.id === issueId) {
-          return {
-            ...item,
-            assignedVolunteerId: newVolunteerId || undefined,
-            assignedVolunteerName: newVolName,
-            status: item.status === "NEW" && newVolunteerId ? "ASSIGNED" : item.status,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return item;
-      })
-    );
-
-    try {
-      await politicalApiService.updateFieldIssueStatus(issueId, {
-        assignedVolunteerId: newVolunteerId || undefined,
-        assignedVolunteerName: newVolName,
-        status: assignmentSafeStatus(issues.find((i) => i.id === issueId)?.status),
-        remarks: `Assigned to ${newVolName}`
-      });
-    } catch (e) {
-      console.warn("Assignment update fallback handled locally", e);
-    }
-  };
-
-  const handleAssignDepartment = async (issueId: string, newDept: string, officialName?: string, officialPhone?: string) => {
-    let finalDept = newDept;
-    if (newDept === "Other Government Department") {
-      const customText = prompt("Specify custom Government Department details:");
-      if (customText && customText.trim()) {
-        finalDept = `Other: ${customText.trim()}`;
-      }
-    }
-
-    const baseDeptObj = PGRS_DEPARTMENTS_LIST.find((d: any) =>
-      typeof d === "string"
-        ? d.toLowerCase().includes(finalDept.toLowerCase())
-        : (d.name || "").toLowerCase().includes(finalDept.toLowerCase()) || finalDept.toLowerCase().includes((d.name || "").split("(")[0].trim().toLowerCase())
-    );
-    const baseDept = baseDeptObj ? (typeof baseDeptObj === "string" ? baseDeptObj : baseDeptObj.name) : finalDept;
-
-    setIssues((prev: FieldIssue[]) =>
-      prev.map((item: FieldIssue) => {
-        if (item.id === issueId) {
-          return {
-            ...item,
-            department: baseDept,
-            assignedDepartment: baseDept,
-            assignedOfficialName: officialName || item.assignedOfficialName || "",
-            assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: volunteerAssignmentStatus(item.status),
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return item;
-      })
-    );
-
-    try {
-      const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
-      if (savedRaw) {
-        const savedList = JSON.parse(savedRaw);
-        const updated = savedList.map((i: any) => {
-          if (i.id === issueId) {
-            return {
-              ...i,
-              department: baseDept,
-              assignedDepartment: baseDept,
-              assignedOfficialName: officialName || i.assignedOfficialName || "",
-              assignedOfficialPhone: officialPhone || i.assignedOfficialPhone || "",
-              status: volunteerAssignmentStatus(i.status),
-              updatedAt: new Date().toISOString()
-            };
-          }
-          return i;
-        });
-        localStorage.setItem("leaders_lens_created_field_issues", JSON.stringify(updated));
-      }
-    } catch (e) {}
-
-    try {
-      await politicalApiService.updateFieldIssueStatus(issueId, {
-        department: baseDept,
-        status: volunteerAssignmentStatus(issues.find((i) => i.id === issueId)?.status),
-        assignedOfficialName: officialName,
-        assignedOfficialPhone: officialPhone,
-        remarks: `Department assigned to ${baseDept}`
-      });
-    } catch (e) {
-      console.warn("Department update error", e);
-    }
-  };
-
-  const getTicketTimingDetails = (issue: FieldIssue) => {
-    const regDateRaw = issue.createdAt || issue.reportedDate;
-    const regDateObj = new Date(regDateRaw);
-    const isValidReg = !isNaN(regDateObj.getTime());
-
-    const registeredTimeFormatted = isValidReg
-      ? regDateObj.toLocaleString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true
-        })
-      : issue.reportedDate;
-
-    const isClosed = issue.status === "COMPLETED" || issue.status === "RESOLVED";
-    const closeDateRaw = issue.completedDate || issue.updatedDate || issue.updatedAt || issue.lastStatusUpdateAt;
-    const closeDateObj = closeDateRaw ? new Date(closeDateRaw) : new Date();
-    const isValidClose = !isNaN(closeDateObj.getTime());
-
-    const closedTimeFormatted = isClosed
-      ? isValidClose
-        ? closeDateObj.toLocaleString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true
-          })
-        : issue.completedDate || "Resolved"
-      : "In Progress";
-
-    const startTime = isValidReg ? regDateObj.getTime() : new Date(issue.reportedDate).getTime();
-    const endTime = isClosed
-      ? isValidClose
-        ? closeDateObj.getTime()
-        : Date.now()
-      : Date.now();
-
-    const diffMs = Math.max(0, endTime - startTime);
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-    const remainingHours = diffHours % 24;
-
-    let durationText = "";
-    if (diffDays > 0) {
-      durationText = `${diffDays}d ${remainingHours}h`;
-    } else if (diffHours > 0) {
-      durationText = `${diffHours} hrs`;
-    } else {
-      const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
-      durationText = `${diffMins} mins`;
-    }
-
-    return {
-      registeredTimeFormatted,
-      closedTimeFormatted,
-      isClosed,
-      durationText,
-      totalHours: diffHours
-    };
-  };
-
-  const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign-ticket");
-
-  // Ticket detail stays on volunteer home. Assign Tickets is intake-only.
-  if (selectedIssue && !isAssignTicketsMode) {
+  if (selectedIssue) {
     return (
       <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6">
         <IssueDetailView
@@ -1032,9 +646,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   }
 
   return (
-          <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0] overflow-x-hidden">
-        {!isAssignTicketsMode && (
-        <div className="space-y-5">
+    <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0] overflow-x-hidden">
+      <div className="space-y-5">
           {/* Volunteer home: identity strip with name and assignment details */}
           <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
@@ -1094,650 +707,25 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
           </div>
 
-          {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters - Screenshot 1) */}
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("ALL");
-                window.location.hash = "#/field-ops?status=ALL";
-              }}
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
-                Total Tickets
-              </span>
-              <div className="flex items-baseline justify-between gap-1">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.total}</span>
-                <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">All</span>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("OPEN_UNASSIGNED");
-                window.location.hash = "#/field-ops?status=OPEN_UNASSIGNED";
-              }}
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
-                Open / Unassigned
-              </span>
-              <div className="flex items-baseline justify-between gap-1">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.openUnassigned}</span>
-                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Pending</span>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("ASSIGNED");
-                window.location.hash = "#/field-ops?status=ASSIGNED";
-              }}
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
-                Assigned
-              </span>
-              <div className="flex items-baseline justify-between gap-1">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.assigned}</span>
-                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Officer</span>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("IN_PROGRESS");
-                window.location.hash = "#/field-ops?status=IN_PROGRESS";
-              }}
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
-                In Progress
-              </span>
-              <div className="flex items-baseline justify-between gap-1">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.inProgress}</span>
-                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Ground</span>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("OVERDUE");
-                window.location.hash = "#/field-ops?status=OVERDUE";
-              }}
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
-                Overdue Alerts
-              </span>
-              <div className="flex items-baseline justify-between gap-1">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.overdue}</span>
-                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Urgent</span>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("RESOLVED");
-                window.location.hash = "#/field-ops?status=RESOLVED";
-              }}
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
-                Resolved / Closed
-              </span>
-              <div className="flex items-baseline justify-between gap-1">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.resolvedClosed}</span>
-                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Closed</span>
-              </div>
-            </div>
-
-            <div
-              onClick={() => {
-                setSearchQuery("");
-                setFilterCategory("ALL");
-                setFilterPriority("ALL");
-                setFilterReporterType("ALL");
-                setDateFilter("ALL");
-                setFilterStatus("REJECTED");
-                window.location.hash = "#/field-ops?status=REJECTED";
-              }}
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
-            >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
-                Rejected
-              </span>
-              <div className="flex items-baseline justify-between gap-1">
-                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.rejected}</span>
-                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Closed</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Filter & Sort Master Toolbar */}
-          <div className="p-4 rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg space-y-3 overflow-visible">
-        <div className="flex flex-col xl:flex-row xl:items-stretch gap-3">
-          <div className="relative w-full xl:flex-1 min-w-0">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
-            <input
-              type="text"
-              placeholder="Search by ID, title, citizen, village..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
+            {kpiCards.map((card) => (
+              <div
+                key={card.label}
+                className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
               >
-                ✕
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto xl:shrink-0">
-            {/* Sort Options Dropdown */}
-            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
-              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
-              >
-                <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
-                <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
-                <option value="DUE_DATE" className="bg-[#0B131E]">Earliest Due (Urgent SLA)</option>
-                <option value="PRIORITY" className="bg-[#0B131E]">Highest Priority (Urgent → Low)</option>
-                <option value="STATUS" className="bg-[#0B131E]">By Lifecycle Status</option>
-                <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
-              </select>
-            </div>
-
-            {/* Page Size Selector */}
-            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
-              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
-              <select
-                value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-transparent text-[#D4A24C] font-bold text-xs focus:outline-none cursor-pointer"
-              >
-                <option value={10} className="bg-[#0B131E]">10 / page</option>
-                <option value={25} className="bg-[#0B131E]">25 / page</option>
-                <option value={50} className="bg-[#0B131E]">50 / page</option>
-                <option value={100} className="bg-[#0B131E]">100 / page</option>
-              </select>
-            </div>
-
-            {/* Grid vs Table View Mode Switcher */}
-            <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
-              <button
-                onClick={() => setViewMode("GRID")}
-                title="Grid Cards View"
-                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "GRID"
-                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                    : "text-[#CBD5E1] hover:text-white"
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="text-[11px] hidden sm:inline">Grid</span>
-              </button>
-              <button
-                onClick={() => setViewMode("TABLE")}
-                title="Data Table View"
-                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === "TABLE"
-                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                    : "text-[#CBD5E1] hover:text-white"
-                }`}
-              >
-                <List className="w-3.5 h-3.5" />
-                <span className="text-[11px] hidden sm:inline">Table</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2: Granular Filter Dropdowns */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
-          {/* Status Filter */}
-          <div>
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFilterStatus(val);
-                window.location.hash = `#/field-ops?status=${val}`;
-              }}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Status: All (Total Records)</option>
-              <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
-              <option value="ASSIGNED">Status: Assigned</option>
-              <option value="IN_PROGRESS">Status: In Progress</option>
-              <option value="OVERDUE">Status: Overdue</option>
-              <option value="RESOLVED">Status: Resolved / Closed</option>
-              <option value="REJECTED">Status: Rejected</option>
-            </select>
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Category: All</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Priority Filter */}
-          <div>
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Priority: All</option>
-              <option value="URGENT">🔴 Urgent</option>
-              <option value="HIGH">🟠 High</option>
-              <option value="MEDIUM">🟡 Medium</option>
-              <option value="LOW">🟢 Low</option>
-            </select>
-          </div>
-
-          {/* Date Filter */}
-          <div>
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value as any)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Date: All Time</option>
-              <option value="TODAY">Date: Today</option>
-              <option value="7DAYS">Date: Past 7 Days</option>
-              <option value="THIS_MONTH">Date: This Month</option>
-              <option value="CUSTOM">Date: Custom Range</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Custom Date Range Picker when CUSTOM is active */}
-        {dateFilter === "CUSTOM" && (
-          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[#0B131E] border border-[#D4A24C]/40 text-xs animate-fadeIn">
-            <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">From:</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="bg-[#070D15] border border-[#223348] focus:border-[#D4A24C] text-[#F5EFE0] px-2.5 py-1.5 rounded-lg text-xs outline-none"
-            />
-            <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">To:</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="bg-[#070D15] border border-[#223348] focus:border-[#D4A24C] text-[#F5EFE0] px-2.5 py-1.5 rounded-lg text-xs outline-none"
-            />
-            {(startDate || endDate) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setStartDate("");
-                  setEndDate("");
-                }}
-                className="text-rose-400 hover:text-rose-200 text-xs font-semibold underline ml-1"
-              >
-                Clear Dates
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Row 3: Active Filter Chips & Clear All */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#223348]/70 text-xs">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase font-semibold text-[#8E9CAE]">Active Filters:</span>
-              {filterStatus !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Status: {filterStatus}
+                <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
+                  {card.label}
                 </span>
-              )}
-              {filterCategory !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Category: {filterCategory}
-                </span>
-              )}
-              {filterPriority !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Priority: {filterPriority}
-                </span>
-              )}
-              {dateFilter !== "ALL" && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Date: {dateFilter}
-                </span>
-              )}
-              {searchQuery && (
-                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
-                  Query: &quot;{searchQuery}&quot;
-                </span>
-              )}
-            </div>
-
-            <button
-              onClick={clearAllFilters}
-              className="text-[#D4A24C] hover:underline font-semibold text-[11px] cursor-pointer"
-            >
-              Reset / Clear All Filters
-            </button>
+                <div className="flex items-baseline justify-between gap-1">
+                  <span className="text-2xl font-bold font-mono text-[#D4A24C]">
+                    {loading ? "—" : card.value}
+                  </span>
+                  <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">{card.hint}</span>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
       </div>
-
-      {/* 3. Submitted Issues Feed: Grid or Table View */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0E1724]/75 rounded-2xl border border-[#223348]">
-            Loading submitted complaints...
-          </div>
-        ) : sortedAndFilteredIssues.length === 0 ? (
-          <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0E1724]/75 rounded-2xl border border-[#223348] space-y-3">
-            <div className="w-12 h-12 rounded-full bg-[#131E2D] text-[#D4A24C] flex items-center justify-center mx-auto">
-              <FileText className="w-6 h-6" />
-            </div>
-            <p className="text-base text-[#F5EFE0] font-semibold">No complaints found matching current filters</p>
-            <p className="text-xs text-[#8E9CAE]">
-              Try clearing filters or click &quot;+ Add Complaint / Requirement&quot; to log a new issue.
-            </p>
-            <button
-              onClick={clearAllFilters}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs cursor-pointer shadow-md"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : viewMode === "GRID" ? (
-          /* GRID VIEW */
-          <div className={TICKET_GRID_CLASS}>
-            {paginatedIssues.map((issue) => {
-              const timing = getTicketTimingDetails(issue);
-
-              return (
-                <TicketGridCard
-                  key={issue.id}
-                  issue={issue}
-                  timing={timing}
-                  departments={DEPARTMENTS}
-                  resolveDeptValue={resolveDeptValue}
-                  showAssignControls={false}
-                  showProofCount={false}
-                  onOpen={() => setSelectedIssue(issue)}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          /* TABLE VIEW */
-          <div className={TICKET_TABLE_SHELL}>
-              <table className={TICKET_TABLE_CLASS}>
-                <thead>
-                  <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%] font-mono`}>ID & Status</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[26%]`}>Issue Title</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Category / Dept</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Mandal / Location</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Reported By</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Department</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Timeline</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[4%] text-right`}>View</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedIssues.map((issue) => {
-                    const timing = getTicketTimingDetails(issue);
-                    const officerComment = issue.lastStatusRemarks?.trim();
-
-                    return (
-                      <tr
-                        key={issue.id}
-                        onClick={() => setSelectedIssue(issue)}
-                        className={TICKET_TABLE_ROW_CLASS}
-                      >
-                        <td className={`${TICKET_TABLE_CELL} font-mono`}>
-                          <div className="font-bold text-[#D4A24C]" title={formatTicketDisplay(issue)}>
-                            {formatTicketDisplay(issue)}
-                          </div>
-                          <span className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${UNIQUE_TICKET_SURFACE.badge}`}>
-                            {formatIssueStatus(issue.status)}
-                          </span>
-                        </td>
-                        <td className={TICKET_TABLE_CELL}>
-                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors">
-                            {issue.title}
-                          </div>
-                          {issue.description ? (
-                            <div className="text-[11px] text-[#8E9CAE] mt-0.5">
-                              {issue.description}
-                            </div>
-                          ) : null}
-                          {officerComment ? (
-                            <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0]">
-                              {officerComment}
-                            </div>
-                          ) : null}
-                        </td>
-                        <td className={TICKET_TABLE_CELL}>
-                          <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
-                          {issue.department && (
-                            <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">
-                              {issue.department.split("(")[0]}
-                            </div>
-                          )}
-                        </td>
-                        <td className={TICKET_TABLE_CELL}>
-                          <div className="text-[#F5EFE0] font-medium">{issue.mandalName}</div>
-                          {issue.villageName ? (
-                            <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">{issue.villageName}</div>
-                          ) : null}
-                        </td>
-                        <td className={TICKET_TABLE_CELL}>
-                          <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
-                          <div className="text-[10.5px] text-[#D4A24C] mt-0.5">
-                            {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
-                          </div>
-                        </td>
-                        <td className={TICKET_TABLE_CELL}>
-                          <div className="text-[11px] font-semibold text-[#F5EFE0]">
-                            {issue.department || "General Administration"}
-                          </div>
-                        </td>
-                        <td className={`${TICKET_TABLE_CELL} font-mono text-[10px]`}>
-                          <div className="text-[#CBD5E1]">Reg: {timing.registeredTimeFormatted}</div>
-                          <div className="mt-0.5">
-                            {timing.isClosed ? (
-                              <span className="text-[#D4A24C] font-semibold">Done: {timing.closedTimeFormatted}</span>
-                            ) : (
-                              <span className="text-[#D4A24C]/90 font-semibold">Open {timing.durationText}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className={`${TICKET_TABLE_CELL} text-right`}>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedIssue(issue);
-                            }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-normal"
-                          >
-                            <Eye className="w-3 h-3 shrink-0" />
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-          </div>
-        )}
-
-        {/* Global Pagination Bar */}
-        {sortedAndFilteredIssues.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:px-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] text-xs">
-            <div className="text-[#8E9CAE] font-mono text-center sm:text-left">
-              Showing{" "}
-              <strong className="text-[#F5EFE0]">
-                {(currentPage - 1) * pageSize + 1}
-              </strong>{" "}
-              to{" "}
-              <strong className="text-[#F5EFE0]">
-                {Math.min(currentPage * pageSize, sortedAndFilteredIssues.length)}
-              </strong>{" "}
-              of{" "}
-              <strong className="text-[#D4A24C]">
-                {sortedAndFilteredIssues.length}
-              </strong>{" "}
-              records
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              {/* First Page */}
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                title="First Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <ChevronsLeft className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Prev Page */}
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                title="Previous Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Page Number Pills */}
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                  .map((p, idx, arr) => {
-                    const prev = arr[idx - 1];
-                    return (
-                      <React.Fragment key={p}>
-                        {prev && p - prev > 1 && (
-                          <span className="px-1 text-[#8E9CAE]">...</span>
-                        )}
-                        <button
-                          onClick={() => setCurrentPage(p)}
-                          className={`w-7 h-7 rounded-lg font-mono font-bold text-xs transition-all cursor-pointer ${
-                            currentPage === p
-                              ? "bg-[#D4A24C] text-[#0B131E] shadow-sm"
-                              : "bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white"
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      </React.Fragment>
-                    );
-                  })}
-              </div>
-
-              {/* Next Page */}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                title="Next Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Last Page */}
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                title="Last Page"
-                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <ChevronsRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-        </div>
-        )}
-
-        {isAssignTicketsMode && (
-        <div className="space-y-5">
-          <div className="p-6 sm:p-8 rounded-2xl bg-[#0E1724]/90 border border-[#D4A24C]/40 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="min-w-0 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] font-mono">
-                Volunteer intake
-              </span>
-              <h1 className="font-display text-2xl sm:text-3xl text-[#F5EFE0] font-normal">
-                Add Complaint / Requirement
-              </h1>
-              <p className="text-xs text-[#8E9CAE] max-w-xl">
-                Log a citizen complaint or requirement. Ticket lists and details stay with Manager and Political Admin.
-              </p>
-            </div>
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              data-testid="add-complaint-btn-assign"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start sm:self-center"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Add Complaint / Requirement</span>
-            </button>
-          </div>
-        </div>
-        )}
 
       {/* 4. Complete Intake Modal: "Log New Citizen Complaint / Requirement" */}
       {isAddModalOpen && (
@@ -2251,14 +1239,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         </div>
       )}
-      {/* Assign Complaint & Notify WhatsApp Modal */}
-      <AssignComplaintModal
-        isOpen={!!assignModalIssue}
-        issue={assignModalIssue}
-        onClose={() => setAssignModalIssue(null)}
-        onConfirmAssign={(issueId, deptName, officialName, officialPhone) => handleAssignDepartment(issueId, deptName, officialName, officialPhone)}
-        returnHash="#/field-ops"
-      />
     </div>
   );
 };

@@ -307,7 +307,7 @@ function AppInner() {
   // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
   // - Political Admin: Home (fieldops), Assign Tickets, Contact Database, Director User Management
   // - Manager: Home (fieldops), Assign Tickets, Contact Database (no Squad Volunteer / governance)
-  // - Volunteer: Home (fieldops), Contact Database — Add Complaint lives on Home, not Assign Tickets
+  // - Volunteer: Home (fieldops), Contact Database — Add Complaint and status counts on Home, no ticket grid/table
   useEffect(() => {
     if (isVolunteer && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
