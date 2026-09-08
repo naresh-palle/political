@@ -68,7 +68,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [roleDashboard, setRoleDashboard] = useState<any>(null);
   const [dashboardError, setDashboardError] = useState("");
-  const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("TABLE");
+  const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
   const [operationsStream] = useState<"ALL" | "FIELD_ISSUES" | "GRIEVANCES">("FIELD_ISSUES");
 
   const getStatusFromUrl = (): string => {
@@ -1062,17 +1062,17 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
             <div className="inline-flex items-center gap-3 text-[#8E9CAE] shrink-0">
               <button
                 type="button"
-                onClick={() => setViewMode("TABLE")}
-                className={`cursor-pointer ${viewMode === "TABLE" ? "text-[#D4A24C] font-semibold" : "hover:text-[#F5EFE0]"}`}
-              >
-                Table
-              </button>
-              <button
-                type="button"
                 onClick={() => setViewMode("GRID")}
                 className={`cursor-pointer ${viewMode === "GRID" ? "text-[#D4A24C] font-semibold" : "hover:text-[#F5EFE0]"}`}
               >
                 Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("TABLE")}
+                className={`cursor-pointer ${viewMode === "TABLE" ? "text-[#D4A24C] font-semibold" : "hover:text-[#F5EFE0]"}`}
+              >
+                Table
               </button>
             </div>
           </div>
