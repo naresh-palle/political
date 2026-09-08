@@ -70,18 +70,58 @@ def format_ticket_display(issue: Optional[Dict[str, Any]]) -> str:
     return raw
 
 
-def allocate_ticket_number(issue: Dict[str, Any], sequence: Optional[int] = None) -> str:
-    existing = strip_ticket_number_parens(issue.get("ticketNumber"))
-    if existing:
-        return existing
+INITIAL_TICKET_SEQUENCE = 1
+_SEQ_SUFFIX = re.compile(r"-(\d{6})$")
+
+
+def ticket_year_code(issue: Optional[Dict[str, Any]]) -> str:
+    year_source = (issue or {}).get("reportedDate") or (issue or {}).get("createdAt") or datetime.now(timezone.utc).isoformat()
+    try:
+        year = datetime.fromisoformat(str(year_source).replace("Z", "+00:00")).year
+    except Exception:
+        year = datetime.now(timezone.utc).year
+    return str(year)[-2:]
+
+
+def ticket_number_prefix(issue: Optional[Dict[str, Any]]) -> str:
     geo = geo_code_from_issue(issue)
     if not geo:
-        return raw_ticket_number(issue)
-    year_source = issue.get("reportedDate") or issue.get("createdAt") or datetime.now(timezone.utc).isoformat()
-    try:
-        year = str(datetime.fromisoformat(str(year_source).replace("Z", "+00:00")).year)[-2:]
-    except Exception:
-        year = str(datetime.now(timezone.utc).year)[-2:]
+        return ""
+    return f"LL-{office_code_from_issue(issue)}-{geo}-{ticket_year_code(issue)}-"
+
+
+def parse_ticket_sequence(ticket_number: Any) -> Optional[int]:
+    raw = strip_ticket_number_parens(ticket_number)
+    match = _SEQ_SUFFIX.search(raw)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def next_ticket_sequence(existing_numbers: Optional[list], issue: Dict[str, Any]) -> int:
+    prefix = ticket_number_prefix(issue)
+    highest = INITIAL_TICKET_SEQUENCE - 1
+    for item in existing_numbers or []:
+        raw = strip_ticket_number_parens(item.get("ticketNumber") if isinstance(item, dict) else item)
+        if prefix and not raw.startswith(prefix):
+            continue
+        seq = parse_ticket_sequence(raw)
+        if seq is not None and seq > highest:
+            highest = seq
+    return highest + 1
+
+
+def allocate_ticket_number(
+    issue: Dict[str, Any],
+    sequence: Optional[int] = None,
+    existing_numbers: Optional[list] = None,
+) -> str:
+    stored = strip_ticket_number_parens(issue.get("ticketNumber"))
+    if stored and sequence is None and existing_numbers is None:
+        return stored
+    geo = geo_code_from_issue(issue)
+    if not geo:
+        return stored or raw_ticket_number({**issue, "ticketNumber": ""})
     if sequence is None:
-        sequence = int(datetime.now(timezone.utc).timestamp() * 1000) % 1_000_000
-    return f"LL-{office_code_from_issue(issue)}-{geo}-{year}-{int(sequence):06d}"
+        sequence = next_ticket_sequence(existing_numbers, issue)
+    return f"LL-{office_code_from_issue(issue)}-{geo}-{ticket_year_code(issue)}-{int(sequence):06d}"

@@ -592,7 +592,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         createdBy: currentUser.id,
         createdByRole: "VOLUNTEER"
       };
-      payload.ticketNumber = allocateTicketNumber(payload);
+      payload.ticketNumber = allocateTicketNumber(payload, undefined, issues);
 
       const created = await politicalApiService.createFieldIssue(payload);
       setIssues([created, ...issues]);

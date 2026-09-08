@@ -235,6 +235,23 @@ def load_runtime_field_issues() -> list:
         return []
 
 
+def known_field_issue_ticket_records(exclude_id: Optional[str] = None) -> list:
+    """Catalog used to assign the next LL-…-00000N sequence. No extra geography calls."""
+    by_id = {}
+    for source in (
+        load_json_fallback("field_issues.json"),
+        load_runtime_field_issues(),
+        list(IN_MEMORY_FIELD_ISSUES.values()),
+    ):
+        for doc in source or []:
+            if not isinstance(doc, dict) or not doc.get("id"):
+                continue
+            by_id[doc["id"]] = doc
+    if exclude_id:
+        by_id.pop(exclude_id, None)
+    return list(by_id.values())
+
+
 def persist_field_issue(issue: Optional[dict]) -> None:
     """Keep officer status on disk so seed JSON cannot reopen In Progress tickets."""
     if not isinstance(issue, dict) or not issue.get("id"):
@@ -1903,7 +1920,14 @@ async def create_field_issue(payload: dict):
         "isImmutable": True,
     }
     issue_doc.pop("_id", None)
-    issue_doc["ticketNumber"] = allocate_ticket_number(issue_doc)
+    existing_numbers = known_field_issue_ticket_records(exclude_id=issue_id)
+    if not _mongo_circuit_open:
+        try:
+            extra = await db.field_issues.find({}, {"id": 1, "ticketNumber": 1, "_id": 0}).to_list(length=5000)
+            existing_numbers.extend(extra or [])
+        except Exception as e:
+            log_mongo_notice("ticket sequence catalog", e)
+    issue_doc["ticketNumber"] = allocate_ticket_number(issue_doc, existing_numbers=existing_numbers)
     persisted = sanitize_doc(dict(issue_doc))
     IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
     persist_field_issue(persisted)
@@ -2490,7 +2514,10 @@ async def create_field_issue(payload: dict):
         "createdAt": payload.get("createdAt") or now_str,
         "updatedAt": now_str
     }
-    issue_doc["ticketNumber"] = allocate_ticket_number(issue_doc)
+    issue_doc["ticketNumber"] = allocate_ticket_number(
+        issue_doc,
+        existing_numbers=known_field_issue_ticket_records(exclude_id=issue_id),
+    )
     
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": issue_doc}, upsert=True)

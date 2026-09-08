@@ -63,15 +63,54 @@ export function formatTicketDisplay(issue: TicketLike | null | undefined): strin
   return place ? `${raw} (${place})` : raw;
 }
 
-export function allocateTicketNumber(issue: TicketLike, sequence?: number): string {
-  const existing = stripTicketNumberParens(String(issue.ticketNumber || ""));
-  if (existing) return existing;
+export const INITIAL_TICKET_SEQUENCE = 1;
+
+const SEQ_SUFFIX = /-(\d{6})$/;
+
+export function ticketYearCode(issue: TicketLike | null | undefined): string {
+  const yearSource = issue?.reportedDate || issue?.createdAt || new Date().toISOString();
+  const year = new Date(yearSource).getFullYear();
+  return String(Number.isFinite(year) ? year : 2026).slice(-2);
+}
+
+export function ticketNumberPrefix(issue: TicketLike | null | undefined): string {
+  if (!issue) return "";
   const geo = geoCodeFromIssue(issue);
-  if (!geo) return rawTicketNumber(issue);
-  const yearSource = issue.reportedDate || issue.createdAt || new Date().toISOString();
-  const year = String(new Date(yearSource).getFullYear() || 2026).slice(-2);
-  const seq = String(sequence ?? Date.now() % 1_000_000).padStart(6, "0");
-  return `LL-${officeCodeFromIssue(issue)}-${geo}-${year}-${seq}`;
+  if (!geo) return "";
+  return `LL-${officeCodeFromIssue(issue)}-${geo}-${ticketYearCode(issue)}-`;
+}
+
+export function parseTicketSequence(ticketNumber?: string | null): number | null {
+  const raw = stripTicketNumberParens(String(ticketNumber || ""));
+  const match = raw.match(SEQ_SUFFIX);
+  if (!match) return null;
+  const value = Number.parseInt(match[1], 10);
+  return Number.isFinite(value) ? value : null;
+}
+
+export function nextTicketSequence(existing: TicketLike[] | string[] | null | undefined, issue: TicketLike): number {
+  const prefix = ticketNumberPrefix(issue);
+  let max = INITIAL_TICKET_SEQUENCE - 1;
+  for (const item of existing || []) {
+    const raw = typeof item === "string" ? item : stripTicketNumberParens(String(item?.ticketNumber || ""));
+    if (prefix && !raw.startsWith(prefix)) continue;
+    const seq = parseTicketSequence(raw);
+    if (seq != null && seq > max) max = seq;
+  }
+  return max + 1;
+}
+
+export function allocateTicketNumber(
+  issue: TicketLike,
+  sequence?: number,
+  existing?: TicketLike[] | string[]
+): string {
+  const stored = stripTicketNumberParens(String(issue.ticketNumber || ""));
+  if (stored && sequence == null && existing == null) return stored;
+  const geo = geoCodeFromIssue(issue);
+  if (!geo) return stored || rawTicketNumber({ ...issue, ticketNumber: "" });
+  const seq = sequence ?? nextTicketSequence(existing, issue);
+  return `LL-${officeCodeFromIssue(issue)}-${geo}-${ticketYearCode(issue)}-${String(seq).padStart(6, "0")}`;
 }
 
 export function ticketSearchHaystack(issue: TicketLike): string {

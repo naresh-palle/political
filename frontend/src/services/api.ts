@@ -1324,10 +1324,21 @@ export const politicalApiService = {
 
   async createFieldIssue(payload: any): Promise<any> {
     const issueId = String(payload?.id || "").trim() || `iss-${Date.now().toString(16)}`;
+    let localIssues: any[] = [];
+    try {
+      const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
+      const remoteRaw = localStorage.getItem("leaders_lens_remote_field_issues");
+      localIssues = [
+        ...(savedRaw ? JSON.parse(savedRaw) : []),
+        ...(remoteRaw ? JSON.parse(remoteRaw) : [])
+      ];
+    } catch (e) {}
     const body = {
       ...payload,
       id: issueId,
-      ticketNumber: payload?.ticketNumber || allocateTicketNumber({ ...payload, id: issueId }),
+      ticketNumber:
+        payload?.ticketNumber ||
+        allocateTicketNumber({ ...payload, id: issueId, ticketNumber: "" }, undefined, localIssues),
       status: payload?.status || "NEW",
       createdAt: payload?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()

@@ -50,7 +50,7 @@ def test_missing_geography_does_not_guess():
 
 
 def test_allocate_does_not_overwrite_existing_ticket_number():
-    assert allocate_ticket_number(dict(MLA), sequence=99) == "LL-MLA-AC140-26-000001"
+    assert allocate_ticket_number(dict(MLA)) == "LL-MLA-AC140-26-000001"
 
 
 def test_allocate_uses_ticket_geography_not_hardcoded_map():
@@ -63,6 +63,32 @@ def test_allocate_uses_ticket_geography_not_hardcoded_map():
     number = allocate_ticket_number(fresh, sequence=123)
     assert number == "LL-MLA-AC140-26-000123"
     assert "(" not in number
+
+
+def test_next_sequence_starts_at_one_not_timestamp():
+    from backend.services.ticket_number_display import INITIAL_TICKET_SEQUENCE, next_ticket_sequence
+
+    fresh = {
+        "assemblyConstituencyId": "BNG-AC",
+        "assemblyConstituencyName": "Banaganapalle Assembly (AC-140)",
+        "reportedDate": "2026-09-08",
+    }
+    assert INITIAL_TICKET_SEQUENCE == 1
+    assert next_ticket_sequence([], fresh) == 1
+    assert allocate_ticket_number(fresh) == "LL-MLA-AC140-26-000001"
+
+
+def test_next_sequence_follows_existing_catalog():
+    from backend.services.ticket_number_display import next_ticket_sequence
+
+    catalog = [dict(MLA), {**MLA, "ticketNumber": "LL-MLA-AC140-26-000012"}]
+    fresh = {
+        "assemblyConstituencyId": "BNG-AC",
+        "assemblyConstituencyName": "Banaganapalle Assembly (AC-140)",
+        "reportedDate": "2026-09-08",
+    }
+    assert next_ticket_sequence(catalog, fresh) == 13
+    assert allocate_ticket_number(fresh, existing_numbers=catalog) == "LL-MLA-AC140-26-000013"
 
 
 def test_legacy_id_still_displays_with_constituency():
