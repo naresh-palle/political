@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { UserProfile } from "../../types";
+import { MandalInfo, UserProfile, VillageInfo } from "../../types";
 import {
   Search,
   Phone,
@@ -10,9 +10,13 @@ import {
   Eye,
   FileSpreadsheet,
   X,
-  UserPlus
+  UserPlus,
+  Pencil,
+  Trash2
 } from "lucide-react";
 import { downloadContactWorkbook } from "../../utils/contactExcelExport";
+import { politicalApiService } from "../../services/api";
+import { PGRS_DEPARTMENTS_LIST } from "../fieldops/VolunteerOperationsDashboard";
 
 export interface ContactRecord {
   id: string;
@@ -35,6 +39,8 @@ export interface ContactRecord {
   lastContactedDate?: string;
   notes?: string;
   assignedVolunteerName?: string;
+  department?: string;
+  subDepartment?: string;
 }
 
 const INITIAL_CONTACTS: ContactRecord[] = [
@@ -57,7 +63,9 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     grievanceCount: 5,
     lastContactedDate: "2026-09-04",
     notes: "Verified Live Department Contact for Panchayat Raj dispatches.",
-    assignedVolunteerName: "Manager1"
+    assignedVolunteerName: "Manager1",
+    department: "1. Panchayat Raj – Engineering Department",
+    subDepartment: "Panchayat Buildings Department (పంచాయతీ భవనాలు)"
   },
   {
     id: "cnt-live-002",
@@ -78,7 +86,9 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     grievanceCount: 3,
     lastContactedDate: "2026-09-04",
     notes: "Verified Live Department Contact for Rural Water Supply Scheme dispatches.",
-    assignedVolunteerName: "Manager1"
+    assignedVolunteerName: "Manager1",
+    department: "2. Rural Water Supply Scheme Department (RWS)",
+    subDepartment: "Drains and Pipe lines (డ్రైన్లు మరియు పైప్‌లైన్లు)"
   },
   {
     id: "cnt-bng-001",
@@ -140,7 +150,9 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     avatarUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80",
     grievanceCount: 1,
     lastContactedDate: "2026-08-25",
-    notes: "Nodal officer for constituency medical camps & Janani Suraksha."
+    notes: "Nodal officer for constituency medical camps & Janani Suraksha.",
+    department: "3. Rural Development – NTR Bharosa Pensions Department",
+    subDepartment: "DMHO / Medical Pensions (వైద్య పింఛన్లు)"
   },
   {
     id: "cnt-bng-004",
@@ -281,8 +293,62 @@ const INITIAL_CONTACTS: ContactRecord[] = [
 ];
 
 const STORAGE_KEY = "leaders_lens_contacts_db";
+const OTHER_DEPT = "Other Government Department (ఇతర ప్రభుత్వ శాఖ)";
+const OTHER_SUB = "Other (ఇతరం)";
+const CONTACT_DEPARTMENTS = [...PGRS_DEPARTMENTS_LIST.map((d) => d.name), OTHER_DEPT];
+
+const EMPTY_CONTACT: Partial<ContactRecord> = {
+  name: "",
+  phone: "+91 ",
+  email: "",
+  category: "CADRE",
+  designation: "",
+  department: "",
+  subDepartment: "",
+  mandalName: "",
+  mandalId: "",
+  villageName: "",
+  villageId: "",
+  politicalAlignment: "STRONG_SUPPORTER",
+  occupation: "",
+  gender: "Male",
+  notes: ""
+};
+
+const FIELD_CLASS =
+  "w-full min-w-0 bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none";
+
+const ROLE_TOKEN = (user: UserProfile) =>
+  String(user.primaryRole || user.roleId || user.role || "")
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_");
+
+/** PA, Manager, and Super Admin can view / edit / delete every contact. */
+function canUserManageContacts(user: UserProfile): boolean {
+  if (user.isPlatformAdmin || user.isPoliticalAdmin) return true;
+  if (user.email === "admin@leaderslens.ai") return true;
+  const role = ROLE_TOKEN(user);
+  return (
+    role === "SUPER_ADMIN" ||
+    role === "POLITICAL_ADMIN" ||
+    role === "DIRECTOR" ||
+    role === "ADMIN" ||
+    role === "CAMPAIGN_MANAGER" ||
+    role === "PARTY_ADMIN" ||
+    role === "CAMPAIGN_DIRECTOR"
+  );
+}
+
+function isVolunteerUser(user: UserProfile): boolean {
+  if (canUserManageContacts(user)) return false;
+  const role = ROLE_TOKEN(user);
+  return role === "VOLUNTEER" || user.role === "volunteer";
+}
 
 export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ currentUser }) => {
+  const canManageContacts = canUserManageContacts(currentUser);
+  const hidePhone = isVolunteerUser(currentUser);
+
   const [contacts, setContacts] = useState<ContactRecord[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -294,38 +360,40 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     return INITIAL_CONTACTS;
   });
 
+  const [mandals, setMandals] = useState<MandalInfo[]>([]);
+  const [villages, setVillages] = useState<VillageInfo[]>([]);
+  const [otherDepartment, setOtherDepartment] = useState("");
+  const [otherSubDepartment, setOtherSubDepartment] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [filterMandal, setFilterMandal] = useState<string>("ALL");
   const [filterGender, setFilterGender] = useState<string>("ALL");
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
-  // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<ContactRecord | null>(null);
 
-  // New Contact Form State
-  const [newContact, setNewContact] = useState<Partial<ContactRecord>>({
-    name: "",
-    phone: "+91 ",
-    email: "",
-    category: "CADRE",
-    designation: "",
-    mandalName: "Banaganapalle Town",
-    mandalId: "MDL-BNG-TWN",
-    villageName: "Ward 1",
-    villageId: "VIL-01",
-    politicalAlignment: "STRONG_SUPPORTER",
-    occupation: "",
-    gender: "Male",
-    notes: ""
-  });
+  const [newContact, setNewContact] = useState<Partial<ContactRecord>>({ ...EMPTY_CONTACT });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
 
-  // Save to local storage whenever contacts change
+  useEffect(() => {
+    const acId = currentUser.assemblyConstituencyId || "BNG-AC";
+    Promise.all([
+      politicalApiService.getMandals(acId, currentUser.stateId || undefined),
+      politicalApiService.getVillages(undefined, acId)
+    ])
+      .then(([m, v]) => {
+        setMandals(Array.isArray(m) ? m : []);
+        setVillages(Array.isArray(v) ? v : []);
+      })
+      .catch(() => {});
+  }, [currentUser.assemblyConstituencyId, currentUser.stateId]);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
@@ -334,14 +402,27 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     }
   }, [contacts]);
 
-  // Unique Mandals list
   const mandalsList = useMemo(() => {
+    if (mandals.length > 0) {
+      return mandals.map((m) => ({ id: m.id, name: m.name }));
+    }
     const map = new Map<string, string>();
     contacts.forEach((c) => {
-      if (c.mandalName) map.set(c.mandalName, c.mandalId);
+      if (c.mandalName) map.set(c.mandalId || c.mandalName, c.mandalName);
     });
-    return Array.from(map.entries()).map(([name, id]) => ({ name, id }));
-  }, [contacts]);
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [mandals, contacts]);
+
+  const villagesForForm = useMemo(() => {
+    const mandalId = newContact.mandalId;
+    if (!mandalId) return villages;
+    const filtered = villages.filter((v) => v.mandalId === mandalId);
+    return filtered.length > 0 ? filtered : villages;
+  }, [villages, newContact.mandalId]);
+
+  const selectedDept = PGRS_DEPARTMENTS_LIST.find((d) => d.name === newContact.department);
+  const subOptions = selectedDept ? [...selectedDept.subDetails, OTHER_SUB] : [OTHER_SUB];
+  const isOfficer = newContact.category === "GOVT_OFFICIAL";
 
   const matchesSearchCategory = (category: ContactRecord["category"], selected: string) => {
     if (selected === "ALL") return true;
@@ -350,7 +431,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     return category === selected;
   };
 
-  // Filtered Contacts
   const filteredContacts = useMemo(() => {
     return contacts.filter((c) => {
       if (!matchesSearchCategory(c.category, filterCategory)) return false;
@@ -359,19 +439,25 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        return (
-          c.name.toLowerCase().includes(q) ||
-          c.phone.toLowerCase().includes(q) ||
-          c.mandalName.toLowerCase().includes(q) ||
-          c.villageName.toLowerCase().includes(q) ||
-          (c.designation || "").toLowerCase().includes(q) ||
-          (c.occupation || "").toLowerCase().includes(q) ||
-          (c.voterId || "").toLowerCase().includes(q)
-        );
+        const haystack = [
+          c.name,
+          hidePhone ? "" : c.phone,
+          c.mandalName,
+          c.villageName,
+          c.designation,
+          c.occupation,
+          c.department,
+          c.subDepartment,
+          hidePhone ? "" : c.voterId
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
       }
       return true;
     });
-  }, [contacts, filterCategory, filterMandal, filterGender, searchQuery]);
+  }, [contacts, filterCategory, filterMandal, filterGender, searchQuery, hidePhone]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -391,51 +477,116 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     };
   }, [contacts]);
 
+  const resolvedDepartment = () => {
+    if (!isOfficer) return "";
+    if (newContact.department === OTHER_DEPT) return otherDepartment.trim() || OTHER_DEPT;
+    return newContact.department || "";
+  };
+
+  const resolvedSubDepartment = () => {
+    if (!isOfficer) return "";
+    if (newContact.subDepartment === OTHER_SUB) return otherSubDepartment.trim() || OTHER_SUB;
+    return newContact.subDepartment || "";
+  };
+
+  const buildContactRecord = (id: string, extras?: Partial<ContactRecord>): ContactRecord => ({
+    id,
+    name: newContact.name || "",
+    phone: newContact.phone || "",
+    email: newContact.email || undefined,
+    category: (newContact.category as ContactRecord["category"]) || "CADRE",
+    designation: newContact.designation || "",
+    department: resolvedDepartment(),
+    subDepartment: resolvedSubDepartment(),
+    mandalId: newContact.mandalId || "",
+    mandalName: newContact.mandalName || "",
+    villageId: newContact.villageId || "",
+    villageName: newContact.villageName || "",
+    voterId: newContact.voterId || undefined,
+    age: newContact.age,
+    gender: (newContact.gender as ContactRecord["gender"]) || "Male",
+    politicalAlignment: (newContact.politicalAlignment as ContactRecord["politicalAlignment"]) || "STRONG_SUPPORTER",
+    occupation: newContact.occupation || "Resident",
+    avatarUrl: newContact.avatarUrl,
+    grievanceCount: extras?.grievanceCount ?? 0,
+    notes: newContact.notes || "",
+    lastContactedDate: extras?.lastContactedDate || new Date().toISOString().split("T")[0],
+    assignedVolunteerName: extras?.assignedVolunteerName
+  });
+
+  const resetForm = () => {
+    setNewContact({ ...EMPTY_CONTACT });
+    setOtherDepartment("");
+    setOtherSubDepartment("");
+    setEditingId(null);
+  };
+
   const handleCreateContact = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newContact.name || !newContact.phone) return;
-
-    const created: ContactRecord = {
-      id: `cnt-${Date.now().toString(16)}`,
-      name: newContact.name,
-      phone: newContact.phone,
-      email: newContact.email || undefined,
-      category: (newContact.category as any) || "CADRE",
-      designation: newContact.designation || "",
-      mandalId: newContact.mandalId || "MDL-BNG-TWN",
-      mandalName: newContact.mandalName || "Banaganapalle Town",
-      villageId: newContact.villageId || "VIL-01",
-      villageName: newContact.villageName || "Town Ward 1",
-      voterId: newContact.voterId || undefined,
-      gender: (newContact.gender as any) || "Male",
-      politicalAlignment: (newContact.politicalAlignment as any) || "STRONG_SUPPORTER",
-      occupation: newContact.occupation || "Resident",
-      grievanceCount: 0,
-      notes: newContact.notes || "",
-      lastContactedDate: new Date().toISOString().split("T")[0]
-    };
-
-    setContacts((prev) => [created, ...prev]);
+    if (editingId) {
+      if (!canManageContacts) return;
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === editingId
+            ? buildContactRecord(editingId, {
+                grievanceCount: c.grievanceCount,
+                lastContactedDate: c.lastContactedDate,
+                assignedVolunteerName: c.assignedVolunteerName
+              })
+            : c
+        )
+      );
+    } else {
+      setContacts((prev) => [buildContactRecord(`cnt-${Date.now().toString(16)}`), ...prev]);
+    }
     setIsAddModalOpen(false);
+    resetForm();
+  };
+
+  const openCreate = () => {
+    resetForm();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    setIsAddModalOpen(true);
+  };
+
+  const openEdit = (contact: ContactRecord) => {
+    if (!canManageContacts) return;
+    const knownDept = CONTACT_DEPARTMENTS.includes(contact.department || "")
+      ? contact.department || ""
+      : contact.department
+        ? OTHER_DEPT
+        : "";
+    const deptObj = PGRS_DEPARTMENTS_LIST.find((d) => d.name === knownDept);
+    const knownSub =
+      deptObj && contact.subDepartment && deptObj.subDetails.includes(contact.subDepartment)
+        ? contact.subDepartment
+        : contact.subDepartment
+          ? OTHER_SUB
+          : "";
+    setEditingId(contact.id);
+    setOtherDepartment(knownDept === OTHER_DEPT ? contact.department || "" : "");
+    setOtherSubDepartment(knownSub === OTHER_SUB ? contact.subDepartment || "" : "");
     setNewContact({
-      name: "",
-      phone: "+91 ",
-      email: "",
-      category: "CADRE",
-      designation: "",
-      mandalName: "Banaganapalle Town",
-      mandalId: "MDL-BNG-TWN",
-      villageName: "Ward 1",
-      villageId: "VIL-01",
-      politicalAlignment: "STRONG_SUPPORTER",
-      occupation: "",
-      gender: "Male",
-      notes: ""
+      ...contact,
+      department: knownDept || contact.department,
+      subDepartment: knownSub || contact.subDepartment
     });
+    setSelectedContact(null);
+    setIsAddModalOpen(true);
+  };
+
+  const handleDeleteContact = (contact: ContactRecord) => {
+    if (!canManageContacts) return;
+    if (!window.confirm(`Delete contact "${contact.name}"? This cannot be undone.`)) return;
+    setContacts((prev) => prev.filter((c) => c.id !== contact.id));
+    if (selectedContact?.id === contact.id) setSelectedContact(null);
   };
 
   const handleExportExcel = () => {
-    downloadContactWorkbook(filteredContacts, "Banaganapalle");
+    downloadContactWorkbook(filteredContacts, currentUser.assemblyConstituencyName || "Banaganapalle", {
+      hidePhone
+    });
   };
 
   const getCategoryBadge = (cat: ContactRecord["category"]) => {
@@ -471,7 +622,9 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             </span>
           </div>
           <p className="text-xs text-[#CBD5E1] mt-0.5">
-            Verified Citizens, Community Influencers, Booth Agents, Nodal Officers & DWCRA Leaders
+            {canManageContacts
+              ? "You can view, edit, or delete every contact in this directory."
+              : "Verified Citizens, Community Influencers, Booth Agents, Nodal Officers & DWCRA Leaders"}
           </p>
         </div>
 
@@ -486,10 +639,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
           </button>
 
           <button
-            onClick={() => {
-              window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-              setIsAddModalOpen(true);
-            }}
+            onClick={openCreate}
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] hover:brightness-110 text-[#0B131E] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
           >
             <UserPlus className="w-4 h-4" />
@@ -547,7 +697,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
             <input
               type="text"
-              placeholder="Search by name, phone, village, designation, voter ID..."
+              placeholder={hidePhone ? "Search by name, village, department, designation..." : "Search by name, phone, village, designation, voter ID..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
@@ -649,31 +799,29 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                       <h3 className="font-display text-base font-bold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors truncate">
                         {contact.name}
                       </h3>
-                      <p className="text-xs text-[#CBD5E1] truncate">{contact.designation}</p>
+                      <p className="text-xs text-[#CBD5E1] whitespace-normal break-words">{contact.designation}</p>
                     </div>
                   </div>
 
                   {getCategoryBadge(contact.category)}
                 </div>
 
-                {/* Badges & Meta */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[11px]">
-                  {contact.voterId && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#131E2D] text-[#8E9CAE] border border-[#223348] font-mono text-[10px]">
-                      {contact.voterId}
-                    </span>
-                  )}
-                </div>
-
-                {/* Mandal & Village */}
                 <div className="pt-2 space-y-1 text-xs text-[#8E9CAE]">
-                  <div className="flex items-center gap-1.5 text-[#CBD5E1]">
-                    <Building2 className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                    <span className="truncate">{contact.mandalName}</span>
-                  </div>
+                  {contact.department ? (
+                    <div className="flex items-start gap-1.5 text-[#CBD5E1]">
+                      <Building2 className="w-3.5 h-3.5 text-[#D4A24C] shrink-0 mt-0.5" />
+                      <span className="whitespace-normal break-words">
+                        {contact.department}
+                        {contact.subDepartment ? ` · ${contact.subDepartment}` : ""}
+                      </span>
+                    </div>
+                  ) : null}
                   <div className="flex items-center gap-1.5 text-[#CBD5E1]">
                     <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-                    <span className="truncate">{contact.villageName}</span>
+                    <span className="whitespace-normal break-words">
+                      {contact.mandalName}
+                      {contact.villageName ? ` · ${contact.villageName}` : ""}
+                    </span>
                   </div>
                 </div>
 
@@ -688,7 +836,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               {/* Bottom: Action Buttons */}
               <div className="pt-2 border-t border-[#223348]/70 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
-                  {/* WhatsApp Action */}
+                  {!hidePhone && (
+                    <>
                   <a
                     href={`https://wa.me/${contact.phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(contact.name)}%20garu,%20greetings%20from%20Leader%27s%20Lens%20Office.`}
                     target="_blank"
@@ -699,25 +848,48 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                     <MessageCircle className="w-3.5 h-3.5" />
                     <span className="text-[11px] hidden sm:inline">WhatsApp</span>
                   </a>
-
-                  {/* Direct Phone Call Action */}
                   <a
                     href={`tel:${contact.phone}`}
                     className="p-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
                     title="Direct Phone Call"
                   >
                     <Phone className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-mono">{contact.phone}</span>
+                    <span className="text-[11px] font-mono whitespace-normal break-words">{contact.phone}</span>
                   </a>
+                    </>
+                  )}
                 </div>
 
-                <button
-                  onClick={() => setSelectedContact(contact)}
-                  className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#131E2D] border border-[#223348] text-[#CBD5E1] hover:text-[#F5EFE0] text-xs transition-all cursor-pointer"
-                  title="View Full Profile"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {canManageContacts && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openEdit(contact)}
+                        className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#131E2D] border border-[#D4A24C]/40 text-[#D4A24C] text-xs transition-all cursor-pointer"
+                        title="Edit contact"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteContact(contact)}
+                        className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-rose-950/60 border border-[#223348] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-200 text-xs transition-all cursor-pointer"
+                        title="Delete contact"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedContact(contact)}
+                    className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#131E2D] border border-[#223348] text-[#CBD5E1] hover:text-[#F5EFE0] text-xs transition-all cursor-pointer"
+                    title="View Full Profile"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -730,8 +902,9 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               <tr>
                 <th className="p-3.5">Contact Name</th>
                 <th className="p-3.5">Category</th>
+                <th className="p-3.5">Dept / Sub-dept</th>
                 <th className="p-3.5">Location</th>
-                <th className="p-3.5">Phone / Connect</th>
+                {!hidePhone && <th className="p-3.5">Phone / Connect</th>}
                 <th className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -744,29 +917,58 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   </td>
                   <td className="p-3.5">{getCategoryBadge(c.category)}</td>
                   <td className="p-3.5">
-                    <span className="text-[#F5EFE0] block">{c.mandalName}</span>
-                    <span className="text-[11px] text-[#8E9CAE] block">{c.villageName}</span>
+                    <span className="text-[#F5EFE0] block whitespace-normal break-words">{c.department || "—"}</span>
+                    {c.subDepartment ? (
+                      <span className="text-[11px] text-[#8E9CAE] block whitespace-normal break-words">{c.subDepartment}</span>
+                    ) : null}
                   </td>
+                  <td className="p-3.5">
+                    <span className="text-[#F5EFE0] block whitespace-normal break-words">{c.mandalName}</span>
+                    <span className="text-[11px] text-[#8E9CAE] block whitespace-normal break-words">{c.villageName}</span>
+                  </td>
+                  {!hidePhone && (
                   <td className="p-3.5">
                     <div className="flex items-center gap-2">
                       <a
                         href={`https://wa.me/${c.phone.replace(/[^0-9]/g, "")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-emerald-400 hover:underline flex items-center gap-1 font-mono text-[11px]"
+                        className="text-emerald-400 hover:underline flex items-center gap-1 font-mono text-[11px] whitespace-normal break-words"
                       >
-                        <MessageCircle className="w-3 h-3" />
+                        <MessageCircle className="w-3 h-3 shrink-0" />
                         {c.phone}
                       </a>
                     </div>
                   </td>
+                  )}
                   <td className="p-3.5 text-right">
-                    <button
-                      onClick={() => setSelectedContact(c)}
-                      className="px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
-                    >
-                      Details
-                    </button>
+                    <div className="inline-flex items-center justify-end gap-1.5">
+                      {canManageContacts && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openEdit(c)}
+                            className="px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteContact(c)}
+                            className="px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-[11px] font-semibold cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedContact(c)}
+                        className="px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
+                      >
+                        Details
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -783,10 +985,15 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             <div className="p-4 sm:p-5 border-b border-[#223348] flex items-center justify-between bg-[#0B131E]">
               <div className="flex items-center gap-2.5">
                 <UserPlus className="w-5 h-5 text-[#D4A24C]" />
-                <h3 className="font-display text-lg text-[#F5EFE0] font-bold">Add New Constituency Contact</h3>
+                <h3 className="font-display text-lg text-[#F5EFE0] font-bold">
+                  {editingId ? "Edit Constituency Contact" : "Add New Constituency Contact"}
+                </h3>
               </div>
               <button
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  resetForm();
+                }}
                 className="p-1 rounded-lg hover:bg-[#131E2D] text-[#8E9CAE] hover:text-white"
               >
                 <X className="w-5 h-5" />
@@ -815,7 +1022,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                     placeholder="+91 98480 00000"
                     value={newContact.phone}
                     onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+                    className={FIELD_CLASS}
                   />
                 </div>
               </div>
@@ -825,12 +1032,30 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   <label className="text-[#8E9CAE] block mb-1 font-medium">Category</label>
                   <select
                     value={newContact.category}
-                    onChange={(e) => setNewContact({ ...newContact, category: e.target.value as any })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+                    className={FIELD_CLASS}
+                    onChange={(e) => {
+                      const category = e.target.value as ContactRecord["category"];
+                      const next: Partial<ContactRecord> = { ...newContact, category };
+                      if (category === "GOVT_OFFICIAL") {
+                        next.department = next.department || CONTACT_DEPARTMENTS[0];
+                        const dept = PGRS_DEPARTMENTS_LIST.find((d) => d.name === next.department);
+                        next.subDepartment = next.subDepartment || dept?.subDetails[0] || OTHER_SUB;
+                      } else {
+                        next.department = "";
+                        next.subDepartment = "";
+                        setOtherDepartment("");
+                        setOtherSubDepartment("");
+                      }
+                      setNewContact(next);
+                    }}
                   >
                     <option value="CADRE">Party Cadre</option>
                     <option value="GOVT_OFFICIAL">Govt Officer</option>
                     <option value="OTHER">Other</option>
+                    {newContact.category &&
+                    !["CADRE", "GOVT_OFFICIAL", "OTHER"].includes(newContact.category) ? (
+                      <option value={newContact.category}>{newContact.category.replace(/_/g, " ")}</option>
+                    ) : null}
                   </select>
                 </div>
 
@@ -838,35 +1063,129 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   <label className="text-[#8E9CAE] block mb-1 font-medium">Designation / Role</label>
                   <input
                     type="text"
+                    className={FIELD_CLASS}
                     placeholder="e.g. Ex-Sarpanch / Mandal Incharge"
-                    value={newContact.designation}
+                    value={newContact.designation || ""}
                     onChange={(e) => setNewContact({ ...newContact, designation: e.target.value })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
                   />
                 </div>
               </div>
 
+              {isOfficer && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-[#071322]/80 border border-[#D4A24C]/25">
+                  <div className="sm:col-span-2">
+                    <label className="text-[#D4A24C] block mb-1 font-medium">Department *</label>
+                    <select
+                      required
+                      value={newContact.department || ""}
+                      onChange={(e) => {
+                        const department = e.target.value;
+                        const dept = PGRS_DEPARTMENTS_LIST.find((d) => d.name === department);
+                        setNewContact({
+                          ...newContact,
+                          department,
+                          subDepartment: dept?.subDetails[0] || OTHER_SUB
+                        });
+                        setOtherSubDepartment("");
+                      }}
+                      className={FIELD_CLASS}
+                    >
+                      <option value="">Select department</option>
+                      {CONTACT_DEPARTMENTS.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                    {newContact.department === OTHER_DEPT && (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter other department name"
+                        value={otherDepartment}
+                        onChange={(e) => setOtherDepartment(e.target.value)}
+                        className={`${FIELD_CLASS} mt-2`}
+                      />
+                    )}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[#D4A24C] block mb-1 font-medium">Sub-department / scheme *</label>
+                    <select
+                      required
+                      value={newContact.subDepartment || ""}
+                      onChange={(e) => setNewContact({ ...newContact, subDepartment: e.target.value })}
+                      className={FIELD_CLASS}
+                    >
+                      {subOptions.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
+                    </select>
+                    {newContact.subDepartment === OTHER_SUB && (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter other sub-department / work details"
+                        value={otherSubDepartment}
+                        onChange={(e) => setOtherSubDepartment(e.target.value)}
+                        className={`${FIELD_CLASS} mt-2`}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[#8E9CAE] block mb-1 font-medium">Mandal</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Banaganapalle Town"
-                    value={newContact.mandalName}
-                    onChange={(e) => setNewContact({ ...newContact, mandalName: e.target.value })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-                  />
+                  <select
+                    value={newContact.mandalId || ""}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      const found = mandalsList.find((m) => m.id === id);
+                      const firstVillage = villages.find((v) => v.mandalId === id);
+                      setNewContact({
+                        ...newContact,
+                        mandalId: id,
+                        mandalName: found?.name || "",
+                        villageId: firstVillage?.id || "",
+                        villageName: firstVillage?.name || ""
+                      });
+                    }}
+                    className={FIELD_CLASS}
+                  >
+                    <option value="">Select mandal</option>
+                    {mandalsList.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
                   <label className="text-[#8E9CAE] block mb-1 font-medium">Village / Ward</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Ward 4 / Yaganti Sector"
-                    value={newContact.villageName}
-                    onChange={(e) => setNewContact({ ...newContact, villageName: e.target.value })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-                  />
+                  <select
+                    value={newContact.villageId || ""}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      const found = villagesForForm.find((v) => v.id === id);
+                      setNewContact({
+                        ...newContact,
+                        villageId: id,
+                        villageName: found?.name || ""
+                      });
+                    }}
+                    className={FIELD_CLASS}
+                  >
+                    <option value="">Select village / ward</option>
+                    {villagesForForm.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -897,7 +1216,10 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               <div className="pt-3 border-t border-[#223348] flex items-center justify-end gap-2.5">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    resetForm();
+                  }}
                   className="px-4 py-2 rounded-xl bg-[#0B131E] border border-[#223348] text-[#CBD5E1] text-xs font-semibold"
                 >
                   Cancel
@@ -906,7 +1228,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] text-xs font-bold shadow-md hover:brightness-110"
                 >
-                  Save to Database
+                  {editingId ? "Save changes" : "Save to Database"}
                 </button>
               </div>
             </form>
@@ -935,21 +1257,32 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
+              {!hidePhone && (
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                 <span className="text-[10px] text-[#8E9CAE] block">Phone</span>
-                <strong className="text-[#F5EFE0] font-mono">{selectedContact.phone}</strong>
+                <strong className="text-[#F5EFE0] font-mono whitespace-normal break-words">{selectedContact.phone}</strong>
               </div>
+              )}
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                 <span className="text-[10px] text-[#8E9CAE] block">Gender</span>
                 <strong className="text-[#F5EFE0]">{selectedContact.gender}</strong>
               </div>
+              {selectedContact.department ? (
+              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348] col-span-2">
+                <span className="text-[10px] text-[#8E9CAE] block">Department / Sub-department</span>
+                <strong className="text-[#F5EFE0] whitespace-normal break-words">
+                  {selectedContact.department}
+                  {selectedContact.subDepartment ? ` · ${selectedContact.subDepartment}` : ""}
+                </strong>
+              </div>
+              ) : null}
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                 <span className="text-[10px] text-[#8E9CAE] block">Mandal</span>
-                <strong className="text-[#F5EFE0]">{selectedContact.mandalName}</strong>
+                <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.mandalName}</strong>
               </div>
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                 <span className="text-[10px] text-[#8E9CAE] block">Village / Ward</span>
-                <strong className="text-[#F5EFE0]">{selectedContact.villageName}</strong>
+                <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.villageName}</strong>
               </div>
             </div>
 
@@ -960,7 +1293,29 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               </div>
             )}
 
-            <div className="pt-2 border-t border-[#223348] flex items-center justify-end gap-2">
+            <div className="pt-2 border-t border-[#223348] flex flex-wrap items-center justify-end gap-2">
+              {canManageContacts && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(selectedContact)}
+                    className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteContact(selectedContact)}
+                    className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </>
+              )}
+              {!hidePhone && (
+                <>
               <a
                 href={`https://wa.me/${selectedContact.phone.replace(/[^0-9]/g, "")}`}
                 target="_blank"
@@ -977,6 +1332,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 <Phone className="w-4 h-4" />
                 <span>Call Now</span>
               </a>
+                </>
+              )}
             </div>
           </div>
         </div>,

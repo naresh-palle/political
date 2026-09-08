@@ -3,6 +3,8 @@ type ContactExportRow = {
   phone: string;
   category: string;
   designation: string;
+  department?: string;
+  subDepartment?: string;
   mandalName: string;
   villageName: string;
   occupation: string;
@@ -46,7 +48,7 @@ function cell(style: string, value: string | number, type: "String" | "Number" =
 
 export function buildContactWorkbookXml(
   contacts: ContactExportRow[],
-  options?: { generatedOn?: Date; constituency?: string }
+  options?: { generatedOn?: Date; constituency?: string; hidePhone?: boolean }
 ): string {
   const generatedOn = options?.generatedOn ?? new Date();
   const constituency = options?.constituency || "Banaganapalle";
@@ -56,19 +58,22 @@ export function buildContactWorkbookXml(
     year: "numeric"
   });
 
+  const includePhone = !options?.hidePhone;
   const columns = [
     { key: "no", title: "#", width: 36 },
     { key: "name", title: "Name", width: 180 },
-    { key: "phone", title: "Phone", width: 120 },
+    ...(includePhone ? [{ key: "phone", title: "Phone", width: 120 }] : []),
     { key: "role", title: "Role", width: 100 },
     { key: "designation", title: "Designation", width: 200 },
+    { key: "department", title: "Department", width: 180 },
+    { key: "subDepartment", title: "Sub-department", width: 180 },
     { key: "mandal", title: "Mandal", width: 140 },
     { key: "village", title: "Village / Ward", width: 160 },
     { key: "occupation", title: "Occupation", width: 150 },
     { key: "gender", title: "Gender", width: 70 },
     { key: "age", title: "Age", width: 48 },
     { key: "notes", title: "Notes", width: 260 }
-  ] as const;
+  ];
 
   const colXml = columns.map((c) => `<Column ss:AutoFitWidth="0" ss:Width="${c.width}"/>`).join("");
 
@@ -86,12 +91,15 @@ export function buildContactWorkbookXml(
     .map((c, index) => {
       const style = index % 2 === 0 ? "sOdd" : "sEven";
       const role = ROLE_LABEL[c.category] || c.category;
+      const phoneCell = includePhone ? cell(style, c.phone) : "";
       return `<Row ss:Height="18">
         ${cell(style, index + 1, "Number")}
         ${cell(style, c.name)}
-        ${cell(style, c.phone)}
+        ${phoneCell}
         ${cell(style, role)}
         ${cell(style, c.designation)}
+        ${cell(style, c.department || "")}
+        ${cell(style, c.subDepartment || "")}
         ${cell(style, c.mandalName)}
         ${cell(style, c.villageName)}
         ${cell(style, c.occupation)}
@@ -168,8 +176,12 @@ export function buildContactWorkbookXml(
 </Workbook>`;
 }
 
-export function downloadContactWorkbook(contacts: ContactExportRow[], constituency?: string): void {
-  const xml = buildContactWorkbookXml(contacts, { constituency });
+export function downloadContactWorkbook(
+  contacts: ContactExportRow[],
+  constituency?: string,
+  options?: { hidePhone?: boolean }
+): void {
+  const xml = buildContactWorkbookXml(contacts, { constituency, hidePhone: options?.hidePhone });
   const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
