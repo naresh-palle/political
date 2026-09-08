@@ -24,13 +24,13 @@ import {
   Tag,
   MessageCircle,
   RotateCw,
-  ShieldCheck,
-  FileDown
+  ShieldCheck
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { formatTicketDisplay } from "../../utils/ticketNumberDisplay";
 import { canVolunteerAssignOrResend, isRejectedTicket, isTicketOpenForAssign } from "../../utils/ticketActions";
-import { exportTicketPdf } from "../../utils/exportTicketPdf";
+import { exportTicketPdf, TicketPdfLang } from "../../utils/exportTicketPdf";
+import { ExportPdfLangButtons } from "./ExportPdfLangButtons";
 
 interface IssueDetailModalProps {
   issue: FieldIssue;
@@ -66,6 +66,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   );
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [exportingPdf, setExportingPdf] = useState<TicketPdfLang | null>(null);
 
   // Lock body scroll when modal is active
   useEffect(() => {
@@ -255,16 +256,18 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             </h2>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-2">
-            <button
-              type="button"
-              onClick={() => exportTicketPdf(issue, history)}
-              className="px-3 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] hover:text-[#F5EFE0] text-xs font-bold border border-[#D4A24C]/50 flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
-              title="Export this ticket as PDF"
-            >
-              <FileDown className="w-4 h-4" />
-              <span className="hidden sm:inline">Export PDF</span>
-            </button>
+          <div className="flex items-center gap-2 shrink-0 ml-2 flex-wrap justify-end">
+            <ExportPdfLangButtons
+              onExport={async (lang) => {
+                setExportingPdf(lang);
+                try {
+                  await exportTicketPdf(issue, history, lang);
+                } finally {
+                  setExportingPdf(null);
+                }
+              }}
+              exporting={exportingPdf}
+            />
             {canAssign && (
               <button
                 type="button"

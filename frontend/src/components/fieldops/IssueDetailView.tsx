@@ -19,12 +19,12 @@ import {
   X,
   MessageCircle,
   Upload,
-  FileText,
-  FileDown
+  FileText
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { canVolunteerAssignOrResend, isRejectedTicket, isTicketOpenForAssign } from "../../utils/ticketActions";
-import { exportTicketPdf } from "../../utils/exportTicketPdf";
+import { exportTicketPdf, TicketPdfLang } from "../../utils/exportTicketPdf";
+import { ExportPdfLangButtons } from "./ExportPdfLangButtons";
 
 const CHIP =
   "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#D4A24C]/35 bg-[#0B131E] text-[#D4A24C]";
@@ -68,6 +68,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
   );
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [exportingPdf, setExportingPdf] = useState<TicketPdfLang | null>(null);
   const [liveIssue, setLiveIssue] = useState<FieldIssue>(issueProp);
   const issue = liveIssue;
 
@@ -305,6 +306,15 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     (isVolunteer && canVolunteerAssignOrResend(liveIssue.status));
   const canUpdateProof = isAdmin || isDirector;
 
+  const handleExportPdf = async (lang: TicketPdfLang) => {
+    setExportingPdf(lang);
+    try {
+      await exportTicketPdf(issue, history, lang);
+    } finally {
+      setExportingPdf(null);
+    }
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto space-y-3 animate-fadeIn text-[#F5EFE0]">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -316,10 +326,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           <span className="text-xs text-[#8E9CAE] font-mono">{formatTicketDisplay(issue)}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => exportTicketPdf(issue, history)} className={BTN} title="Export this ticket as PDF">
-            <FileDown className="w-4 h-4" />
-            <span>Export PDF</span>
-          </button>
+          <ExportPdfLangButtons onExport={handleExportPdf} exporting={exportingPdf} />
           {canAssign && (
             <button type="button" onClick={() => setIsAssignModalOpen(true)} className={BTN}>
               <MessageCircle className="w-4 h-4" />
