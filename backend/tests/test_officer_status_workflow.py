@@ -35,6 +35,20 @@ def test_whatsapp_copy_contains_status():
     assert "Out of scope" in rejected
 
 
+def test_complainant_template_parameters_match_status_update_v1():
+    from backend.services.officer_status_workflow import complainant_template_parameters
+
+    params = complainant_template_parameters("Rama", "LL-9", "IN_PROGRESS", "")
+    assert params[0] == "Rama"
+    assert params[1] == "LL-9"
+    assert params[2] == "IN PROGRESS"
+    assert "started working" in params[3].lower()
+    resolved = complainant_template_parameters("Rama", "#iss-1", "RESOLVED", "Drain cleared at Ward 4")
+    assert resolved[1] == "iss-1"
+    assert resolved[2] == "RESOLVED"
+    assert "Drain cleared" in resolved[3]
+
+
 def test_mask_phone():
     assert mask_phone("919876543210").endswith("3210")
     assert "987654" not in mask_phone("919876543210") or "****" in mask_phone("919876543210")
@@ -113,6 +127,26 @@ def test_merge_keeps_officer_remarks_when_assignment_overlay_has_text():
     assert merged["status"] == "IN_PROGRESS"
     assert merged["lastStatusRemarks"] == "crew on site"
     assert merged["title"] == "Pothole"
+
+
+def test_complainant_template_request_uses_status_update_v1():
+    from backend.services.whatsapp_service import WhatsAppCloudApiClient
+
+    client = WhatsAppCloudApiClient()
+    body = client._complainant_status_request_body(
+        "919876543210",
+        {
+            "complainantName": "Rama",
+            "ticketNumber": "LL-9",
+            "newStatus": "RESOLVED",
+            "remarks": "Fixed at site",
+        },
+        shape="body",
+    )
+    assert body["template"]["name"] == "complainant_status_update_v1"
+    params = body["template"]["components"][0]["parameters"]
+    assert [p["text"] for p in params] == ["Rama", "LL-9", "RESOLVED", "Fixed at site"]
+    assert client.complainant_template_name == "complainant_status_update_v1"
 
 
 def test_runtime_persist_prevents_seed_assigned_from_winning(tmp_path, monkeypatch):

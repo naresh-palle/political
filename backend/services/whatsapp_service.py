@@ -152,7 +152,7 @@ class WhatsAppCloudApiClient:
         self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "officer_ticket_alert_v1")
         self.complainant_template_name = os.environ.get(
             "WHATSAPP_COMPLAINANT_TEMPLATE_NAME",
-            os.environ.get("WHATSAPP_STATUS_TEMPLATE_NAME", "officer_ticket_alert_v1"),
+            os.environ.get("WHATSAPP_STATUS_TEMPLATE_NAME", "complainant_status_update_v1"),
         )
 
     def _graph_url(self) -> str:
@@ -263,6 +263,55 @@ class WhatsAppCloudApiClient:
             }
         }
 
+    def _complainant_status_request_body(self, phone: str, payload: Dict[str, Any], shape: str = "body") -> Dict[str, Any]:
+        """Active Meta template complainant_status_update_v1: name, ticket, status, detail."""
+        try:
+            from backend.services.officer_status_workflow import complainant_template_parameters
+        except ImportError:
+            from services.officer_status_workflow import complainant_template_parameters
+
+        template_name = (
+            payload.get("templateName")
+            or self.complainant_template_name
+            or "complainant_status_update_v1"
+        )
+        name, ticket, status_label, details = complainant_template_parameters(
+            payload.get("complainantName") or payload.get("officerName") or "Citizen",
+            payload.get("ticketNumber") or payload.get("rawTicketId") or "ticket",
+            payload.get("newStatus") or payload.get("statusLabel") or "UPDATED",
+            payload.get("remarks") or payload.get("statusDetail") or "",
+        )
+        body_params = [
+            {"type": "text", "text": name},
+            {"type": "text", "text": ticket},
+            {"type": "text", "text": status_label},
+            {"type": "text", "text": details},
+        ]
+        if shape == "officer_like":
+            components = [
+                {"type": "header", "parameters": [{"type": "text", "text": (payload.get("leaderName") or "LeaderLens")[:60]}]},
+                {"type": "body", "parameters": body_params},
+                {
+                    "type": "button",
+                    "sub_type": "url",
+                    "index": "0",
+                    "parameters": [{"type": "text", "text": ticket}],
+                },
+            ]
+        else:
+            components = [{"type": "body", "parameters": body_params}]
+        return {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": phone,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {"code": "en"},
+                "components": components,
+            },
+        }
+
     async def send_whatsapp_notification(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         phone = payload.get("recipientPhone", "").replace("+", "").replace(" ", "").replace("-", "")
         if len(phone) == 10:
@@ -273,7 +322,8 @@ class WhatsAppCloudApiClient:
         ticket_ref = payload.get("rawTicketId") or payload.get("ticketNumber") or payload.get("issueId")
         message_kind = (payload.get("messageKind") or "TEMPLATE").upper()
         template_for_log = payload.get("templateName") or (
-            "status_update_text" if message_kind == "TEXT" else self.template_name
+            self.complainant_template_name if message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE")
+            else ("status_update_text" if message_kind == "TEXT" else self.template_name)
         )
         masked = _mask_phone(phone)
         sent_at = datetime.now(timezone.utc).isoformat()
@@ -318,39 +368,13 @@ class WhatsAppCloudApiClient:
                 "text": {"preview_url": False, "body": payload.get("textMessage")},
             }
         elif message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE"):
-            status_label = payload.get("statusLabel") or payload.get("newStatus") or "UPDATED"
-            remarks = (payload.get("remarks") or "Status updated")[:60] or "Status updated"
-            citizen_name = payload.get("complainantName") or payload.get("officerName") or "Citizen"
-            clean_ticket_id = (payload.get("rawTicketId") or payload.get("ticketNumber") or "ticket").replace("#", "")
-            request_body = {
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": phone,
-                "type": "template",
-                "template": {
-                    "name": self.complainant_template_name,
-                    "language": {"code": "en"},
-                    "components": [
-                        {"type": "header", "parameters": [{"type": "text", "text": "LeaderLens"}]},
-                        {
-                            "type": "body",
-                            "parameters": [
-                                {"type": "text", "text": citizen_name[:60]},
-                                {"type": "text", "text": clean_ticket_id[:60]},
-                                {"type": "text", "text": (payload.get("deptName") or status_label)[:60]},
-                                {"type": "text", "text": (payload.get("mandalName") or remarks)[:60]},
-                            ],
-                        },
-                        {
-                            "type": "button",
-                            "sub_type": "url",
-                            "index": "0",
-                            "parameters": [{"type": "text", "text": clean_ticket_id[:60]}],
-                        },
-                    ],
-                },
-            }
-            template_for_log = self.complainant_template_name
+            shape = payload.get("templateShape") or "body"
+            request_body = self._complainant_status_request_body(phone, payload, shape=shape)
+            template_for_log = (
+                payload.get("templateName")
+                or self.complainant_template_name
+                or "complainant_status_update_v1"
+            )
         else:
             request_body = self._template_request_body(phone, payload)
 
@@ -379,7 +403,7 @@ class WhatsAppCloudApiClient:
                     "templateName": template_for_log,
                 }
 
-            # Session text messages are often rejected; retry with the approved Cloud template.
+            # Session text is rejected outside the 24h window; use the approved citizen template.
             if message_kind == "TEXT":
                 dedicated = (self.complainant_template_name or "").strip()
                 if dedicated and dedicated.lower() not in ("officer_ticket_alert_v1", "hello_world"):
@@ -389,12 +413,28 @@ class WhatsAppCloudApiClient:
                     )
                     retry_payload = dict(payload)
                     retry_payload["messageKind"] = "COMPLAINANT_STATUS"
+                    retry_payload["templateName"] = dedicated
                     return await self.send_whatsapp_notification(retry_payload)
                 return _fail(
                     "NEEDS_COMPLAINANT_TEMPLATE",
                     "Complainant WhatsApp needs an approved Meta template for citizens. The officer ticket template cannot be used for the complaint person.",
                     http_status=status_code,
                 )
+
+            # complainant_status_update_v1 may be body-only or cloned from the officer template.
+            if message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE") and not payload.get("templateShapeRetried"):
+                err_code = str(((res_json or {}).get("error") or {}).get("code") or "")
+                if status_code == 400 or err_code in ("132000", "132012", "132001"):
+                    next_shape = "officer_like" if (payload.get("templateShape") or "body") == "body" else "body"
+                    logger.warning(
+                        "[WhatsApp] complainant template shape retry ticket=%s metaHttp=%s shape=%s",
+                        ticket_ref, status_code, next_shape,
+                    )
+                    retry_payload = dict(payload)
+                    retry_payload["messageKind"] = "COMPLAINANT_STATUS"
+                    retry_payload["templateShape"] = next_shape
+                    retry_payload["templateShapeRetried"] = True
+                    return await self.send_whatsapp_notification(retry_payload)
 
             safe = _safe_provider_error(res_json, error_msg_fallback)
             return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)

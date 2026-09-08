@@ -22,6 +22,7 @@ import {
   ChevronRight,
   X
 } from "lucide-react";
+import { formatIssueStatus } from "../../utils/statusLabels";
 
 export const OfficerTicketPortal: React.FC = () => {
   const [issueId, setIssueId] = useState<string>("");
@@ -45,6 +46,8 @@ export const OfficerTicketPortal: React.FC = () => {
   const [proofFiles, setProofFiles] = useState<{ name: string; url: string; type: "image" | "pdf" }[]>([]);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
+  const [showStatusForm, setShowStatusForm] = useState<boolean>(false);
+  const [history, setHistory] = useState<any[]>([]);
 
   // Parse ticket ID from URL hash or query string
   useEffect(() => {
@@ -111,6 +114,15 @@ export const OfficerTicketPortal: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
+  }, [issueId]);
+
+  useEffect(() => {
+    setShowStatusForm(false);
+    setSubmitSuccess(false);
+    if (!issueId) return;
+    politicalApiService.getIssueHistory(issueId).then((rows) => {
+      if (Array.isArray(rows)) setHistory(rows);
+    }).catch(() => setHistory([]));
   }, [issueId]);
 
   // Resend Timer Countdown
@@ -542,10 +554,9 @@ export const OfficerTicketPortal: React.FC = () => {
             {/* Grievance Ticket Unlocked Details */}
             {issue && (
               <div className="p-5 sm:p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-5 shadow-xl">
-                {/* Header Row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#22405E] pb-4">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-mono font-bold text-[#D4A24C] uppercase tracking-wider">
                         TICKET #{issue.id}
                       </span>
@@ -559,29 +570,56 @@ export const OfficerTicketPortal: React.FC = () => {
                     </h2>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                       issue.status === "RESOLVED"
                         ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
                         : issue.status === "IN_PROGRESS"
                         ? "bg-blue-950/80 text-blue-300 border border-blue-500/40"
+                        : issue.status === "REJECTED"
+                        ? "bg-rose-950/80 text-rose-300 border border-rose-500/40"
                         : "bg-amber-950/80 text-amber-300 border border-amber-500/40"
                     }`}>
-                      Status: {issue.status}
+                      Status: {formatIssueStatus(issue.status)}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      issue.priority === "URGENT" || issue.priority === "HIGH"
+                        ? "bg-rose-950/80 text-rose-300 border border-rose-500/40"
+                        : "bg-amber-950/80 text-amber-300 border border-amber-500/40"
+                    }`}>
+                      Priority: {issue.priority}
                     </span>
                   </div>
                 </div>
 
-                {/* Details Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Type</span>
+                    <p className="font-semibold text-[#F5EFE0] mt-1">{issue.issueType === "GRIEVANCE" ? "Grievance Petition" : "Field Issue"}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Due Date</span>
+                    <p className="font-semibold text-[#F5EFE0] mt-1">{issue.dueDate || "Within 72 Hours"}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Constituency</span>
+                    <p className="font-semibold text-[#F5EFE0] mt-1 truncate">{issue.assemblyConstituencyName || "Banaganapalle AC"}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Category</span>
+                    <p className="font-semibold text-[#F5EFE0] mt-1 truncate">{issue.category || issue.department || "General"}</p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
                       DEPARTMENT & LOCATION
                     </span>
-                    <p className="font-semibold text-[#F5EFE0]">{issue.department || issue.category}</p>
+                    <p className="font-semibold text-[#F5EFE0]">{issue.department || issue.assignedDepartment || issue.category}</p>
                     <p className="text-zinc-400 flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
-                      {issue.mandalName}, {issue.villageName} {issue.placeName ? `(${issue.placeName})` : ""}
+                      {[issue.mandalName, issue.villageName, issue.placeName].filter(Boolean).join(" · ")}
                     </p>
                   </div>
 
@@ -590,6 +628,9 @@ export const OfficerTicketPortal: React.FC = () => {
                       COMPLAINANT / CITIZEN DETAILS
                     </span>
                     <p className="font-semibold text-[#F5EFE0]">{issue.reportedBy} ({issue.reporterType || "CITIZEN"})</p>
+                    {issue.reporterDesignation ? (
+                      <p className="text-zinc-400">{issue.reporterDesignation}</p>
+                    ) : null}
                     <p className="text-zinc-400 flex items-center gap-1.5">
                       <Phone className="w-3.5 h-3.5 text-[#D4A24C]" />
                       {issue.reporterPhone || "Contact provided during intake"}
@@ -597,43 +638,113 @@ export const OfficerTicketPortal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Description */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
+                      FIELD ASSIGNMENT
+                    </span>
+                    <p className="text-zinc-400">Volunteer: <strong className="text-[#F5EFE0]">{issue.assignedVolunteerName || "Not assigned"}</strong></p>
+                    <p className="text-zinc-400">Officer: <strong className="text-[#F5EFE0]">{issue.assignedOfficialName || officerInfo?.name || "Department Officer"}</strong></p>
+                    {issue.assignedVolunteerPhone ? (
+                      <p className="text-zinc-400 flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-[#D4A24C]" />
+                        {issue.assignedVolunteerPhone}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
+                      LATEST OFFICER COMMENT
+                    </span>
+                    <p className="text-[#F5EFE0] leading-relaxed whitespace-pre-wrap">
+                      {issue.lastStatusRemarks?.trim() || "No officer comment yet. Review the ticket below, then proceed to update status."}
+                    </p>
+                    {issue.lastStatusUpdateAt ? (
+                      <p className="text-[11px] font-mono text-zinc-500">{String(issue.lastStatusUpdateAt).replace("T", " ").slice(0, 19)}</p>
+                    ) : null}
+                  </div>
+                </div>
+
                 <div>
                   <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block mb-1.5">
                     DETAILED DESCRIPTION OF ISSUE
                   </span>
-                  <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#D8CFB8] leading-relaxed">
-                    {issue.description}
+                  <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#D8CFB8] leading-relaxed whitespace-pre-wrap">
+                    {issue.description || "No detailed description recorded during intake."}
                   </div>
                 </div>
 
-                {/* Attached Proof Files */}
+                {history.length > 0 && (
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block mb-1.5">
+                      TICKET TIMELINE ({history.length})
+                    </span>
+                    <div className="space-y-2">
+                      {history.slice(-8).map((record: any) => (
+                        <div key={record.id || `${record.updateDate}-${record.newStatus}`} className="p-3 rounded-xl bg-[#071322] border border-[#22405E] text-xs space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold uppercase text-[#D4A24C]">{formatIssueStatus(record.newStatus || record.status)}</span>
+                            <span className="text-[11px] font-mono text-zinc-500">{record.updateDate || record.createdAt}</span>
+                          </div>
+                          {record.remarks ? <p className="text-[#D8CFB8] leading-relaxed">{record.remarks}</p> : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {issue.attachments && issue.attachments.length > 0 && (
                   <div>
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block mb-1.5">
                       ATTACHED INTAKE PROOF & DOCUMENTS ({issue.attachments.length})
                     </span>
-                    <div className="flex flex-wrap gap-2">
-                      {issue.attachments.map((att, idx) => (
-                        <a
-                          key={idx}
-                          href={att}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 text-xs text-[#F5EFE0] hover:brightness-125 transition-all"
-                        >
-                          <FileText className="w-3.5 h-3.5 text-[#D4A24C]" />
-                          Proof Document #{idx + 1}
-                          <ExternalLink className="w-3 h-3 text-zinc-400 ml-1" />
-                        </a>
-                      ))}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {issue.attachments.map((att, idx) => {
+                        const isPdf = String(att).toLowerCase().includes("application/pdf") || String(att).toLowerCase().includes(".pdf");
+                        const isImage = String(att).startsWith("data:image") || /\.(png|jpe?g|webp|gif)(\?|$)/i.test(String(att));
+                        return (
+                          <a
+                            key={idx}
+                            href={att}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-xl overflow-hidden border border-[#D4A24C]/40 bg-[#142B45] min-h-24 flex items-center justify-center"
+                          >
+                            {isImage && !isPdf ? (
+                              <img src={att} alt={`Proof ${idx + 1}`} className="w-full h-24 object-cover" />
+                            ) : (
+                              <span className="flex items-center gap-2 px-3 py-2 text-xs text-[#F5EFE0]">
+                                <FileText className="w-3.5 h-3.5 text-[#D4A24C]" />
+                                Proof #{idx + 1}
+                                <ExternalLink className="w-3 h-3 text-zinc-400" />
+                              </span>
+                            )}
+                          </a>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Officer Response / Resolution Update Form */}
+            {!showStatusForm && !submitSuccess && (
+              <div className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/50 text-center space-y-3">
+                <p className="text-xs text-[#D8CFB8]">
+                  Review the full ticket above, then proceed to record the official status update.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowStatusForm(true)}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-sm hover:brightness-110 inline-flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  Proceed to Status Update
+                </button>
+              </div>
+            )}
+
+            {(showStatusForm || submitSuccess) && (
             <div className="p-5 sm:p-6 rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/50 space-y-5 shadow-2xl">
               <div className="flex items-center gap-3 border-b border-[#22405E] pb-3">
                 <div className="w-8 h-8 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
@@ -795,6 +906,7 @@ export const OfficerTicketPortal: React.FC = () => {
                 </form>
               )}
             </div>
+            )}
           </div>
         )}
       </main>

@@ -63,6 +63,35 @@ def volunteer_notification_copy(ticket_number: str, new_status: str, remarks: st
     )
 
 
+def complainant_status_detail(new_status: str, remarks: str) -> str:
+    """Fourth body parameter for complainant_status_update_v1 (Meta 60-char named params)."""
+    notes = (remarks or "").strip()
+    if new_status == "IN_PROGRESS":
+        return notes or "The concerned department has started working on the issue."
+    if new_status == "RESOLVED":
+        return notes or "The concerned department has reported that the issue is resolved."
+    if new_status == "REJECTED":
+        return notes or "The concerned department has not accepted the issue."
+    return notes or "There is an update on your complaint."
+
+
+def complainant_template_parameters(
+    complainant_name: str,
+    ticket_number: str,
+    new_status: str,
+    remarks: str,
+) -> list:
+    name = (complainant_name or "Citizen").strip() or "Citizen"
+    ticket = (ticket_number or "ticket").replace("#", "").strip() or "ticket"
+    status_label = normalize_status(new_status).replace("_", " ") or "UPDATED"
+    return [
+        name[:60],
+        ticket[:60],
+        status_label[:60],
+        complainant_status_detail(new_status, remarks)[:60],
+    ]
+
+
 def complainant_whatsapp_text(
     complainant_name: str,
     ticket_number: str,

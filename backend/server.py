@@ -2797,7 +2797,10 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "recipientType": "COMPLAINT_PERSON",
         "recipientReference": mask_phone(complainant_phone),
         "channel": "WHATSAPP",
-        "templateName": os.environ.get("WHATSAPP_TEMPLATE_NAME", "officer_ticket_alert_v1"),
+        "templateName": os.environ.get(
+            "WHATSAPP_COMPLAINANT_TEMPLATE_NAME",
+            os.environ.get("WHATSAPP_STATUS_TEMPLATE_NAME", "complainant_status_update_v1"),
+        ),
         "providerMessageId": None,
         "status": "PENDING",
         "attempt": 1,
@@ -2815,11 +2818,14 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     sanitize_doc(pending_audit)
     IN_MEMORY_NOTIFICATION_AUDITS.insert(0, sanitize_doc(dict(pending_audit)))
 
-    # Session text first (works inside 24h). Outside that window a dedicated
-    # complainant Meta template is required — do not reuse the officer template.
+    # Approved Meta utility template complainant_status_update_v1 (session text is fallback only).
     wa_payload = {
         "recipientPhone": complainant_phone,
-        "messageKind": "TEXT",
+        "messageKind": "COMPLAINANT_STATUS",
+        "templateName": os.environ.get(
+            "WHATSAPP_COMPLAINANT_TEMPLATE_NAME",
+            os.environ.get("WHATSAPP_STATUS_TEMPLATE_NAME", "complainant_status_update_v1"),
+        ),
         "event": event_type,
         "eventType": event_type,
         "ticketNumber": ticket_number,
@@ -2827,6 +2833,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "issueId": issue_id,
         "textMessage": wa_text,
         "correlationId": correlation_id,
+        "complainantName": complainant_name,
         "officerName": complainant_name,
         "leaderName": "LeaderLens",
         "deptName": template_dept,
@@ -2834,6 +2841,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "statusLabel": status_label,
         "newStatus": new_status,
         "remarks": remarks,
+        "statusDetail": remarks,
     }
 
     whatsapp_result = await whatsapp_client.send_whatsapp_notification(wa_payload)
@@ -2860,7 +2868,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "errorMessage": whatsapp_result.get("errorMessage"),
         "metaHttpStatus": whatsapp_result.get("metaHttpStatus"),
         "apiVersion": whatsapp_result.get("apiVersion"),
-        "templateName": whatsapp_result.get("templateName") or "complainant_status_update",
+        "templateName": whatsapp_result.get("templateName") or "complainant_status_update_v1",
     }
     try:
         await db.notification_audits.update_one({"id": audit_id}, {"$set": patch}, upsert=True)
