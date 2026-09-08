@@ -14,421 +14,31 @@ export interface AssignContactOption {
   phone: string;
   category: string;
   mandalName: string;
+  villageName?: string;
   isOfficer?: boolean;
 }
 
 export const PGRS_CONTACT_DATABASE: AssignContactOption[] = [
-  // Primary Verified Live Testing Officers
   {
-    id: "cnt-pr-live-01",
+    id: "cnt-live-001",
     deptId: 1,
     name: "N. Palle (Senior Executive Officer)",
     designation: "Senior Executive Engineer - Panchayat Raj",
     phone: "+91 98857 65672",
     category: "1. Panchayat Raj – Engineering Department",
     mandalName: "Banaganapalle Mandal",
+    villageName: "Yaganti Sector",
     isOfficer: true
   },
   {
-    id: "cnt-rws-live-02",
+    id: "cnt-live-002",
     deptId: 2,
     name: "K. Reddy (RWS Executive Engineer)",
     designation: "RWS Chief Operations Engineer",
     phone: "+91 89852 16765",
     category: "2. Rural Water Supply Scheme Department (RWS)",
     mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-
-  // 1. Panchayat Raj – Engineering Department
-  {
-    id: "cnt-pr-01",
-    deptId: 1,
-    name: "C. Hanumantha Reddy",
-    designation: "Panchayat Secretary & Engineering Assistant",
-    phone: "+91 98492 44556",
-    category: "1. Panchayat Raj – Engineering Department",
-    mandalName: "Banaganapalle Mandal",
-    isOfficer: true
-  },
-  {
-    id: "cnt-pr-02",
-    deptId: 1,
-    name: "Er. P. Ramanjaneyulu",
-    designation: "Assistant Engineer (AE), Panchayat Raj Dept",
-    phone: "+91 94408 12345",
-    category: "1. Panchayat Raj – Engineering Department",
-    mandalName: "Koilakuntla Mandal",
-    isOfficer: true
-  },
-  {
-    id: "cnt-pr-03",
-    deptId: 1,
-    name: "B. Venkateswarlu",
-    designation: "Panchayat Buildings Convener, Ward 4",
-    phone: "+91 94401 22334",
-    category: "1. Panchayat Raj – Engineering Department",
-    mandalName: "Banaganapalle Town"
-  },
-
-  // 2. Rural Water Supply Scheme Department (RWS)
-  {
-    id: "cnt-rws-01",
-    deptId: 2,
-    name: "Smt. Chennamma Naidu",
-    designation: "Village Organization (VO) President & Swachh Bharat Lead",
-    phone: "+91 94401 56789",
-    category: "2. Rural Water Supply Scheme Department (RWS)",
-    mandalName: "Banaganapalle Mandal"
-  },
-  {
-    id: "cnt-rws-02",
-    deptId: 2,
-    name: "Er. G. V. Ramana",
-    designation: "RWS Assistant Executive Engineer (AEE)",
-    phone: "+91 94901 88776",
-    category: "2. Rural Water Supply Scheme Department (RWS)",
-    mandalName: "Koilakuntla Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-rws-03",
-    deptId: 2,
-    name: "M. Subbaiah",
-    designation: "Filter Bed & Pipeline Operator Lead",
-    phone: "+91 98485 11223",
-    category: "2. Rural Water Supply Scheme Department (RWS)",
-    mandalName: "Owk Mandal"
-  },
-
-  // 3. Rural Development – NTR Bharosa Pensions Department
-  {
-    id: "cnt-pen-01",
-    deptId: 3,
-    name: "P. Madhavi Latha",
-    designation: "NTR Bharosa Pension Coordinator & VRO Lead",
-    phone: "+91 94412 77889",
-    category: "3. Rural Development – NTR Bharosa Pensions Department",
-    mandalName: "Kolimigundla Mandal"
-  },
-  {
-    id: "cnt-pen-02",
-    deptId: 3,
-    name: "Sri M. Chenna Kesava",
-    designation: "MRO Pension Sanctioning Authority",
-    phone: "+91 98499 01010",
-    category: "3. Rural Development – NTR Bharosa Pensions Department",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-pen-03",
-    deptId: 3,
-    name: "Smt. K. Lakshmi Devi",
-    designation: "Divyangulu & Old Age Pensions Representative",
-    phone: "+91 94911 33445",
-    category: "3. Rural Development – NTR Bharosa Pensions Department",
-    mandalName: "Owk Mandal"
-  },
-
-  // 4. Self-Employment Scheme
-  {
-    id: "cnt-se-01",
-    deptId: 4,
-    name: "Y. Obulapathi",
-    designation: "SC / BC Corporation Executive Officer",
-    phone: "+91 98489 22110",
-    category: "4. Self-Employment Scheme (స్వయం ఉపాధి పథకాలు)",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-se-02",
-    deptId: 4,
-    name: "Smt. Chennamma Naidu",
-    designation: "Self-Help Group (SHG) & Self-Employment Convener",
-    phone: "+91 94401 56789",
-    category: "4. Self-Employment Scheme (స్వయం ఉపాధి పథకాలు)",
-    mandalName: "Banaganapalle Mandal"
-  },
-
-  // 5. VELUGU – Rural Development & SHG Programme
-  {
-    id: "cnt-vel-01",
-    deptId: 5,
-    name: "Smt. Chennamma Naidu",
-    designation: "Stree Nidhi & Bank Linkage Coordinator",
-    phone: "+91 94401 56789",
-    category: "5. VELUGU – Rural Development & SHG Programme",
-    mandalName: "Banaganapalle Mandal"
-  },
-  {
-    id: "cnt-vel-02",
-    deptId: 5,
-    name: "P. Madhavi Latha",
-    designation: "Interest Subsidy & Chandranna Pelli Kanuka Lead",
-    phone: "+91 94412 77889",
-    category: "5. VELUGU – Rural Development & SHG Programme",
-    mandalName: "Kolimigundla Mandal"
-  },
-
-  // 6. MGNREGS – Employment Guarantee Scheme
-  {
-    id: "cnt-mgn-01",
-    deptId: 6,
-    name: "V. Obulapati",
-    designation: "MGNREGS Field Assistant & Work Supervisor",
-    phone: "+91 98489 22110",
-    category: "6. MGNREGS – Employment Guarantee Scheme",
-    mandalName: "Sanjamala Mandal"
-  },
-  {
-    id: "cnt-mgn-02",
-    deptId: 6,
-    name: "Y. Narayana Reddy",
-    designation: "Farm Ponds & Solid Waste Management Project Lead",
-    phone: "+91 94405 66778",
-    category: "6. MGNREGS – Employment Guarantee Scheme",
-    mandalName: "Banaganapalle Mandal"
-  },
-
-  // 7. Agriculture Department
-  {
-    id: "cnt-agri-01",
-    deptId: 7,
-    name: "Y. Narayana Reddy",
-    designation: "Agricultural Officer (AO) & Loan Waiver Lead",
-    phone: "+91 94405 66778",
-    category: "7. Agriculture Department (వ్యవసాయ శాఖ)",
-    mandalName: "Banaganapalle Mandal",
-    isOfficer: true
-  },
-  {
-    id: "cnt-agri-02",
-    deptId: 7,
-    name: "K. Subba Rayudu",
-    designation: "Rythu Sangham President & Soil Health Lead",
-    phone: "+91 98480 33441",
-    category: "7. Agriculture Department (వ్యవసాయ శాఖ)",
-    mandalName: "Banaganapalle Town"
-  },
-
-  // 8. Roads & Buildings (R&B) Department
-  {
-    id: "cnt-rb-01",
-    deptId: 8,
-    name: "K. Subba Rayudu",
-    designation: "Ex-Sarpanch, R&B liaison",
-    phone: "+91 98480 33441",
-    category: "8. Roads & Buildings (R&B) Department",
-    mandalName: "Banaganapalle Town"
-  },
-  {
-    id: "cnt-rb-02",
-    deptId: 8,
-    name: "B. Venkateswarlu",
-    designation: "Booth Convener, Booth 142",
-    phone: "+91 94401 22334",
-    category: "8. Roads & Buildings (R&B) Department",
-    mandalName: "Banaganapalle Mandal"
-  },
-  {
-    id: "cnt-rb-03",
-    deptId: 8,
-    name: "Er. M. Ramanjaneyulu",
-    designation: "Executive Engineer (EE), R&B Division",
-    phone: "+91 94408 12345",
-    category: "8. Roads & Buildings (R&B) Department",
-    mandalName: "Koilakuntla Mandal",
-    isOfficer: true
-  },
-
-  // 9. Housing Department
-  {
-    id: "cnt-hs-01",
-    deptId: 9,
-    name: "Sri M. Chenna Kesava",
-    designation: "Housing Inspector & PMAY Site Allotment Lead",
-    phone: "+91 98499 01010",
-    category: "9. Housing Department (గృహ నిర్మాణ శాఖ)",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-hs-02",
-    deptId: 9,
-    name: "C. Hanumantha Reddy",
-    designation: "Housing Construction Supervisor",
-    phone: "+91 98492 44556",
-    category: "9. Housing Department (గృహ నిర్మాణ శాఖ)",
-    mandalName: "Banaganapalle Mandal"
-  },
-
-  // 10. Health Department
-  {
-    id: "cnt-hlth-01",
-    deptId: 10,
-    name: "Dr. P. Suresh Kumar, M.D.",
-    designation: "Medical Officer, Primary Health Center (PHC)",
-    phone: "+91 98850 77123",
-    category: "10. Health Department (ఆరోగ్య శాఖ)",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-hlth-02",
-    deptId: 10,
-    name: "Smt. K. Lakshmi Devi",
-    designation: "ASHA Worker Lead & Thalli Bidda Express Liaison",
-    phone: "+91 94911 33445",
-    category: "10. Health Department (ఆరోగ్య శాఖ)",
-    mandalName: "Owk Mandal"
-  },
-
-  // 11. Revenue Department
-  {
-    id: "cnt-rev-01",
-    deptId: 11,
-    name: "Sri M. Chenna Kesava",
-    designation: "Tahsildar / MRO Revenue Officer",
-    phone: "+91 98499 01010",
-    category: "11. Revenue Department (రెవెన్యూ శాఖ)",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-rev-02",
-    deptId: 11,
-    name: "P. Madhavi Latha",
-    designation: "VRO & Ration Cards Officer",
-    phone: "+91 94412 77889",
-    category: "11. Revenue Department (రెవెన్యూ శాఖ)",
-    mandalName: "Kolimigundla Mandal"
-  },
-
-  // 12. Neeru-Chettu / Minor Irrigation Dept
-  {
-    id: "cnt-irrig-01",
-    deptId: 12,
-    name: "Er. G. V. Ramana",
-    designation: "Minor Irrigation Executive Engineer",
-    phone: "+91 94901 88776",
-    category: "12. Neeru-Chettu / Minor Irrigation Dept (నీరు-చెట్టు)",
-    mandalName: "Koilakuntla Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-irrig-02",
-    deptId: 12,
-    name: "C. Hanumantha Reddy",
-    designation: "Canal Modernization & Check Dams Engineer",
-    phone: "+91 98492 44556",
-    category: "12. Neeru-Chettu / Minor Irrigation Dept (నీరు-చెట్టు)",
-    mandalName: "Banaganapalle Mandal"
-  },
-
-  // 13. Education Department
-  {
-    id: "cnt-edu-01",
-    deptId: 13,
-    name: "M. Balaji Naik",
-    designation: "Mandal Educational Officer (MEO)",
-    phone: "+91 94403 44556",
-    category: "13. Education Department (విద్యా శాఖ)",
-    mandalName: "Koilakuntla Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-edu-02",
-    deptId: 13,
-    name: "B. Venkateswarlu",
-    designation: "School Infrastructure & Cycle Scheme Lead",
-    phone: "+91 94401 22334",
-    category: "13. Education Department (విద్యా శాఖ)",
-    mandalName: "Banaganapalle Mandal"
-  },
-
-  // 14. Electricity Department (APCPDCL)
-  {
-    id: "cnt-elec-01",
-    deptId: 14,
-    name: "Er. K. Srinivasulu",
-    designation: "Assistant Engineer (AE), APCPDCL DISCOM",
-    phone: "+91 94408 99112",
-    category: "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-elec-02",
-    deptId: 14,
-    name: "T. Chinna Subbaiah",
-    designation: "Line Inspector & Substation Convener",
-    phone: "+91 98485 11223",
-    category: "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
-    mandalName: "Sanjamala Mandal"
-  },
-
-  // 15. ICDS – Women & Child Development
-  {
-    id: "cnt-icds-01",
-    deptId: 15,
-    name: "Smt. G. Radhamma",
-    designation: "Anganwadi Supervisor & ICDS Cluster Lead",
-    phone: "+91 98496 77889",
-    category: "15. ICDS – Women & Child Development (ఐసిడిఎస్)",
-    mandalName: "Banaganapalle Town"
-  },
-  {
-    id: "cnt-icds-02",
-    deptId: 15,
-    name: "Smt. K. Lakshmi Devi",
-    designation: "Anna Amrutha Hastham Representative",
-    phone: "+91 94911 33445",
-    category: "15. ICDS – Women & Child Development (ఐసిడిఎస్)",
-    mandalName: "Owk Mandal"
-  },
-
-  // 16. Aadarana – 3 Scheme
-  {
-    id: "cnt-aad-01",
-    deptId: 16,
-    name: "Y. Obulapathi",
-    designation: "Artisans & Aadarana Scheme Executive Officer",
-    phone: "+91 98489 22110",
-    category: "16. Aadarana – 3 Scheme (ఆదరణ – 3 పథకం)",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-aad-02",
-    deptId: 16,
-    name: "K. Subba Rayudu",
-    designation: "Weavers & Blacksmith Trade Representative",
-    phone: "+91 98480 33441",
-    category: "16. Aadarana – 3 Scheme (ఆదరణ – 3 పథకం)",
-    mandalName: "Banaganapalle Town"
-  },
-
-  // 17. Law & Order & Police Services
-  {
-    id: "cnt-pol-01",
-    deptId: 17,
-    name: "Inspector B. Maheshwar",
-    designation: "Station House Officer (Circle Inspector)",
-    phone: "+91 94407 90900",
-    category: "17. Law & Order & Police Services (శాంతి భద్రతలు)",
-    mandalName: "Banaganapalle Town",
-    isOfficer: true
-  },
-  {
-    id: "cnt-pol-02",
-    deptId: 17,
-    name: "Sri M. Chenna Kesava",
-    designation: "Executive Magistrate & Law Liaison",
-    phone: "+91 98499 01010",
-    category: "17. Law & Order & Police Services (శాంతి భద్రతలు)",
-    mandalName: "Banaganapalle Town",
+    villageName: "Banaganapalle Town Wards 11-20",
     isOfficer: true
   }
 ];
@@ -549,32 +159,6 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
       return matchesDept && matchesSearch;
     });
 
-    // Fallback: If no contact matches the specific sub-category filter, show officers for department
-    if (list.length === 0) {
-      const deptShortName = currentDeptObj.name.split(".")[1]?.split("(")[0]?.trim() || "Department";
-      return [
-        {
-          id: `cnt-fallback-${currentDeptObj.id}`,
-          deptId: currentDeptObj.id,
-          name: `Nodal Officer (${deptShortName})`,
-          designation: `Department Nodal Officer, ${deptShortName}`,
-          phone: "+91 98480 33441",
-          category: currentDeptObj.name,
-          mandalName: issue?.mandalName || "Banaganapalle Mandal",
-          isOfficer: true
-        },
-        {
-          id: "usr-vol-01",
-          deptId: currentDeptObj.id,
-          name: "Volunteer1",
-          designation: "Constituency Field Operations Lead",
-          phone: "+91 98480 12345",
-          category: currentDeptObj.name,
-          mandalName: issue?.mandalName || "Banaganapalle Town"
-        }
-      ];
-    }
-
     return list;
   }, [currentDeptObj, searchQuery, issue?.mandalName]);
 
@@ -605,11 +189,15 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
 
   const handleAssignAndNotify = async () => {
     const contactToNotify = selectedContact || filteredContacts[0];
-    
+    if (!contactToNotify) {
+      setSuccessMessage("Select a Contact Database officer before assigning.");
+      return;
+    }
+
     // Exact contact details
-    const targetName = contactToNotify ? contactToNotify.name : `${currentDeptObj.name.split(".")[1] || currentDeptObj.name} Officer`;
-    const targetRole = contactToNotify ? contactToNotify.designation : currentDeptObj.name;
-    const targetPhone = contactToNotify ? contactToNotify.phone : "+91 98492 44556";
+    const targetName = contactToNotify.name;
+    const targetRole = contactToNotify.designation;
+    const targetPhone = contactToNotify.phone;
 
     // Direct WhatsApp web link fallback with interactive Officer Portal URL
     const rawDigits = targetPhone.replace(/[^0-9]/g, "");
@@ -818,12 +406,21 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
             </div>
 
             {/* Department Filter Counter Badge */}
-            <div className="text-[11px] font-semibold text-emerald-400 pt-1 flex items-center justify-between">
-              <span>{filteredContacts.length} contacts tagged for {currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name}</span>
+            <div className={`text-[11px] font-semibold pt-1 flex items-center justify-between ${filteredContacts.length ? "text-emerald-400" : "text-amber-400"}`}>
+              <span>
+                {filteredContacts.length
+                  ? `${filteredContacts.length} Contact Database officer${filteredContacts.length === 1 ? "" : "s"} for ${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name}`
+                  : `No Contact Database officer for ${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name}`}
+              </span>
             </div>
 
             {/* Contacts Cards List */}
             <div className="space-y-2 max-h-[230px] overflow-y-auto pr-1">
+              {filteredContacts.length === 0 ? (
+                <div className="p-3.5 rounded-2xl border border-[#4A3D22] bg-[#142438] text-xs text-[#D8CFB8] leading-relaxed">
+                  Only the two live directory officers can be assigned: N. Palle (Panchayat Raj, Yaganti) and K. Reddy (RWS, Town Wards 11-20).
+                </div>
+              ) : null}
               {filteredContacts.map((contact) => {
                 const isSelected = selectedContact?.id === contact.id;
 
@@ -851,9 +448,10 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                       {contact.designation}
                     </div>
 
-                    <div className="text-[10.5px] font-mono text-[#D4A24C] mt-1 flex items-center gap-2">
+                    <div className="text-[10.5px] font-mono text-[#D4A24C] mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span>📱 {contact.phone}</span>
                       {contact.mandalName && <span>· 📍 {contact.mandalName}</span>}
+                      {contact.villageName && <span>· {contact.villageName}</span>}
                     </div>
                   </div>
                 );
@@ -866,7 +464,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         <div className="p-4 border-t border-[#1E2E42] bg-[#0A1320] flex items-center justify-center">
           <button
             type="button"
-            disabled={isSending}
+            disabled={isSending || filteredContacts.length === 0}
             onClick={handleAssignAndNotify}
             className="w-full py-3 px-5 rounded-2xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] font-bold text-sm sm:text-base transition-all shadow-lg border border-[#D4A24C]/40 flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
           >

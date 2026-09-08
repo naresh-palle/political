@@ -33,6 +33,11 @@ RETIRED_MOCK_ISSUE_IDS = {
     "iss-ll-open-02",
     "iss-ll-open-03",
     "iss-ll-open-04",
+    "iss-ll-sec-asg-02",
+    "iss-ll-sec-prg-02",
+    "iss-ll-sec-ovd-02",
+    "iss-ll-sec-res-02",
+    "iss-ll-sec-rej-02",
 }
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -3219,9 +3224,38 @@ async def startup_db_seed():
             logger.info("MongoDB collections empty, executing comprehensive auto-seed...")
             await trigger_geography_seed()
         await apply_demo_display_name_fixes()
+        await refresh_live_officer_ticket_seeds()
         await purge_mock_audit_logs()
     except Exception as e:
         log_mongo_notice("startup seed", e)
+
+
+async def refresh_live_officer_ticket_seeds():
+    """Replace packaged demo tickets so Contact Database officers stay in sync."""
+    try:
+        packaged = _load_packaged_json("field_issues.json")
+        seed_ids = {iss.get("id") for iss in packaged if isinstance(iss, dict) and iss.get("id")}
+        for iss in packaged:
+            iid = iss.get("id") if isinstance(iss, dict) else None
+            if not iid:
+                continue
+            await db.field_issues.replace_one({"id": iid}, sanitize_doc(iss), upsert=True)
+        await db.field_issues.delete_many({"id": {"$in": list(RETIRED_MOCK_ISSUE_IDS)}})
+        leftover_demo = {
+            "iss-ll-sec-asg-02",
+            "iss-ll-sec-prg-02",
+            "iss-ll-sec-ovd-02",
+            "iss-ll-sec-res-02",
+            "iss-ll-sec-rej-02",
+        } - seed_ids
+        if leftover_demo:
+            await db.field_issues.delete_many({"id": {"$in": list(leftover_demo)}})
+        for notif in _load_packaged_json("field_notifications.json"):
+            nid = notif.get("id") if isinstance(notif, dict) else None
+            if nid:
+                await db.field_notifications.replace_one({"id": nid}, notif, upsert=True)
+    except Exception as e:
+        log_mongo_notice("refresh live officer tickets", e)
 
 
 async def apply_demo_display_name_fixes():

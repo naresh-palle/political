@@ -283,7 +283,13 @@ IDENTITY_FIELDS = (
     "stateId",
     "assemblyConstituencyId",
     "assemblyConstituencyName",
+    "parliamentConstituencyId",
+    "parliamentConstituencyName",
     "ticketNumber",
+    "schemeSubDetail",
+    "citizenGender",
+    "citizenAge",
+    "initialRemarks",
 )
 
 

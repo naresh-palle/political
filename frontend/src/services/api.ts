@@ -42,9 +42,14 @@ const RETIRED_MOCK_IDS = new Set([
   "iss-ll-open-01",
   "iss-ll-open-02",
   "iss-ll-open-03",
-  "iss-ll-open-04"
+  "iss-ll-open-04",
+  "iss-ll-sec-asg-02",
+  "iss-ll-sec-prg-02",
+  "iss-ll-sec-ovd-02",
+  "iss-ll-sec-res-02",
+  "iss-ll-sec-rej-02"
 ]);
-const TICKET_SEED = "ll-section-tickets-v1-2026-09-07";
+const TICKET_SEED = "ll-live-officer-tickets-v1-2026-09-08";
 const REMOTE_ISSUES_CACHE_KEY = "leaders_lens_remote_field_issues";
 const LOCAL_AUDIT_KEY = "leaders_lens_usage_audit_logs";
 const MOCK_AUDIT_ACTORS = new Set([
@@ -172,14 +177,23 @@ const IDENTITY_FIELDS = [
   "createdBy",
   "createdByRole",
   "directorId",
+  "directorName",
   "reporterPhone",
   "reportedBy",
+  "reporterType",
+  "reporterDesignation",
   "title",
   "description",
   "category",
   "mandalName",
   "villageName",
-  "placeName"
+  "placeName",
+  "schemeSubDetail",
+  "citizenGender",
+  "citizenAge",
+  "initialRemarks",
+  "parliamentConstituencyId",
+  "parliamentConstituencyName"
 ];
 
 function hasFieldValue(value: any): boolean {
@@ -256,6 +270,10 @@ function mergeFieldIssueLists(seedList: any[], remoteList: any[]): any[] {
   overlay(readCachedIssueList(REMOTE_ISSUES_CACHE_KEY));
   overlay(remoteList);
   overlay(readCachedIssueList("leaders_lens_created_field_issues"));
+  // Packaged catalog is the source of officer identity. Re-apply last so stale
+  // Mongo/demo copies cannot reintroduce retired officers; status rank still
+  // preserves in-progress officer work.
+  overlay(seedList);
   if (remoteList.length > 0) {
     writeCachedIssueList(REMOTE_ISSUES_CACHE_KEY, Array.from(byId.values()));
   }

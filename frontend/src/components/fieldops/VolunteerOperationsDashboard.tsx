@@ -579,6 +579,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         reporterDesignation: reporterDesignation.trim(),
         reporterPhone: newReporterPhone.trim(),
         aadharNumber: newAadharNumber.trim(),
+        citizenGender: citizenGender as FieldIssue["citizenGender"],
+        citizenAge: citizenAge ? Number(citizenAge) : undefined,
         schemeSubDetail:
           newSchemeSubDetail === SCHEME_OTHER ? otherSchemeSubDetail.trim() : newSchemeSubDetail.trim(),
         reportedDate: new Date().toISOString().split("T")[0],
