@@ -11,6 +11,7 @@ import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { canVolunteerAssignOrResend, isRejectedTicket } from "../../utils/ticketActions";
 import { assignmentSafeStatus, countByKpi, kpiBucket, ticketStatusSurface, volunteerAssignmentStatus } from "../../utils/ticketKpi";
+import { allocateTicketNumber, formatTicketDisplay, ticketSearchHaystack } from "../../utils/ticketNumberDisplay";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import { OfficerStatusComments } from "./OfficerStatusComments";
@@ -565,7 +566,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         status: "NEW",
         stateId: currentUser.stateId || "AP",
         assemblyConstituencyId: currentUser.assemblyConstituencyId || "BNG-AC",
-        assemblyConstituencyName: "Banaganapalle Assembly (AC-140)",
+        assemblyConstituencyName: currentUser.assemblyConstituencyName || "Banaganapalle Assembly (AC-140)",
+        parliamentConstituencyId: currentUser.parliamentConstituencyId,
+        parliamentConstituencyName: currentUser.parliamentConstituencyName,
         mandalId: mandalObj.id,
         mandalName: mandalObj.name,
         villageId: `VIL-${mandalObj.id.replace("MDL-", "")}-${Date.now().toString().slice(-3)}`,
@@ -589,6 +592,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         createdBy: currentUser.id,
         createdByRole: "VOLUNTEER"
       };
+      payload.ticketNumber = allocateTicketNumber(payload);
 
       const created = await politicalApiService.createFieldIssue(payload);
       setIssues([created, ...issues]);
@@ -601,7 +605,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           recipientRole: "DIRECTOR",
           type: "NEW_COMPLAINT",
           title: `New Ground ${newIssueType === "COMPLAINT" ? "Complaint" : "Requirement"} Logged`,
-          message: `Volunteer ${currentUser.name} logged [${newPriority}] issue: "${newTitle.trim()}" in ${mandalObj.name} (${villageWardText.trim()}). Assigned to ${currentUser.name}.`,
+          message: `Volunteer ${currentUser.name} logged [${newPriority}] issue ${formatTicketDisplay(created)}: "${newTitle.trim()}" in ${mandalObj.name} (${villageWardText.trim()}). Assigned to ${currentUser.name}.`,
           issueId: created.id,
           priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
         }),
@@ -621,7 +625,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           recipientRole: "DEPARTMENT_OFFICER",
           type: "NEW_COMPLAINT",
           title: `Department Forwarding: ${newDepartment}`,
-          message: `Official grievance ticket #${created.id} forwarded to ${newDepartment} for ground resolution in ${mandalObj.name}. Contact: ${newReporterPhone || assignedPersonPhone}.`,
+          message: `Official grievance ticket ${formatTicketDisplay(created)} forwarded to ${newDepartment} for ground resolution in ${mandalObj.name}. Contact: ${newReporterPhone || assignedPersonPhone}.`,
           issueId: created.id,
           priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
         })
@@ -733,6 +737,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         const q = searchQuery.toLowerCase();
         return (
           item.id.toLowerCase().includes(q) ||
+          ticketSearchHaystack(item).includes(q) ||
           item.title.toLowerCase().includes(q) ||
           (item.description || "").toLowerCase().includes(q) ||
           (item.villageName || "").toLowerCase().includes(q) ||
@@ -1539,7 +1544,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         className={`${surface.row} transition-colors cursor-pointer group`}
                       >
                         <td className="py-1.5 px-2 align-top font-mono">
-                          <div className="font-bold text-[#D4A24C] truncate" title={`#${issue.id}`}>#{issue.id}</div>
+                          <div className="font-bold text-[#D4A24C] truncate" title={formatTicketDisplay(issue)}>
+                            {formatTicketDisplay(issue)}
+                          </div>
                           <span
                             className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
                               issue.status === "COMPLETED" || issue.status === "RESOLVED"

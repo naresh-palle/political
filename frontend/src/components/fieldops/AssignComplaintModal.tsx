@@ -4,6 +4,7 @@ import { Search, X, MessageCircle, CheckCircle2, Shield, Loader2, ExternalLink }
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
 import { politicalApiService } from "../../services/api";
 import { isRejectedTicket } from "../../utils/ticketActions";
+import { formatTicketDisplay } from "../../utils/ticketNumberDisplay";
 
 export interface AssignContactOption {
   id: string;
@@ -611,7 +612,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     const rawDigits = targetPhone.replace(/[^0-9]/g, "");
     const formattedPhone = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
     const actionUrl = `${window.location.origin}/#/officer-portal?ticket=${issue.id}`;
-    const waText = encodeURIComponent(`🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${targetName},\n\nYou have been assigned Grievance Ticket *#${issue.id}*.\n*Title:* ${issue.title}\n*Department:* ${currentDeptObj.name}\n*Mandal:* ${issue.mandalName || "Banaganapalle"}\n\n🔗 *Click link below to view full ticket info & update resolution status:*\n${actionUrl}`);
+    const waText = encodeURIComponent(`🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${targetName},\n\nYou have been assigned Grievance Ticket *${formatTicketDisplay(issue)}*.\n*Title:* ${issue.title}\n*Department:* ${currentDeptObj.name}\n*Mandal:* ${issue.mandalName || "Banaganapalle"}\n\n🔗 *Click link below to view full ticket info & update resolution status:*\n${actionUrl}`);
     setDirectWaLink(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${waText}`);
 
     setIsSending(true);
@@ -631,7 +632,8 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         assignedDeptName: currentDeptObj.name,
         actionUrl: actionUrl,
         reporterPhone: issue.reporterPhone || (issue as any)?.citizenPhone,
-        mandalName: issue.mandalName || "Banaganapalle"
+        mandalName: issue.mandalName || "Banaganapalle",
+        ticketLabel: formatTicketDisplay(issue)
       } as any);
 
       if (res.success && res.notification?.status === "DELIVERED") {

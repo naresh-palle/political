@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { FieldIssue } from "../../types";
 import { formatIssueStatus } from "../../utils/statusLabels";
+import { rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
 
 const COMMENTED_STATUSES = ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"];
 const PAGE_SIZE = 10;
@@ -73,8 +74,11 @@ export const OfficerStatusComments: React.FC<OfficerStatusCommentsProps> = ({
                 onClick={() => onOpen(i)}
                 className="bg-[#0B131E]/80 hover:bg-[#142B45] cursor-pointer transition-colors"
               >
-                <td className="py-2 px-3 align-top font-mono font-semibold text-[#D4A24C] whitespace-nowrap">
-                  #{i.id}
+                <td className="py-2 px-3 align-top font-mono font-semibold text-[#D4A24C]">
+                  <div className="whitespace-nowrap">{rawTicketNumber(i)}</div>
+                  {constituencyShortName(i) ? (
+                    <div className="text-[10px] text-[#8E9CAE] font-normal">({constituencyShortName(i)})</div>
+                  ) : null}
                 </td>
                 <td className="py-2 px-3 align-top">
                   <span className="text-[10px] font-bold uppercase text-amber-300">

@@ -63,7 +63,11 @@ class WhatsAppMessageBuilder:
             location_str = ticket.get("placeName") or "Constituency Jurisdiction"
             
         ticket_id = ticket.get("id", "LL-TICKET")
-        ticket_number = f"#{ticket_id}" if not ticket_id.startswith("#") else ticket_id
+        try:
+            from backend.services.ticket_number_display import format_ticket_display
+        except ImportError:
+            from services.ticket_number_display import format_ticket_display
+        ticket_number = format_ticket_display(ticket)
         issue_title = ticket.get("title", "Public Grievance / Requirement")
         priority = (ticket.get("priority") or "MEDIUM").upper()
         dept_name = department.get("name") or ticket.get("category") or "Public Service"

@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import { FieldIssue, WorkUpdateRecord } from "../types";
 import { formatIssueStatus } from "./statusLabels";
+import { formatTicketDisplay } from "./ticketNumberDisplay";
 
 function line(value: string | number | undefined | null): string {
   const text = String(value ?? "").trim();
@@ -56,7 +57,7 @@ export function exportTicketPdf(issue: FieldIssue, history: WorkUpdateRecord[] =
   doc.setTextColor(11, 19, 30);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(`Ticket #${line(issue.id)}`, margin, y);
+  doc.text(line(formatTicketDisplay(issue)), margin, y);
   y += 8;
   doc.setFontSize(12);
   doc.setTextColor(40, 50, 65);

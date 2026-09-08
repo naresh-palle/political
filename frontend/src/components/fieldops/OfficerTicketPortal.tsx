@@ -29,6 +29,7 @@ import {
   OFFICER_STATUS_OPTION_LABELS,
   OfficerActionStatus
 } from "../../utils/statusLabels";
+import { formatTicketDisplay } from "../../utils/ticketNumberDisplay";
 
 export const OfficerTicketPortal: React.FC = () => {
   const [issueId, setIssueId] = useState<string>("");
@@ -450,7 +451,7 @@ export const OfficerTicketPortal: React.FC = () => {
               <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
                   <span className="text-[10px] font-mono font-bold text-[#D4A24C] uppercase tracking-wider block mb-0.5">
-                    ASSIGNED TICKET #{issue.id}
+                    ASSIGNED TICKET {formatTicketDisplay(issue)}
                   </span>
                   <h3 className="font-bold text-sm text-[#F5EFE0]">{issue.title}</h3>
                   <p className="text-zinc-400 text-[11px]">
@@ -592,7 +593,7 @@ export const OfficerTicketPortal: React.FC = () => {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-mono font-bold text-[#D4A24C] uppercase tracking-wider">
-                        TICKET #{issue.id}
+                        TICKET {formatTicketDisplay(issue)}
                       </span>
                       <span className="text-zinc-500">•</span>
                       <span className="text-xs text-zinc-400">

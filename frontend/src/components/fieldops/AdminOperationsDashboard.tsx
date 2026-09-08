@@ -15,6 +15,7 @@ import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
 import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, ticketStatusSurface } from "../../utils/ticketKpi";
 import { formatIssueStatus } from "../../utils/statusLabels";
+import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
 import { findVolunteerForVillage } from "../../utils/villageVolunteers";
 import {
   ShieldCheck,
@@ -388,6 +389,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         const q = searchQuery.toLowerCase();
         return (
           item.id.toLowerCase().includes(q) ||
+          ticketSearchHaystack(item).includes(q) ||
           item.title.toLowerCase().includes(q) ||
           item.description.toLowerCase().includes(q) ||
           (item.villageName || "").toLowerCase().includes(q) ||
@@ -921,7 +923,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                           className="p-3 rounded-lg bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer space-y-1.5"
                                         >
                                           <div className="flex items-center justify-between text-[10px]">
-                                            <span className="font-mono text-[#D4A24C]">#{iss.id}</span>
+                                            <span className="font-mono text-[#D4A24C]">{formatTicketDisplay(iss)}</span>
                                             <span
                                               className={`font-bold uppercase px-2 py-0.2 rounded-full border ${
                                                 iss.status === "COMPLETED"
@@ -1216,8 +1218,13 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                         className={`${surface.row} transition-colors cursor-pointer group`}
                       >
                         <td className="py-1.5 px-2 align-top">
-                          <div className="font-mono font-bold text-[#D4A24C] text-[11px] truncate" title={`#${iss.id}`}>
-                            #{iss.id}
+                          <div className="font-mono font-bold text-[#D4A24C] text-[11px]" title={formatTicketDisplay(iss)}>
+                            <div className="truncate">{rawTicketNumber(iss)}</div>
+                            {constituencyShortName(iss) ? (
+                              <div className="truncate text-[10px] text-[#8E9CAE] font-normal">
+                                ({constituencyShortName(iss)})
+                              </div>
+                            ) : null}
                           </div>
                           <span className="mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block bg-[#071322] text-[#D8CFB8] border-[#22405E]">
                             {formatIssueStatus(iss.status)}

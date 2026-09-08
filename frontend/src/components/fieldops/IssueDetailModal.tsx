@@ -28,6 +28,7 @@ import {
   FileDown
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
+import { formatTicketDisplay } from "../../utils/ticketNumberDisplay";
 import { canVolunteerAssignOrResend, isRejectedTicket, isTicketOpenForAssign } from "../../utils/ticketActions";
 import { exportTicketPdf } from "../../utils/exportTicketPdf";
 
@@ -223,7 +224,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           <div className="space-y-1.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30">
-                #{issue.id}
+                {formatTicketDisplay(issue)}
               </span>
               <span
                 className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${

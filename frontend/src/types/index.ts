@@ -554,6 +554,8 @@ export interface FieldIssue {
   createdByRole: string;
   createdAt: string;
   updatedAt: string;
+  ticketNumber?: string;
+  parliamentConstituencyName?: string;
 }
 
 export type NotificationType =

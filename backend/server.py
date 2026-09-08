@@ -62,6 +62,7 @@ try:
         issue_from_client_payload,
         ASSIGNMENT_STATUSES,
     )
+    from services.ticket_number_display import allocate_ticket_number, format_ticket_display
     from services.role_scope import (
         actor_role,
         build_manager_dashboard,
@@ -90,6 +91,7 @@ except ImportError:
         issue_from_client_payload,
         ASSIGNMENT_STATUSES,
     )
+    from backend.services.ticket_number_display import allocate_ticket_number, format_ticket_display
     from backend.services.role_scope import (
         actor_role,
         build_manager_dashboard,
@@ -1901,6 +1903,7 @@ async def create_field_issue(payload: dict):
         "isImmutable": True,
     }
     issue_doc.pop("_id", None)
+    issue_doc["ticketNumber"] = allocate_ticket_number(issue_doc)
     persisted = sanitize_doc(dict(issue_doc))
     IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
     persist_field_issue(persisted)
@@ -2487,6 +2490,7 @@ async def create_field_issue(payload: dict):
         "createdAt": payload.get("createdAt") or now_str,
         "updatedAt": now_str
     }
+    issue_doc["ticketNumber"] = allocate_ticket_number(issue_doc)
     
     try:
         await db.field_issues.update_one({"id": issue_id}, {"$set": issue_doc}, upsert=True)
@@ -2584,6 +2588,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     completed_dept = issue.get("assignedDepartment") or issue.get("department") or "Assigned Department"
     actor_id = issue.get("departmentContactId") or issue.get("assignedOfficialPhone") or "dept-officer"
     ticket_number = ticket_display_number(issue)
+    ticket_label = format_ticket_display(issue)
     event_type = EVENT_BY_STATUS[new_status]
 
     update_doc = {
@@ -2662,7 +2667,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     sanitize_doc(history_record)
     IN_MEMORY_ISSUE_HISTORY.insert(0, sanitize_doc(dict(history_record)))
 
-    notif_title, notif_msg = volunteer_notification_copy(ticket_number, new_status, remarks)
+    notif_title, notif_msg = volunteer_notification_copy(ticket_label, new_status, remarks)
     if volunteer_ids:
         volunteer_notif_status = "CREATED"
         for recipient_id in volunteer_ids:
@@ -2754,7 +2759,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
 
     complainant_name = issue.get("reportedBy") or "Citizen"
     complainant_phone = complainant_phone_from_issue(issue, payload)
-    wa_text = complainant_whatsapp_text(complainant_name, ticket_number, new_status, remarks)
+    wa_text = complainant_whatsapp_text(complainant_name, ticket_label, new_status, remarks)
     correlation_id = f"{issue_id}:{event_type}:{now_str}"
     audit_id = f"wa-stat-{uuid.uuid4().hex[:8]}"
     status_label = new_status.replace("_", " ")
@@ -2799,7 +2804,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         ),
         "event": event_type,
         "eventType": event_type,
-        "ticketNumber": ticket_number,
+        "ticketNumber": ticket_label,
         "rawTicketId": issue_id,
         "issueId": issue_id,
         "textMessage": wa_text,

@@ -2,6 +2,7 @@ import React from "react";
 import { MapPin, MessageCircle, Paperclip } from "lucide-react";
 import { FieldIssue } from "../../types";
 import { formatIssueStatus } from "../../utils/statusLabels";
+import { formatTicketDisplay, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
 import { ticketStatusSurface } from "../../utils/ticketKpi";
 
 export type TicketTiming = {
@@ -55,8 +56,13 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       className={`h-full min-w-0 p-2.5 rounded-xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-1.5 shadow-md group ${surface.card}`}
     >
       <header className="flex items-start justify-between gap-2 min-w-0">
-        <span className="min-w-0 truncate text-[11px] font-mono text-[#D4A24C] font-semibold" title={`#${issue.id}`}>
-          #{issue.id}
+        <span className="min-w-0 text-[11px] font-mono text-[#D4A24C] font-semibold" title={formatTicketDisplay(issue)}>
+          <span className="block truncate">{rawTicketNumber(issue)}</span>
+          {constituencyShortName(issue) ? (
+            <span className="block truncate text-[10px] text-[#8E9CAE] font-normal">
+              ({constituencyShortName(issue)})
+            </span>
+          ) : null}
         </span>
         <span
           className={`shrink-0 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
@@ -131,7 +137,11 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
               {issue.villageName ? ` · ${issue.villageName}` : ""}
             </span>
           </span>
-          {showAcCode && <span className="text-[#8E9CAE] font-mono text-[10px] shrink-0">AC-140</span>}
+          {showAcCode && constituencyShortName(issue) ? (
+            <span className="text-[#8E9CAE] font-mono text-[10px] shrink-0">
+              ({constituencyShortName(issue)})
+            </span>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between gap-2 text-[11px] text-[#8E9CAE] min-w-0">

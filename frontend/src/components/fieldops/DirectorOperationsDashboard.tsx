@@ -46,6 +46,7 @@ import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
+import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
 import { assignmentSafeStatus, countByKpi, hasAssignee, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
@@ -534,6 +535,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         const q = searchQuery.toLowerCase();
         return (
           item.id.toLowerCase().includes(q) ||
+          ticketSearchHaystack(item).includes(q) ||
           item.title.toLowerCase().includes(q) ||
           item.description.toLowerCase().includes(q) ||
           (item.villageName || "").toLowerCase().includes(q) ||
@@ -1965,8 +1967,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                       className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
                     >
                       <td className="py-1.5 px-2 align-top">
-                        <div className="font-mono font-bold text-[#D4A24C] text-[11px] truncate" title={`#${issue.id}`}>
-                          #{issue.id}
+                        <div className="font-mono font-bold text-[#D4A24C] text-[11px]" title={formatTicketDisplay(issue)}>
+                          <div className="truncate">{rawTicketNumber(issue)}</div>
+                          {constituencyShortName(issue) ? (
+                            <div className="truncate text-[10px] text-[#8E9CAE] font-normal">
+                              ({constituencyShortName(issue)})
+                            </div>
+                          ) : null}
                         </div>
                         <span
                           className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${

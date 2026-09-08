@@ -373,10 +373,8 @@ def merge_issue_docs(base: Optional[Dict[str, Any]], overlay: Optional[Dict[str,
 
 
 def ticket_display_number(issue: Dict[str, Any]) -> str:
-    raw = issue.get("ticketNumber") or issue.get("id") or "LL-TICKET"
-    raw = str(raw)
-    if raw.startswith("LL-") or raw.startswith("#"):
-        return raw if raw.startswith("#") or raw.startswith("LL-") else f"#{raw}"
-    if raw.startswith("iss-"):
-        return f"LL-{raw.replace('iss-', '')}"
-    return f"#{raw}"
+    try:
+        from backend.services.ticket_number_display import raw_ticket_number
+    except ImportError:
+        from services.ticket_number_display import raw_ticket_number
+    return raw_ticket_number(issue)

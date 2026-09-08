@@ -8,6 +8,7 @@ import {
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
+import { formatTicketDisplay } from "../../utils/ticketNumberDisplay";
 import {
   ArrowLeft,
   Clock,
@@ -342,7 +343,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           <div className="hidden sm:flex items-center gap-2 text-xs text-[#8E9CAE]">
             <span>Grievance Desk</span>
             <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[#D4A24C] font-mono font-bold">#{issue.id}</span>
+            <span className="text-[#D4A24C] font-mono font-bold">{formatTicketDisplay(issue)}</span>
           </div>
         </div>
 
@@ -386,7 +387,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-mono font-bold uppercase px-3 py-1 rounded-lg bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30">
-              #{issue.id}
+              {formatTicketDisplay(issue)}
             </span>
             <span
               className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${

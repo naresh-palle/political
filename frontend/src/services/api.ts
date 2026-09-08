@@ -21,6 +21,7 @@ import {
   MOCK_ELECTED_REPRESENTATIVES,
   USER_PROFILES
 } from "./mockData";
+import { allocateTicketNumber } from "../utils/ticketNumberDisplay";
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
 const BASE_URL = (import.meta as any).env?.BASE_URL || "/";
@@ -1326,6 +1327,7 @@ export const politicalApiService = {
     const body = {
       ...payload,
       id: issueId,
+      ticketNumber: payload?.ticketNumber || allocateTicketNumber({ ...payload, id: issueId }),
       status: payload?.status || "NEW",
       createdAt: payload?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -1825,6 +1827,7 @@ export const politicalApiService = {
       reporterPhone?: string;
       citizenPhone?: string;
       mandalName?: string;
+      ticketLabel?: string;
     }
   ): Promise<{ success: boolean; notification: any; issue?: any }> {
     const cleanDigits = (payload.assignedOfficialPhone || "").replace(/\D/g, "");
@@ -1946,7 +1949,7 @@ export const politicalApiService = {
             type: "text",
             text: {
               preview_url: true,
-              body: `🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${officerName},\n\nYou have been assigned Grievance Ticket *#${cleanTicketId}*.\n*Department:* ${deptName}\n*Mandal:* ${mandalName}\n\n🔗 *Click link below to view ticket info & update status:*\n${actionUrl}`
+              body: `🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${officerName},\n\nYou have been assigned Grievance Ticket *${(payload as any).ticketLabel || "#" + cleanTicketId}*.\n*Department:* ${deptName}\n*Mandal:* ${mandalName}\n\n🔗 *Click link below to view ticket info & update status:*\n${actionUrl}`
             }
           })
         });
@@ -1977,7 +1980,7 @@ export const politicalApiService = {
               type: "text",
               text: {
                 preview_url: true,
-                body: `🏛️ *LeaderLens Grievance Registration*\n\nDear Citizen,\n\nYour grievance/complaint ticket *#${cleanTicketId}* has been registered and assigned to *${payload.assignedOfficialName || "Department Nodal Officer"}* (${payload.assignedDeptName || "Department"}).\n\nOur field operations team and department officers are reviewing your issue and work will be initiated shortly.\n\nThank you,\nOffice of Hon. B. C. Janardhan Reddy (MLA)\nBanaganapalle Constituency`
+                body: `🏛️ *LeaderLens Grievance Registration*\n\nDear Citizen,\n\nYour grievance/complaint ticket *${(payload as any).ticketLabel || "#" + cleanTicketId}* has been registered and assigned to *${payload.assignedOfficialName || "Department Nodal Officer"}* (${payload.assignedDeptName || "Department"}).\n\nOur field operations team and department officers are reviewing your issue and work will be initiated shortly.\n\nThank you,\nOffice of Hon. B. C. Janardhan Reddy (MLA)\nBanaganapalle Constituency`
               }
             })
           });
