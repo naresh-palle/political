@@ -1,9 +1,8 @@
 import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { FieldIssue, WorkUpdateRecord } from "../types";
 import { formatIssueStatus } from "./statusLabels";
 import { formatTicketDisplay } from "./ticketNumberDisplay";
-import { addFramedPdfImage, PDF_FONT_EN, PDF_FONT_TE } from "./pdfPageLayout";
+import { pdfFromCanvas, PDF_FONT_EN, PDF_FONT_TE } from "./pdfPageLayout";
 
 export type TicketPdfLang = "en" | "te";
 
@@ -259,7 +258,7 @@ export async function exportTicketPdf(
       [data-ticket-pdf] table { width:100%; border-collapse:collapse; font-size:9.5px; line-height:1.25; border:1px solid #071322; }
       [data-ticket-pdf] th, [data-ticket-pdf] td {
         padding: 2px 5px;
-        border: 1px solid #C9A24C;
+        border: 1px solid #071322;
         vertical-align: top;
         word-break: break-word;
       }
@@ -276,8 +275,7 @@ export async function exportTicketPdf(
       backgroundColor: "#ffffff",
       useCORS: true
     });
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    addFramedPdfImage(pdf, canvas);
+    const pdf = pdfFromCanvas(canvas, "portrait");
     const stamp = new Date().toISOString().split("T")[0];
     const langTag = lang === "te" ? "Telugu" : "English";
     const safeId = String(ticketId || issue.id).replace(/[^\w.-]+/g, "_");

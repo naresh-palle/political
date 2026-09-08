@@ -1,6 +1,5 @@
 import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
-import { addFramedPdfImage, PDF_FONT_EN, PDF_FONT_TE } from "./pdfPageLayout";
+import { pdfFromCanvas, PDF_FONT_EN, PDF_FONT_TE } from "./pdfPageLayout";
 
 export type ContactPdfLang = "en" | "te";
 
@@ -230,7 +229,7 @@ export async function downloadContactPdf(
       }
       [data-contact-pdf] th, [data-contact-pdf] td {
         padding: 2px 4px;
-        border: 1px solid #C9A24C;
+        border: 1px solid #071322;
         vertical-align: top;
         word-break: break-word;
       }
@@ -251,8 +250,7 @@ export async function downloadContactPdf(
       backgroundColor: "#ffffff",
       useCORS: true
     });
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
-    addFramedPdfImage(pdf, canvas);
+    const pdf = pdfFromCanvas(canvas, "landscape");
     const stamp = new Date().toISOString().split("T")[0];
     const langTag = lang === "te" ? "Telugu" : "English";
     pdf.save(`LeaderLens_Contacts_${langTag}_${stamp}.pdf`);
