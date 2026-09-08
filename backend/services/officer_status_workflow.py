@@ -274,6 +274,38 @@ def _has_value(value: Any) -> bool:
     return True
 
 
+def issue_from_client_payload(issue_id: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Hydrate a ticket when Mongo/JSON never stored a volunteer-created id."""
+    payload = payload or {}
+    nested = payload.get("ticket") if isinstance(payload.get("ticket"), dict) else {}
+    merged = {**nested}
+    for key, value in payload.items():
+        if key in {"ticket", "status", "newStatus", "remarks", "rejectionReason", "notes", "proofUrl", "proofFiles"}:
+            continue
+        if _has_value(value):
+            merged[key] = value
+    issue: Dict[str, Any] = {"id": issue_id, "status": "ASSIGNED"}
+    for key in IDENTITY_FIELDS:
+        if _has_value(merged.get(key)):
+            issue[key] = merged[key]
+    for key in (
+        "citizenPhone",
+        "citizenGender",
+        "citizenAge",
+        "schemeSubDetail",
+        "initialRemarks",
+        "dueDate",
+        "reportedDate",
+        "attachments",
+        "assignedAt",
+    ):
+        if _has_value(merged.get(key)):
+            issue[key] = merged[key]
+    if not issue.get("title"):
+        issue["title"] = f"Grievance Ticket #{issue_id}"
+    return issue
+
+
 def apply_assignment_fields(issue: Dict[str, Any], payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     payload = payload or {}
     updated = dict(issue)

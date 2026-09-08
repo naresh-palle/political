@@ -1322,26 +1322,32 @@ export const politicalApiService = {
   },
 
   async createFieldIssue(payload: any): Promise<any> {
+    const issueId = String(payload?.id || "").trim() || `iss-${Date.now().toString(16)}`;
+    const body = {
+      ...payload,
+      id: issueId,
+      status: payload?.status || "NEW",
+      createdAt: payload?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
     let createdDoc = null;
     try {
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/issues`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const res = await fetchWithTimeout(
+        `${RENDER_BACKEND_URL}/field-ops/issues`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        },
+        ISSUES_API_TIMEOUT_MS
+      );
       if (res.ok) createdDoc = await res.json();
     } catch (e) {
       // Fallback
     }
 
     if (!createdDoc) {
-      createdDoc = {
-        ...payload,
-        id: payload.id || `iss-${Date.now().toString(16)}`,
-        status: payload.status || "NEW",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      createdDoc = { ...body };
     }
 
     try {
@@ -1379,7 +1385,24 @@ export const politicalApiService = {
             assignedVolunteerId: payload.assignedVolunteerId,
             assignedVolunteerName: payload.assignedVolunteerName,
             assignedOfficialName: payload.assignedOfficialName,
-            assignedOfficialPhone: payload.assignedOfficialPhone
+            assignedOfficialPhone: payload.assignedOfficialPhone,
+            title: payload.title,
+            description: payload.description,
+            category: payload.category,
+            reportedBy: payload.reportedBy,
+            reporterPhone: payload.reporterPhone,
+            reporterType: payload.reporterType,
+            mandalName: payload.mandalName,
+            villageName: payload.villageName,
+            placeName: payload.placeName,
+            ticket: payload.ticket && typeof payload.ticket === "object"
+              ? {
+                  ...payload.ticket,
+                  attachments: Array.isArray(payload.ticket.attachments)
+                    ? payload.ticket.attachments.filter((u: any) => typeof u === "string" && !u.startsWith("data:"))
+                    : []
+                }
+              : undefined
           })
         },
         45000
@@ -1465,7 +1488,9 @@ export const politicalApiService = {
       if (userRole) qp.append("userRole", userRole);
       const suffix = qp.toString() ? `?${qp.toString()}` : "";
       const res = await fetchWithTimeout(
-        `${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}${suffix}`
+        `${RENDER_BACKEND_URL}/field-ops/issues/${encodeURIComponent(issueId)}${suffix}`,
+        {},
+        ISSUES_API_TIMEOUT_MS
       );
       if (res.ok) remote = await res.json();
     } catch (e) {

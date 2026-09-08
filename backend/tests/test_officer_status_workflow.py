@@ -116,6 +116,24 @@ def test_assignment_reopens_rejected():
     assert should_preserve_progress_status("IN_PROGRESS", "ASSIGNED")
 
 
+def test_issue_from_client_payload_ignores_target_status():
+    from backend.services.officer_status_workflow import issue_from_client_payload
+
+    issue = issue_from_client_payload(
+        "iss-1a081309359",
+        {
+            "status": "IN_PROGRESS",
+            "remarks": "Started",
+            "title": "Broken street light on Ward 2",
+            "reportedBy": "K. Rao",
+        },
+    )
+    assert issue["id"] == "iss-1a081309359"
+    assert issue["status"] == "ASSIGNED"
+    assert issue["title"] == "Broken street light on Ward 2"
+    assert "remarks" not in issue
+
+
 def test_merge_keeps_officer_remarks_when_assignment_overlay_has_text():
     from backend.services.officer_status_workflow import merge_issue_docs
 

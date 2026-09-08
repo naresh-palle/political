@@ -59,6 +59,7 @@ try:
         should_preserve_progress_status,
         assignment_reopens_rejected,
         apply_assignment_fields,
+        issue_from_client_payload,
         ASSIGNMENT_STATUSES,
     )
     from services.role_scope import (
@@ -86,6 +87,7 @@ except ImportError:
         should_preserve_progress_status,
         assignment_reopens_rejected,
         apply_assignment_fields,
+        issue_from_client_payload,
         ASSIGNMENT_STATUSES,
     )
     from backend.services.role_scope import (
@@ -1885,70 +1887,33 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
 @api_router.post("/field-ops/issues")
 async def create_field_issue(payload: dict):
     now_str = datetime.now(timezone.utc).isoformat()
-    issue_id = payload.get("id") or f"iss-{uuid.uuid4().hex[:8]}"
-    
+    payload = payload or {}
+    issue_id = str(payload.get("id") or "").strip() or f"iss-{uuid.uuid4().hex[:8]}"
     issue_doc = {
         **payload,
         "id": issue_id,
-        "status": payload.get("status", "NEW"),
-        "reportedDate": payload.get("reportedDate", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
-        "dueDate": payload.get("dueDate"),
-        "assignedVolunteerId": payload.get("assignedVolunteerId"),
-        "assignedVolunteerName": payload.get("assignedVolunteerName"),
-        "directorId": payload.get("directorId"),
-        "directorName": payload.get("directorName"),
-        "initialRemarks": payload.get("initialRemarks", ""),
-        "attachments": payload.get("attachments", []),
+        "status": payload.get("status") or "NEW",
+        "reportedDate": payload.get("reportedDate") or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "createdAt": payload.get("createdAt") or now_str,
+        "updatedAt": now_str,
+        "createdBy": payload.get("createdBy") or "system",
+        "createdByRole": payload.get("createdByRole") or "VOLUNTEER",
         "isImmutable": True,
-        "lastStatusUpdateAt": now_iso,
-        "lastStatusRemarks": payload.get("initialRemarks", "Original complaint submitted"),
-        "lastStatusProof": payload.get("attachments", [None])[0] if payload.get("attachments") else None,
-        "createdBy": payload.get("createdBy", "system"),
-        "createdByRole": payload.get("createdByRole", "VOLUNTEER"),
-        "createdAt": now_iso,
-        "updatedAt": now_iso
     }
-    
-    # Store initial history record
-    initial_update = {
-        "id": f"upd-{uuid.uuid4().hex[:8]}",
-        "issueId": issue_id,
-        "volunteerId": new_issue["createdBy"],
-        "volunteerName": new_issue.get("assignedVolunteerName", "Volunteer"),
-        "previousStatus": "NONE",
-        "newStatus": new_issue["status"],
-        "updateDate": datetime.now(timezone.utc).strftime("%d %b %Y"),
-        "remarks": f"Original complaint submitted by {new_issue['reportedBy']}: {new_issue['title']}",
-        "attachments": new_issue["attachments"],
-        "createdAt": now_iso
-    }
-    
-    try:
-        await db.field_issues.insert_one(new_issue)
-        await db.work_updates.insert_one(initial_update)
-        
-        # Trigger notification to Director
-        if new_issue.get("directorId"):
-            notif = {
-                "id": f"notif-{uuid.uuid4().hex[:8]}",
-                "recipientUserId": new_issue["directorId"],
-                "recipientRole": "DIRECTOR",
-                "type": "NEW_COMPLAINT",
-                "title": f"New {new_issue['category']} Issue Submitted",
-                "message": f"{new_issue['assignedVolunteerName'] or 'Volunteer'} reported #{issue_id}: {new_issue['title']}",
-                "issueId": issue_id,
-                "volunteerId": new_issue["assignedVolunteerId"],
-                "priority": new_issue["priority"],
-                "isRead": False,
-                "createdAt": now_iso
-            }
-            await db.field_notifications.insert_one(notif)
-            
-        new_issue.pop("_id", None)
-    except Exception as e:
-        log_mongo_notice("save field_issue", e)
-        
-    return new_issue
+    issue_doc.pop("_id", None)
+    persisted = sanitize_doc(dict(issue_doc))
+    IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
+    persist_field_issue(persisted)
+    if not _mongo_circuit_open:
+        try:
+            await mongo_write(
+                db.field_issues.update_one({"id": issue_id}, {"$set": persisted}, upsert=True),
+                timeout=8.0,
+                tag="create_field_issue",
+            )
+        except Exception as e:
+            log_mongo_notice("create field_issue", e)
+    return persisted
 
 @api_router.get("/field-ops/issues/{issue_id}")
 async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, userRole: Optional[str] = None):
@@ -2554,7 +2519,9 @@ async def update_field_issue_status(issue_id: str, payload: dict):
 
     issue = resolve_stored_issue(issue_id, mongo_issue)
     if not issue:
-        raise HTTPException(status_code=404, detail="Ticket not found.")
+        # Volunteer-created tickets can miss Mongo when create failed or hit another Render instance.
+        # Officer submit still has to persist the resolution instead of 404.
+        issue = issue_from_client_payload(issue_id, payload)
 
     if new_status in ASSIGNMENT_STATUSES:
         current_status = normalize_status(issue.get("status") or "NEW")
@@ -3067,15 +3034,14 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     elif not should_preserve_progress_status(issue.get("status"), "ASSIGNED"):
         update_data["status"] = "ASSIGNED"
     
+    issue.update(update_data)
+    persisted_assign = sanitize_doc(dict(issue))
+    IN_MEMORY_FIELD_ISSUES[issue_id] = persisted_assign
+    persist_field_issue(persisted_assign)
     try:
-        await db.field_issues.update_one({"id": issue_id}, {"$set": update_data})
-        issue.update(update_data)
-        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
-        persist_field_issue(IN_MEMORY_FIELD_ISSUES[issue_id])
+        await db.field_issues.update_one({"id": issue_id}, {"$set": persisted_assign}, upsert=True)
     except Exception as e:
         log_mongo_notice("update issue status on assign-notify", e)
-        IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(issue)
-        persist_field_issue(IN_MEMORY_FIELD_ISSUES[issue_id])
         
     # 8. Create Notification Audit Log Record
     audit_record = {

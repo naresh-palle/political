@@ -307,7 +307,29 @@ export const OfficerTicketPortal: React.FC = () => {
       proofFiles: uploadedUrls,
       completedByPerson: officerInfo?.name || "Official Department Officer",
       completedDepartment: issue?.department || "Assigned Department",
+      department: issue?.department,
+      assignedDepartment: issue?.assignedDepartment || issue?.department,
+      assignedVolunteerId: issue?.assignedVolunteerId,
+      assignedVolunteerName: issue?.assignedVolunteerName,
+      assignedOfficialName: officerInfo?.name || issue?.assignedOfficialName,
+      assignedOfficialPhone: officerInfo?.phone || issue?.assignedOfficialPhone,
+      title: issue?.title,
+      description: issue?.description,
+      category: issue?.category,
+      reportedBy: issue?.reportedBy,
       reporterPhone: issue?.reporterPhone || (issue as any)?.citizenPhone,
+      reporterType: issue?.reporterType,
+      mandalName: issue?.mandalName,
+      villageName: issue?.villageName,
+      placeName: issue?.placeName,
+      ticket: issue
+        ? {
+            ...issue,
+            assignedOfficialName: officerInfo?.name || issue.assignedOfficialName,
+            assignedOfficialPhone: officerInfo?.phone || issue.assignedOfficialPhone,
+            attachments: (issue.attachments || []).filter((u) => typeof u === "string" && !u.startsWith("data:"))
+          }
+        : undefined,
       updatedAt: new Date().toISOString()
     };
 

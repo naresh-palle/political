@@ -374,3 +374,63 @@ def test_status_notifies_created_by_when_assignee_is_demo(monkeypatch):
     recipients = {n.get("recipientUserId") for n in srv.IN_MEMORY_NOTIFICATIONS}
     assert "vol-real" in recipients
     assert "vol-b" not in recipients
+
+
+def test_create_field_issue_persists_without_nameerror(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    monkeypatch.setattr(srv, "_mongo_circuit_open", True)
+    monkeypatch.setattr(srv, "db", srv._OfflineDB())
+
+    created = asyncio.run(
+        srv.create_field_issue(
+            {
+                "id": "iss-1a081309359",
+                "title": "Broken street light on Ward 2",
+                "description": "Pole 14 has been dark for a week.",
+                "assignedVolunteerId": "usr-demo-volunteer",
+                "reportedBy": "K. Rao",
+                "reporterPhone": "9876543210",
+            }
+        )
+    )
+    assert created["id"] == "iss-1a081309359"
+    assert created["title"] == "Broken street light on Ward 2"
+    assert srv.IN_MEMORY_FIELD_ISSUES["iss-1a081309359"]["title"] == "Broken street light on Ward 2"
+
+
+def test_officer_status_upserts_unknown_ticket(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    srv.IN_MEMORY_NOTIFICATIONS.clear()
+    srv.IN_MEMORY_ISSUE_HISTORY.clear()
+    srv.IN_MEMORY_STATUS_IDEMPOTENCY.clear()
+    monkeypatch.setattr(srv, "_mongo_circuit_open", True)
+    monkeypatch.setattr(srv, "db", srv._OfflineDB())
+    monkeypatch.setattr(
+        srv.whatsapp_client,
+        "send_whatsapp_notification",
+        AsyncMock(return_value={"success": True, "status": "SENT", "providerMessageId": "wamid.1"}),
+    )
+
+    result = asyncio.run(
+        srv.update_field_issue_status(
+            "iss-1a081309359",
+            {
+                "status": "IN_PROGRESS",
+                "remarks": "Inspected the site; crew mobilizing.",
+                "title": "Broken street light on Ward 2",
+                "reportedBy": "K. Rao",
+                "reporterPhone": "9876543210",
+                "assignedVolunteerId": "usr-demo-volunteer",
+            },
+        )
+    )
+    assert result["ticket"]["status"] == "IN_PROGRESS"
+    assert result["ticket"]["id"] == "iss-1a081309359"
+    assert result["issue"]["lastStatusRemarks"] == "Inspected the site; crew mobilizing."
+    assert srv.IN_MEMORY_FIELD_ISSUES["iss-1a081309359"]["status"] == "IN_PROGRESS"
