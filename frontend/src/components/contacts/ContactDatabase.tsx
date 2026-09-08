@@ -9,12 +9,15 @@ import {
   Building2,
   Eye,
   FileSpreadsheet,
+  FileDown,
   X,
   UserPlus,
   Pencil,
   Trash2
 } from "lucide-react";
 import { downloadContactWorkbook } from "../../utils/contactExcelExport";
+import { downloadContactPdf, ContactPdfLang } from "../../utils/contactPdfExport";
+import { UNIQUE_TICKET_SURFACE, formatDashboardCount } from "../../utils/ticketKpi";
 import { politicalApiService } from "../../services/api";
 import { PGRS_DEPARTMENTS_LIST } from "../fieldops/VolunteerOperationsDashboard";
 import ManagerVolunteerRoster, { VolunteerIdentity } from "./ManagerVolunteerRoster";
@@ -206,6 +209,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
   const [viewMode, setViewMode] = useState<"GRID" | "TABLE">("GRID");
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState<ContactPdfLang | null>(null);
   const [selectedContact, setSelectedContact] = useState<ContactRecord | null>(null);
 
   const [newContact, setNewContact] = useState<Partial<ContactRecord>>({ ...EMPTY_CONTACT });
@@ -436,27 +440,44 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     });
   };
 
+  const handleExportPdf = async (lang: ContactPdfLang) => {
+    setExportingPdf(lang);
+    try {
+      await downloadContactPdf(
+        filteredContacts,
+        currentUser.assemblyConstituencyName || "Banaganapalle",
+        lang,
+        { hidePhone }
+      );
+    } finally {
+      setExportingPdf(null);
+    }
+  };
+
+  const goldBadge =
+    "px-2 py-0.5 rounded-md bg-[#4A3D22] text-[#F5E0B0] border border-[#D4A24C] text-[10.5px] font-bold";
+
   const getCategoryBadge = (cat: ContactRecord["category"]) => {
     switch (cat) {
       case "INFLUENCER":
-        return <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10.5px] font-bold">Influencer</span>;
+        return <span className={goldBadge}>Influencer</span>;
       case "CADRE":
-        return <span className="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[10.5px] font-bold">Party Cadre</span>;
+        return <span className={goldBadge}>Party Cadre</span>;
       case "GOVT_OFFICIAL":
-        return <span className="px-2 py-0.5 rounded-md bg-[#D4A24C]/15 text-[#D4A24C] border border-[#D4A24C]/40 text-[10.5px] font-bold">Govt Officer</span>;
+        return <span className={goldBadge}>Govt Officer</span>;
       case "DWCRA_LEAD":
-        return <span className="px-2 py-0.5 rounded-md bg-pink-500/20 text-pink-300 border border-pink-500/40 text-[10.5px] font-bold">DWCRA Lead</span>;
+        return <span className={goldBadge}>DWCRA Lead</span>;
       case "YOUTH_LEADER":
-        return <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-bold">Youth Wing</span>;
+        return <span className={goldBadge}>Youth Wing</span>;
       case "OTHER":
-        return <span className="px-2 py-0.5 rounded-md bg-slate-500/20 text-slate-200 border border-slate-500/40 text-[10.5px] font-bold">Other</span>;
+        return <span className={goldBadge}>Other</span>;
       default:
-        return <span className="px-2 py-0.5 rounded-md bg-[#223348] text-[#CBD5E1] border border-[#223348] text-[10.5px] font-medium">Citizen</span>;
+        return <span className={goldBadge}>Citizen</span>;
     }
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-5 animate-fadeIn">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-3 animate-fadeIn">
       {/* 1. Header Banner & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-xl">
         <div className="min-w-0">
@@ -480,12 +501,36 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
         {/* Right CTA Actions */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
+            type="button"
             onClick={handleExportExcel}
             className="px-3.5 py-2 rounded-xl bg-[#0B131E] border border-[#223348] hover:border-[#D4A24C]/50 text-[#CBD5E1] hover:text-[#F5EFE0] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-[#D4A24C]" />
             <span>Export Excel</span>
           </button>
+
+          <div className="inline-flex flex-wrap items-center gap-1.5 rounded-xl border border-[#223348] bg-[#0B131E] p-1">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-[#CBD5E1]">
+              <FileDown className="w-3.5 h-3.5 text-[#D4A24C]" />
+              Export PDF
+            </span>
+            <button
+              type="button"
+              onClick={() => handleExportPdf("en")}
+              disabled={exportingPdf !== null}
+              className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
+            >
+              {exportingPdf === "en" ? "Exporting…" : "English"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleExportPdf("te")}
+              disabled={exportingPdf !== null}
+              className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
+            >
+              {exportingPdf === "te" ? "Exporting…" : "Telugu"}
+            </button>
+          </div>
 
           <button
             onClick={openCreate}
@@ -501,52 +546,42 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
         <ManagerVolunteerRoster currentUser={currentUser} onIdentities={handleVolunteerIdentities} />
       ) : null}
 
-      {/* 2. Top Strategic KPI Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-3.5 rounded-xl bg-[#0E1724]/80 border border-[#223348] backdrop-blur-xl">
-          <span className="text-[10px] text-[#8E9CAE] uppercase block font-semibold">Total Verified</span>
-          <strong className="font-display text-2xl text-[#F5EFE0] block mt-0.5">{stats.total}</strong>
-          <span className="text-[9.5px] text-[#D4A24C] block mt-0.5">100% In Constituency</span>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-[#0E1724]/80 border border-[#223348] backdrop-blur-xl">
-          <span className="text-[10px] text-amber-300/80 uppercase block font-semibold">Influencers</span>
-          <strong className="font-display text-2xl text-amber-400 block mt-0.5">{stats.influencers}</strong>
-          <span className="text-[9.5px] text-[#8E9CAE] block mt-0.5">Sarpanches & Elders</span>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-[#0E1724]/80 border border-[#223348] backdrop-blur-xl">
-          <span className="text-[10px] text-blue-300/80 uppercase block font-semibold">Field Cadres</span>
-          <strong className="font-display text-2xl text-blue-400 block mt-0.5">{stats.cadres}</strong>
-          <span className="text-[9.5px] text-[#8E9CAE] block mt-0.5">Booth Conveners</span>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-[#0E1724]/80 border border-[#223348] backdrop-blur-xl">
-          <span className="text-[10px] text-purple-300/80 uppercase block font-semibold">Govt Officers</span>
-          <strong className="font-display text-2xl text-purple-400 block mt-0.5">{stats.officials}</strong>
-          <span className="text-[9.5px] text-[#8E9CAE] block mt-0.5">Department Heads</span>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-[#0E1724]/80 border border-[#223348] backdrop-blur-xl">
-          <span className="text-[10px] text-pink-300/80 uppercase block font-semibold">Citizens & DWCRA</span>
-          <strong className="font-display text-2xl text-pink-400 block mt-0.5">{stats.citizens}</strong>
-          <span className="text-[9.5px] text-[#8E9CAE] block mt-0.5">Petitioners & Leads</span>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-[#0E1724]/80 border border-emerald-500/30 bg-emerald-950/20 backdrop-blur-xl">
-          <span className="text-[10px] text-emerald-300 uppercase block font-semibold">Strong Supporters</span>
-          <strong className="font-display text-2xl text-emerald-400 block mt-0.5">{stats.supporters}</strong>
-          <span className="text-[9.5px] text-emerald-300/80 block mt-0.5">
-            {stats.total > 0 ? Math.round((stats.supporters / stats.total) * 100) : 0}% Active Base
-          </span>
-        </div>
+      {/* 2. Directory KPI Metrics — same gold surface as Manager landing */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 p-3 rounded-2xl bg-[#091422] border border-[#22354D]">
+        {(
+          [
+            { label: "Total Verified", hint: "Directory", value: stats.total },
+            { label: "Influencers", hint: "Elders", value: stats.influencers },
+            { label: "Field Cadres", hint: "Booth", value: stats.cadres },
+            { label: "Govt Officers", hint: "Dept", value: stats.officials },
+            { label: "Citizens & DWCRA", hint: "Leads", value: stats.citizens },
+            {
+              label: "Strong Supporters",
+              hint: stats.total > 0 ? `${Math.round((stats.supporters / stats.total) * 100)}%` : "0%",
+              value: stats.supporters
+            }
+          ] as const
+        ).map((card) => (
+          <div
+            key={card.label}
+            className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+          >
+            <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
+              {card.label}
+            </span>
+            <div className="flex items-baseline justify-between gap-1">
+              <span className="text-2xl font-bold font-mono text-[#D4A24C]">{formatDashboardCount(card.value)}</span>
+              <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">{card.hint}</span>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 3. Filter & Search Master Toolbar */}
-      {showManagerVolunteers ? (
-        <h2 className="font-display text-lg text-[#F5EFE0] pt-1">Constituency Directory</h2>
-      ) : null}
-      <div className="p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+      <div className="p-3 sm:p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+        {showManagerVolunteers ? (
+          <h2 className="font-display text-lg text-[#F5EFE0]">Constituency Directory</h2>
+        ) : null}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           {/* Search Box */}
           <div className="relative w-full lg:w-96">

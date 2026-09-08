@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { FieldIssue, UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
-import { kpiBucket } from "../../utils/ticketKpi";
+import { kpiBucket, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 export type VolunteerIdentity = { name: string; phone: string };
 
@@ -145,7 +145,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
   }, [volunteers, issues, summaries, query]);
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-2">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
@@ -226,7 +226,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                         {vol.designation || vol.roleTitle || "Field Volunteer"}
                       </p>
                     </div>
-                    <span className="shrink-0 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-bold uppercase">
+                    <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase ${UNIQUE_TICKET_SURFACE.badge}`}>
                       {vol.status || "ACTIVE"}
                     </span>
                   </div>
@@ -251,22 +251,19 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                 </div>
 
                 <div className="grid grid-cols-4 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
-                  <div className="p-1 rounded bg-[#0B131E]/80">
-                    <span className="text-[#8E9CAE] block font-semibold">Assigned</span>
-                    <strong className="text-[#F5EFE0]">{assignedCount}</strong>
-                  </div>
-                  <div className="p-1 rounded bg-[#0B131E]/80">
-                    <span className="text-amber-300 block font-semibold">Pending</span>
-                    <strong className="text-amber-200">{pendingCount}</strong>
-                  </div>
-                  <div className="p-1 rounded bg-[#0B131E]/80">
-                    <span className="text-rose-300 block font-semibold">Overdue</span>
-                    <strong className={overdueCount > 0 ? "text-rose-400" : "text-[#8E9CAE]"}>{overdueCount}</strong>
-                  </div>
-                  <div className="p-1 rounded bg-[#0B131E]/80">
-                    <span className="text-emerald-300 block font-semibold">Done</span>
-                    <strong className="text-emerald-400">{doneCount}</strong>
-                  </div>
+                  {(
+                    [
+                      ["Assigned", assignedCount],
+                      ["Pending", pendingCount],
+                      ["Overdue", overdueCount],
+                      ["Done", doneCount]
+                    ] as const
+                  ).map(([label, n]) => (
+                    <div key={label} className={`p-1 rounded border ${UNIQUE_TICKET_SURFACE.kpi}`}>
+                      <span className="text-[#D4A24C] block font-semibold">{label}</span>
+                      <strong className="text-[#D4A24C]">{n}</strong>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="pt-2 border-t border-[#223348]/70 flex flex-wrap items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -336,7 +333,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                       </span>
                     </td>
                     <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10.5px] font-bold uppercase">
+                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase ${UNIQUE_TICKET_SURFACE.badge}`}>
                         {vol.status || "ACTIVE"}
                       </span>
                     </td>
@@ -344,10 +341,10 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                     <td className="p-3.5 whitespace-normal break-words">{villages.length ? villages.join(", ") : "—"}</td>
                     <td className="p-3.5 whitespace-normal break-words">{email || "—"}</td>
                     <td className="p-3.5 font-mono whitespace-normal break-words">{phone ? `+91 ${phone.slice(-10)}` : "—"}</td>
-                    <td className="p-3.5 text-center font-bold text-[#F5EFE0]">{assignedCount}</td>
-                    <td className="p-3.5 text-center font-bold text-amber-200">{pendingCount}</td>
-                    <td className="p-3.5 text-center font-bold text-rose-300">{overdueCount}</td>
-                    <td className="p-3.5 text-center font-bold text-emerald-400">{doneCount}</td>
+                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{assignedCount}</td>
+                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{pendingCount}</td>
+                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{overdueCount}</td>
+                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{doneCount}</td>
                     <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {wa ? (
