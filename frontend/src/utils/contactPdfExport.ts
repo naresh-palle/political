@@ -1,5 +1,6 @@
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { addFramedPdfImage, PDF_FONT_EN, PDF_FONT_TE } from "./pdfPageLayout";
 
 export type ContactPdfLang = "en" | "te";
 
@@ -142,10 +143,7 @@ export async function downloadContactPdf(
     month: "short",
     year: "numeric"
   });
-  const fontFamily =
-    lang === "te"
-      ? "'Noto Sans Telugu', 'IBM Plex Sans', sans-serif"
-      : "'IBM Plex Sans', sans-serif";
+  const fontFamily = lang === "te" ? PDF_FONT_TE : PDF_FONT_EN;
 
   const columns = [
     copy.columns.no,
@@ -198,39 +196,49 @@ export async function downloadContactPdf(
     "background:#ffffff",
     "color:#1A2433",
     `font-family:${fontFamily}`,
-    "padding:28px 24px",
+    "padding:0",
     "box-sizing:border-box"
   ].join(";");
   host.innerHTML = `
-    <div style="background:#071322;color:#D4A24C;padding:16px 18px;border-radius:10px 10px 0 0;">
-      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">${escapeHtml(copy.brand)}</div>
-      <div style="font-size:22px;font-weight:700;color:#F5EFE0;margin-top:4px;">${escapeHtml(copy.title)}</div>
-      <div style="font-size:12px;color:#F5EFE0;margin-top:4px;">${escapeHtml(copy.subtitle(contacts.length, constituency, dateLabel))}</div>
+    <div style="background:#071322;color:#D4A24C;padding:6px 8px;border:1px solid #071322;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;line-height:1.2;">${escapeHtml(copy.brand)}</div>
+      <div style="font-size:13px;font-weight:700;color:#F5EFE0;margin-top:1px;line-height:1.25;">${escapeHtml(copy.title)}</div>
+      <div style="font-size:9px;color:#F5EFE0;margin-top:1px;line-height:1.2;">${escapeHtml(copy.subtitle(contacts.length, constituency, dateLabel))}</div>
     </div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:0;">
+    <table>
       <thead>
         <tr>
           ${columns
-            .map(
-              (col) =>
-                `<th style="background:#D4A24C;color:#071322;text-align:left;padding:8px 6px;font-weight:700;">${escapeHtml(col)}</th>`
-            )
+            .map((col) => `<th>${escapeHtml(col)}</th>`)
             .join("")}
         </tr>
       </thead>
       <tbody>
         ${
           rowsHtml ||
-          `<tr><td colspan="${columns.length}" style="padding:12px;">—</td></tr>`
+          `<tr><td colspan="${columns.length}">—</td></tr>`
         }
       </tbody>
     </table>
     <style>
-      [data-contact-pdf] td {
-        padding: 7px 6px;
-        border-bottom: 1px solid #E6D7B3;
+      [data-contact-pdf] table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8.5px;
+        line-height: 1.25;
+        border: 1px solid #071322;
+      }
+      [data-contact-pdf] th, [data-contact-pdf] td {
+        padding: 2px 4px;
+        border: 1px solid #C9A24C;
         vertical-align: top;
         word-break: break-word;
+      }
+      [data-contact-pdf] th {
+        background: #D4A24C;
+        color: #071322;
+        text-align: left;
+        font-weight: 700;
       }
       [data-contact-pdf] tbody tr:nth-child(even) td { background: #F8F1DE; }
     </style>
@@ -244,17 +252,7 @@ export async function downloadContactPdf(
       useCORS: true
     });
     const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = (canvas.height * imgW) / canvas.width;
-    let offset = 0;
-    const img = canvas.toDataURL("image/jpeg", 0.92);
-    while (offset < imgH - 0.5) {
-      if (offset > 0) pdf.addPage();
-      pdf.addImage(img, "JPEG", 0, -offset, imgW, imgH);
-      offset += pageH;
-    }
+    addFramedPdfImage(pdf, canvas);
     const stamp = new Date().toISOString().split("T")[0];
     const langTag = lang === "te" ? "Telugu" : "English";
     pdf.save(`LeaderLens_Contacts_${langTag}_${stamp}.pdf`);

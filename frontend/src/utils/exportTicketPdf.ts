@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import { FieldIssue, WorkUpdateRecord } from "../types";
 import { formatIssueStatus } from "./statusLabels";
 import { formatTicketDisplay } from "./ticketNumberDisplay";
+import { addFramedPdfImage, PDF_FONT_EN, PDF_FONT_TE } from "./pdfPageLayout";
 
 export type TicketPdfLang = "en" | "te";
 
@@ -161,9 +162,11 @@ function reporterTypeLabel(type: string | undefined, lang: TicketPdfLang): strin
 }
 
 function row(label: string, value: string): string {
+  const text = String(value ?? "").trim();
+  if (!text || text === "—") return "";
   return `<tr>
     <th>${escapeHtml(label)}</th>
-    <td>${escapeHtml(value)}</td>
+    <td>${escapeHtml(text)}</td>
   </tr>`;
 }
 
@@ -173,10 +176,7 @@ export async function exportTicketPdf(
   lang: TicketPdfLang = "en"
 ): Promise<void> {
   const copy = COPY[lang];
-  const fontFamily =
-    lang === "te"
-      ? "'Noto Sans Telugu', 'IBM Plex Sans', sans-serif"
-      : "'IBM Plex Sans', sans-serif";
+  const fontFamily = lang === "te" ? PDF_FONT_TE : PDF_FONT_EN;
   const ticketId = formatTicketDisplay(issue);
   const officer = issue.assignedOfficialName || issue.completedByPerson || copy.unassigned;
   const comment =
@@ -217,15 +217,16 @@ export async function exportTicketPdf(
     history.length === 0
       ? ""
       : `<h3>${escapeHtml(copy.labels.timeline)}</h3>
-        <ol>
+        <table>
           ${history
             .map((entry) => {
               const stamp = line(entry.updateDate || entry.createdAt);
               const status = statusLabel(String(entry.newStatus), lang);
-              return `<li><strong>${escapeHtml(status)}</strong> · ${escapeHtml(stamp)}<br/>${escapeHtml(line(entry.volunteerName))}<br/>${escapeHtml(line(entry.remarks))}</li>`;
+              const body = [line(entry.volunteerName), line(entry.remarks)].filter((part) => part !== "—").join(" · ");
+              return row(`${status} · ${stamp}`, body || " ");
             })
             .join("")}
-        </ol>`;
+        </table>`;
 
   const host = document.createElement("div");
   host.setAttribute("data-ticket-pdf", "1");
@@ -237,16 +238,16 @@ export async function exportTicketPdf(
     "background:#ffffff",
     "color:#1A2433",
     `font-family:${fontFamily}`,
-    "padding:28px 24px",
+    "padding:0",
     "box-sizing:border-box"
   ].join(";");
   host.innerHTML = `
-    <div style="background:#071322;color:#D4A24C;padding:16px 18px;border-radius:10px;">
-      <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">${escapeHtml(copy.brand)}</div>
-      <div style="font-size:22px;font-weight:700;color:#F5EFE0;margin-top:4px;">${escapeHtml(ticketId)}</div>
-      <div style="font-size:12px;color:#F5EFE0;margin-top:4px;">${escapeHtml(copy.heading)}</div>
+    <div style="background:#071322;color:#D4A24C;padding:6px 8px;border:1px solid #071322;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;line-height:1.2;">${escapeHtml(copy.brand)}</div>
+      <div style="font-size:13px;font-weight:700;color:#F5EFE0;margin-top:1px;line-height:1.25;">${escapeHtml(ticketId)}</div>
+      <div style="font-size:9px;color:#F5EFE0;margin-top:1px;line-height:1.2;">${escapeHtml(copy.heading)}</div>
     </div>
-    <h2 style="font-size:16px;margin:16px 0 10px;color:#071322;">${escapeHtml(line(issue.title))}</h2>
+    <div style="padding:5px 6px 4px;border-left:1px solid #C9A24C;border-right:1px solid #C9A24C;font-size:12px;font-weight:700;color:#071322;line-height:1.3;">${escapeHtml(line(issue.title))}</div>
     <table>${fieldRows}</table>
     <h3>${escapeHtml(copy.labels.description)}</h3>
     <p>${escapeHtml(line(issue.description))}</p>
@@ -255,11 +256,16 @@ export async function exportTicketPdf(
     <p>${escapeHtml(comment)}</p>
     ${timelineHtml}
     <style>
-      [data-ticket-pdf] table { width:100%; border-collapse:collapse; font-size:12px; }
-      [data-ticket-pdf] th { width:34%; text-align:left; color:#8A6A28; padding:6px 8px; vertical-align:top; background:#F8F1DE; border-bottom:1px solid #E6D7B3; }
-      [data-ticket-pdf] td { padding:6px 8px; border-bottom:1px solid #E6D7B3; word-break:break-word; }
-      [data-ticket-pdf] h3 { color:#D4A24C; font-size:13px; margin:16px 0 6px; }
-      [data-ticket-pdf] p, [data-ticket-pdf] li { font-size:12px; line-height:1.45; margin:0 0 8px; }
+      [data-ticket-pdf] table { width:100%; border-collapse:collapse; font-size:9.5px; line-height:1.25; border:1px solid #071322; }
+      [data-ticket-pdf] th, [data-ticket-pdf] td {
+        padding: 2px 5px;
+        border: 1px solid #C9A24C;
+        vertical-align: top;
+        word-break: break-word;
+      }
+      [data-ticket-pdf] th { width:30%; text-align:left; color:#071322; background:#F8F1DE; font-weight:700; }
+      [data-ticket-pdf] h3 { color:#8A6A28; font-size:9.5px; font-weight:700; margin:6px 0 2px; text-transform:uppercase; letter-spacing:0.04em; }
+      [data-ticket-pdf] p { font-size:9.5px; line-height:1.3; margin:0; padding:3px 5px; border:1px solid #C9A24C; }
     </style>
   `;
   document.body.appendChild(host);
@@ -271,17 +277,7 @@ export async function exportTicketPdf(
       useCORS: true
     });
     const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = (canvas.height * imgW) / canvas.width;
-    const img = canvas.toDataURL("image/jpeg", 0.92);
-    let offset = 0;
-    while (offset < imgH - 0.5) {
-      if (offset > 0) pdf.addPage();
-      pdf.addImage(img, "JPEG", 0, -offset, imgW, imgH);
-      offset += pageH;
-    }
+    addFramedPdfImage(pdf, canvas);
     const stamp = new Date().toISOString().split("T")[0];
     const langTag = lang === "te" ? "Telugu" : "English";
     const safeId = String(ticketId || issue.id).replace(/[^\w.-]+/g, "_");
