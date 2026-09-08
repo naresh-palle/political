@@ -21,6 +21,7 @@ export interface TicketGridCardProps {
   showProofCount?: boolean;
   showAcCode?: boolean;
   volunteerName?: string;
+  assignButtonLabel?: string;
   onOpen: () => void;
   onAssignDepartment?: (issueId: string, department: string) => void;
   onOpenWhatsAppAssign: () => void;
@@ -40,6 +41,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
   showProofCount = false,
   showAcCode = false,
   volunteerName,
+  assignButtonLabel,
   onOpen,
   onAssignDepartment,
   onOpenWhatsAppAssign
@@ -225,7 +227,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
             className="w-full py-1.5 px-2 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[11px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
           >
             <MessageCircle className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400/20 shrink-0" />
-            <span className="truncate">Assign & Notify on WhatsApp</span>
+            <span className="truncate">{assignButtonLabel || "Assign & Notify on WhatsApp"}</span>
           </button>
         ) : null}
       </div>

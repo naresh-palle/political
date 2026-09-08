@@ -125,6 +125,12 @@ export function assignmentSafeStatus(current?: string | null): string {
   return "ASSIGNED";
 }
 
+/** Volunteer resend after officer rejection reopens the ticket for the department. */
+export function volunteerAssignmentStatus(current?: string | null): string {
+  if (normalizeIssueStatus(current) === "REJECTED") return "ASSIGNED";
+  return assignmentSafeStatus(current);
+}
+
 export function ticketStatusSurface(issue: AssigneeFields): {
   card: string;
   row: string;

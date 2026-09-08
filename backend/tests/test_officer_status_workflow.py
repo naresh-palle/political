@@ -107,6 +107,15 @@ def test_preserve_in_progress_against_open():
     assert normalize_status(" in_progress ") == "IN_PROGRESS"
 
 
+def test_assignment_reopens_rejected():
+    from backend.services.officer_status_workflow import assignment_reopens_rejected, should_preserve_progress_status
+
+    assert assignment_reopens_rejected("REJECTED", "ASSIGNED")
+    assert not assignment_reopens_rejected("IN_PROGRESS", "ASSIGNED")
+    assert should_preserve_progress_status("REJECTED", "ASSIGNED")
+    assert should_preserve_progress_status("IN_PROGRESS", "ASSIGNED")
+
+
 def test_merge_keeps_officer_remarks_when_assignment_overlay_has_text():
     from backend.services.officer_status_workflow import merge_issue_docs
 

@@ -3,6 +3,7 @@ import { FieldIssue } from "../../types";
 import { Search, X, MessageCircle, CheckCircle2, Shield, Loader2, ExternalLink } from "lucide-react";
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
 import { politicalApiService } from "../../services/api";
+import { isRejectedTicket } from "../../utils/ticketActions";
 
 export interface AssignContactOption {
   id: string;
@@ -576,11 +577,18 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   // Reset selected contact whenever category or filtered contacts change
   useEffect(() => {
     if (filteredContacts.length > 0) {
-      setSelectedContactId(filteredContacts[0].id);
+      const prevPhone = String(issue?.assignedOfficialPhone || "").replace(/\D/g, "");
+      const prevName = String(issue?.assignedOfficialName || "").trim().toLowerCase();
+      const previousOfficer = filteredContacts.find((contact) => {
+        const phone = String(contact.phone || "").replace(/\D/g, "");
+        if (prevPhone && phone && (phone.endsWith(prevPhone) || prevPhone.endsWith(phone))) return true;
+        return Boolean(prevName) && String(contact.name || "").trim().toLowerCase() === prevName;
+      });
+      setSelectedContactId(previousOfficer?.id || filteredContacts[0].id);
     } else {
       setSelectedContactId("");
     }
-  }, [selectedCategory, filteredContacts]);
+  }, [selectedCategory, filteredContacts, issue?.assignedOfficialName, issue?.assignedOfficialPhone]);
 
   // Currently active contact option
   const selectedContact = useMemo(() => {
@@ -588,6 +596,8 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   }, [selectedContactId, filteredContacts]);
 
   if (!isOpen || !issue) return null;
+
+  const isResend = isRejectedTicket(issue.status);
 
   const handleAssignAndNotify = async () => {
     const contactToNotify = selectedContact || filteredContacts[0];
@@ -626,13 +636,24 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
 
       if (res.success && res.notification?.status === "DELIVERED") {
         const notifStatus = res.notification.status || "DELIVERED";
-        setSuccessMessage(`✓ Ticket Assigned & Live WhatsApp Alert (${notifStatus}) sent to ${targetName} (${targetPhone})!`);
+        setSuccessMessage(
+          isResend
+            ? `✓ Ticket resent & live WhatsApp alert (${notifStatus}) sent to ${targetName} (${targetPhone})!`
+            : `✓ Ticket Assigned & Live WhatsApp Alert (${notifStatus}) sent to ${targetName} (${targetPhone})!`
+        );
       } else {
-        const errMsg = (res as any).error || res.notification?.errorMessage || "Meta Sandbox restriction";
-        setSuccessMessage(`✓ Ticket Assigned to ${targetName} (${targetPhone}). WhatsApp Alert Dispatched!`);
+        setSuccessMessage(
+          isResend
+            ? `✓ Ticket resent to ${targetName} (${targetPhone}). WhatsApp alert dispatched!`
+            : `✓ Ticket Assigned to ${targetName} (${targetPhone}). WhatsApp Alert Dispatched!`
+        );
       }
     } catch (err: any) {
-      setSuccessMessage(`✓ Ticket Assigned to ${targetName} & WhatsApp Notification logged.`);
+      setSuccessMessage(
+        isResend
+          ? `✓ Ticket resent to ${targetName} & WhatsApp notification logged.`
+          : `✓ Ticket Assigned to ${targetName} & WhatsApp Notification logged.`
+      );
     } finally {
       setIsSending(false);
       // Auto-close modal after 1.2s and redirect to ticket dashboard
@@ -656,7 +677,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         <div className="p-5 border-b border-[#1E2E42] bg-[#0E1826] flex items-start justify-between">
           <div>
             <span className="text-[11px] font-mono font-semibold text-[#D4A24C] uppercase tracking-wider block">
-              Assign complaint
+              {isResend ? "Resend to officer" : "Assign complaint"}
             </span>
             <h2 className="font-display text-lg sm:text-xl font-bold text-[#F5EFE0] leading-snug mt-0.5">
               {issue.title}
@@ -852,7 +873,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
             ) : (
               <>
                 <MessageCircle className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
-                Assign and notify on WhatsApp
+                {isResend ? "Resend to Officer on WhatsApp" : "Assign and notify on WhatsApp"}
               </>
             )}
           </button>

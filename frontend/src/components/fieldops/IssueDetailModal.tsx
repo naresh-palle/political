@@ -28,7 +28,7 @@ import {
   FileDown
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
-import { isTicketOpenForAssign } from "../../utils/ticketActions";
+import { canVolunteerAssignOrResend, isRejectedTicket, isTicketOpenForAssign } from "../../utils/ticketActions";
 import { exportTicketPdf } from "../../utils/exportTicketPdf";
 
 interface IssueDetailModalProps {
@@ -204,7 +204,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     currentUser.roleId === "ADMIN" ||
     currentUser.role === "super_admin";
 
-  const canAssign = (isAdmin || isDirector || isVolunteer) && isTicketOpenForAssign(issue.status);
+  const canAssign =
+    ((isAdmin || isDirector) && isTicketOpenForAssign(issue.status)) ||
+    (isVolunteer && canVolunteerAssignOrResend(issue.status));
   const canUpdateProof = isAdmin || isDirector;
 
   const modal = (
@@ -269,7 +271,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 className="px-3 py-1.5 rounded-xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-xs font-bold border border-[#D4A24C]/40 flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
               >
                 <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
-                <span className="hidden sm:inline">Assign & WhatsApp</span>
+                <span className="hidden sm:inline">
+                  {isVolunteer && isRejectedTicket(issue.status) ? "Resend to Officer" : "Assign & WhatsApp"}
+                </span>
               </button>
             )}
             <button

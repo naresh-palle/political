@@ -199,9 +199,14 @@ function mergeIssueRecords(base: any, overlay: any): any {
   }
   const current = String(base.status || "").toUpperCase();
   const incoming = String(overlay.status || "").toUpperCase();
+  const reopenRejected =
+    current === "REJECTED" &&
+    incoming === "ASSIGNED" &&
+    (hasFieldValue(overlay.assignedOfficialName) || hasFieldValue(overlay.assignedAt));
   if (
-    (STATUS_RANK[current] || 0) > (STATUS_RANK[incoming] || 0) ||
-    (OFFICER_LOCKED_STATUSES.has(current) && !OFFICER_LOCKED_STATUSES.has(incoming))
+    !reopenRejected &&
+    ((STATUS_RANK[current] || 0) > (STATUS_RANK[incoming] || 0) ||
+      (OFFICER_LOCKED_STATUSES.has(current) && !OFFICER_LOCKED_STATUSES.has(incoming)))
   ) {
     merged.status = base.status;
     if (hasFieldValue(base.lastStatusRemarks)) merged.lastStatusRemarks = base.lastStatusRemarks;

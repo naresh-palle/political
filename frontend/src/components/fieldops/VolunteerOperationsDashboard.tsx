@@ -9,8 +9,8 @@ import {
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
-import { isTicketOpenForAssign } from "../../utils/ticketActions";
-import { assignmentSafeStatus, countByKpi, kpiBucket, ticketStatusSurface } from "../../utils/ticketKpi";
+import { canVolunteerAssignOrResend, isRejectedTicket } from "../../utils/ticketActions";
+import { assignmentSafeStatus, countByKpi, kpiBucket, ticketStatusSurface, volunteerAssignmentStatus } from "../../utils/ticketKpi";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import { OfficerStatusComments } from "./OfficerStatusComments";
@@ -870,7 +870,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             assignedDepartment: baseDept,
             assignedOfficialName: officialName || item.assignedOfficialName || "",
             assignedOfficialPhone: officialPhone || item.assignedOfficialPhone || "",
-            status: assignmentSafeStatus(item.status),
+            status: volunteerAssignmentStatus(item.status),
             updatedAt: new Date().toISOString()
           };
         }
@@ -890,7 +890,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               assignedDepartment: baseDept,
               assignedOfficialName: officialName || i.assignedOfficialName || "",
               assignedOfficialPhone: officialPhone || i.assignedOfficialPhone || "",
-              status: assignmentSafeStatus(i.status),
+              status: volunteerAssignmentStatus(i.status),
               updatedAt: new Date().toISOString()
             };
           }
@@ -903,7 +903,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     try {
       await politicalApiService.updateFieldIssueStatus(issueId, {
         department: baseDept,
-        status: assignmentSafeStatus(issues.find((i) => i.id === issueId)?.status),
+        status: volunteerAssignmentStatus(issues.find((i) => i.id === issueId)?.status),
         assignedOfficialName: officialName,
         assignedOfficialPhone: officialPhone,
         remarks: `Department assigned to ${baseDept}`
@@ -1488,7 +1488,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <div className={TICKET_GRID_CLASS}>
             {paginatedIssues.map((issue) => {
               const timing = getTicketTimingDetails(issue);
-              const showAssign = isTicketOpenForAssign(issue.status);
+              const showAssign = canVolunteerAssignOrResend(issue.status);
 
               return (
                 <TicketGridCard
@@ -1498,6 +1498,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   departments={DEPARTMENTS}
                   resolveDeptValue={resolveDeptValue}
                   showAssignControls={showAssign}
+                  assignButtonLabel={
+                    isRejectedTicket(issue.status) ? "Resend to Officer on WhatsApp" : "Assign & Notify on WhatsApp"
+                  }
                   showProofCount={false}
                   onOpen={() => setSelectedIssue(issue)}
                   onAssignDepartment={handleAssignDepartment}
@@ -1588,7 +1591,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         </td>
                         <td className="py-1.5 px-2 align-top" onClick={(e) => e.stopPropagation()}>
                           {(() => {
-                            const canAssign = isTicketOpenForAssign(issue.status);
+                            const canAssign = canVolunteerAssignOrResend(issue.status);
                             if (!canAssign) {
                               return (
                                 <div className="text-[11px] font-semibold text-[#F5EFE0] truncate" title={issue.department || "General Administration"}>
@@ -1620,7 +1623,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                   className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer"
                                 >
                                   <MessageCircle className="w-3 h-3 text-emerald-400 fill-emerald-400/20 shrink-0" />
-                                  WhatsApp
+                                  {isRejectedTicket(issue.status) ? "Resend" : "WhatsApp"}
                                 </button>
                               </div>
                             );

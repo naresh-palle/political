@@ -202,6 +202,16 @@ def should_preserve_progress_status(current_status: Optional[str], incoming_stat
 
 
 ASSIGNMENT_STATUSES = frozenset({"ASSIGNED", "ACKNOWLEDGED", "ASSIGNED_TO_DEPARTMENT"})
+
+
+def assignment_reopens_rejected(current_status: Optional[str], incoming_status: Optional[str]) -> bool:
+    """Volunteer resend after officer rejection may reopen the ticket to ASSIGNED."""
+    return (
+        normalize_status(current_status) == "REJECTED"
+        and normalize_status(incoming_status) in ASSIGNMENT_STATUSES
+    )
+
+
 STATUS_RANK = {
     "NEW": 1,
     "OPEN": 1,

@@ -57,6 +57,7 @@ try:
         volunteer_recipient_ids,
         merge_issue_docs,
         should_preserve_progress_status,
+        assignment_reopens_rejected,
         apply_assignment_fields,
         ASSIGNMENT_STATUSES,
     )
@@ -83,6 +84,7 @@ except ImportError:
         volunteer_recipient_ids,
         merge_issue_docs,
         should_preserve_progress_status,
+        assignment_reopens_rejected,
         apply_assignment_fields,
         ASSIGNMENT_STATUSES,
     )
@@ -2557,7 +2559,9 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     if new_status in ASSIGNMENT_STATUSES:
         current_status = normalize_status(issue.get("status") or "NEW")
         issue = apply_assignment_fields(issue, payload)
-        if should_preserve_progress_status(current_status, new_status):
+        if assignment_reopens_rejected(current_status, new_status):
+            issue["status"] = new_status
+        elif should_preserve_progress_status(current_status, new_status):
             issue["status"] = current_status
         else:
             issue["status"] = new_status
@@ -3054,7 +3058,13 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
         "assignedAt": now_iso,
         "updatedAt": now_iso
     }
-    if not should_preserve_progress_status(issue.get("status"), "ASSIGNED"):
+    if assignment_reopens_rejected(issue.get("status"), "ASSIGNED"):
+        update_data["status"] = "ASSIGNED"
+        update_data["lastStatusRemarks"] = (
+            f"Volunteer resent to officer after rejection. Previous: {issue.get('lastStatusRemarks') or 'Rejected'}"
+        )[:500]
+        update_data["lastStatusUpdateAt"] = now_iso
+    elif not should_preserve_progress_status(issue.get("status"), "ASSIGNED"):
         update_data["status"] = "ASSIGNED"
     
     try:

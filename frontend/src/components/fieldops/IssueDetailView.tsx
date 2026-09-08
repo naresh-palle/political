@@ -27,7 +27,7 @@ import {
   FileDown
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
-import { isTicketOpenForAssign } from "../../utils/ticketActions";
+import { canVolunteerAssignOrResend, isRejectedTicket, isTicketOpenForAssign } from "../../utils/ticketActions";
 import { exportTicketPdf } from "../../utils/exportTicketPdf";
 
 interface IssueDetailViewProps {
@@ -321,7 +321,9 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     currentUser.roleId === "ADMIN" ||
     currentUser.role === "super_admin";
 
-  const canAssign = (isAdmin || isDirector || isVolunteer) && isTicketOpenForAssign(liveIssue.status);
+  const canAssign =
+    ((isAdmin || isDirector) && isTicketOpenForAssign(liveIssue.status)) ||
+    (isVolunteer && canVolunteerAssignOrResend(liveIssue.status));
   const canUpdateProof = isAdmin || isDirector;
 
   return (
@@ -360,7 +362,11 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
             >
               <MessageCircle className="w-4 h-4 fill-white/20" />
-              <span>Assign & Notify via WhatsApp</span>
+              <span>
+                {isVolunteer && isRejectedTicket(liveIssue.status)
+                  ? "Resend to Officer via WhatsApp"
+                  : "Assign & Notify via WhatsApp"}
+              </span>
             </button>
           )}
           {canUpdateProof && (
@@ -869,7 +875,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
       {/* Assign Complaint & WhatsApp Modal */}
       <AssignComplaintModal
         isOpen={isAssignModalOpen}
-        issue={issue}
+        issue={liveIssue}
         onClose={() => setIsAssignModalOpen(false)}
         onConfirmAssign={() => {
           if (onIssueUpdated) onIssueUpdated();

@@ -133,6 +133,45 @@ def test_assign_notify_does_not_overwrite_in_progress(monkeypatch):
     assert args[0][1]["$set"].get("status") != "ASSIGNED"
 
 
+def test_assign_notify_reopens_rejected(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    rejected = {
+        **_issue(status="REJECTED"),
+        "lastStatusRemarks": "Out of scope",
+    }
+    srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"] = dict(rejected)
+
+    mock_issues = MagicMock()
+    mock_issues.find_one = AsyncMock(return_value=dict(rejected))
+    mock_issues.update_one = AsyncMock(return_value=MagicMock(matched_count=1))
+
+    class _DB:
+        field_issues = mock_issues
+        users = MagicMock()
+        notification_audits = MagicMock()
+
+    _DB.users.find_one = AsyncMock(return_value=None)
+    _DB.notification_audits.insert_one = AsyncMock(return_value=None)
+    monkeypatch.setattr(srv, "db", _DB())
+    monkeypatch.setattr(
+        srv.whatsapp_client,
+        "send_whatsapp_notification",
+        AsyncMock(return_value={"success": True, "status": "SENT"}),
+    )
+
+    result = asyncio.run(
+        srv.assign_and_notify_whatsapp(
+            "iss-e2e-1",
+            {"assignedDeptName": "R&B", "assignedOfficialName": "Officer A"},
+        )
+    )
+    assert result["issue"]["status"] == "ASSIGNED"
+    args = mock_issues.update_one.await_args
+    assert args[0][1]["$set"].get("status") == "ASSIGNED"
+
+
 def test_volunteer_assignment_saves_department_without_mongo(monkeypatch):
     import asyncio
     from backend import server as srv
@@ -157,6 +196,33 @@ def test_volunteer_assignment_saves_department_without_mongo(monkeypatch):
     assert result["ticket"]["status"] == "ASSIGNED"
     assert "Panchayat Raj" in result["ticket"]["department"]
     assert result["ticket"]["assignedOfficialName"] == "Dept Officer"
+    assert srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"]["status"] == "ASSIGNED"
+
+
+def test_volunteer_status_assignment_reopens_rejected(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"] = {
+        **_issue(status="REJECTED"),
+        "lastStatusRemarks": "Out of jurisdiction",
+    }
+    monkeypatch.setattr(srv, "_mongo_circuit_open", True)
+    monkeypatch.setattr(srv, "db", srv._OfflineDB())
+
+    result = asyncio.run(
+        srv.update_field_issue_status(
+            "iss-e2e-1",
+            {
+                "status": "ASSIGNED",
+                "department": "R&B",
+                "assignedOfficialName": "Officer A",
+                "remarks": "Resent to officer after rejection",
+            },
+        )
+    )
+    assert result["ticket"]["status"] == "ASSIGNED"
     assert srv.IN_MEMORY_FIELD_ISSUES["iss-e2e-1"]["status"] == "ASSIGNED"
 
 

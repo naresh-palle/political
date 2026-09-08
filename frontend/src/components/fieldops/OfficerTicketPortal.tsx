@@ -625,22 +625,6 @@ export const OfficerTicketPortal: React.FC = () => {
 
                   <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
-                      COMPLAINANT / CITIZEN DETAILS
-                    </span>
-                    <p className="font-semibold text-[#F5EFE0]">{issue.reportedBy} ({issue.reporterType || "CITIZEN"})</p>
-                    {issue.reporterDesignation ? (
-                      <p className="text-zinc-400">{issue.reporterDesignation}</p>
-                    ) : null}
-                    <p className="text-zinc-400 flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-[#D4A24C]" />
-                      {issue.reporterPhone || "Contact provided during intake"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
-                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
                       FIELD ASSIGNMENT
                     </span>
                     <p className="text-zinc-400">Volunteer: <strong className="text-[#F5EFE0]">{issue.assignedVolunteerName || "Not assigned"}</strong></p>
@@ -652,25 +636,106 @@ export const OfficerTicketPortal: React.FC = () => {
                       </p>
                     ) : null}
                   </div>
-                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
-                    <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
-                      LATEST OFFICER COMMENT
-                    </span>
-                    <p className="text-[#F5EFE0] leading-relaxed whitespace-pre-wrap">
-                      {issue.lastStatusRemarks?.trim() || "No officer comment yet. Review the ticket below, then proceed to update status."}
-                    </p>
-                    {issue.lastStatusUpdateAt ? (
-                      <p className="text-[11px] font-mono text-zinc-500">{String(issue.lastStatusUpdateAt).replace("T", " ").slice(0, 19)}</p>
-                    ) : null}
-                  </div>
                 </div>
 
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block mb-1.5">
-                    DETAILED DESCRIPTION OF ISSUE
+                <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2 text-xs">
+                  <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
+                    LATEST OFFICER COMMENT
                   </span>
-                  <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#D8CFB8] leading-relaxed whitespace-pre-wrap">
-                    {issue.description || "No detailed description recorded during intake."}
+                  <p className="text-[#F5EFE0] leading-relaxed whitespace-pre-wrap">
+                    {issue.lastStatusRemarks?.trim() || "No officer comment yet. Review the ticket below, then proceed to update status."}
+                  </p>
+                  {issue.lastStatusUpdateAt ? (
+                    <p className="text-[11px] font-mono text-zinc-500">{String(issue.lastStatusUpdateAt).replace("T", " ").slice(0, 19)}</p>
+                  ) : null}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] space-y-3">
+                    <div className="flex items-start justify-between gap-3 border-b border-[#22405E] pb-2">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
+                        Issue Scope & Ground Description
+                      </h3>
+                      <span className="text-[11px] text-[#8E9CAE] font-mono shrink-0 text-right">
+                        {issue.assemblyConstituencyName || "Constituency"}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#D8CFB8] leading-relaxed whitespace-pre-wrap">
+                      {issue.description || "No specific detailed description recorded during ground intake."}
+                    </p>
+                    <div className="p-3 rounded-xl bg-[#0B1A2C] border border-[#22405E] text-xs text-[#8E9CAE] space-y-1.5">
+                      <p className="flex items-start gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0 mt-0.5" />
+                        <span>
+                          {[issue.mandalName, issue.villageName].filter(Boolean).join(" · ") || "Location not recorded"}
+                        </span>
+                      </p>
+                      {issue.placeName ? (
+                        <p>
+                          Exact Location Landmark: <strong className="text-[#F5EFE0]">{issue.placeName}</strong>
+                        </p>
+                      ) : null}
+                      {issue.initialRemarks ? (
+                        <p>
+                          Ground intake notes: <strong className="text-[#F5EFE0]">{issue.initialRemarks}</strong>
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] space-y-3">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[#22405E] pb-2">
+                      Reported Person Details
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div className="min-w-0">
+                        <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Reporter Name</span>
+                        <strong className="text-[#F5EFE0] text-sm mt-0.5 break-words flex items-start gap-1.5">
+                          <User className="w-3.5 h-3.5 text-[#D4A24C] shrink-0 mt-0.5" />
+                          <span>{issue.reportedBy || "Not recorded"}</span>
+                        </strong>
+                        <span className="text-[11px] text-[#D4A24C] block mt-0.5">
+                          {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
+                          {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Direct Phone Contact</span>
+                        {issue.reporterPhone ? (
+                          <a
+                            href={`tel:${issue.reporterPhone}`}
+                            className="inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-xl bg-[#0B1A2C] hover:bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold"
+                          >
+                            <Phone className="w-3.5 h-3.5 shrink-0" />
+                            {issue.reporterPhone}
+                          </a>
+                        ) : (
+                          <p className="text-[#8E9CAE] mt-1">Contact provided during intake</p>
+                        )}
+                      </div>
+                      {issue.citizenGender ? (
+                        <div className="min-w-0">
+                          <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Gender</span>
+                          <strong className="text-[#F5EFE0] block mt-0.5">{issue.citizenGender}</strong>
+                        </div>
+                      ) : null}
+                      {issue.citizenAge ? (
+                        <div className="min-w-0">
+                          <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Age</span>
+                          <strong className="text-[#F5EFE0] block mt-0.5">{issue.citizenAge}</strong>
+                        </div>
+                      ) : null}
+                      <div className="min-w-0">
+                        <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Reported On</span>
+                        <strong className="text-[#F5EFE0] block mt-0.5">{issue.reportedDate || issue.createdAt?.split("T")[0] || "Not recorded"}</strong>
+                      </div>
+                      {issue.schemeSubDetail ? (
+                        <div className="min-w-0">
+                          <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Scheme / Sub-detail</span>
+                          <strong className="text-[#F5EFE0] block mt-0.5 break-words">{issue.schemeSubDetail}</strong>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
