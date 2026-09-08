@@ -307,14 +307,14 @@ function AppInner() {
   // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
   // - Political Admin: Home (fieldops), Assign Tickets, Contact Database, Director User Management
   // - Manager: Home (fieldops), Assign Tickets, Contact Database, Squad Volunteer Management
-  // - Volunteer: Home (fieldops), Assign Tickets, Contact Database
+  // - Volunteer: Home (fieldops), Contact Database — Add Complaint lives on Home, not Assign Tickets
   useEffect(() => {
-    if (isVolunteer && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
+    if (isVolunteer && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-      if (!window.location.hash.toLowerCase().includes("field-ops") && !window.location.hash.toLowerCase().includes("assign") && !window.location.hash.toLowerCase().includes("contact")) {
+      if (!window.location.hash.toLowerCase().includes("field-ops") && !window.location.hash.toLowerCase().includes("contact")) {
         window.location.hash = "#/field-ops";
       }
     } else if ((isPoliticalAdmin || isDirector) && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
@@ -328,7 +328,7 @@ function AppInner() {
   const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets") => {
     let targetProduct = product;
     if (isVolunteer) {
-      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts"].includes(product) ? "assigntickets" : product;
+      targetProduct = ["fieldops", "grievances", "contacts"].includes(product) ? product : "fieldops";
     } else if (isPoliticalAdmin || isDirector) {
       targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
     } else if (!isPlatformAdmin) {
@@ -374,7 +374,7 @@ function AppInner() {
         : "DIRECTOR"
     );
 
-    if (userRole === "VOLUNTEER" && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
+    if (userRole === "VOLUNTEER" && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");

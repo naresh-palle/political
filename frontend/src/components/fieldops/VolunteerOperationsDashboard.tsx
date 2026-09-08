@@ -1674,6 +1674,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         issue={assignModalIssue}
         onClose={() => setAssignModalIssue(null)}
         onConfirmAssign={(issueId, deptName, officialName, officialPhone) => handleAssignDepartment(issueId, deptName, officialName, officialPhone)}
+        returnHash="#/field-ops"
       />
     </div>
   );

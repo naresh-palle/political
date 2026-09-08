@@ -35,7 +35,6 @@ import {
   LayoutGrid,
   List,
   Eye,
-  ClipboardList,
   Building2,
   MessageCircle,
   Mail
@@ -1351,7 +1350,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
       {!isAssignTicketsMode && (
       <>
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
         <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#D4A24C]/40">
           <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">My Volunteers</span>
           <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.myVolunteers ?? volunteers.length}</span>
@@ -1360,10 +1359,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Active Volunteers</span>
           <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.activeVolunteers ?? volunteers.filter((v) => !v.status || v.status === "ACTIVE").length}</span>
         </div>
-        <button type="button" onClick={() => goAssignTickets("ALL", undefined, true)} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Assigned Tickets</span>
-          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.totalAssignedTickets ?? assignedTickets.length}</span>
-        </button>
         <button type="button" onClick={() => goAssignTickets("ASSIGNED", undefined, true)} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
           <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Pending Tickets</span>
           <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.pendingTickets ?? pendingAssignedCount}</span>
@@ -1507,57 +1502,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="font-display text-lg text-[#F5EFE0] flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-[#D4A24C]" />
-            Assigned Tickets
-          </h2>
-          <button
-            type="button"
-            onClick={() => goAssignTickets("ALL", undefined, true)}
-            className="text-xs font-semibold text-[#D4A24C] hover:text-[#F5EFE0] cursor-pointer"
-          >
-            View all ({dashStats?.totalAssignedTickets ?? assignedTickets.length})
-          </button>
-        </div>
-        {assignedTickets.length === 0 ? (
-          <div className="p-4 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
-            No tickets are assigned to your volunteers.
-          </div>
-        ) : (
-          <div className={TICKET_GRID_CLASS}>
-            {assignedTickets.slice(0, 8).map((issue) => {
-              const timing = getTicketTimingDetails(issue);
-              return (
-                <TicketGridCard
-                  key={issue.id}
-                  issue={issue}
-                  timing={timing}
-                  showAssignControls={false}
-                  volunteerName={issue.assignedVolunteerName || volunteers.find((v) => v.id === issue.assignedVolunteerId)?.name || "Assigned volunteer"}
-                  extraBadges={
-                    <span
-                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                        issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                          ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                          : issue.status === "OVERDUE"
-                          ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
-                          : "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                      }`}
-                    >
-                      {formatIssueStatus(issue.status)}
-                    </span>
-                  }
-                  onOpen={() => setSelectedIssue(issue)}
-                  onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
-                />
               );
             })}
           </div>

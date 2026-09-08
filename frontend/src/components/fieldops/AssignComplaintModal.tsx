@@ -438,13 +438,16 @@ interface AssignComplaintModalProps {
   issue: FieldIssue | null;
   onClose: () => void;
   onConfirmAssign: (issueId: string, assignedDeptName: string, officialName?: string, officialPhone?: string) => void;
+  /** Where to send the user after assign/close. Volunteers stay on Home; PA/Manager return to Assign Tickets. */
+  returnHash?: string;
 }
 
 export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
   isOpen,
   issue,
   onClose,
-  onConfirmAssign
+  onConfirmAssign,
+  returnHash = "#/assign-tickets?status=ALL"
 }) => {
   const [directWaLink, setDirectWaLink] = useState<string>("");
 
@@ -660,7 +663,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
       setIsSending(false);
       // Auto-close modal after 1.2s and redirect to ticket dashboard
       setTimeout(() => {
-        window.location.hash = "#/assign-tickets?status=ALL";
+        window.location.hash = returnHash;
         onClose();
       }, 1200);
     }
@@ -687,7 +690,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
           </div>
           <button
             onClick={() => {
-              window.location.hash = "#/assign-tickets?status=ALL";
+              window.location.hash = returnHash;
               onClose();
             }}
             className="w-8 h-8 rounded-full bg-[#142233] hover:bg-rose-950/80 border border-[#22354D] text-[#8E9CAE] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 ml-2"

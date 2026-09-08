@@ -72,6 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isPlatformAdmin = currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin);
   const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
   const isDirector = !isPlatformAdmin && !isPoliticalAdmin && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
+  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer");
 
   useEffect(() => {
     setLogoError(false);
@@ -198,7 +199,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             )}
 
-            {/* Tab 2: Assign Tickets / Complaints */}
+            {isVolunteer && (
+            <button
+              onClick={() => {
+                window.location.hash = "#/field-ops";
+                onProductChange("fieldops");
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeProduct === "fieldops"
+                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
+                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
+              }`}
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              <span>Home</span>
+            </button>
+            )}
+
+            {/* Tab 2: Assign Tickets / Complaints — PA and Manager only. Volunteers add complaints on Home. */}
+            {!isVolunteer && (
             <button
               onClick={() => {
                 window.location.hash = "#/assign-tickets?status=ALL";
@@ -213,6 +232,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Shield className="w-3.5 h-3.5" />
               <span>Assign Tickets / Complaints</span>
             </button>
+            )}
 
             {/* Tab 3: Contact Database */}
             <button
@@ -441,6 +461,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           )}
 
+          {isVolunteer && (
+          <button
+            onClick={() => {
+              window.location.hash = "#/field-ops";
+              onProductChange("fieldops");
+            }}
+            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
+            }`}
+          >
+            Home
+          </button>
+          )}
+
+          {!isVolunteer && (
           <button
             onClick={() => {
               window.location.hash = "#/assign-tickets?status=ALL";
@@ -452,6 +487,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Assign Tickets
           </button>
+          )}
 
           <button
             onClick={() => onProductChange("contacts")}
