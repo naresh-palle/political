@@ -116,13 +116,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           )}
         </div>
         <div
-          className={`shrink-0 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wider uppercase border whitespace-nowrap ${
-            timing.isClosed
-              ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
-              : issue.status === "OVERDUE"
-              ? "bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse"
-              : "bg-blue-950/80 text-blue-300 border-blue-500/40"
-          }`}
+          className={`shrink-0 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wider uppercase ${surface.badge} whitespace-normal break-words max-w-[9rem] text-center`}
         >
           {timing.isClosed ? `Closed in ${timing.durationText}` : `Open ${timing.durationText}`}
         </div>
@@ -188,15 +182,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
             Category: <strong className="text-[#D4A24C] font-semibold">{issue.category}</strong>
           </span>
           <span
-            className={`shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-              timing.isClosed || issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
-                : issue.status === "IN_PROGRESS"
-                  ? "bg-sky-950/80 text-sky-300 border border-sky-500/40"
-                  : issue.status === "ASSIGNED" || issue.status === "ACKNOWLEDGED"
-                    ? "bg-violet-950/80 text-violet-200 border border-violet-500/40"
-                    : "bg-amber-950/80 text-amber-300 border border-amber-500/40"
-            }`}
+            className={`shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${surface.badge} whitespace-normal break-words max-w-[8rem] text-center`}
           >
             {formatIssueStatus(issue.status)}
           </span>

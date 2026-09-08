@@ -131,54 +131,32 @@ export function volunteerAssignmentStatus(current?: string | null): string {
   return assignmentSafeStatus(current);
 }
 
-export function ticketStatusSurface(issue: AssigneeFields): {
+/** One unique gold surface for every ticket status (Assign Tickets, all roles). */
+export const UNIQUE_TICKET_SURFACE = {
+  card: "bg-[#0E1724] border-[#D4A24C]/45 hover:border-[#D4A24C]/85 hover:bg-[#131E2D] shadow-[0_0_14px_rgba(212,162,76,0.16)]",
+  row: "bg-[#0B131E]",
+  kpi: "bg-[#071322]/55 text-[#D4A24C] border-[#D4A24C]/40 hover:border-[#D4A24C]/80",
+  badge: "bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40"
+} as const;
+
+export const TICKET_TABLE_WRAP =
+  "whitespace-normal break-words [overflow-wrap:anywhere] leading-snug";
+
+export const TICKET_TABLE_CLASS =
+  "w-full table-fixed text-left text-xs border-separate border-spacing-y-2.5 border-spacing-x-0";
+
+export const TICKET_TABLE_HEAD_CELL = `py-2 px-2 ${TICKET_TABLE_WRAP}`;
+
+export const TICKET_TABLE_ROW_CLASS =
+  `${UNIQUE_TICKET_SURFACE.row} transition-shadow cursor-pointer group shadow-[0_0_16px_rgba(212,162,76,0.28)] hover:shadow-[0_0_24px_rgba(212,162,76,0.48)] hover:bg-[#131E2D] [&>td]:border-y [&>td]:border-[#D4A24C]/55 [&>td+td]:border-l [&>td:first-child]:border-l [&>td:last-child]:border-r [&>td:first-child]:rounded-l-lg [&>td:last-child]:rounded-r-lg`;
+
+export const TICKET_TABLE_CELL = `py-1.5 px-2 align-top ${TICKET_TABLE_WRAP}`;
+
+export function ticketStatusSurface(_issue?: AssigneeFields): {
   card: string;
   row: string;
   kpi: string;
+  badge: string;
 } {
-  const bucket = kpiBucket(issue);
-  switch (bucket) {
-    case "OPEN_UNASSIGNED":
-      return {
-        card: "bg-amber-950/35 border-amber-500/40 hover:border-amber-400/70 hover:bg-amber-950/50",
-        row: "bg-amber-950/20 hover:bg-amber-950/35",
-        kpi: "bg-amber-950/40 border-amber-500/40 hover:border-amber-400/70"
-      };
-    case "ASSIGNED":
-      return {
-        card: "bg-violet-950/35 border-violet-500/40 hover:border-violet-400/70 hover:bg-violet-950/50",
-        row: "bg-violet-950/20 hover:bg-violet-950/35",
-        kpi: "bg-violet-950/40 border-violet-500/40 hover:border-violet-400/70"
-      };
-    case "IN_PROGRESS":
-      return {
-        card: "bg-sky-950/40 border-sky-500/45 hover:border-sky-400/70 hover:bg-sky-950/55",
-        row: "bg-sky-950/20 hover:bg-sky-950/35",
-        kpi: "bg-sky-950/40 border-sky-500/40 hover:border-sky-400/70"
-      };
-    case "OVERDUE":
-      return {
-        card: "bg-rose-950/45 border-rose-500/50 hover:border-rose-400/80 hover:bg-rose-950/60",
-        row: "bg-rose-950/25 hover:bg-rose-950/40",
-        kpi: "bg-rose-950/45 border-rose-500/50 hover:border-rose-400/80"
-      };
-    case "RESOLVED":
-      return {
-        card: "bg-emerald-950/35 border-emerald-500/40 hover:border-emerald-400/70 hover:bg-emerald-950/50",
-        row: "bg-emerald-950/20 hover:bg-emerald-950/35",
-        kpi: "bg-emerald-950/40 border-emerald-500/40 hover:border-emerald-400/70"
-      };
-    case "REJECTED":
-      return {
-        card: "bg-slate-800/50 border-slate-500/40 hover:border-slate-400/70 hover:bg-slate-800/70",
-        row: "bg-slate-800/30 hover:bg-slate-800/50",
-        kpi: "bg-slate-800/50 border-slate-500/40 hover:border-slate-400/70"
-      };
-    default:
-      return {
-        card: "bg-[#0E1724] border-[#223348] hover:border-[#D4A24C]/60 hover:bg-[#131E2D]",
-        row: "hover:bg-[#131E2D]/70",
-        kpi: "bg-[#0F1E30] border-[#22354D] hover:border-[#D4A24C]/60"
-      };
-  }
+  return UNIQUE_TICKET_SURFACE;
 }

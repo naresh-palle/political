@@ -13,7 +13,7 @@ import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
-import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, ticketStatusSurface } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
 import { findVolunteerForVillage } from "../../utils/villageVolunteers";
@@ -76,11 +76,11 @@ const DashboardKpi = ({
         onClick ? "cursor-pointer" : "cursor-default"
       } ${tone}`}
     >
-      <span className="flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold leading-tight truncate">
+      <span className="flex items-center gap-1 text-[9px] uppercase tracking-wide font-semibold leading-tight whitespace-normal break-words">
         {icon}
-        <span className="truncate">{label}</span>
+        <span className="whitespace-normal break-words">{label}</span>
       </span>
-      <span className="block font-display text-base font-bold tabular-nums leading-tight truncate">
+      <span className="block font-display text-base font-bold tabular-nums leading-tight whitespace-normal break-words">
         {formatDashboardCount(value)}
       </span>
     </button>
@@ -661,76 +661,76 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             label="Total Tickets"
             value={totalIssues}
             onClick={() => goAssignTickets("ALL")}
-            tone="bg-[#071322]/45 text-[#D4A24C] border-[#D4A24C]/35 hover:border-[#D4A24C]/80"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Open / Unassigned"
             value={pendingCount}
             onClick={() => goAssignTickets("OPEN_UNASSIGNED")}
-            tone="bg-amber-950/40 text-amber-300 border-amber-500/40 hover:border-amber-400/70"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Assigned"
             value={assignedCount}
             onClick={() => goAssignTickets("ASSIGNED")}
-            tone="bg-violet-950/40 text-violet-200 border-violet-500/40 hover:border-violet-400/70"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="In Progress"
             value={inProgressCount}
             onClick={() => goAssignTickets("IN_PROGRESS")}
-            tone="bg-sky-950/40 text-sky-300 border-sky-500/40 hover:border-sky-400/70"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Overdue"
             value={overdueCount}
             onClick={() => goAssignTickets("OVERDUE")}
             icon={<AlertTriangle className="w-2.5 h-2.5 shrink-0" />}
-            tone="bg-rose-950/40 text-rose-300 border-rose-500/40 hover:border-rose-400/80"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Resolved / Closed"
             value={completedCount}
             onClick={() => goAssignTickets("RESOLVED")}
-            tone="bg-emerald-950/40 text-emerald-300 border-emerald-500/40 hover:border-emerald-400/70"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Rejected"
             value={rejectedCount}
             onClick={() => goAssignTickets("REJECTED")}
-            tone="bg-slate-800/50 text-slate-200 border-slate-500/40 hover:border-slate-400/70"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-1.5">
           <DashboardKpi
             label="Total Volunteers"
             value={volunteerCount}
-            tone="bg-[#071322]/45 text-[#D4A24C] border-[#D4A24C]/35"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Active Volunteers"
             value={activeVolunteerCount}
-            tone="bg-emerald-950/40 text-emerald-300 border-emerald-500/40"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Assigned to Dept"
             value={assignedToDeptCount}
-            tone="bg-violet-950/40 text-violet-200 border-violet-500/40"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Pending Work"
             value={dashStats?.volunteersWithPending ?? 0}
-            tone="bg-sky-950/40 text-sky-300 border-sky-500/40"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Overdue Work"
             value={dashStats?.volunteersWithOverdue ?? 0}
-            tone="bg-rose-950/40 text-rose-300 border-rose-500/40"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
           <DashboardKpi
             label="Completed Work"
             value={dashStats?.volunteersWithCompleted ?? 0}
-            tone="bg-emerald-950/35 text-emerald-300 border-emerald-500/35"
+            tone={UNIQUE_TICKET_SURFACE.kpi}
           />
         </div>
       </div>
@@ -1175,15 +1175,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   showAssignControls={false}
                   volunteerName={iss.assignedVolunteerName || "Unassigned"}
                   extraBadges={
-                    <span
-                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                        iss.status === "COMPLETED" || iss.status === "RESOLVED"
-                          ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                          : iss.status === "OVERDUE"
-                          ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
-                          : "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                      }`}
-                    >
+                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
                       {iss.status}
                     </span>
                   }
@@ -1194,75 +1186,73 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             })}
           </div>
           ) : (
-          <div className="rounded-xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[960px] table-fixed text-left text-xs border-collapse">
+          <div className="rounded-xl overflow-visible py-1">
+            <table className={TICKET_TABLE_CLASS}>
                 <thead>
-                  <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
-                    <th className="py-2 px-2 w-[12%]">ID & Status</th>
-                    <th className="py-2 px-2 w-[26%]">Issue Title</th>
-                    <th className="py-2 px-2 w-[14%]">Category / Dept</th>
-                    <th className="py-2 px-2 w-[14%]">Mandal / Location</th>
-                    <th className="py-2 px-2 w-[12%]">Reported By</th>
-                    <th className="py-2 px-2 w-[12%]">Volunteer</th>
-                    <th className="py-2 px-2 w-[10%] text-right">View</th>
+                  <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>ID & Status</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[26%]`}>Issue Title</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Category / Dept</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Mandal / Location</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Reported By</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Volunteer</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%] text-right`}>View</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#223348]/50">
+                <tbody>
                   {paginatedIssues.map((iss) => {
-                    const surface = ticketStatusSurface(iss);
                     return (
                       <tr
                         key={iss.id}
                         onClick={() => setSelectedIssue(iss)}
-                        className={`${surface.row} transition-colors cursor-pointer group`}
+                        className={TICKET_TABLE_ROW_CLASS}
                       >
-                        <td className="py-1.5 px-2 align-top">
+                        <td className={TICKET_TABLE_CELL}>
                           <div className="font-mono font-bold text-[#D4A24C] text-[11px]" title={formatTicketDisplay(iss)}>
-                            <div className="truncate">{rawTicketNumber(iss)}</div>
+                            <div>{rawTicketNumber(iss)}</div>
                             {constituencyShortName(iss) ? (
-                              <div className="truncate text-[10px] text-[#8E9CAE] font-normal">
+                              <div className="text-[10px] text-[#8E9CAE] font-normal">
                                 ({constituencyShortName(iss)})
                               </div>
                             ) : null}
                           </div>
-                          <span className="mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block bg-[#071322] text-[#D8CFB8] border-[#22405E]">
+                          <span className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${UNIQUE_TICKET_SURFACE.badge}`}>
                             {formatIssueStatus(iss.status)}
                           </span>
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] line-clamp-2 leading-snug">
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C]">
                             {iss.title}
                           </div>
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="font-medium text-[#F5EFE0] truncate">{iss.category}</div>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-medium text-[#F5EFE0]">{iss.category}</div>
                           {iss.department && (
-                            <div className="text-[10.5px] text-[#D4A24C] truncate mt-0.5">{String(iss.department).split("(")[0]}</div>
+                            <div className="text-[10.5px] text-[#D4A24C] mt-0.5">{String(iss.department).split("(")[0]}</div>
                           )}
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="font-medium text-[#F5EFE0] truncate">{iss.mandalName}</div>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-medium text-[#F5EFE0]">{iss.mandalName}</div>
                           {(iss.villageName || iss.placeName) && (
-                            <div className="text-[10.5px] text-[#8E9CAE] truncate mt-0.5">{iss.villageName || iss.placeName}</div>
+                            <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">{iss.villageName || iss.placeName}</div>
                           )}
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="font-medium text-[#F5EFE0] truncate">{iss.reportedBy}</div>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-medium text-[#F5EFE0]">{iss.reportedBy}</div>
                         </td>
-                        <td className="py-1.5 px-2 align-top text-[#8E9CAE] truncate">
+                        <td className={`${TICKET_TABLE_CELL} text-[#8E9CAE]`}>
                           {iss.assignedVolunteerName || "Unassigned"}
                         </td>
-                        <td className="py-1.5 px-2 align-top text-right">
+                        <td className={`${TICKET_TABLE_CELL} text-right`}>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedIssue(iss);
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-normal"
                           >
-                            <Eye className="w-3 h-3" />
+                            <Eye className="w-3 h-3 shrink-0" />
                             View
                           </button>
                         </td>
@@ -1271,7 +1261,6 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   })}
                 </tbody>
               </table>
-            </div>
           </div>
           )}
 

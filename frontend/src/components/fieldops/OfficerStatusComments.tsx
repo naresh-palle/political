@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { FieldIssue } from "../../types";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
+import { TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 const COMMENTED_STATUSES = ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"];
 const PAGE_SIZE = 10;
@@ -57,38 +58,38 @@ export const OfficerStatusComments: React.FC<OfficerStatusCommentsProps> = ({
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-[#223348]">
-        <table className="w-full min-w-[640px] text-left text-xs">
-          <thead className="bg-[#070D15] text-[10px] uppercase tracking-wider text-[#8E9CAE]">
-            <tr>
-              <th className="py-2 px-3 font-semibold w-[18%]">Ticket</th>
-              <th className="py-2 px-3 font-semibold w-[14%]">Status</th>
-              <th className="py-2 px-3 font-semibold">Officer comment</th>
-              <th className="py-2 px-3 font-semibold w-[18%]">Updated</th>
+      <div className="overflow-visible rounded-xl py-1">
+        <table className={TICKET_TABLE_CLASS}>
+          <thead>
+            <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+              <th className={`${TICKET_TABLE_HEAD_CELL} w-[18%]`}>Ticket</th>
+              <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Status</th>
+              <th className={TICKET_TABLE_HEAD_CELL}>Officer comment</th>
+              <th className={`${TICKET_TABLE_HEAD_CELL} w-[18%]`}>Updated</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#223348]/60">
+          <tbody>
             {pageItems.map((i) => (
               <tr
                 key={`${i.id}-${i.status}-${i.lastStatusUpdateAt}`}
                 onClick={() => onOpen(i)}
-                className="bg-[#0B131E]/80 hover:bg-[#142B45] cursor-pointer transition-colors"
+                className={TICKET_TABLE_ROW_CLASS}
               >
-                <td className="py-2 px-3 align-top font-mono font-semibold text-[#D4A24C]">
-                  <div className="whitespace-nowrap">{rawTicketNumber(i)}</div>
+                <td className={`${TICKET_TABLE_CELL} font-mono font-semibold text-[#D4A24C]`}>
+                  <div>{rawTicketNumber(i)}</div>
                   {constituencyShortName(i) ? (
                     <div className="text-[10px] text-[#8E9CAE] font-normal">({constituencyShortName(i)})</div>
                   ) : null}
                 </td>
-                <td className="py-2 px-3 align-top">
-                  <span className="text-[10px] font-bold uppercase text-amber-300">
+                <td className={TICKET_TABLE_CELL}>
+                  <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${UNIQUE_TICKET_SURFACE.badge}`}>
                     {formatIssueStatus(i.status)}
                   </span>
                 </td>
-                <td className="py-2 px-3 align-top text-[#F5EFE0] leading-snug">
+                <td className={`${TICKET_TABLE_CELL} text-[#F5EFE0]`}>
                   {i.lastStatusRemarks?.trim() || "Officer updated this ticket."}
                 </td>
-                <td className="py-2 px-3 align-top font-mono text-[10px] text-[#8E9CAE] whitespace-nowrap">
+                <td className={`${TICKET_TABLE_CELL} font-mono text-[10px] text-[#8E9CAE]`}>
                   {i.lastStatusUpdateAt
                     ? i.lastStatusUpdateAt.replace("T", " ").slice(0, 16)
                     : "—"}

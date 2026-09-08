@@ -47,7 +47,7 @@ import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
-import { assignmentSafeStatus, countByKpi, hasAssignee, isOverdueStatus, kpiBucket } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, hasAssignee, isOverdueStatus, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -1352,29 +1352,29 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       {!isAssignTicketsMode && (
       <>
       <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#22354D]">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block">My Volunteers</span>
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#D4A24C]/40">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">My Volunteers</span>
           <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.myVolunteers ?? volunteers.length}</span>
         </div>
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#22354D]">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block">Active Volunteers</span>
-          <span className="text-2xl font-bold font-mono text-emerald-300">{dashStats?.activeVolunteers ?? volunteers.filter((v) => !v.status || v.status === "ACTIVE").length}</span>
+        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#D4A24C]/40">
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Active Volunteers</span>
+          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.activeVolunteers ?? volunteers.filter((v) => !v.status || v.status === "ACTIVE").length}</span>
         </div>
-        <button type="button" onClick={() => goAssignTickets("ALL", undefined, true)} className="p-3.5 rounded-xl bg-[#0F1E30] border border-violet-500/40 text-left hover:border-violet-400/70 cursor-pointer">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-violet-300 block">Assigned Tickets</span>
-          <span className="text-2xl font-bold font-mono text-violet-200">{dashStats?.totalAssignedTickets ?? assignedTickets.length}</span>
+        <button type="button" onClick={() => goAssignTickets("ALL", undefined, true)} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Assigned Tickets</span>
+          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.totalAssignedTickets ?? assignedTickets.length}</span>
         </button>
-        <button type="button" onClick={() => goAssignTickets("ASSIGNED", undefined, true)} className="p-3.5 rounded-xl bg-[#0F1E30] border border-amber-500/40 text-left hover:border-amber-400/70 cursor-pointer">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block">Pending Tickets</span>
-          <span className="text-2xl font-bold font-mono text-amber-300">{dashStats?.pendingTickets ?? pendingAssignedCount}</span>
+        <button type="button" onClick={() => goAssignTickets("ASSIGNED", undefined, true)} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Pending Tickets</span>
+          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.pendingTickets ?? pendingAssignedCount}</span>
         </button>
-        <button type="button" onClick={() => goAssignTickets("ASSIGNED")} className="p-3.5 rounded-xl bg-[#0F1E30] border border-sky-500/40 text-left hover:border-sky-400/70 cursor-pointer">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block">Assigned to Dept</span>
-          <span className="text-2xl font-bold font-mono text-sky-300">{dashStats?.assignedToDepartment ?? assignedToDeptCount}</span>
+        <button type="button" onClick={() => goAssignTickets("ASSIGNED")} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Assigned to Dept</span>
+          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.assignedToDepartment ?? assignedToDeptCount}</span>
         </button>
-        <button type="button" onClick={() => goAssignTickets("OVERDUE")} className="p-3.5 rounded-xl bg-[#0F1E30] border border-rose-500/40 text-left hover:border-rose-400/70 cursor-pointer">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block">Overdue</span>
-          <span className="text-2xl font-bold font-mono text-rose-300">{dashStats?.overdue ?? kpiCounts.overdue}</span>
+        <button type="button" onClick={() => goAssignTickets("OVERDUE")} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
+          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Overdue</span>
+          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.overdue ?? kpiCounts.overdue}</span>
         </button>
       </div>
 
@@ -1907,26 +1907,10 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   showAcCode
                   extraBadges={
                     <>
-                      <span
-                        className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                          issue.issueType === "GRIEVANCE"
-                            ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
-                            : "bg-sky-950/70 text-sky-300 border-sky-500/40"
-                        }`}
-                      >
+                      <span className={`text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
                         {issue.issueType === "GRIEVANCE" ? "Grievance" : "Field Issue"}
                       </span>
-                      <span
-                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                          issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                            : issue.status === "IN_PROGRESS"
-                            ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                            : issue.status === "OVERDUE"
-                            ? "bg-rose-950/60 text-rose-300 border-rose-500/40 animate-pulse"
-                            : "bg-blue-950/60 text-blue-300 border-blue-500/40"
-                        }`}
-                      >
+                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
                         {issue.status}
                       </span>
                     </>
@@ -1940,22 +1924,21 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         ) : (
           /* TABLE VIEW */
-          <div className="rounded-xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-            <table className="w-full min-w-[960px] table-fixed text-left text-xs border-collapse">
+          <div className="rounded-xl overflow-visible py-1">
+            <table className={TICKET_TABLE_CLASS}>
               <thead>
-                <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
-                  <th className="py-2 px-2 w-[12%]">ID & Status</th>
-                  <th className="py-2 px-2 w-[26%]">Issue Title</th>
-                  <th className="py-2 px-2 w-[12%]">Category / Dept</th>
-                  <th className="py-2 px-2 w-[12%]">Mandal / Location</th>
-                  <th className="py-2 px-2 w-[10%]">Reported By</th>
-                  <th className="py-2 px-2 w-[14%]">Assign & Notify</th>
-                  <th className="py-2 px-2 w-[10%]">Timeline</th>
-                  <th className="py-2 px-2 w-[4%] text-right">View</th>
+                <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>ID & Status</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[26%]`}>Issue Title</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Category / Dept</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Mandal / Location</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Reported By</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Assign & Notify</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Timeline</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[4%] text-right`}>View</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#223348]/50">
+              <tbody>
                 {paginatedOperations.map((issue) => {
                   const timing = getTicketTimingDetails(issue);
                   const officerComment = issue.lastStatusRemarks?.trim();
@@ -1964,74 +1947,64 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                     <tr
                       key={issue.id}
                       onClick={() => setSelectedIssue(issue)}
-                      className="hover:bg-[#131E2D]/70 transition-colors cursor-pointer group"
+                      className={TICKET_TABLE_ROW_CLASS}
                     >
-                      <td className="py-1.5 px-2 align-top">
+                      <td className={TICKET_TABLE_CELL}>
                         <div className="font-mono font-bold text-[#D4A24C] text-[11px]" title={formatTicketDisplay(issue)}>
-                          <div className="truncate">{rawTicketNumber(issue)}</div>
+                          <div>{rawTicketNumber(issue)}</div>
                           {constituencyShortName(issue) ? (
-                            <div className="truncate text-[10px] text-[#8E9CAE] font-normal">
+                            <div className="text-[10px] text-[#8E9CAE] font-normal">
                               ({constituencyShortName(issue)})
                             </div>
                           ) : null}
                         </div>
-                        <span
-                          className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
-                            issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                              ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                              : issue.status === "IN_PROGRESS"
-                              ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                              : issue.status === "OVERDUE" || (issue as any).status === "Can't be done"
-                              ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
-                              : "bg-blue-950/60 text-blue-300 border-blue-500/40"
-                          }`}
-                        >
+                        <span className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${UNIQUE_TICKET_SURFACE.badge}`}>
                           {formatIssueStatus(issue.status)}
                         </span>
                       </td>
-                      <td className="py-1.5 px-2 align-top">
-                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors line-clamp-2 leading-snug">
+                      <td className={TICKET_TABLE_CELL}>
+                        <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors">
                           {issue.title}
                         </div>
                         {issue.description ? (
-                          <div className="text-[11px] text-[#8E9CAE] line-clamp-2 mt-0.5 leading-snug">
+                          <div className="text-[11px] text-[#8E9CAE] mt-0.5">
                             {issue.description}
                           </div>
                         ) : null}
                         {officerComment ? (
-                          <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0] line-clamp-2">
+                          <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0]">
                             {officerComment}
                           </div>
                         ) : null}
                       </td>
-                      <td className="py-1.5 px-2 align-top">
-                        <div className="font-medium text-[#F5EFE0] truncate" title={issue.category}>{issue.category}</div>
+                      <td className={TICKET_TABLE_CELL}>
+                        <div className="font-medium text-[#F5EFE0]">{issue.category}</div>
                         {issue.department && (
-                          <div className="text-[10.5px] text-[#D4A24C] truncate mt-0.5" title={issue.department}>
+                          <div className="text-[10.5px] text-[#D4A24C] mt-0.5">
                             {issue.department.split("(")[0]}
                           </div>
                         )}
                       </td>
-                      <td className="py-1.5 px-2 align-top">
-                        <div className="font-medium text-[#F5EFE0] truncate" title={issue.mandalName}>{issue.mandalName}</div>
+                      <td className={TICKET_TABLE_CELL}>
+                        <div className="font-medium text-[#F5EFE0]">{issue.mandalName}</div>
                         {(issue.villageName || issue.placeName) ? (
-                          <div className="text-[10.5px] text-[#8E9CAE] truncate mt-0.5">
+                          <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">
                             {issue.villageName || issue.placeName}
                           </div>
                         ) : null}
                       </td>
-                      <td className="py-1.5 px-2 align-top">
-                        <div className="font-medium text-[#F5EFE0] truncate" title={issue.reportedBy}>{issue.reportedBy}</div>
-                        <div className="text-[10.5px] text-[#D4A24C] truncate mt-0.5">
+                      <td className={TICKET_TABLE_CELL}>
+                        <div className="font-medium text-[#F5EFE0]">{issue.reportedBy}</div>
+                        <div className="text-[10.5px] text-[#D4A24C] mt-0.5">
                           {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
                         </div>
                       </td>
-                      <td className="py-1.5 px-2 align-top" onClick={(e) => e.stopPropagation()}>
+                      <td className={TICKET_TABLE_CELL} onClick={(e) => e.stopPropagation()}>
                         {(() => {
                           const canAssign = isTicketOpenForAssign(issue.status);
                           if (!canAssign) {
                             return (
-                              <div className="text-[11px] font-semibold text-[#F5EFE0] truncate" title={issue.department || "General Administration"}>
+                              <div className="text-[11px] font-semibold text-[#F5EFE0]">
                                 {issue.department || "General Administration"}
                               </div>
                             );
@@ -2042,7 +2015,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                               <select
                                 value={resolveDeptValue(issue.department)}
                                 onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                                className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                                className="w-full max-w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
                               >
                                 <option value="">-- Select Department --</option>
                                 {DEPARTMENTS.map((dept) => (
@@ -2057,7 +2030,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                                   e.stopPropagation();
                                   setAssignModalIssue(issue);
                                 }}
-                                className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer"
+                                className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-normal"
                               >
                                 <MessageCircle className="w-3 h-3 text-emerald-400 fill-emerald-400/20 shrink-0" />
                                 WhatsApp
@@ -2066,25 +2039,25 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                           );
                         })()}
                       </td>
-                      <td className="py-1.5 px-2 align-top font-mono text-[10px]">
-                        <div className="text-[#CBD5E1] truncate">Reg: {timing.registeredTimeFormatted}</div>
-                        <div className="mt-0.5 truncate">
+                      <td className={`${TICKET_TABLE_CELL} font-mono text-[10px]`}>
+                        <div className="text-[#CBD5E1]">Reg: {timing.registeredTimeFormatted}</div>
+                        <div className="mt-0.5">
                           {timing.isClosed ? (
-                            <span className="text-emerald-400 font-semibold">Done: {timing.closedTimeFormatted}</span>
+                            <span className="text-[#D4A24C] font-semibold">Done: {timing.closedTimeFormatted}</span>
                           ) : (
-                            <span className="text-amber-400/90 font-semibold">Open {timing.durationText}</span>
+                            <span className="text-[#D4A24C]/90 font-semibold">Open {timing.durationText}</span>
                           )}
                         </div>
                       </td>
-                      <td className="py-1.5 px-2 align-top text-right">
+                      <td className={`${TICKET_TABLE_CELL} text-right`}>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedIssue(issue);
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-normal"
                         >
-                          <Eye className="w-3 h-3" />
+                          <Eye className="w-3 h-3 shrink-0" />
                           View
                         </button>
                       </td>
@@ -2093,7 +2066,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 })}
               </tbody>
             </table>
-            </div>
           </div>
         )}
 

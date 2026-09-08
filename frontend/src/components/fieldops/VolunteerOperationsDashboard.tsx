@@ -10,7 +10,7 @@ import {
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { canVolunteerAssignOrResend, isRejectedTicket } from "../../utils/ticketActions";
-import { assignmentSafeStatus, countByKpi, kpiBucket, ticketStatusSurface, volunteerAssignmentStatus } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE, volunteerAssignmentStatus } from "../../utils/ticketKpi";
 import { allocateTicketNumber, formatTicketDisplay, ticketSearchHaystack } from "../../utils/ticketNumberDisplay";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
@@ -1077,12 +1077,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("ALL");
                 window.location.hash = "#/assign-tickets?status=ALL";
               }}
-              className="p-3.5 rounded-xl border border-[#D4A24C]/35 bg-[#142B45]/70 hover:border-[#D4A24C]/80 cursor-pointer space-y-1 transition-all"
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#8E9CAE] block truncate">
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Total Tickets
               </span>
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between gap-1">
                 <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.total}</span>
                 <span className="text-[10px] text-[#8E9CAE] font-mono font-semibold">All</span>
               </div>
@@ -1098,14 +1098,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("OPEN_UNASSIGNED");
                 window.location.hash = "#/assign-tickets?status=OPEN_UNASSIGNED";
               }}
-              className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-950/40 hover:border-amber-400/70 cursor-pointer space-y-1 transition-all"
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-amber-400 block truncate">
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Open / Unassigned
               </span>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-amber-300">{kpiCounts.openUnassigned}</span>
-                <span className="text-[10px] text-amber-400/80 font-mono font-semibold">Pending</span>
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.openUnassigned}</span>
+                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Pending</span>
               </div>
             </div>
 
@@ -1119,14 +1119,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("ASSIGNED");
                 window.location.hash = "#/assign-tickets?status=ASSIGNED";
               }}
-              className="p-3.5 rounded-xl border border-violet-500/40 bg-violet-950/40 hover:border-violet-400/70 cursor-pointer space-y-1 transition-all"
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-violet-300 block truncate">
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Assigned
               </span>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-violet-200">{kpiCounts.assigned}</span>
-                <span className="text-[10px] text-violet-400/80 font-mono font-semibold">Officer</span>
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.assigned}</span>
+                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Officer</span>
               </div>
             </div>
 
@@ -1140,14 +1140,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("IN_PROGRESS");
                 window.location.hash = "#/assign-tickets?status=IN_PROGRESS";
               }}
-              className="p-3.5 rounded-xl border border-sky-500/40 bg-sky-950/40 hover:border-sky-400/70 cursor-pointer space-y-1 transition-all"
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-sky-400 block truncate">
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 In Progress
               </span>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-sky-300">{kpiCounts.inProgress}</span>
-                <span className="text-[10px] text-sky-400/80 font-mono font-semibold">Ground</span>
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.inProgress}</span>
+                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Ground</span>
               </div>
             </div>
 
@@ -1161,14 +1161,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("OVERDUE");
                 window.location.hash = "#/assign-tickets?status=OVERDUE";
               }}
-              className="p-3.5 rounded-xl border border-rose-500/45 bg-rose-950/40 hover:border-rose-400/80 cursor-pointer space-y-1 transition-all"
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-rose-400 block truncate">
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Overdue Alerts
               </span>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-rose-300">{kpiCounts.overdue}</span>
-                <span className="text-[10px] text-rose-400/80 font-mono font-semibold">Urgent</span>
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.overdue}</span>
+                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Urgent</span>
               </div>
             </div>
 
@@ -1182,14 +1182,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("RESOLVED");
                 window.location.hash = "#/assign-tickets?status=RESOLVED";
               }}
-              className="p-3.5 rounded-xl border border-emerald-500/40 bg-emerald-950/40 hover:border-emerald-400/70 cursor-pointer space-y-1 transition-all"
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-emerald-400 block truncate">
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Resolved / Closed
               </span>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-emerald-300">{kpiCounts.resolvedClosed}</span>
-                <span className="text-[10px] text-emerald-400/80 font-mono font-semibold">Closed</span>
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.resolvedClosed}</span>
+                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Closed</span>
               </div>
             </div>
 
@@ -1203,14 +1203,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 setFilterStatus("REJECTED");
                 window.location.hash = "#/assign-tickets?status=REJECTED";
               }}
-              className="p-3.5 rounded-xl border border-slate-500/40 bg-slate-800/50 hover:border-slate-400/70 cursor-pointer space-y-1 transition-all"
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
-              <span className="text-[10.5px] font-mono font-semibold uppercase text-slate-300 block truncate">
+              <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Rejected
               </span>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold font-mono text-slate-200">{kpiCounts.rejected}</span>
-                <span className="text-[10px] text-slate-400/80 font-mono font-semibold">Closed</span>
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="text-2xl font-bold font-mono text-[#D4A24C]">{kpiCounts.rejected}</span>
+                <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">Closed</span>
               </div>
             </div>
           </div>
@@ -1516,92 +1516,80 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         ) : (
           /* TABLE VIEW */
-          <div className="rounded-xl bg-[#0E1724] border border-[#223348] overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[960px] table-fixed text-left text-xs border-collapse">
+          <div className="rounded-xl overflow-visible py-1">
+              <table className={TICKET_TABLE_CLASS}>
                 <thead>
-                  <tr className="bg-[#0B131E] border-b border-[#223348] text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
-                    <th className="py-2 px-2 w-[12%] font-mono">ID & Status</th>
-                    <th className="py-2 px-2 w-[26%]">Issue Title</th>
-                    <th className="py-2 px-2 w-[12%]">Category / Dept</th>
-                    <th className="py-2 px-2 w-[12%]">Mandal / Location</th>
-                    <th className="py-2 px-2 w-[10%]">Reported By</th>
-                    <th className="py-2 px-2 w-[14%]">Assign & Notify</th>
-                    <th className="py-2 px-2 w-[10%]">Timeline</th>
-                    <th className="py-2 px-2 w-[4%] text-right">View</th>
+                  <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%] font-mono`}>ID & Status</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[26%]`}>Issue Title</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Category / Dept</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Mandal / Location</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Reported By</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Assign & Notify</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Timeline</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[4%] text-right`}>View</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#223348]/50">
+                <tbody>
                   {paginatedIssues.map((issue) => {
                     const timing = getTicketTimingDetails(issue);
-                    const surface = ticketStatusSurface(issue);
                     const officerComment = issue.lastStatusRemarks?.trim();
 
                     return (
                       <tr
                         key={issue.id}
                         onClick={() => setSelectedIssue(issue)}
-                        className={`${surface.row} transition-colors cursor-pointer group`}
+                        className={TICKET_TABLE_ROW_CLASS}
                       >
-                        <td className="py-1.5 px-2 align-top font-mono">
-                          <div className="font-bold text-[#D4A24C] truncate" title={formatTicketDisplay(issue)}>
+                        <td className={`${TICKET_TABLE_CELL} font-mono`}>
+                          <div className="font-bold text-[#D4A24C]" title={formatTicketDisplay(issue)}>
                             {formatTicketDisplay(issue)}
                           </div>
-                          <span
-                            className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border inline-block ${
-                              issue.status === "COMPLETED" || issue.status === "RESOLVED"
-                                ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                                : issue.status === "IN_PROGRESS"
-                                ? "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                                : issue.status === "OVERDUE"
-                                ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
-                                : "bg-blue-950/60 text-blue-300 border-blue-500/40"
-                            }`}
-                          >
+                          <span className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${UNIQUE_TICKET_SURFACE.badge}`}>
                             {formatIssueStatus(issue.status)}
                           </span>
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors line-clamp-2 leading-snug">
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors">
                             {issue.title}
                           </div>
                           {issue.description ? (
-                            <div className="text-[11px] text-[#8E9CAE] line-clamp-2 mt-0.5 leading-snug">
+                            <div className="text-[11px] text-[#8E9CAE] mt-0.5">
                               {issue.description}
                             </div>
                           ) : null}
                           {officerComment ? (
-                            <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0] line-clamp-2">
+                            <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0]">
                               {officerComment}
                             </div>
                           ) : null}
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="font-medium text-[#D8CFB8] truncate" title={issue.category}>{issue.category}</div>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
                           {issue.department && (
-                            <div className="text-[10.5px] text-[#8E9CAE] truncate mt-0.5" title={issue.department}>
+                            <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">
                               {issue.department.split("(")[0]}
                             </div>
                           )}
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="text-[#F5EFE0] font-medium truncate" title={issue.mandalName}>{issue.mandalName}</div>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="text-[#F5EFE0] font-medium">{issue.mandalName}</div>
                           {issue.villageName ? (
-                            <div className="text-[10.5px] text-[#8E9CAE] truncate mt-0.5">{issue.villageName}</div>
+                            <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">{issue.villageName}</div>
                           ) : null}
                         </td>
-                        <td className="py-1.5 px-2 align-top">
-                          <div className="text-[#F5EFE0] font-medium truncate" title={issue.reportedBy}>{issue.reportedBy}</div>
-                          <div className="text-[10.5px] text-[#D4A24C] truncate mt-0.5">
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
+                          <div className="text-[10.5px] text-[#D4A24C] mt-0.5">
                             {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
                           </div>
                         </td>
-                        <td className="py-1.5 px-2 align-top" onClick={(e) => e.stopPropagation()}>
+                        <td className={TICKET_TABLE_CELL} onClick={(e) => e.stopPropagation()}>
                           {(() => {
                             const canAssign = canVolunteerAssignOrResend(issue.status);
                             if (!canAssign) {
                               return (
-                                <div className="text-[11px] font-semibold text-[#F5EFE0] truncate" title={issue.department || "General Administration"}>
+                                <div className="text-[11px] font-semibold text-[#F5EFE0]">
                                   {issue.department || "General Administration"}
                                 </div>
                               );
@@ -1612,7 +1600,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                 <select
                                   value={resolveDeptValue(issue.department)}
                                   onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                                  className="w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                                  className="w-full max-w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
                                 >
                                   <option value="">-- Select Department --</option>
                                   {DEPARTMENTS.map((dept) => (
@@ -1627,7 +1615,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                     e.stopPropagation();
                                     setAssignModalIssue(issue);
                                   }}
-                                  className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer"
+                                  className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-normal"
                                 >
                                   <MessageCircle className="w-3 h-3 text-emerald-400 fill-emerald-400/20 shrink-0" />
                                   {isRejectedTicket(issue.status) ? "Resend" : "WhatsApp"}
@@ -1636,25 +1624,25 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             );
                           })()}
                         </td>
-                        <td className="py-1.5 px-2 align-top font-mono text-[10px]">
-                          <div className="text-[#CBD5E1] truncate">Reg: {timing.registeredTimeFormatted}</div>
-                          <div className="mt-0.5 truncate">
+                        <td className={`${TICKET_TABLE_CELL} font-mono text-[10px]`}>
+                          <div className="text-[#CBD5E1]">Reg: {timing.registeredTimeFormatted}</div>
+                          <div className="mt-0.5">
                             {timing.isClosed ? (
-                              <span className="text-emerald-400 font-semibold">Done: {timing.closedTimeFormatted}</span>
+                              <span className="text-[#D4A24C] font-semibold">Done: {timing.closedTimeFormatted}</span>
                             ) : (
-                              <span className="text-amber-400/90 font-semibold">Open {timing.durationText}</span>
+                              <span className="text-[#D4A24C]/90 font-semibold">Open {timing.durationText}</span>
                             )}
                           </div>
                         </td>
-                        <td className="py-1.5 px-2 align-top text-right">
+                        <td className={`${TICKET_TABLE_CELL} text-right`}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedIssue(issue);
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-normal"
                           >
-                            <Eye className="w-3 h-3" />
+                            <Eye className="w-3 h-3 shrink-0" />
                             View
                           </button>
                         </td>
@@ -1663,7 +1651,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   })}
                 </tbody>
               </table>
-            </div>
           </div>
         )}
 
