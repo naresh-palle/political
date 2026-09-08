@@ -20,6 +20,19 @@ def test_rejection_transition_from_assigned():
     assert validate_transition("CLOSED", "IN_PROGRESS") is not None
 
 
+def test_officer_dropdown_skips_current_status():
+    from backend.services.officer_status_workflow import next_officer_statuses
+
+    assert next_officer_statuses("ASSIGNED") == ["IN_PROGRESS", "RESOLVED", "REJECTED"]
+    assert next_officer_statuses("IN_PROGRESS") == ["RESOLVED", "REJECTED"]
+    assert next_officer_statuses("RESOLVED") == []
+    assert next_officer_statuses("REJECTED") == []
+    assert validate_transition("IN_PROGRESS", "IN_PROGRESS") is not None
+    assert validate_transition("IN_PROGRESS", "RESOLVED") is None
+    assert validate_transition("RESOLVED", "REJECTED") is not None
+    assert validate_transition("RESOLVED", "RESOLVED") is not None
+
+
 def test_volunteer_copy():
     title, msg = volunteer_notification_copy("LL-1002", "IN_PROGRESS", "on site")
     assert title == "Department Started Work"

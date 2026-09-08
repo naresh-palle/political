@@ -22,7 +22,13 @@ import {
   ChevronRight,
   X
 } from "lucide-react";
-import { formatIssueStatus } from "../../utils/statusLabels";
+import {
+  defaultOfficerActionStatus,
+  formatIssueStatus,
+  nextOfficerActionStatuses,
+  OFFICER_STATUS_OPTION_LABELS,
+  OfficerActionStatus
+} from "../../utils/statusLabels";
 
 export const OfficerTicketPortal: React.FC = () => {
   const [issueId, setIssueId] = useState<string>("");
@@ -98,13 +104,7 @@ export const OfficerTicketPortal: React.FC = () => {
       .then((data) => {
         if (data) {
           setIssue(data);
-          if (data.status === "RESOLVED") {
-            setNewStatus("RESOLVED");
-          } else if (data.status === "REJECTED") {
-            setNewStatus("REJECTED");
-          } else {
-            setNewStatus("IN_PROGRESS");
-          }
+          setNewStatus(defaultOfficerActionStatus(data.status));
         } else {
           setError("Grievance Ticket not found. Please verify the ticket link.");
         }
@@ -286,6 +286,11 @@ export const OfficerTicketPortal: React.FC = () => {
   // Submit Official Resolution Update
   const handleSubmitResolution = async (e: React.FormEvent) => {
     e.preventDefault();
+    const allowedNext = nextOfficerActionStatuses(issue?.status);
+    if (!allowedNext.includes(newStatus as OfficerActionStatus)) {
+      setError("This status is no longer available for this ticket. Choose the next status in the list.");
+      return;
+    }
     if (!remarks.trim()) {
       setError("Please enter official resolution remarks / field notes.");
       return;
@@ -369,6 +374,9 @@ export const OfficerTicketPortal: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  const nextStatuses = nextOfficerActionStatuses(issue?.status);
+  const statusLocked = Boolean(issue && nextStatuses.length === 0);
 
   if (loading) {
     return (
@@ -819,14 +827,28 @@ export const OfficerTicketPortal: React.FC = () => {
               </div>
             )}
 
-            {!showStatusForm && !submitSuccess && (
+            {statusLocked && !submitSuccess && (
+              <div className="p-5 rounded-2xl bg-[#0B1A2C] border border-emerald-500/40 text-center space-y-2">
+                <p className="text-sm font-bold text-emerald-300">
+                  Status locked: {formatIssueStatus(issue?.status)}
+                </p>
+                <p className="text-xs text-[#D8CFB8]">
+                  This ticket already has a final officer status. Reopening the same link will not offer In Progress, Resolved, or Rejected again.
+                </p>
+              </div>
+            )}
+
+            {!statusLocked && !showStatusForm && !submitSuccess && (
               <div className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/50 text-center space-y-3">
                 <p className="text-xs text-[#D8CFB8]">
                   Review the full ticket above, then proceed to record the official status update.
                 </p>
                 <button
                   type="button"
-                  onClick={() => setShowStatusForm(true)}
+                  onClick={() => {
+                    setNewStatus(defaultOfficerActionStatus(issue?.status));
+                    setShowStatusForm(true);
+                  }}
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-sm hover:brightness-110 inline-flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                 >
                   <ArrowRight className="w-4 h-4" />
@@ -835,7 +857,7 @@ export const OfficerTicketPortal: React.FC = () => {
               </div>
             )}
 
-            {(showStatusForm || submitSuccess) && (
+            {((showStatusForm && !statusLocked) || submitSuccess) && (
             <div className="p-5 sm:p-6 rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/50 space-y-5 shadow-2xl">
               <div className="flex items-center gap-3 border-b border-[#22405E] pb-3">
                 <div className="w-8 h-8 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
@@ -878,13 +900,19 @@ export const OfficerTicketPortal: React.FC = () => {
                       <ArrowRight className="w-4 h-4" />
                       Return to Grievance Dashboard ({newStatus})
                     </button>
+                    {nextStatuses.length > 0 ? (
                     <button
                       type="button"
-                      onClick={() => setSubmitSuccess(false)}
+                      onClick={() => {
+                        setNewStatus(defaultOfficerActionStatus(issue?.status));
+                        setSubmitSuccess(false);
+                        setShowStatusForm(true);
+                      }}
                       className="px-4 py-2.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 text-xs font-bold cursor-pointer"
                     >
                       Submit Follow-up Update
                     </button>
+                    ) : null}
                   </div>
                 </div>
               ) : (
@@ -899,10 +927,17 @@ export const OfficerTicketPortal: React.FC = () => {
                       onChange={(e) => setNewStatus(e.target.value as IssueStatus)}
                       className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] outline-none font-semibold cursor-pointer"
                     >
-                      <option value="IN_PROGRESS">IN_PROGRESS — Field work / team dispatched</option>
-                      <option value="RESOLVED">RESOLVED — Grievance completely fixed & closed</option>
-                      <option value="REJECTED">REJECTED — Invalid / Duplicate / Outside Scope</option>
+                      {nextStatuses.map((status) => (
+                        <option key={status} value={status}>
+                          {OFFICER_STATUS_OPTION_LABELS[status]}
+                        </option>
+                      ))}
                     </select>
+                    {issue?.status === "IN_PROGRESS" ? (
+                      <p className="mt-1.5 text-[11px] text-[#B9AF95]">
+                        In Progress is already recorded. Next choices are Resolved or Rejected.
+                      </p>
+                    ) : null}
                   </div>
 
                   {!String(issue?.reporterPhone || (issue as any)?.citizenPhone || "").replace(/\D/g, "") ? (

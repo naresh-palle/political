@@ -10,9 +10,9 @@ ALLOWED_TRANSITIONS = {
     "ASSIGNED": ["IN_PROGRESS", "RESOLVED", "REJECTED", "ACKNOWLEDGED"],
     "ASSIGNED_TO_DEPARTMENT": ["IN_PROGRESS", "RESOLVED", "REJECTED", "ACKNOWLEDGED"],
     "ACKNOWLEDGED": ["IN_PROGRESS", "RESOLVED", "REJECTED"],
-    "IN_PROGRESS": ["RESOLVED", "REJECTED", "IN_PROGRESS"],
-    "RESOLVED": ["RESOLVED"],
-    "REJECTED": ["REJECTED"],
+    "IN_PROGRESS": ["RESOLVED", "REJECTED"],
+    "RESOLVED": [],
+    "REJECTED": [],
 }
 
 EVENT_BY_STATUS = {
@@ -35,10 +35,19 @@ def validate_officer_status(new_status: str) -> Optional[str]:
     return None
 
 
+def next_officer_statuses(current_status: Optional[str]) -> list:
+    """Officer portal dropdown: remaining actions only, never the current status."""
+    current = normalize_status(current_status)
+    if current in {"CLOSED", "COMPLETED"}:
+        return []
+    valid_next = ALLOWED_TRANSITIONS.get(current, list(OFFICER_STATUSES))
+    return [status for status in OFFICER_STATUSES if status in valid_next and status != current]
+
+
 def validate_transition(current_status: str, new_status: str) -> Optional[str]:
     if current_status == "CLOSED":
         return "Ticket is permanently CLOSED and cannot be modified by Department Officers."
-    valid_next = ALLOWED_TRANSITIONS.get(current_status, list(OFFICER_STATUSES))
+    valid_next = next_officer_statuses(current_status)
     if new_status not in valid_next:
         return f"Invalid status transition from '{current_status}' to '{new_status}'."
     return None
