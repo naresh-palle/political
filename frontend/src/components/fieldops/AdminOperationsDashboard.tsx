@@ -55,7 +55,8 @@ const ASSIGN_FILTER_CLASS =
   "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[#223348] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none [color-scheme:dark]";
 const ASSIGN_OPTION_CLASS = "bg-[#0B131E] text-[#F5EFE0]";
 const ASSIGN_GRID_CLASS = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-visible";
-const HIERARCHY_CHIP = `px-2 py-0.5 rounded text-[11px] ${UNIQUE_TICKET_SURFACE.badge}`;
+const HIERARCHY_CHIP =
+  "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/70";
 
 const DashboardKpi = ({
   label,
@@ -787,7 +788,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className={`px-2.5 py-1 rounded ${UNIQUE_TICKET_SURFACE.badge}`}>
+              <span className={`${HIERARCHY_CHIP} px-2.5 py-1`}>
                 {currentUser.assignedConstituency || currentUser.assemblyConstituencyName || "Constituency"}
               </span>
             </div>
@@ -953,7 +954,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                         >
                                           <div className="flex items-center justify-between gap-2 text-[10px]">
                                             <span className="font-mono text-[#D4A24C]">{formatTicketDisplay(iss)}</span>
-                                            <span className={`font-bold uppercase px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
+                                            <span className={`${HIERARCHY_CHIP} uppercase text-[10px]`}>
                                               {formatIssueStatus(iss.status)}
                                             </span>
                                           </div>
