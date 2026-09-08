@@ -1,6 +1,7 @@
 type ContactExportRow = {
   name: string;
   phone: string;
+  email?: string;
   category: string;
   designation: string;
   department?: string;
@@ -10,6 +11,8 @@ type ContactExportRow = {
   occupation: string;
   gender: string;
   age?: number;
+  voterId?: string;
+  politicalAlignment?: string;
   notes?: string;
 };
 
@@ -63,6 +66,7 @@ export function buildContactWorkbookXml(
     { key: "no", title: "#", width: 36 },
     { key: "name", title: "Name", width: 180 },
     ...(includePhone ? [{ key: "phone", title: "Phone", width: 120 }] : []),
+    ...(includePhone ? [{ key: "email", title: "Email", width: 180 }] : []),
     { key: "role", title: "Role", width: 100 },
     { key: "designation", title: "Designation", width: 200 },
     { key: "department", title: "Department", width: 180 },
@@ -72,6 +76,8 @@ export function buildContactWorkbookXml(
     { key: "occupation", title: "Occupation", width: 150 },
     { key: "gender", title: "Gender", width: 70 },
     { key: "age", title: "Age", width: 48 },
+    ...(includePhone ? [{ key: "voterId", title: "Voter ID", width: 140 }] : []),
+    { key: "alignment", title: "Alignment", width: 140 },
     { key: "notes", title: "Notes", width: 260 }
   ];
 
@@ -92,10 +98,14 @@ export function buildContactWorkbookXml(
       const style = index % 2 === 0 ? "sOdd" : "sEven";
       const role = ROLE_LABEL[c.category] || c.category;
       const phoneCell = includePhone ? cell(style, c.phone) : "";
+      const emailCell = includePhone ? cell(style, c.email || "") : "";
+      const voterCell = includePhone ? cell(style, c.voterId || "") : "";
+      const alignment = (c.politicalAlignment || "").replace(/_/g, " ");
       return `<Row ss:Height="18">
         ${cell(style, index + 1, "Number")}
         ${cell(style, c.name)}
         ${phoneCell}
+        ${emailCell}
         ${cell(style, role)}
         ${cell(style, c.designation)}
         ${cell(style, c.department || "")}
@@ -105,6 +115,8 @@ export function buildContactWorkbookXml(
         ${cell(style, c.occupation)}
         ${cell(style, c.gender)}
         ${cell(style, c.age ?? "", "Number")}
+        ${voterCell}
+        ${cell(style, alignment)}
         ${cell(style, c.notes || "")}
       </Row>`;
     })

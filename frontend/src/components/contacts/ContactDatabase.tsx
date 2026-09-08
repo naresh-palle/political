@@ -53,8 +53,8 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     designation: "Senior Executive Engineer - Panchayat Raj",
     mandalId: "MDL-BNG-RUR",
     mandalName: "Banaganapalle Mandal",
-    villageId: "VIL-BNG-TWN-01",
-    villageName: "Banaganapalle Sector 1",
+    villageId: "VIL-BNG-YGT",
+    villageName: "Yaganti Sector",
     voterId: "AP/140/012/10001",
     age: 48,
     gender: "Male",
@@ -62,7 +62,7 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     occupation: "Executive Engineer - Govt Operations",
     grievanceCount: 5,
     lastContactedDate: "2026-09-04",
-    notes: "Verified Live Department Contact for Panchayat Raj dispatches.",
+    notes: "Verified live department contact for Panchayat Raj dispatches.",
     assignedVolunteerName: "Manager1",
     department: "1. Panchayat Raj – Engineering Department",
     subDepartment: "Panchayat Buildings Department (పంచాయతీ భవనాలు)"
@@ -77,7 +77,7 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     mandalId: "MDL-BNG-TWN",
     mandalName: "Banaganapalle Town",
     villageId: "VIL-BNG-TWN-02",
-    villageName: "Banaganapalle Sector 2",
+    villageName: "Banaganapalle Town Wards 11-20",
     voterId: "AP/140/012/10002",
     age: 45,
     gender: "Male",
@@ -85,214 +85,14 @@ const INITIAL_CONTACTS: ContactRecord[] = [
     occupation: "Chief Engineer - RWS Water Supply",
     grievanceCount: 3,
     lastContactedDate: "2026-09-04",
-    notes: "Verified Live Department Contact for Rural Water Supply Scheme dispatches.",
+    notes: "Verified live department contact for Rural Water Supply Scheme dispatches.",
     assignedVolunteerName: "Manager1",
     department: "2. Rural Water Supply Scheme Department (RWS)",
     subDepartment: "Drains and Pipe lines (డ్రైన్లు మరియు పైప్‌లైన్లు)"
-  },
-  {
-    id: "cnt-bng-001",
-    name: "K. Subba Rayudu",
-    phone: "+91 98480 33441",
-    email: "subba.rayudu@gmail.com",
-    category: "INFLUENCER",
-    designation: "Ex-Sarpanch & Rythu Sangham President",
-    mandalId: "MDL-BNG-TWN",
-    mandalName: "Banaganapalle Town",
-    villageId: "VIL-BNG-TWN-01",
-    villageName: "Banaganapalle Town Wards 1-10",
-    voterId: "AP/140/012/98341",
-    age: 56,
-    gender: "Male",
-    politicalAlignment: "STRONG_SUPPORTER",
-    occupation: "Agriculture & Landowner",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    grievanceCount: 2,
-    lastContactedDate: "2026-08-29",
-    notes: "Key opinion leader in Town Sector. Influences 250+ farmer households.",
-    assignedVolunteerName: "Volunteer1"
-  },
-  {
-    id: "cnt-bng-002",
-    name: "Smt. Chennamma Naidu",
-    phone: "+91 94401 56789",
-    category: "DWCRA_LEAD",
-    designation: "Village Organization (VO) President",
-    mandalId: "MDL-BNG-RUR",
-    mandalName: "Banaganapalle Mandal",
-    villageId: "VIL-BNG-YGT",
-    villageName: "Yaganti Sector",
-    voterId: "AP/140/014/45120",
-    age: 44,
-    gender: "Female",
-    politicalAlignment: "STRONG_SUPPORTER",
-    occupation: "Self-Help Group Leader & Dairy",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-    grievanceCount: 3,
-    lastContactedDate: "2026-08-30",
-    notes: "Heads 18 DWCRA self-help groups. Actively coordinates welfare schemes.",
-    assignedVolunteerName: "Volunteer1"
-  },
-  {
-    id: "cnt-bng-003",
-    name: "Dr. P. Suresh Kumar, M.D.",
-    phone: "+91 98850 77123",
-    category: "GOVT_OFFICIAL",
-    designation: "Medical Officer · Primary Health Center",
-    mandalId: "MDL-BNG-TWN",
-    mandalName: "Banaganapalle Town",
-    villageId: "VIL-BNG-TWN-01",
-    villageName: "Hospital Road Ward 3",
-    age: 42,
-    gender: "Male",
-    politicalAlignment: "OFFICIAL",
-    occupation: "Civil Surgeon & Govt Medical Officer",
-    avatarUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80",
-    grievanceCount: 1,
-    lastContactedDate: "2026-08-25",
-    notes: "Nodal officer for constituency medical camps & Janani Suraksha.",
-    department: "3. Rural Development – NTR Bharosa Pensions Department",
-    subDepartment: "DMHO / Medical Pensions (వైద్య పింఛన్లు)"
-  },
-  {
-    id: "cnt-bng-004",
-    name: "B. Venkateswarlu",
-    phone: "+91 99890 23456",
-    category: "CADRE",
-    designation: "Booth Convener · Booth 142",
-    mandalId: "MDL-KKL-TWN",
-    mandalName: "Koilakuntla",
-    villageId: "VIL-KKL-01",
-    villageName: "Koilakuntla North Ward",
-    voterId: "AP/140/018/88712",
-    age: 32,
-    gender: "Male",
-    politicalAlignment: "STRONG_SUPPORTER",
-    occupation: "Retail Merchant & Party Activist",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    grievanceCount: 1,
-    lastContactedDate: "2026-08-31",
-    notes: "Manages 1,100 voters in Booth 142. Very active on WhatsApp campaign broadcasts."
-  },
-  {
-    id: "cnt-bng-005",
-    name: "Sri M. Ramakrishna Reddy",
-    phone: "+91 94901 88442",
-    category: "INFLUENCER",
-    designation: "Water Users Association (WUA) Chairman",
-    mandalId: "MDL-OWK-RUR",
-    mandalName: "Owk",
-    villageId: "VIL-OWK-01",
-    villageName: "Owk Reservoir Colony",
-    voterId: "AP/140/022/12903",
-    age: 62,
-    gender: "Male",
-    politicalAlignment: "NEUTRAL_LEANING",
-    occupation: "Commercial Horticulture Farmer",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-    grievanceCount: 2,
-    lastContactedDate: "2026-08-27",
-    notes: "Controls canal release distribution across 8 ayacut villages."
-  },
-  {
-    id: "cnt-bng-006",
-    name: "S. Fatima Begum",
-    phone: "+91 98492 66311",
-    category: "CITIZEN",
-    designation: "Senior Citizen & DBT Beneficiary",
-    mandalId: "MDL-BNG-TWN",
-    mandalName: "Banaganapalle Town",
-    villageId: "VIL-BNG-TWN-02",
-    villageName: "Old Bus Stand Area",
-    voterId: "AP/140/012/34812",
-    age: 64,
-    gender: "Female",
-    politicalAlignment: "STRONG_SUPPORTER",
-    occupation: "Pensioner",
-    avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
-    grievanceCount: 1,
-    lastContactedDate: "2026-08-31",
-    notes: "Widow pension beneficiary. Grateful for quick resolution of e-KYC issue.",
-    assignedVolunteerName: "Volunteer1"
-  },
-  {
-    id: "cnt-bng-007",
-    name: "T. Narayana Murthy",
-    phone: "+91 97011 44521",
-    category: "CITIZEN",
-    designation: "Fruit Transport Operators Association Member",
-    mandalId: "MDL-SJM-RUR",
-    mandalName: "Sanjamala",
-    villageId: "VIL-SJM-01",
-    villageName: "Sanjamala Main Village",
-    voterId: "AP/140/031/76192",
-    age: 48,
-    gender: "Male",
-    politicalAlignment: "NEUTRAL_LEANING",
-    occupation: "Transport Business",
-    grievanceCount: 1,
-    lastContactedDate: "2026-08-30",
-    notes: "Raised pothole cluster issue on Sanjamala bypass road."
-  },
-  {
-    id: "cnt-bng-008",
-    name: "Sri G. Venkatappa",
-    phone: "+91 98851 33201",
-    category: "INFLUENCER",
-    designation: "Kolimigundla Grama Panchayat Elder",
-    mandalId: "MDL-KLM-RUR",
-    mandalName: "Kolimigundla",
-    villageId: "VIL-KLM-01",
-    villageName: "Belum Caves Sector",
-    voterId: "AP/140/040/99120",
-    age: 59,
-    gender: "Male",
-    politicalAlignment: "CRITICAL_NEEDS_REACH",
-    occupation: "Mining Contractor & Farmer",
-    grievanceCount: 1,
-    lastContactedDate: "2026-08-20",
-    notes: "High influence among lime-stone workers. Requires direct MLA meeting on drinking water pipeline."
-  },
-  {
-    id: "cnt-bng-009",
-    name: "K. Suresh, Executive Engineer",
-    phone: "+91 94408 12300",
-    category: "GOVT_OFFICIAL",
-    designation: "Executive Engineer · Roads & Buildings (R&B)",
-    mandalId: "MDL-BNG-TWN",
-    mandalName: "Banaganapalle Town",
-    villageId: "VIL-BNG-TWN-01",
-    villageName: "R&B Division Camp Office",
-    gender: "Male",
-    politicalAlignment: "OFFICIAL",
-    occupation: "Civil Engineer",
-    grievanceCount: 0,
-    lastContactedDate: "2026-08-30",
-    notes: "Nodal authority for sanctioning highway pothole repair works."
-  },
-  {
-    id: "cnt-bng-010",
-    name: "P. Rakesh Yadav",
-    phone: "+91 98660 99412",
-    category: "YOUTH_LEADER",
-    designation: "Constituency Youth Wing Incharge",
-    mandalId: "MDL-BNG-TWN",
-    mandalName: "Banaganapalle Town",
-    villageId: "VIL-BNG-TWN-01",
-    villageName: "Degree College Road",
-    voterId: "AP/140/012/11293",
-    age: 26,
-    gender: "Male",
-    politicalAlignment: "STRONG_SUPPORTER",
-    occupation: "Graduate Student & Social Worker",
-    avatarUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80",
-    grievanceCount: 0,
-    lastContactedDate: "2026-08-31",
-    notes: "Coordinates 50+ college volunteers for youth rallies and sports tournaments."
   }
 ];
 
-const STORAGE_KEY = "leaders_lens_contacts_db";
+const STORAGE_KEY = "leaders_lens_contacts_db_v2";
 const OTHER_DEPT = "Other Government Department (ఇతర ప్రభుత్వ శాఖ)";
 const OTHER_SUB = "Other (ఇతరం)";
 const CONTACT_DEPARTMENTS = [...PGRS_DEPARTMENTS_LIST.map((d) => d.name), OTHER_DEPT];
@@ -309,6 +109,8 @@ const EMPTY_CONTACT: Partial<ContactRecord> = {
   mandalId: "",
   villageName: "",
   villageId: "",
+  voterId: "",
+  age: undefined,
   politicalAlignment: "STRONG_SUPPORTER",
   occupation: "",
   gender: "Male",
@@ -442,6 +244,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
         const haystack = [
           c.name,
           hidePhone ? "" : c.phone,
+          hidePhone ? "" : c.email,
           c.mandalName,
           c.villageName,
           c.designation,
@@ -503,10 +306,10 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     villageId: newContact.villageId || "",
     villageName: newContact.villageName || "",
     voterId: newContact.voterId || undefined,
-    age: newContact.age,
+    age: Number.isFinite(newContact.age) ? newContact.age : undefined,
     gender: (newContact.gender as ContactRecord["gender"]) || "Male",
     politicalAlignment: (newContact.politicalAlignment as ContactRecord["politicalAlignment"]) || "STRONG_SUPPORTER",
-    occupation: newContact.occupation || "Resident",
+    occupation: newContact.occupation || "",
     avatarUrl: newContact.avatarUrl,
     grievanceCount: extras?.grievanceCount ?? 0,
     notes: newContact.notes || "",
@@ -784,7 +587,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       </div>
 
       {/* 4. Main Contact Grid / Table List */}
-      {viewMode === "GRID" ? (
+      {filteredContacts.length === 0 ? (
+        <div className="p-10 rounded-2xl bg-[#0E1724]/90 border border-[#223348] text-center space-y-2">
+          <p className="text-sm font-semibold text-[#F5EFE0]">No contacts in this directory yet</p>
+          <p className="text-xs text-[#8E9CAE]">
+            Add a contact with name, phone, category, designation, mandal, village, and the remaining directory fields.
+          </p>
+        </div>
+      ) : viewMode === "GRID" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-stretch">
           {filteredContacts.map((contact) => (
             <div
@@ -1071,6 +881,29 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[#8E9CAE] block mb-1 font-medium">Email</label>
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    value={newContact.email || ""}
+                    onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                    className={FIELD_CLASS}
+                  />
+                </div>
+                <div>
+                  <label className="text-[#8E9CAE] block mb-1 font-medium">Voter ID</label>
+                  <input
+                    type="text"
+                    placeholder="AP/140/012/00000"
+                    value={newContact.voterId || ""}
+                    onChange={(e) => setNewContact({ ...newContact, voterId: e.target.value })}
+                    className={FIELD_CLASS}
+                  />
+                </div>
+              </div>
+
               {isOfficer && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-[#071322]/80 border border-[#D4A24C]/25">
                   <div className="sm:col-span-2">
@@ -1189,17 +1022,67 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </div>
               </div>
 
-              <div>
-                <label className="text-[#8E9CAE] block mb-1 font-medium">Gender</label>
-                <select
-                  value={newContact.gender}
-                  onChange={(e) => setNewContact({ ...newContact, gender: e.target.value as any })}
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[#8E9CAE] block mb-1 font-medium">Gender</label>
+                  <select
+                    value={newContact.gender}
+                    onChange={(e) => setNewContact({ ...newContact, gender: e.target.value as ContactRecord["gender"] })}
+                    className={FIELD_CLASS}
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[#8E9CAE] block mb-1 font-medium">Age</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={120}
+                    placeholder="e.g. 42"
+                    value={newContact.age ?? ""}
+                    onChange={(e) =>
+                      setNewContact({
+                        ...newContact,
+                        age: e.target.value === "" ? undefined : Number(e.target.value)
+                      })
+                    }
+                    className={FIELD_CLASS}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[#8E9CAE] block mb-1 font-medium">Occupation</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Farmer / Booth Convener"
+                    value={newContact.occupation || ""}
+                    onChange={(e) => setNewContact({ ...newContact, occupation: e.target.value })}
+                    className={FIELD_CLASS}
+                  />
+                </div>
+                <div>
+                  <label className="text-[#8E9CAE] block mb-1 font-medium">Political alignment</label>
+                  <select
+                    value={newContact.politicalAlignment || "STRONG_SUPPORTER"}
+                    onChange={(e) =>
+                      setNewContact({
+                        ...newContact,
+                        politicalAlignment: e.target.value as ContactRecord["politicalAlignment"]
+                      })
+                    }
+                    className={FIELD_CLASS}
+                  >
+                    <option value="STRONG_SUPPORTER">Strong supporter</option>
+                    <option value="NEUTRAL_LEANING">Neutral / leaning</option>
+                    <option value="OFFICIAL">Official</option>
+                    <option value="CRITICAL_NEEDS_REACH">Needs reach</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -1263,10 +1146,40 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 <strong className="text-[#F5EFE0] font-mono whitespace-normal break-words">{selectedContact.phone}</strong>
               </div>
               )}
+              {!hidePhone && selectedContact.email ? (
+              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                <span className="text-[10px] text-[#8E9CAE] block">Email</span>
+                <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.email}</strong>
+              </div>
+              ) : null}
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                 <span className="text-[10px] text-[#8E9CAE] block">Gender</span>
                 <strong className="text-[#F5EFE0]">{selectedContact.gender}</strong>
               </div>
+              {selectedContact.age != null ? (
+              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                <span className="text-[10px] text-[#8E9CAE] block">Age</span>
+                <strong className="text-[#F5EFE0]">{selectedContact.age}</strong>
+              </div>
+              ) : null}
+              {selectedContact.occupation ? (
+              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                <span className="text-[10px] text-[#8E9CAE] block">Occupation</span>
+                <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.occupation}</strong>
+              </div>
+              ) : null}
+              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                <span className="text-[10px] text-[#8E9CAE] block">Political alignment</span>
+                <strong className="text-[#F5EFE0] whitespace-normal break-words">
+                  {selectedContact.politicalAlignment.replace(/_/g, " ")}
+                </strong>
+              </div>
+              {!hidePhone && selectedContact.voterId ? (
+              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                <span className="text-[10px] text-[#8E9CAE] block">Voter ID</span>
+                <strong className="text-[#F5EFE0] font-mono whitespace-normal break-words">{selectedContact.voterId}</strong>
+              </div>
+              ) : null}
               {selectedContact.department ? (
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348] col-span-2">
                 <span className="text-[10px] text-[#8E9CAE] block">Department / Sub-department</span>
