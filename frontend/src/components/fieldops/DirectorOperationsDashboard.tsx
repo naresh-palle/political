@@ -47,7 +47,7 @@ import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
-import { assignmentSafeStatus, countByKpi, hasAssignee, isOverdueStatus, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, hasAssignee, isOverdueStatus, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_CONTROL, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -1924,7 +1924,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           </div>
         ) : (
           /* TABLE VIEW */
-          <div className="rounded-xl overflow-visible py-1">
+          <div className={TICKET_TABLE_SHELL}>
             <table className={TICKET_TABLE_CLASS}>
               <thead>
                 <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
@@ -2015,7 +2015,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                               <select
                                 value={resolveDeptValue(issue.department)}
                                 onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                                className="w-full max-w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                                className={`${TICKET_TABLE_CONTROL} bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer`}
                               >
                                 <option value="">-- Select Department --</option>
                                 {DEPARTMENTS.map((dept) => (

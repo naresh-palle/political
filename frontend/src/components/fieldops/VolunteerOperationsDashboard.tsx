@@ -10,7 +10,7 @@ import {
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { canVolunteerAssignOrResend, isRejectedTicket } from "../../utils/ticketActions";
-import { assignmentSafeStatus, countByKpi, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE, volunteerAssignmentStatus } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_CONTROL, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE, volunteerAssignmentStatus } from "../../utils/ticketKpi";
 import { allocateTicketNumber, formatTicketDisplay, ticketSearchHaystack } from "../../utils/ticketNumberDisplay";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
@@ -1003,7 +1003,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign");
 
   return (
-          <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0]">
+          <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0] overflow-x-hidden">
         {!isAssignTicketsMode && (
         <div className="space-y-5">
           {/* Volunteer home: identity strip with name and assignment details */}
@@ -1516,7 +1516,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           </div>
         ) : (
           /* TABLE VIEW */
-          <div className="rounded-xl overflow-visible py-1">
+          <div className={TICKET_TABLE_SHELL}>
               <table className={TICKET_TABLE_CLASS}>
                 <thead>
                   <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
@@ -1600,7 +1600,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                 <select
                                   value={resolveDeptValue(issue.department)}
                                   onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                                  className="w-full max-w-full bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer"
+                                  className={`${TICKET_TABLE_CONTROL} bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer`}
                                 >
                                   <option value="">-- Select Department --</option>
                                   {DEPARTMENTS.map((dept) => (

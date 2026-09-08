@@ -136,21 +136,27 @@ export const UNIQUE_TICKET_SURFACE = {
   card: "bg-[#0E1724] border-[#D4A24C]/45 hover:border-[#D4A24C]/85 hover:bg-[#131E2D] shadow-[0_0_14px_rgba(212,162,76,0.16)]",
   row: "bg-[#0B131E]",
   kpi: "bg-[#071322]/55 text-[#D4A24C] border-[#D4A24C]/40 hover:border-[#D4A24C]/80",
-  badge: "bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40"
+  badge:
+    "bg-[#4A3D22] text-[#F5E0B0] border border-[#D4A24C] shadow-[0_0_10px_rgba(212,162,76,0.55)]"
 } as const;
 
 export const TICKET_TABLE_WRAP =
   "whitespace-normal break-words [overflow-wrap:anywhere] leading-snug";
 
+export const TICKET_TABLE_SHELL = "w-full max-w-full overflow-x-hidden py-1";
+
 export const TICKET_TABLE_CLASS =
-  "w-full table-fixed text-left text-xs border-separate border-spacing-y-2.5 border-spacing-x-0";
+  "w-full max-w-full table-fixed text-left text-xs border-separate border-spacing-y-2.5 border-spacing-x-0 [&_select]:min-w-0 [&_select]:max-w-full";
 
-export const TICKET_TABLE_HEAD_CELL = `py-2 px-2 ${TICKET_TABLE_WRAP}`;
+export const TICKET_TABLE_HEAD_CELL = `py-2 px-1.5 min-w-0 ${TICKET_TABLE_WRAP}`;
 
+/** Glow lives on td — table-row box-shadow is ignored by browsers. */
 export const TICKET_TABLE_ROW_CLASS =
-  `${UNIQUE_TICKET_SURFACE.row} transition-shadow cursor-pointer group shadow-[0_0_16px_rgba(212,162,76,0.28)] hover:shadow-[0_0_24px_rgba(212,162,76,0.48)] hover:bg-[#131E2D] [&>td]:border-y [&>td]:border-[#D4A24C]/55 [&>td+td]:border-l [&>td:first-child]:border-l [&>td:last-child]:border-r [&>td:first-child]:rounded-l-lg [&>td:last-child]:rounded-r-lg`;
+  `cursor-pointer group [&>td]:bg-[#0B131E] [&>td]:border-y [&>td]:border-[#D4A24C]/80 [&>td+td]:border-l [&>td:first-child]:border-l [&>td:last-child]:border-r [&>td:first-child]:rounded-l-lg [&>td:last-child]:rounded-r-lg [&>td]:shadow-[0_0_16px_rgba(212,162,76,0.42)] hover:[&>td]:bg-[#131E2D] hover:[&>td]:shadow-[0_0_22px_rgba(212,162,76,0.62)]`;
 
-export const TICKET_TABLE_CELL = `py-1.5 px-2 align-top ${TICKET_TABLE_WRAP}`;
+export const TICKET_TABLE_CELL = `py-1.5 px-1.5 align-top min-w-0 ${TICKET_TABLE_WRAP}`;
+
+export const TICKET_TABLE_CONTROL = "min-w-0 w-full max-w-full";
 
 export function ticketStatusSurface(_issue?: AssigneeFields): {
   card: string;

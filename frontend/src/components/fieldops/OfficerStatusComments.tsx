@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { FieldIssue } from "../../types";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
-import { TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
+import { TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 const COMMENTED_STATUSES = ["IN_PROGRESS", "RESOLVED", "REJECTED", "COMPLETED"];
 const PAGE_SIZE = 10;
@@ -58,7 +58,7 @@ export const OfficerStatusComments: React.FC<OfficerStatusCommentsProps> = ({
         </span>
       </div>
 
-      <div className="overflow-visible rounded-xl py-1">
+      <div className={TICKET_TABLE_SHELL}>
         <table className={TICKET_TABLE_CLASS}>
           <thead>
             <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">

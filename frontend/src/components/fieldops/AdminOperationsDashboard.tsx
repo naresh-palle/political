@@ -13,7 +13,7 @@ import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
-import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
 import { findVolunteerForVillage } from "../../utils/villageVolunteers";
@@ -1186,7 +1186,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             })}
           </div>
           ) : (
-          <div className="rounded-xl overflow-visible py-1">
+          <div className={TICKET_TABLE_SHELL}>
             <table className={TICKET_TABLE_CLASS}>
                 <thead>
                   <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
