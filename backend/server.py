@@ -420,6 +420,31 @@ def log_mongo_notice(tag: str, exc: Exception):
         return
     logger.warning("MongoDB warning (%s): %s", tag, type(exc).__name__)
 
+def apply_live_officer_catalog(issues: list) -> list:
+    """Force packaged Contact Database tickets over stale Mongo/demo copies."""
+    packaged = [
+        dict(item)
+        for item in _load_packaged_json("field_issues.json")
+        if isinstance(item, dict) and item.get("id")
+    ]
+    packaged_by_id = {item["id"]: item for item in packaged}
+    by_id = {}
+    for issue in issues or []:
+        if not isinstance(issue, dict) or not issue.get("id"):
+            continue
+        iid = issue["id"]
+        if iid in RETIRED_MOCK_ISSUE_IDS:
+            continue
+        if iid in packaged_by_id:
+            by_id[iid] = merge_issue_docs(issue, packaged_by_id[iid])
+        else:
+            by_id[iid] = dict(issue)
+    for iid, seed in packaged_by_id.items():
+        if iid not in by_id:
+            by_id[iid] = dict(seed)
+    return list(by_id.values())
+
+
 def overlay_in_memory_issues(issues: list) -> list:
     """Merge authoritative in-memory officer updates onto a ticket list."""
     if not IN_MEMORY_FIELD_ISSUES:
@@ -443,7 +468,8 @@ def resolve_stored_issue(issue_id: str, mongo_doc: Optional[dict] = None) -> Opt
         base = merge_issue_docs(base, mem) if base else dict(mem)
     if not base.get("id"):
         return None
-    return sanitize_doc(base)
+    catalogued = apply_live_officer_catalog([base])
+    return sanitize_doc(catalogued[0] if catalogued else base)
 
 # Base routes
 @api_router.get("/")
@@ -2426,6 +2452,7 @@ async def get_field_issues(
     for i in issues:
         if isinstance(i, dict) and "_id" in i:
             i.pop("_id")
+    issues = apply_live_officer_catalog(issues)
     issues = [i for i in issues if isinstance(i, dict) and i.get("id") not in RETIRED_MOCK_ISSUE_IDS]
     return issues
 

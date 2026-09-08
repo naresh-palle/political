@@ -66,3 +66,44 @@ def test_seed_catalog_matches_two_live_officers():
             assert issue["villageId"] == "VIL-BNG-TWN-02"
             assert "Rural Water Supply" in issue["department"]
             assert "Drains and Pipe lines" in issue["schemeSubDetail"]
+
+
+def test_catalog_overlay_replaces_stale_mongo_officers():
+    from backend.server import apply_live_officer_catalog
+
+    stale = [
+        {
+            "id": "iss-ll-sec-open-01",
+            "title": "Potholes on Koilakuntla bus-stand approach",
+            "status": "NEW",
+            "villageName": "Koilakuntla Town Wards 1-15",
+        },
+        {
+            "id": "iss-ll-sec-ovd-02",
+            "title": "Broken street slab on Temple Road Ward 2",
+            "status": "OVERDUE",
+            "assignedOfficialName": "R&B Section Officer",
+            "assignedOfficialPhone": "+91 98492 44556",
+        },
+        {
+            "id": "iss-ll-sec-asg-01",
+            "title": "Broken cement drain on Ward 3 bazaar lane",
+            "status": "IN_PROGRESS",
+            "assignedOfficialName": "N. Palle",
+            "lastStatusRemarks": "Crew already on the compound wall.",
+            "lastStatusUpdateAt": "2026-09-08T10:00:00Z",
+        },
+    ]
+    cleaned = apply_live_officer_catalog(stale)
+    ids = {i["id"] for i in cleaned}
+    assert "iss-ll-sec-ovd-02" not in ids
+    assert "iss-ll-sec-open-01" in ids
+    open_ticket = next(i for i in cleaned if i["id"] == "iss-ll-sec-open-01")
+    assert open_ticket["title"] == "Pipeline leak on Ward 14 crossroads"
+    assert open_ticket["villageName"] == "Banaganapalle Town Wards 11-20"
+    assert not open_ticket.get("assignedOfficialName")
+    assigned = next(i for i in cleaned if i["id"] == "iss-ll-sec-asg-01")
+    assert assigned["assignedOfficialName"] == "N. Palle (Senior Executive Officer)"
+    assert assigned["departmentContactId"] == "cnt-live-001"
+    assert assigned["status"] == "IN_PROGRESS"
+    assert assigned["lastStatusRemarks"] == "Crew already on the compound wall."
