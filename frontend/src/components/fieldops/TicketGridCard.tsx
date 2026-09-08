@@ -62,7 +62,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       onClick={onOpen}
       className={
         plain
-          ? "h-full min-w-0 p-3 border-b border-[#223348] bg-transparent hover:bg-[#0E1724]/40 transition-colors cursor-pointer flex flex-col gap-1.5 group"
+          ? "h-full min-w-0 p-3 border-0 bg-transparent hover:bg-[#0E1724]/40 transition-colors cursor-pointer flex flex-col gap-1.5 group overflow-visible"
           : `h-full min-w-0 p-2.5 rounded-xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-1.5 shadow-md group ${surface.card}`
       }
     >
@@ -221,7 +221,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       ) : null}
 
       <div
-        className={`mt-auto pt-1.5 space-y-1 min-w-0 ${plain ? "border-t border-[#223348]/40" : "border-t border-[#223348]/60"}`}
+        className={`mt-auto pt-1.5 space-y-1 min-w-0 overflow-visible ${plain ? "" : "border-t border-[#223348]/60"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2 text-[11px] min-w-0">
@@ -249,13 +249,15 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
               onChange={(e) => onAssignDepartment?.(issue.id, e.target.value)}
               className={
                 plain
-                  ? "w-full min-w-0 bg-transparent text-[#F5EFE0] text-[11px] border-b border-[#223348] focus:border-[#D4A24C] rounded-none px-0 py-1 outline-none cursor-pointer"
-                  : "w-full min-w-0 bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer"
+                  ? "w-full min-w-0 bg-[#0B131E] text-[#F5EFE0] text-[11px] border-0 rounded-none px-1 py-1 outline-none cursor-pointer [color-scheme:dark]"
+                  : "w-full min-w-0 bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer [color-scheme:dark]"
               }
             >
-              <option value="">-- Select Department --</option>
+              <option value="" className="bg-[#0B131E] text-[#F5EFE0]">
+                -- Select Department --
+              </option>
               {departments.map((dept) => (
-                <option key={dept} value={dept}>
+                <option key={dept} value={dept} className="bg-[#0B131E] text-[#F5EFE0]">
                   {dept}
                 </option>
               ))}

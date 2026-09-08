@@ -45,7 +45,7 @@ const DEPARTMENTS = [
 ];
 
 const ASSIGN_FILTER_CLASS =
-  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[#223348] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none";
+  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[#223348] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none [color-scheme:dark]";
 const ASSIGN_TABLE_CLASS =
   "w-full max-w-full table-fixed text-left text-xs border-collapse [&_select]:min-w-0 [&_select]:max-w-full";
 const ASSIGN_TH =
@@ -53,7 +53,8 @@ const ASSIGN_TH =
 const ASSIGN_TD =
   "py-2.5 px-2 align-top min-w-0 whitespace-normal break-words [overflow-wrap:anywhere] border-b border-[#223348]";
 const ASSIGN_TR = "cursor-pointer hover:bg-[#0E1724]/50";
-const ASSIGN_GRID_CLASS = "grid grid-cols-1 md:grid-cols-2 gap-x-8";
+const ASSIGN_GRID_CLASS = "grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 overflow-visible";
+const ASSIGN_OPTION_CLASS = "bg-[#0B131E] text-[#F5EFE0]";
 
 export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   currentUser,
@@ -798,7 +799,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign");
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-clip">
       {!isAssignTicketsMode && (
       <>
       {/* Manager Command Strip */}
@@ -1035,7 +1036,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
               >
                 <option value="NEWEST" className="bg-[#0B131E]">Newest first</option>
                 <option value="OLDEST" className="bg-[#0B131E]">Oldest first</option>
@@ -1050,7 +1051,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
               >
                 <option value={10} className="bg-[#0B131E]">10 / page</option>
                 <option value={25} className="bg-[#0B131E]">25 / page</option>
@@ -1079,31 +1080,31 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-x-3 gap-y-2 text-xs">
           <select value={activeTab} onChange={(e) => setActiveTab(e.target.value as any)} className={ASSIGN_FILTER_CLASS}>
-            <option value="ALL">Status: All</option>
-            <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
-            <option value="ASSIGNED">Status: Assigned</option>
-            <option value="IN_PROGRESS">Status: In Progress</option>
-            <option value="OVERDUE">Status: Overdue</option>
-            <option value="COMPLETED">Status: Resolved / Closed</option>
-            <option value="REJECTED">Status: Rejected</option>
-            <option value="CANT_BE_DONE">Status: Can't be done</option>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Status: All</option>
+            <option value="OPEN_UNASSIGNED" className={ASSIGN_OPTION_CLASS}>Status: Open / Unassigned</option>
+            <option value="ASSIGNED" className={ASSIGN_OPTION_CLASS}>Status: Assigned</option>
+            <option value="IN_PROGRESS" className={ASSIGN_OPTION_CLASS}>Status: In Progress</option>
+            <option value="OVERDUE" className={ASSIGN_OPTION_CLASS}>Status: Overdue</option>
+            <option value="COMPLETED" className={ASSIGN_OPTION_CLASS}>Status: Resolved / Closed</option>
+            <option value="REJECTED" className={ASSIGN_OPTION_CLASS}>Status: Rejected</option>
+            <option value="CANT_BE_DONE" className={ASSIGN_OPTION_CLASS}>Status: Can't be done</option>
           </select>
           <select value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)} className={ASSIGN_FILTER_CLASS}>
             <option value="ALL">Dept: All</option>
             {analyticsMatrix.departmentCounts.map((d) => (
-              <option key={d.name} value={d.name}>{d.name}</option>
+              <option key={d.name} value={d.name} className={ASSIGN_OPTION_CLASS}>{d.name}</option>
             ))}
           </select>
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={ASSIGN_FILTER_CLASS}>
             <option value="ALL">Type: All</option>
             {analyticsMatrix.typeCounts.map((t) => (
-              <option key={t.name} value={t.name}>{t.name}</option>
+              <option key={t.name} value={t.name} className={ASSIGN_OPTION_CLASS}>{t.name}</option>
             ))}
           </select>
           <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className={ASSIGN_FILTER_CLASS}>
             <option value="ALL">Category: All</option>
             {availableCategories.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c} className={ASSIGN_OPTION_CLASS}>{c}</option>
             ))}
           </select>
           <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className={ASSIGN_FILTER_CLASS}>
@@ -1128,13 +1129,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
           <select value={filterMandalId} onChange={(e) => setFilterMandalId(e.target.value)} className={ASSIGN_FILTER_CLASS}>
             <option value="ALL">Mandal: All</option>
             {mandals.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
+              <option key={m.id} value={m.id} className={ASSIGN_OPTION_CLASS}>{m.name}</option>
             ))}
           </select>
           <select value={filterVolunteerId} onChange={(e) => setFilterVolunteerId(e.target.value)} className={ASSIGN_FILTER_CLASS}>
             <option value="ALL">Assignee: All</option>
             {volunteers.map((v) => (
-              <option key={v.id} value={v.id}>{v.name}</option>
+              <option key={v.id} value={v.id} className={ASSIGN_OPTION_CLASS}>{v.name}</option>
             ))}
           </select>
         </div>
@@ -1267,11 +1268,11 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                             <select
                               value={resolveDeptValue(issue.department)}
                               onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                              className="w-full min-w-0 bg-transparent text-[#F5EFE0] text-[11px] border-0 border-b border-[#223348] focus:border-[#D4A24C] rounded-none px-0 py-1 outline-none cursor-pointer"
+                              className="w-full min-w-0 bg-[#0B131E] text-[#F5EFE0] text-[11px] border-0 rounded-none px-1 py-1 outline-none cursor-pointer [color-scheme:dark]"
                             >
-                              <option value="">-- Select Department --</option>
+                              <option value="" className={ASSIGN_OPTION_CLASS}>-- Select Department --</option>
                               {DEPARTMENTS.map((dept) => (
-                                <option key={dept} value={dept}>{dept}</option>
+                                <option key={dept} value={dept} className={ASSIGN_OPTION_CLASS}>{dept}</option>
                               ))}
                             </select>
                             <button

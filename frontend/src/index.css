@@ -49,6 +49,17 @@
   html { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; box-sizing: border-box; }
   *, *::before, *::after { box-sizing: inherit; }
 
+  /* Native <select> menus inherit cream text; without a dark scheme they render
+     cream-on-white and look empty. Keep option rows readable on this dark UI. */
+  select {
+    color-scheme: dark;
+  }
+  select option,
+  select optgroup {
+    background-color: #0B131E;
+    color: #F5EFE0;
+  }
+
   body {
     font-family: var(--font-sans);
     background-color: var(--party-light-bg, var(--ll-ivory));
