@@ -147,13 +147,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               title="Constituency Intelligence Workspace"
             >
-              {/* Permanent Leader's Lens Official Company Logo */}
+              {/* Permanent Leaders Lens official company logo — mark and name same gold */}
               <div className="relative w-9 h-9 flex-shrink-0 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[#D4A24C]/40 shadow-sm">
                 <LeadersLogo size={36} />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-display text-[18px] sm:text-[22px] tracking-[-0.01em] text-[#F5EFE0] leading-none truncate">
-                  Leader's<span className="italic gold-text"> Lens</span>
+                <span className="font-display text-[18px] sm:text-[22px] tracking-[-0.01em] text-[#D4A24C] leading-none truncate">
+                  Leaders Lens
                 </span>
                 <span className="text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[var(--party-primary)] mt-1 flex items-center gap-1.5 truncate">
                   {isPartyThemeActive && partyName ? (

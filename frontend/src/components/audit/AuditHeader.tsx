@@ -29,7 +29,7 @@ export const AuditHeader: React.FC<AuditHeaderProps> = ({
         {/* Left Title & Geo Hierarchy */}
         <div className="space-y-2">
           <div className="flex items-center space-x-2 text-[11px] font-semibold uppercase tracking-widest text-[#797C88]">
-            <span>Leader's Lens</span>
+            <span>Leaders Lens</span>
             <span>/</span>
             <span className="text-[#112233]">Constituency Strength Audit</span>
           </div>

@@ -13,8 +13,8 @@ export const Footer: React.FC = () => {
               <LeadersLogo size={28} />
             </div>
             <div className="flex flex-col">
-              <span className="font-display text-base tracking-[-0.01em] text-[#F5EFE0] leading-none">
-                Leader's<span className="italic gold-text"> Lens</span>
+              <span className="font-display text-base tracking-[-0.01em] text-[#D4A24C] leading-none">
+                Leaders Lens
               </span>
               <span className="text-[9px] uppercase tracking-[0.18em] text-[#D4A24C] font-semibold mt-0.5">
                 Political Intelligence System
@@ -25,7 +25,7 @@ export const Footer: React.FC = () => {
           {/* Copyright & Attribution */}
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-[11.5px] text-[#8E9CAE]">
             <div>
-              © {new Date().getFullYear()} Leader's Lens. All rights reserved.
+              © {new Date().getFullYear()} Leaders Lens. All rights reserved.
             </div>
             <div className="flex items-center space-x-1.5 text-[#D8CFB8]">
               <span>Developed and Maintained by</span>

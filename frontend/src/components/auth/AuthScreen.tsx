@@ -148,8 +148,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
           <div className="p-2 rounded-2xl bg-[#071322]/60 backdrop-blur-md border border-[#D4A24C]/40 shadow-xl mb-2.5">
             <LeadersLogo size={46} />
           </div>
-          <h1 className="font-display text-2xl tracking-[0.14em] text-[#F5EFE0] uppercase font-bold drop-shadow-md">
-            LEADERS<span className="gold-text">LENS</span>
+          <h1 className="font-display text-2xl tracking-[-0.01em] text-[#D4A24C] font-semibold drop-shadow-md">
+            Leaders Lens
           </h1>
           <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4A24C] font-semibold mt-1 font-mono drop-shadow">
             CONSULTING

@@ -869,7 +869,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     Submit Official Officer Resolution Update
                   </h3>
                   <p className="text-xs text-[#B9AF95]">
-                    Update the grievance status and submit field notes. Updates instantly sync back to Leader's Lens Command Center.
+                    Update the grievance status and submit field notes. Updates instantly sync back to Leaders Lens Command Center.
                   </p>
                 </div>
               </div>

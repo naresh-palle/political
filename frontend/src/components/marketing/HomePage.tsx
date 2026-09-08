@@ -88,8 +88,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
           <div className="flex items-center gap-3">
             <LeadersLogo size={36} />
             <div>
-              <div className="font-display text-[20px] cream-text leading-none">
-                Leader's <span className="italic gold-text">Lens</span>
+              <div className="font-display text-[20px] text-[#D4A24C] leading-none">
+                Leaders Lens
               </div>
               <div className="eyebrow text-[#D4A24C] mt-1">Political Intelligence</div>
             </div>
@@ -140,7 +140,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onEnter }) => {
                 onClick={onEnter}
                 className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-[13.5px] font-bold rounded-md shadow-[0_10px_30px_-10px_rgba(224,122,31,0.6)] hover:brightness-110 transition-all"
               >
-                Enter Leader's Lens
+                Enter Leaders Lens
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
               <a

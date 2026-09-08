@@ -260,24 +260,24 @@ function AppInner() {
       window.history.replaceState(null, "", canonical);
     }
     if (isOfficerPortal) {
-      document.title = "Department Ticket Action | Leader's Lens";
+      document.title = "Department Ticket Action | Leaders Lens";
       return;
     }
 
     if (route === "auth") {
-      document.title = "Login & Security | Leader's Lens";
+      document.title = "Login & Security | Leaders Lens";
     } else {
       const titles: Record<ActiveProductType, string> = {
-        fieldops: "Field Operations Command | Leader's Lens",
-        assigntickets: "Assign Tickets & Complaints | Leader's Lens",
-        grievances: "Grievance Management | Leader's Lens",
-        volunteers: "Volunteer Field Force | Leader's Lens",
-        webbuilder: "Campaign Web Builder | Leader's Lens",
-        governance: "User & Role Governance | Leader's Lens",
-        contacts: "Contact Database | Leader's Lens",
-        pitch: "Audit & Strategy Command | Leader's Lens"
+        fieldops: "Field Operations Command | Leaders Lens",
+        assigntickets: "Assign Tickets & Complaints | Leaders Lens",
+        grievances: "Grievance Management | Leaders Lens",
+        volunteers: "Volunteer Field Force | Leaders Lens",
+        webbuilder: "Campaign Web Builder | Leaders Lens",
+        governance: "User & Role Governance | Leaders Lens",
+        contacts: "Contact Database | Leaders Lens",
+        pitch: "Audit & Strategy Command | Leaders Lens"
       };
-      document.title = titles[activeProduct] || "Leader's Lens";
+      document.title = titles[activeProduct] || "Leaders Lens";
     }
   }, [route, activeProduct, isOfficerPortal]);
 

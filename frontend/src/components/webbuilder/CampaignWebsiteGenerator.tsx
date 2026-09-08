@@ -80,7 +80,7 @@ export const CampaignWebsiteGenerator: React.FC = () => {
   const themeStyle = getThemeStyles(config.theme);
 
   const handleCopyCode = () => {
-    const code = `<!-- Leader's Lens Campaign Landing Page: ${config.candidateName} -->
+    const code = `<!-- Leaders Lens Campaign Landing Page: ${config.candidateName} -->
 <!DOCTYPE html>
 <html lang="en">
 <head>

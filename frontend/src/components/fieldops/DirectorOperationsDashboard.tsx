@@ -966,7 +966,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                     {phone ? (
                       <>
                         <a
-                          href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(vol.name)}%20garu,%20greetings%20from%20Leader%27s%20Lens%20Office.`}
+                          href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(vol.name)}%20garu,%20greetings%20from%20Leaders%20Lens%20Office.`}
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}

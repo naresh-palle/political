@@ -268,7 +268,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
             full report.
           </p>
           <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] gold-text">
-            <span className="h-px w-8 bg-[#D4A24C]" /> Leader's Lens <span className="h-px w-8 bg-[#D4A24C]" />
+            <span className="h-px w-8 bg-[#D4A24C]" /> Leaders Lens <span className="h-px w-8 bg-[#D4A24C]" />
           </div>
         </div>
       ),
@@ -319,8 +319,8 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
         <div className="flex items-center gap-3">
           <LeadersLogo size={34} />
           <div>
-            <div className="font-display text-lg cream-text leading-none">
-              Leader's <span className="italic gold-text">Lens</span>
+            <div className="font-display text-lg text-[#D4A24C] leading-none">
+              Leaders Lens
             </div>
             <div className="text-[11px] text-[#B9AF95] mt-1 tracking-wide">
               Boardroom briefing · {audit.assembly.name} AC

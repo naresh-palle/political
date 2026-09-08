@@ -47,7 +47,7 @@ export function exportTicketPdf(issue: FieldIssue, history: WorkUpdateRecord[] =
   doc.setTextColor(212, 162, 76);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("Leader's Lens", margin, 12);
+  doc.text("Leaders Lens", margin, 12);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(245, 239, 224);

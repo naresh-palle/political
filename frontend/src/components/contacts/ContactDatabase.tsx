@@ -649,7 +649,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   {!hidePhone && (
                     <>
                   <a
-                    href={`https://wa.me/${contact.phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(contact.name)}%20garu,%20greetings%20from%20Leader%27s%20Lens%20Office.`}
+                    href={`https://wa.me/${contact.phone.replace(/[^0-9]/g, "")}?text=Namaste%20${encodeURIComponent(contact.name)}%20garu,%20greetings%20from%20Leaders%20Lens%20Office.`}
                     target="_blank"
                     rel="noreferrer"
                     className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
