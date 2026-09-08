@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { UserProfile, UserRole, PrimaryRole, PoliticalParty, ElectedRepresentative } from "../../types";
 import { USER_PROFILES, MOCK_POLITICAL_PARTIES, MOCK_ELECTED_REPRESENTATIVES } from "../../services/mockData";
 import { politicalApiService } from "../../services/api";
+import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import {
   ShieldCheck,
   UserCheck,
@@ -35,6 +36,13 @@ import {
   MapPin,
   CheckCircle
 } from "lucide-react";
+
+const KPI_CARD = `rounded-xl p-3 border ${UNIQUE_TICKET_SURFACE.kpi}`;
+const KPI_LABEL = "text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block";
+const KPI_VALUE = "text-2xl font-bold font-display text-[#D4A24C] mt-0.5";
+const KPI_HINT = "text-[10px] text-[#D4A24C]/80 mt-0.5 block";
+const GOLD_PILL = `px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${UNIQUE_TICKET_SURFACE.badge}`;
+const GOLD_CHIP = `text-[9.5px] px-1.5 py-0.5 rounded ${UNIQUE_TICKET_SURFACE.badge}`;
 
 interface RoleManagementProps {
   currentProfile: UserProfile;
@@ -519,9 +527,9 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   const countL4 = profiles.filter((p) => p.primaryRole === "VOLUNTEER").length;
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-4 sm:space-y-6 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
+    <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-3 sm:space-y-4 animate-fadeIn text-[#F5EFE0] overflow-x-hidden">
       {/* Executive Command Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#D4A24C]/40 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-5 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-2xl">
         <div className="flex items-center gap-4">
           {(isSuperAdmin || isPoliticalAdmin) && currentProfile.avatar && (
             <img
@@ -562,7 +570,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           <button
             type="button"
             onClick={handleOpenAddUser}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D4A24C] text-[#071322] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>{isSuperAdmin ? "Add System User" : "Add Volunteer"}</span>
@@ -633,164 +641,91 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
       {/* TAB 1: USER DIRECTORY & RBAC MANAGEMENT */}
       {activeTab === "roles" && (
-        <div className="space-y-6 animate-fadeIn">
+        <div className="space-y-3 animate-fadeIn">
           {/* User Metrics Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {isSuperAdmin ? (
               <>
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CAE] block">
-                    Total Active Users
-                  </span>
-                  <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
-                    {profiles.length}
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Total Active Users</span>
+                  <div className={KPI_VALUE}>{profiles.length}</div>
+                  <span className={`${KPI_HINT} flex items-center gap-1`}>
                     <CheckCircle className="w-3 h-3" /> 100% RBAC Active
                   </span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
-                    Platform Super Admins (L1)
-                  </span>
-                  <div className="text-2xl font-bold font-display text-[#D4A24C] mt-1">
-                    {countL1}
-                  </div>
-                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                    Protected Multi-Tenant Clearance
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Platform Super Admins (L1)</span>
+                  <div className={KPI_VALUE}>{countL1}</div>
+                  <span className={KPI_HINT}>Protected Multi-Tenant Clearance</span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
-                    Political Admins & Directors (L2/L3)
-                  </span>
-                  <div className="text-2xl font-bold font-display text-blue-400 mt-1">
-                    {countL2 + countL3}
-                  </div>
-                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                    {countL2} MLAs · {countL3} Directors
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Political Admins & Directors (L2/L3)</span>
+                  <div className={KPI_VALUE}>{countL2 + countL3}</div>
+                  <span className={KPI_HINT}>{countL2} MLAs · {countL3} Directors</span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                    Field Volunteers (L4)
-                  </span>
-                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
-                    {countL4}
-                  </div>
-                  <span className="text-[10px] text-emerald-400 mt-0.5 block">
-                    Grassroots Ground Force
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Field Volunteers (L4)</span>
+                  <div className={KPI_VALUE}>{countL4}</div>
+                  <span className={KPI_HINT}>Grassroots Ground Force</span>
                 </div>
               </>
             ) : isPoliticalAdmin ? (
               <>
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
-                    Constituency Directors
-                  </span>
-                  <div className="text-2xl font-bold font-display text-amber-400 mt-1">
-                    {scopedProfiles.length}
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Constituency Directors</span>
+                  <div className={KPI_VALUE}>{scopedProfiles.length}</div>
+                  <span className={`${KPI_HINT} flex items-center gap-1`}>
                     <CheckCircle className="w-3 h-3" /> 100% Active Squads
                   </span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
-                    Assigned Mandals
-                  </span>
-                  <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
-                    6 Mandals
-                  </div>
-                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                    Urban & Rural Covered
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Assigned Mandals</span>
+                  <div className={KPI_VALUE}>6 Mandals</div>
+                  <span className={KPI_HINT}>Urban & Rural Covered</span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                    Supervised Cadre
-                  </span>
-                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Supervised Cadre</span>
+                  <div className={KPI_VALUE}>
                     {profiles.filter((p) => p.primaryRole === "VOLUNTEER" && (!p.partyId || p.partyId === currentProfile.partyId)).length}
                   </div>
-                  <span className="text-[10px] text-emerald-400 mt-0.5 block">
-                    Field Volunteers in AC
-                  </span>
+                  <span className={KPI_HINT}>Field Volunteers in AC</span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
-                    Governance Clearance
-                  </span>
-                  <div className="text-2xl font-bold font-display text-blue-400 mt-1">
-                    Level 4
-                  </div>
-                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                    Constituency Command
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Governance Clearance</span>
+                  <div className={KPI_VALUE}>Level 4</div>
+                  <span className={KPI_HINT}>Constituency Command</span>
                 </div>
               </>
             ) : (
               <>
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
-                    Squad Volunteers
-                  </span>
-                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
-                    {scopedProfiles.length}
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5 block flex items-center gap-1">
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Squad Volunteers</span>
+                  <div className={KPI_VALUE}>{scopedProfiles.length}</div>
+                  <span className={`${KPI_HINT} flex items-center gap-1`}>
                     <CheckCircle className="w-3 h-3" /> Field Force Active
                   </span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
-                    Assigned Villages
-                  </span>
-                  <div className="text-2xl font-bold font-display text-[#F5EFE0] mt-1">
-                    4 Villages
-                  </div>
-                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                    Ground Reach 100%
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Assigned Villages</span>
+                  <div className={KPI_VALUE}>4 Villages</div>
+                  <span className={KPI_HINT}>Ground Reach 100%</span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
-                    Director Supervision
-                  </span>
-                  <div className="text-2xl font-bold font-display text-amber-400 mt-1">
-                    Level 3
-                  </div>
-                  <span className="text-[10px] text-[#8E9CAE] mt-0.5 block">
-                    Squad Manager Clearance
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Director Supervision</span>
+                  <div className={KPI_VALUE}>Level 3</div>
+                  <span className={KPI_HINT}>Squad Manager Clearance</span>
                 </div>
-
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
-                    Audit Status
-                  </span>
-                  <div className="text-2xl font-bold font-display text-emerald-400 mt-1">
-                    Verified
-                  </div>
-                  <span className="text-[10px] text-emerald-400 mt-0.5 block">
-                    Task Integrity Enforced
-                  </span>
+                <div className={KPI_CARD}>
+                  <span className={KPI_LABEL}>Audit Status</span>
+                  <div className={KPI_VALUE}>Verified</div>
+                  <span className={KPI_HINT}>Task Integrity Enforced</span>
                 </div>
               </>
             )}
           </div>
 
           {/* Search & Filter Toolbar */}
-          <div className="bg-[#0F2338] border border-[#22405E] rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="bg-[#0E1724] border border-[#D4A24C]/40 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="relative w-full sm:w-80">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
               <input
@@ -870,12 +805,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#071322] border-b border-[#22405E] text-[10.5px] font-bold uppercase tracking-wider text-[#8E9CAE]">
-                    <th className="py-3.5 px-4">User / Operator</th>
-                    <th className="py-3.5 px-4">Tier & Role</th>
-                    <th className="py-3.5 px-4">Jurisdiction</th>
-                    <th className="py-3.5 px-4">Clearance</th>
-                    <th className="py-3.5 px-4">Permission Matrix</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
+                    <th className="py-2.5 px-3">User / Operator</th>
+                    <th className="py-2.5 px-3">Tier & Role</th>
+                    <th className="py-2.5 px-3">Jurisdiction</th>
+                    <th className="py-2.5 px-3">Clearance</th>
+                    <th className="py-2.5 px-3">Permission Matrix</th>
+                    <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#22405E]/60 text-xs">
@@ -900,7 +835,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         key={user.id}
                         className="hover:bg-[#122A44]/60 transition-colors group"
                       >
-                        <td className="py-4 px-4">
+                        <td className="py-2.5 px-3">
                           <div className="flex items-center gap-3">
                             <img
                               src={user.avatar}
@@ -911,9 +846,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                               <div className="font-bold text-[#F5EFE0] flex items-center gap-1.5">
                                 <span>{user.name}</span>
                                 {isSelf && (
-                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-500/40">
-                                    You
-                                  </span>
+                                  <span className={GOLD_CHIP}>You</span>
                                 )}
                               </div>
                               <div className="text-[11px] text-[#8E9CAE] font-mono">
@@ -928,26 +861,20 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                           </div>
                         </td>
 
-                        <td className="py-4 px-4">
+                        <td className="py-2.5 px-3">
                           {/* Role Tier Badge */}
                           <div className="flex items-center gap-1.5">
                             {isUserSuperAdmin ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#D4A24C]/20 border border-[#D4A24C]/60 text-[#D4A24C]">
-                                Level 1: Platform Super Admin
-                              </span>
+                              <span className={GOLD_PILL}>Level 1: Platform Super Admin</span>
                             ) : isUserPoliticalAdmin ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-950/60 border border-blue-500/40 text-blue-300 flex items-center gap-1">
+                              <span className={`${GOLD_PILL} inline-flex items-center gap-1`}>
                                 <span>{user.partyEmoji || "🏛️"}</span>
                                 <span>Level 2: Political (MLA)</span>
                               </span>
                             ) : isUserDirector ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-950/60 border border-amber-500/40 text-amber-300">
-                                Level 3: Director
-                              </span>
+                              <span className={GOLD_PILL}>Level 3: Director</span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-950/60 border border-emerald-500/40 text-emerald-300">
-                                Level 4: Volunteer
-                              </span>
+                              <span className={GOLD_PILL}>Level 4: Volunteer</span>
                             )}
                           </div>
                           <div className="font-semibold text-xs text-[#E2DCBE] mt-1">
@@ -958,50 +885,40 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                           </div>
                         </td>
 
-                        <td className="py-4 px-4 text-[#D8CFB8] font-medium">
+                        <td className="py-2.5 px-3 text-[#D8CFB8] font-medium">
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
                             {user.assignedConstituency}
                           </span>
                         </td>
 
-                        <td className="py-4 px-4">
+                        <td className="py-2.5 px-3">
                           <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
                             {user.clearanceLevel?.split("(")[0] || "LEVEL 2"}
                           </span>
                         </td>
 
-                        <td className="py-4 px-4">
+                        <td className="py-2.5 px-3">
                           <div className="flex items-center gap-1.5 flex-wrap max-w-xs">
                             {user.permissions?.canExportReports && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-blue-950/60 text-blue-300 border border-blue-500/30 rounded">
-                                Export PDF
-                              </span>
+                              <span className={GOLD_CHIP}>Export PDF</span>
                             )}
                             {user.permissions?.canEditStrategy && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-amber-950/60 text-amber-300 border border-amber-500/30 rounded">
-                                Strategy
-                              </span>
+                              <span className={GOLD_CHIP}>Strategy</span>
                             )}
                             {user.permissions?.canManageVolunteers && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 rounded">
-                                Volunteers
-                              </span>
+                              <span className={GOLD_CHIP}>Volunteers</span>
                             )}
                             {user.permissions?.canResolveGrievances && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-purple-950/60 text-purple-300 border border-purple-500/30 rounded">
-                                Grievances
-                              </span>
+                              <span className={GOLD_CHIP}>Grievances</span>
                             )}
                             {user.permissions?.canManageSystemUsers && (
-                              <span className="text-[9.5px] px-1.5 py-0.5 bg-rose-950/60 text-rose-300 border border-rose-500/30 rounded">
-                                Platform Admin
-                              </span>
+                              <span className={GOLD_CHIP}>Platform Admin</span>
                             )}
                           </div>
                         </td>
 
-                        <td className="py-4 px-4 text-right">
+                        <td className="py-2.5 px-3 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             {/* Edit Button */}
                             {canEdit && (
@@ -1261,14 +1178,14 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         <span>Publish Candidate Web Pages</span>
                       </label>
                       {isSuperAdmin && (
-                        <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-rose-500/30 cursor-pointer sm:col-span-2">
+                        <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#D4A24C]/40 cursor-pointer sm:col-span-2">
                           <input
                             type="checkbox"
                             checked={userFormPermissions.canManageSystemUsers}
                             onChange={(e) => setUserFormPermissions({ ...userFormPermissions, canManageSystemUsers: e.target.checked })}
-                            className="rounded text-rose-400 focus:ring-rose-400"
+                            className="rounded text-[#D4A24C] focus:ring-[#D4A24C]"
                           />
-                          <span className="font-semibold text-rose-300">
+                          <span className="font-semibold text-[#D4A24C]">
                             Super Admin: Manage System Users & Multi-Tenant Provisioning
                           </span>
                         </label>
@@ -1375,7 +1292,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                   <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
                     <div>
                       <span className="text-[#8E9CAE] block text-[10px] uppercase">Account Status</span>
-                      <strong className="text-emerald-400 font-semibold">Active & Certified</strong>
+                      <strong className="text-[#D4A24C] font-semibold">Active & Certified</strong>
                     </div>
                     <div>
                       <span className="text-[#8E9CAE] block text-[10px] uppercase">Clearance Check</span>
@@ -1401,7 +1318,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                           <div key={log.id} className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
                             <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
                               <span className="font-mono">{formatAuditTime(log.timestamp)}</span>
-                              <span className="text-emerald-400 font-bold uppercase">Live</span>
+                              <span className="text-[#D4A24C] font-bold uppercase">Live</span>
                             </div>
                             <p className="text-[#F5EFE0]">
                               {formatAuditAction(log.action)}
@@ -1491,7 +1408,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
               <h3 className="font-display text-xl text-[#F5EFE0]">Platform Security & Access Audit Trail</h3>
               <p className="text-xs text-[#8E9CAE]">Live sign-ins and user-management actions. Mock history has been removed.</p>
             </div>
-            <span className="px-3 py-1 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 text-xs font-bold">
+            <span className={`px-3 py-1 rounded-xl text-xs font-bold ${UNIQUE_TICKET_SURFACE.badge}`}>
               Live usage
             </span>
           </div>
@@ -1515,7 +1432,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     </p>
                     <span className="text-[11px] text-[#D4A24C]">Actor: {log.actorName || "Unknown user"}</span>
                   </div>
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 font-bold uppercase text-[10px] shrink-0">
+                  <span className={`px-2.5 py-1 rounded-lg font-bold uppercase text-[10px] shrink-0 ${UNIQUE_TICKET_SURFACE.badge}`}>
                     Live
                   </span>
                 </div>

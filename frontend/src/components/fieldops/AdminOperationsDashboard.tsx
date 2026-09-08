@@ -11,7 +11,7 @@ import { getAssignTicketsParamsFromHash, getTicketIdFromHash, clearTicketIdFromH
 import { IssueDetailView } from "./IssueDetailView";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { AssignComplaintModal } from "./AssignComplaintModal";
-import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
+import { TicketGridCard } from "./TicketGridCard";
 import { OfficerStatusComments } from "./OfficerStatusComments";
 import { assignmentSafeStatus, countByKpi, formatDashboardCount, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { formatIssueStatus } from "../../utils/statusLabels";
@@ -43,8 +43,6 @@ import {
   Calendar,
   Edit3,
   MessageCircle,
-  LayoutGrid,
-  List
 } from "lucide-react";
 
 interface AdminDashboardProps {
@@ -52,6 +50,12 @@ interface AdminDashboardProps {
   onUpdateProfile?: (updated: UserProfile) => void;
   initialFilterStatus?: string;
 }
+
+const ASSIGN_FILTER_CLASS =
+  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[#223348] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none [color-scheme:dark]";
+const ASSIGN_OPTION_CLASS = "bg-[#0B131E] text-[#F5EFE0]";
+const ASSIGN_GRID_CLASS = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-visible";
+const HIERARCHY_CHIP = `px-2 py-0.5 rounded text-[11px] ${UNIQUE_TICKET_SURFACE.badge}`;
 
 const DashboardKpi = ({
   label,
@@ -436,6 +440,31 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
     volunteers
   ]);
 
+  const hasActiveFilters =
+    filterStatus !== "ALL" ||
+    filterPriority !== "ALL" ||
+    filterMandal !== "ALL" ||
+    filterDepartment !== "ALL" ||
+    filterVolunteer !== "ALL" ||
+    filterType !== "ALL" ||
+    filterCategory !== "ALL" ||
+    filterGender !== "ALL" ||
+    filterAgeGroup !== "ALL" ||
+    Boolean(searchQuery.trim());
+
+  const clearAllFilters = () => {
+    setFilterStatus("ALL");
+    setFilterPriority("ALL");
+    setFilterMandal("ALL");
+    setFilterDepartment("ALL");
+    setFilterVolunteer("ALL");
+    setFilterType("ALL");
+    setFilterCategory("ALL");
+    setFilterGender("ALL");
+    setFilterAgeGroup("ALL");
+    setSearchQuery("");
+  };
+
   const totalPages = Math.ceil(filteredIssues.length / pageSize) || 1;
   const paginatedIssues = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -742,8 +771,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {viewMode === "DRILLDOWN" && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-[#0F2338]/80 border border-[#22405E]">
+        <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#0E1724] border border-[#D4A24C]/40">
             <div>
               <h2 className="font-display text-base text-[#F5EFE0] flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#D4A24C]" />
@@ -758,7 +787,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               </p>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="px-2.5 py-1 rounded bg-[#071322] border border-[#22405E] text-[#D4A24C]">
+              <span className={`px-2.5 py-1 rounded ${UNIQUE_TICKET_SURFACE.badge}`}>
                 {currentUser.assignedConstituency || currentUser.assemblyConstituencyName || "Constituency"}
               </span>
             </div>
@@ -773,21 +802,21 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               No geography drilldown data available.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {drilldownData.mandals.map((mandal: any) => {
                 const isMandalExpanded = !!expandedMandals[mandal.mandalId];
                 return (
                   <div
                     key={mandal.mandalId}
-                    className="rounded-2xl bg-[#0B1A2C] border border-[#22405E] overflow-hidden shadow-sm transition-all"
+                    className="rounded-xl bg-[#0E1724] border border-[#D4A24C]/40 overflow-hidden"
                   >
                     {/* Mandal Node Header */}
                     <div
                       onClick={() => toggleMandal(mandal.mandalId)}
-                      className="p-4 sm:p-5 bg-gradient-to-r from-[#0F2338] to-[#0B1A2C] hover:bg-[#122A44] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-3 border-b border-[#22405E]/60"
+                      className="p-3 hover:bg-[#131E2D] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-2 border-b border-[#D4A24C]/25"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C]">
                           {isMandalExpanded ? (
                             <ChevronDown className="w-5 h-5" />
                           ) : (
@@ -796,7 +825,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C]">
+                            <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/35">
                               {mandal.code}
                             </span>
                             <span className="text-xs text-[#8E9CAE]">
@@ -810,18 +839,18 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
 
                       {/* Mandal Issue Summary Badges */}
-                      <div className="flex items-center gap-2 text-[11px]">
-                        <span className="px-2.5 py-1 rounded bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
-                          Total: <strong className="text-[#F5EFE0]">{mandal.issueSummary.total}</strong>
+                      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                        <span className={HIERARCHY_CHIP}>
+                          Total: <strong>{mandal.issueSummary.total}</strong>
                         </span>
-                        <span className="px-2.5 py-1 rounded bg-amber-950/50 border border-amber-500/30 text-amber-300">
+                        <span className={HIERARCHY_CHIP}>
                           In Progress: <strong>{mandal.issueSummary.inProgress}</strong>
                         </span>
-                        <span className="px-2.5 py-1 rounded bg-emerald-950/50 border border-emerald-500/30 text-emerald-300">
+                        <span className={HIERARCHY_CHIP}>
                           Resolved: <strong>{mandal.issueSummary.completed}</strong>
                         </span>
                         {mandal.issueSummary.overdue > 0 && (
-                          <span className="px-2.5 py-1 rounded bg-rose-950/60 border border-rose-500/40 text-rose-300 animate-pulse">
+                          <span className={HIERARCHY_CHIP}>
                             Overdue: <strong>{mandal.issueSummary.overdue}</strong>
                           </span>
                         )}
@@ -830,18 +859,18 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
                     {/* Village Nodes List */}
                     {isMandalExpanded && (
-                      <div className="p-4 sm:p-5 space-y-3 bg-[#071322]/50">
+                      <div className="p-2.5 space-y-2 bg-[#071322]/40">
                         {mandal.villages.map((village: any) => {
                           const isVillageExpanded = !!expandedVillages[village.villageId];
                           return (
                             <div
                               key={village.villageId}
-                              className="rounded-xl bg-[#0F2338] border border-[#22405E] overflow-hidden"
+                              className="rounded-lg bg-[#0B131E] border border-[#D4A24C]/30 overflow-hidden"
                             >
                               {/* Village Node Row */}
                               <div
                                 onClick={() => toggleVillage(village.villageId)}
-                                className="p-3.5 hover:bg-[#122A44] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-3"
+                                className="p-2.5 hover:bg-[#131E2D] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-2"
                               >
                                 <div className="flex items-center gap-3">
                                   <div className="text-[#D4A24C]">
@@ -866,25 +895,25 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                   </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex flex-wrap items-center gap-2">
                                   {(() => {
                                     const assigned = findVolunteerForVillage(scopedUsers, village.villageId);
                                     if (!assigned) {
                                       return (
-                                        <div className="px-3 py-1.5 rounded-lg bg-[#071322] border border-dashed border-[#22405E] text-[11px] text-[#8E9CAE]">
+                                        <div className="px-2.5 py-1 rounded-lg bg-[#071322] border border-dashed border-[#D4A24C]/30 text-[11px] text-[#8E9CAE]">
                                           No volunteer assigned
                                         </div>
                                       );
                                     }
                                     return (
-                                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#071322] border border-[#22405E] text-[11px]">
+                                      <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#071322] border border-[#D4A24C]/35 text-[11px]">
                                         <span>
                                           Volunteer: <strong className="text-[#D4A24C]">{assigned.name}</strong>
                                         </span>
                                         {assigned.phone && (
                                           <a
                                             href={`tel:${assigned.phone}`}
-                                            className="text-[#8E9CAE] hover:text-white"
+                                            className="text-[#8E9CAE] hover:text-[#D4A24C]"
                                             onClick={(e) => e.stopPropagation()}
                                           >
                                             <Phone className="w-3 h-3" />
@@ -894,12 +923,12 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                     );
                                   })()}
 
-                                  <div className="flex items-center gap-1.5 text-[10px]">
-                                    <span className="px-2 py-0.5 rounded bg-[#071322] text-[#D8CFB8]">
+                                  <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                                    <span className={HIERARCHY_CHIP}>
                                       {village.issueSummary.total} Issues
                                     </span>
                                     {village.issueSummary.overdue > 0 && (
-                                      <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">
+                                      <span className={HIERARCHY_CHIP}>
                                         {village.issueSummary.overdue} Overdue
                                       </span>
                                     )}
@@ -909,31 +938,23 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
                               {/* Village Issues Drilldown */}
                               {isVillageExpanded && (
-                                <div className="p-3 border-t border-[#22405E] bg-[#071322] space-y-2">
+                                <div className="p-2 border-t border-[#D4A24C]/25 bg-[#071322] space-y-1.5">
                                   {village.issues.length === 0 ? (
-                                    <div className="p-3 text-center text-xs text-[#8E9CAE]">
+                                    <div className="p-2.5 text-center text-xs text-[#8E9CAE]">
                                       No issues logged in {village.villageName}. Ground reports clear.
                                     </div>
                                   ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       {village.issues.map((iss: FieldIssue) => (
                                         <div
                                           key={iss.id}
                                           onClick={() => setSelectedIssue(iss)}
-                                          className="p-3 rounded-lg bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer space-y-1.5"
+                                          className="p-2.5 rounded-lg bg-[#0E1724] border border-[#D4A24C]/35 hover:border-[#D4A24C]/80 transition-all cursor-pointer space-y-1"
                                         >
-                                          <div className="flex items-center justify-between text-[10px]">
+                                          <div className="flex items-center justify-between gap-2 text-[10px]">
                                             <span className="font-mono text-[#D4A24C]">{formatTicketDisplay(iss)}</span>
-                                            <span
-                                              className={`font-bold uppercase px-2 py-0.2 rounded-full border ${
-                                                iss.status === "COMPLETED"
-                                                  ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/40"
-                                                  : iss.status === "OVERDUE"
-                                                  ? "bg-rose-950/60 text-rose-300 border-rose-500/40"
-                                                  : "bg-amber-950/60 text-amber-300 border-amber-500/40"
-                                              }`}
-                                            >
-                                              {iss.status}
+                                            <span className={`font-bold uppercase px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
+                                              {formatIssueStatus(iss.status)}
                                             </span>
                                           </div>
                                           <h5 className="font-semibold text-xs text-[#F5EFE0] line-clamp-1">
@@ -942,7 +963,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                           <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
                                             <span>By {iss.reportedBy}</span>
                                             {iss.lastStatusProof && (
-                                              <span className="text-emerald-400 flex items-center gap-1">
+                                              <span className="text-[#D4A24C] flex items-center gap-1">
                                                 <Camera className="w-3 h-3" /> Proof Verified
                                               </span>
                                             )}
@@ -971,195 +992,176 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
       {isAssignTicketsMode && (
       <div className="space-y-4">
-        <div className="p-4 rounded-2xl bg-[#0E1724] border border-[#223348] shadow-lg space-y-3">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-            <div className="relative min-w-0 w-full">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="font-display text-xl sm:text-2xl text-[#F5EFE0]">Assign Tickets</h1>
+            <p className="text-xs text-[#8E9CAE] mt-0.5">
+              {filteredIssues.length} tickets · assign departments and inspect records
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs min-w-0">
+            <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
+              <Search className="w-3.5 h-3.5 absolute left-0 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
               <input
                 type="text"
-                placeholder="Search by ID, title, village, citizen, phone..."
+                placeholder="Search ID, title, village, citizen, phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className="w-full h-9 bg-transparent border-0 border-b border-[#223348] focus:border-[#D4A24C] pl-6 pr-6 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
               />
-              {searchQuery && (
+              {searchQuery ? (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
                 >
                   ✕
                 </button>
-              )}
+              ) : null}
             </div>
-
-            <div className="flex items-center justify-end gap-2.5 min-w-0">
-              <div className="flex items-center h-10 shrink-0 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
-                <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="min-w-0 max-w-[11.5rem] bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
-                >
-                  <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
-                  <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
-                  <option value="DUE_DATE" className="bg-[#0B131E]">Earliest Due (Urgent SLA)</option>
-                  <option value="PRIORITY" className="bg-[#0B131E]">Highest Priority (Urgent → Low)</option>
-                  <option value="STATUS" className="bg-[#0B131E]">By Lifecycle Status</option>
-                  <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
-                </select>
-              </div>
-              <div className="flex items-center h-10 shrink-0 gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-xs">
-                <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="bg-transparent text-[#D4A24C] font-bold text-xs focus:outline-none cursor-pointer"
-                >
-                  <option value={10} className="bg-[#0B131E]">10 / page</option>
-                  <option value={25} className="bg-[#0B131E]">25 / page</option>
-                  <option value={50} className="bg-[#0B131E]">50 / page</option>
-                  <option value={100} className="bg-[#0B131E]">100 / page</option>
-                </select>
-              </div>
-              <div className="flex items-center h-10 shrink-0 p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
-                <button
-                  type="button"
-                  onClick={() => setTicketLayout("GRID")}
-                  title="Grid Cards View"
-                  className={`h-8 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                    ticketLayout === "GRID"
-                      ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                      : "text-[#CBD5E1] hover:text-white"
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span className="text-[11px] hidden sm:inline">Grid</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTicketLayout("TABLE")}
-                  title="Data Table View"
-                  className={`h-8 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                    ticketLayout === "TABLE"
-                      ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
-                      : "text-[#CBD5E1] hover:text-white"
-                  }`}
-                >
-                  <List className="w-3.5 h-3.5" />
-                  <span className="text-[11px] hidden sm:inline">Table</span>
-                </button>
-              </div>
+            <label className="inline-flex items-center gap-1.5 text-[#8E9CAE] shrink-0">
+              Sort
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
+              >
+                <option value="NEWEST" className={ASSIGN_OPTION_CLASS}>Newest first</option>
+                <option value="OLDEST" className={ASSIGN_OPTION_CLASS}>Oldest first</option>
+                <option value="DUE_DATE" className={ASSIGN_OPTION_CLASS}>Earliest due</option>
+                <option value="PRIORITY" className={ASSIGN_OPTION_CLASS}>Highest priority</option>
+                <option value="STATUS" className={ASSIGN_OPTION_CLASS}>By status</option>
+                <option value="TITLE" className={ASSIGN_OPTION_CLASS}>Title A–Z</option>
+              </select>
+            </label>
+            <label className="inline-flex items-center gap-1.5 text-[#8E9CAE] shrink-0">
+              Show
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
+              >
+                <option value={10} className={ASSIGN_OPTION_CLASS}>10 / page</option>
+                <option value={25} className={ASSIGN_OPTION_CLASS}>25 / page</option>
+                <option value={50} className={ASSIGN_OPTION_CLASS}>50 / page</option>
+                <option value={100} className={ASSIGN_OPTION_CLASS}>100 / page</option>
+              </select>
+            </label>
+            <div className="inline-flex items-center gap-3 text-[#8E9CAE] shrink-0">
+              <button
+                type="button"
+                onClick={() => setTicketLayout("GRID")}
+                className={`cursor-pointer ${ticketLayout === "GRID" ? "text-[#D4A24C] font-semibold" : "hover:text-[#F5EFE0]"}`}
+              >
+                Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setTicketLayout("TABLE")}
+                className={`cursor-pointer ${ticketLayout === "TABLE" ? "text-[#D4A24C] font-semibold" : "hover:text-[#F5EFE0]"}`}
+              >
+                Table
+              </button>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2 w-full text-xs">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Status: All</option>
-              <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
-              <option value="ASSIGNED">Status: Assigned</option>
-              <option value="IN_PROGRESS">Status: In Progress</option>
-              <option value="OVERDUE">Status: Overdue</option>
-              <option value="COMPLETED">Status: Resolved / Closed</option>
-              <option value="REJECTED">Status: Rejected</option>
-              <option value="CANT_BE_DONE">Status: Can't be done</option>
-            </select>
-            <select
-              value={filterDepartment}
-              onChange={(e) => setFilterDepartment(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Dept: All</option>
-              {availableDepartments.map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Type: All</option>
-              {availableTypes.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Category: All</option>
-              {availableCategories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Priority: All</option>
-              <option value="URGENT">Urgent</option>
-              <option value="HIGH">High</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="LOW">Low</option>
-            </select>
-            <select
-              value={filterGender}
-              onChange={(e) => setFilterGender(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Gender: All</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-            </select>
-            <select
-              value={filterAgeGroup}
-              onChange={(e) => setFilterAgeGroup(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Age: All</option>
-              <option value="20-30">Age: 20-30</option>
-              <option value="30-40">Age: 30-40</option>
-              <option value="40-50">Age: 40-50</option>
-              <option value="50+">Age: 50+</option>
-            </select>
-            <select
-              value={filterMandal}
-              onChange={(e) => setFilterMandal(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Mandal: All</option>
-              {mandals.map((m) => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-            <select
-              value={filterVolunteer}
-              onChange={(e) => setFilterVolunteer(e.target.value)}
-              className="min-w-0 w-full max-w-full h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
-            >
-              <option value="ALL">Assignee: All</option>
-              {volunteers.map((vol) => (
-                <option key={vol.id} value={vol.id}>{vol.name}</option>
-              ))}
-            </select>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-9 gap-x-3 gap-y-2 text-xs">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Status: All</option>
+            <option value="OPEN_UNASSIGNED" className={ASSIGN_OPTION_CLASS}>Status: Open / Unassigned</option>
+            <option value="ASSIGNED" className={ASSIGN_OPTION_CLASS}>Status: Assigned</option>
+            <option value="IN_PROGRESS" className={ASSIGN_OPTION_CLASS}>Status: In Progress</option>
+            <option value="OVERDUE" className={ASSIGN_OPTION_CLASS}>Status: Overdue</option>
+            <option value="COMPLETED" className={ASSIGN_OPTION_CLASS}>Status: Resolved / Closed</option>
+            <option value="REJECTED" className={ASSIGN_OPTION_CLASS}>Status: Rejected</option>
+            <option value="CANT_BE_DONE" className={ASSIGN_OPTION_CLASS}>Status: Can't be done</option>
+          </select>
+          <select value={filterDepartment} onChange={(e) => setFilterDepartment(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Dept: All</option>
+            {availableDepartments.map((dept) => (
+              <option key={dept} value={dept} className={ASSIGN_OPTION_CLASS}>{dept}</option>
+            ))}
+          </select>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Type: All</option>
+            {availableTypes.map((t) => (
+              <option key={t} value={t} className={ASSIGN_OPTION_CLASS}>{t}</option>
+            ))}
+          </select>
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Category: All</option>
+            {availableCategories.map((c) => (
+              <option key={c} value={c} className={ASSIGN_OPTION_CLASS}>{c}</option>
+            ))}
+          </select>
+          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Priority: All</option>
+            <option value="URGENT" className={ASSIGN_OPTION_CLASS}>Urgent</option>
+            <option value="HIGH" className={ASSIGN_OPTION_CLASS}>High</option>
+            <option value="MEDIUM" className={ASSIGN_OPTION_CLASS}>Medium</option>
+            <option value="LOW" className={ASSIGN_OPTION_CLASS}>Low</option>
+          </select>
+          <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Gender: All</option>
+            <option value="Male" className={ASSIGN_OPTION_CLASS}>Male</option>
+            <option value="Female" className={ASSIGN_OPTION_CLASS}>Female</option>
+          </select>
+          <select value={filterAgeGroup} onChange={(e) => setFilterAgeGroup(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Age: All</option>
+            <option value="20-30" className={ASSIGN_OPTION_CLASS}>Age: 20-30</option>
+            <option value="30-40" className={ASSIGN_OPTION_CLASS}>Age: 30-40</option>
+            <option value="40-50" className={ASSIGN_OPTION_CLASS}>Age: 40-50</option>
+            <option value="50+" className={ASSIGN_OPTION_CLASS}>Age: 50+</option>
+          </select>
+          <select value={filterMandal} onChange={(e) => setFilterMandal(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Mandal: All</option>
+            {mandals.map((m) => (
+              <option key={m.id} value={m.id} className={ASSIGN_OPTION_CLASS}>{m.name}</option>
+            ))}
+          </select>
+          <select value={filterVolunteer} onChange={(e) => setFilterVolunteer(e.target.value)} className={ASSIGN_FILTER_CLASS}>
+            <option value="ALL" className={ASSIGN_OPTION_CLASS}>Assignee: All</option>
+            {volunteers.map((vol) => (
+              <option key={vol.id} value={vol.id} className={ASSIGN_OPTION_CLASS}>{vol.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#8E9CAE]">
+            <p className="min-w-0 whitespace-normal break-words">
+              {[
+                filterStatus !== "ALL" ? `Status ${filterStatus}` : "",
+                filterDepartment !== "ALL" ? `Dept ${filterDepartment}` : "",
+                filterType !== "ALL" ? `Type ${filterType}` : "",
+                filterCategory !== "ALL" ? `Category ${filterCategory}` : "",
+                filterPriority !== "ALL" ? `Priority ${filterPriority}` : "",
+                filterGender !== "ALL" ? `Gender ${filterGender}` : "",
+                filterAgeGroup !== "ALL" ? `Age ${filterAgeGroup}` : "",
+                filterMandal !== "ALL" ? "Mandal filtered" : "",
+                filterVolunteer !== "ALL" ? "Volunteer filtered" : "",
+                searchQuery ? `Search “${searchQuery}”` : ""
+              ].filter(Boolean).join(" · ")}
+            </p>
+            <button type="button" onClick={clearAllFilters} className="text-[#D4A24C] hover:underline font-semibold shrink-0 cursor-pointer">
+              Clear filters
+            </button>
+          </div>
+        )}
+
+        <div className="space-y-3">
 
           {filteredIssues.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[#8E9CAE] rounded-xl border border-[#22405E] bg-[#0F2338]">
-              No tickets match the current filters.
+            <div className="py-12 text-center space-y-2">
+              <h3 className="text-base font-semibold text-[#F5EFE0]">No tickets match these filters</h3>
+              <p className="text-xs text-[#8E9CAE]">Try a different search, category, or status.</p>
+              <button type="button" onClick={clearAllFilters} className="text-xs font-semibold text-[#D4A24C] hover:underline cursor-pointer">
+                Clear filters
+              </button>
             </div>
           ) : ticketLayout === "GRID" ? (
-          <div className={TICKET_GRID_CLASS}>
+          <div className={ASSIGN_GRID_CLASS}>
             {paginatedIssues.map((iss) => {
               const isClosed = iss.status === "COMPLETED" || iss.status === "RESOLVED";
               return (
@@ -1173,10 +1175,13 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     durationText: iss.dueDate ? `Due ${iss.dueDate}` : "—"
                   }}
                   showAssignControls={false}
+                  showAcCode
+                  plain
                   volunteerName={iss.assignedVolunteerName || "Unassigned"}
                   extraBadges={
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${UNIQUE_TICKET_SURFACE.badge}`}>
-                      {iss.status}
+                    <span>
+                      {" · "}
+                      {formatIssueStatus(iss.status)}
                     </span>
                   }
                   onOpen={() => setSelectedIssue(iss)}
@@ -1254,7 +1259,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                             title="View ticket"
                           >
                             <Eye className="w-3 h-3 shrink-0" />
-                            <span className="hidden sm:inline">View</span>
+                            <span>View</span>
                           </button>
                         </td>
                       </tr>
@@ -1266,50 +1271,24 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
           )}
 
           {filteredIssues.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:px-5 rounded-2xl bg-[#0E1724]/90 border border-[#223348] text-xs">
-              <div className="text-[#8E9CAE] font-mono">
-                Showing{" "}
-                <strong className="text-[#F5EFE0]">{(currentPage - 1) * pageSize + 1}</strong>
-                {" "}to{" "}
-                <strong className="text-[#F5EFE0]">{Math.min(currentPage * pageSize, filteredIssues.length)}</strong>
-                {" "}of{" "}
-                <strong className="text-[#D4A24C]">{filteredIssues.length}</strong>
-                {" "}records
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 text-xs text-[#8E9CAE]">
+              <div className="font-mono text-center sm:text-left">
+                Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredIssues.length)} of {filteredIssues.length}
               </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} title="First Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                   <ChevronsLeft className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
+                <button type="button" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} title="Previous Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
                 <span className="px-2 text-[#F5EFE0] font-semibold">
                   {currentPage} / {totalPages}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
+                <button type="button" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} title="Next Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
+                <button type="button" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} title="Last Page" className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:text-[#F5EFE0]">
                   <ChevronsRight className="w-3.5 h-3.5" />
                 </button>
               </div>
