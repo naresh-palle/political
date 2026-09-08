@@ -46,7 +46,7 @@ import { OfficerStatusComments } from "./OfficerStatusComments";
 import { isTicketOpenForAssign } from "../../utils/ticketActions";
 import { formatIssueStatus } from "../../utils/statusLabels";
 import { formatTicketDisplay, ticketSearchHaystack, rawTicketNumber, constituencyShortName } from "../../utils/ticketNumberDisplay";
-import { assignmentSafeStatus, countByKpi, hasAssignee, isOverdueStatus, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_CONTROL, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, formatDashboardCount, isOverdueStatus, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_CONTROL, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 export interface DirectorDashboardProps {
   currentUser: UserProfile;
@@ -358,10 +358,6 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         (item.assignedVolunteerName && v.name === item.assignedVolunteerName)
     );
   });
-  const assignedKpi = countByKpi(assignedTickets);
-  const pendingAssignedCount = assignedKpi.openUnassigned + assignedKpi.assigned;
-  const assignedToDeptCount = allOperationsList.filter((item) => hasAssignee(item)).length;
-
   const goAssignTickets = (status = "ALL", volunteerId?: string, volunteerAssignedOnly = false) => {
     if (volunteerId) setFilterVolunteerId(volunteerId);
     else setFilterVolunteerId("ALL");
@@ -1350,27 +1346,34 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
       {!isAssignTicketsMode && (
       <>
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#D4A24C]/40">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">My Volunteers</span>
-          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.myVolunteers ?? volunteers.length}</span>
-        </div>
-        <div className="p-3.5 rounded-xl bg-[#0F1E30] border border-[#D4A24C]/40">
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Active Volunteers</span>
-          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.activeVolunteers ?? volunteers.filter((v) => !v.status || v.status === "ACTIVE").length}</span>
-        </div>
-        <button type="button" onClick={() => goAssignTickets("ASSIGNED", undefined, true)} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Pending Tickets</span>
-          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.pendingTickets ?? pendingAssignedCount}</span>
-        </button>
-        <button type="button" onClick={() => goAssignTickets("ASSIGNED")} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Assigned to Dept</span>
-          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.assignedToDepartment ?? assignedToDeptCount}</span>
-        </button>
-        <button type="button" onClick={() => goAssignTickets("OVERDUE")} className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} text-left cursor-pointer`}>
-          <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">Overdue</span>
-          <span className="text-2xl font-bold font-mono text-[#D4A24C]">{dashStats?.overdue ?? kpiCounts.overdue}</span>
-        </button>
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+        {(
+          [
+            { label: "Total Tickets", hint: "All", value: kpiCounts.total, status: "ALL" },
+            { label: "Open / Unassigned", hint: "Pending", value: kpiCounts.openUnassigned, status: "OPEN_UNASSIGNED" },
+            { label: "Assigned", hint: "Officer", value: kpiCounts.assigned, status: "ASSIGNED" },
+            { label: "In Progress", hint: "Ground", value: kpiCounts.inProgress, status: "IN_PROGRESS" },
+            { label: "Overdue Alerts", hint: "Urgent", value: kpiCounts.overdue, status: "OVERDUE" },
+            { label: "Resolved / Closed", hint: "Closed", value: kpiCounts.resolvedClosed, status: "RESOLVED" },
+            { label: "Rejected", hint: "Closed", value: kpiCounts.rejected, status: "REJECTED" }
+          ] as const
+        ).map((card) => (
+          <button
+            key={card.status}
+            type="button"
+            onClick={() => goAssignTickets(card.status)}
+            title={`${card.label}: ${Number(card.value || 0).toLocaleString("en-IN")}`}
+            className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1 text-left cursor-pointer`}
+          >
+            <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
+              {card.label}
+            </span>
+            <div className="flex items-baseline justify-between gap-1">
+              <span className="text-2xl font-bold font-mono text-[#D4A24C]">{formatDashboardCount(card.value)}</span>
+              <span className="text-[10px] text-[#D4A24C]/80 font-mono font-semibold">{card.hint}</span>
+            </div>
+          </button>
+        ))}
       </div>
 
       {dashboardError && (
