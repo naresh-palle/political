@@ -76,6 +76,11 @@ def test_complainant_phone_prefers_ticket_fields():
         {"reporterPhone": "1111111111"},
     )
     assert phone.endswith("3210")
+    nested = complainant_phone_from_issue(
+        {"reporterPhone": ""},
+        {"ticket": {"reporterPhone": "+91 98765 43003"}},
+    )
+    assert nested.endswith("43003")
 
 
 def test_preserve_in_progress_against_open():
@@ -171,9 +176,76 @@ def test_complainant_template_request_uses_status_update_v1():
         shape="body",
     )
     assert body["template"]["name"] == "complainant_status_update_v1"
+    assert body["template"]["language"]["code"] == "en"
     params = body["template"]["components"][0]["parameters"]
+    assert [p["parameter_name"] for p in params] == ["name", "ticket", "status", "detail"]
     assert [p["text"] for p in params] == ["Rama", "LL-9", "RESOLVED", "Fixed at site"]
     assert client.complainant_template_name == "complainant_status_update_v1"
+
+
+def test_complainant_template_positional_omits_parameter_name():
+    from backend.services.whatsapp_service import WhatsAppCloudApiClient
+
+    client = WhatsAppCloudApiClient()
+    body = client._complainant_status_request_body(
+        "919876543210",
+        {
+            "complainantName": "Rama",
+            "ticketNumber": "LL-9",
+            "newStatus": "IN_PROGRESS",
+            "remarks": "Started\non site",
+        },
+        shape="body",
+        param_style="positional",
+        language="en_US",
+    )
+    params = body["template"]["components"][0]["parameters"]
+    assert "parameter_name" not in params[0]
+    assert params[3]["text"] == "Started on site"
+    assert body["template"]["language"]["code"] == "en_US"
+
+
+def test_complainant_template_retries_positional_after_named_reject(monkeypatch):
+    import asyncio
+    from backend.services.whatsapp_service import WhatsAppCloudApiClient
+
+    client = WhatsAppCloudApiClient()
+    client.enabled = True
+    client.phone_number_id = "1"
+    client.access_token = "token"
+    calls = []
+
+    async def fake_post(body):
+        calls.append(body)
+        if len(calls) == 1:
+            return {
+                "status_code": 400,
+                "res_json": {"error": {"code": 132018, "message": "Named parameter missing"}},
+                "error_msg_fallback": "",
+            }
+        return {
+            "status_code": 200,
+            "res_json": {"messages": [{"id": "wamid.ok"}]},
+            "error_msg_fallback": "",
+        }
+
+    monkeypatch.setattr(client, "_post_graph", fake_post)
+    result = asyncio.run(
+        client.send_whatsapp_notification(
+            {
+                "recipientPhone": "9876543210",
+                "messageKind": "COMPLAINANT_STATUS",
+                "templateName": "complainant_status_update_v1",
+                "complainantName": "Rama",
+                "ticketNumber": "LL-9",
+                "newStatus": "RESOLVED",
+                "remarks": "Fixed",
+            }
+        )
+    )
+    assert result["status"] == "SENT"
+    assert calls[0]["template"]["components"][0]["parameters"][0].get("parameter_name") == "name"
+    assert "parameter_name" not in calls[1]["template"]["components"][0]["parameters"][0]
 
 
 def test_runtime_persist_prevents_seed_assigned_from_winning(tmp_path, monkeypatch):

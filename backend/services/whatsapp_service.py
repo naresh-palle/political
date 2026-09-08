@@ -154,6 +154,11 @@ class WhatsAppCloudApiClient:
             "WHATSAPP_COMPLAINANT_TEMPLATE_NAME",
             os.environ.get("WHATSAPP_STATUS_TEMPLATE_NAME", "complainant_status_update_v1"),
         )
+        self.complainant_template_lang = os.environ.get("WHATSAPP_COMPLAINANT_TEMPLATE_LANG", "en")
+        raw_names = os.environ.get("WHATSAPP_COMPLAINANT_PARAM_NAMES", "name,ticket,status,detail")
+        self.complainant_param_names = [p.strip() for p in raw_names.split(",") if p.strip()][:4]
+        if len(self.complainant_param_names) < 4:
+            self.complainant_param_names = ["name", "ticket", "status", "detail"]
 
     def _graph_url(self) -> str:
         return f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
@@ -263,7 +268,14 @@ class WhatsAppCloudApiClient:
             }
         }
 
-    def _complainant_status_request_body(self, phone: str, payload: Dict[str, Any], shape: str = "body") -> Dict[str, Any]:
+    def _complainant_status_request_body(
+        self,
+        phone: str,
+        payload: Dict[str, Any],
+        shape: str = "body",
+        param_style: str = "named",
+        language: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Active Meta template complainant_status_update_v1: name, ticket, status, detail."""
         try:
             from backend.services.officer_status_workflow import complainant_template_parameters
@@ -281,15 +293,21 @@ class WhatsAppCloudApiClient:
             payload.get("newStatus") or payload.get("statusLabel") or "UPDATED",
             payload.get("remarks") or payload.get("statusDetail") or "",
         )
-        body_params = [
-            {"type": "text", "text": name},
-            {"type": "text", "text": ticket},
-            {"type": "text", "text": status_label},
-            {"type": "text", "text": details},
-        ]
+        values = [name, ticket, status_label, details]
+        if param_style == "named":
+            body_params = [
+                {"type": "text", "parameter_name": pname, "text": pval}
+                for pname, pval in zip(self.complainant_param_names, values)
+            ]
+        else:
+            body_params = [{"type": "text", "text": pval} for pval in values]
+        lang = language or payload.get("templateLanguage") or self.complainant_template_lang or "en"
         if shape == "officer_like":
+            header_param = {"type": "text", "text": (payload.get("leaderName") or "LeaderLens")[:60]}
+            if param_style == "named":
+                header_param["parameter_name"] = "leader_name"
             components = [
-                {"type": "header", "parameters": [{"type": "text", "text": (payload.get("leaderName") or "LeaderLens")[:60]}]},
+                {"type": "header", "parameters": [header_param]},
                 {"type": "body", "parameters": body_params},
                 {
                     "type": "button",
@@ -307,7 +325,7 @@ class WhatsAppCloudApiClient:
             "type": "template",
             "template": {
                 "name": template_name,
-                "language": {"code": "en"},
+                "language": {"code": lang},
                 "components": components,
             },
         }
@@ -369,7 +387,11 @@ class WhatsAppCloudApiClient:
             }
         elif message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE"):
             shape = payload.get("templateShape") or "body"
-            request_body = self._complainant_status_request_body(phone, payload, shape=shape)
+            param_style = payload.get("templateParamStyle") or "named"
+            language = payload.get("templateLanguage") or self.complainant_template_lang or "en"
+            request_body = self._complainant_status_request_body(
+                phone, payload, shape=shape, param_style=param_style, language=language
+            )
             template_for_log = (
                 payload.get("templateName")
                 or self.complainant_template_name
@@ -404,7 +426,7 @@ class WhatsAppCloudApiClient:
                 }
 
             # Session text is rejected outside the 24h window; use the approved citizen template.
-            if message_kind == "TEXT":
+            if message_kind == "TEXT" and int(payload.get("templateRetryStep") or 0) < 1:
                 dedicated = (self.complainant_template_name or "").strip()
                 if dedicated and dedicated.lower() not in ("officer_ticket_alert_v1", "hello_world"):
                     logger.warning(
@@ -421,20 +443,40 @@ class WhatsAppCloudApiClient:
                     http_status=status_code,
                 )
 
-            # complainant_status_update_v1 may be body-only or cloned from the officer template.
-            if message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE") and not payload.get("templateShapeRetried"):
+            # complainant_status_update_v1 is named in Meta Business Suite; also retry language and positional.
+            if message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE"):
+                retry_step = int(payload.get("templateRetryStep") or 0)
                 err_code = str(((res_json or {}).get("error") or {}).get("code") or "")
-                if status_code == 400 or err_code in ("132000", "132012", "132001"):
-                    next_shape = "officer_like" if (payload.get("templateShape") or "body") == "body" else "body"
+                err_msg = str(((res_json or {}).get("error") or {}).get("message") or error_msg_fallback or "")
+                if retry_step < 4 and (status_code == 400 or err_code in ("100", "132000", "132001", "132012", "132018")):
+                    next_payload = dict(payload)
+                    next_payload["messageKind"] = "COMPLAINANT_STATUS"
+                    next_payload["templateRetryStep"] = retry_step + 1
+                    if retry_step == 0:
+                        next_payload["templateParamStyle"] = "positional"
+                        next_payload["templateLanguage"] = payload.get("templateLanguage") or self.complainant_template_lang or "en"
+                    elif retry_step == 1:
+                        next_payload["templateParamStyle"] = "named"
+                        next_payload["templateLanguage"] = "en_US" if (payload.get("templateLanguage") or "en") != "en_US" else "en"
+                    elif retry_step == 2:
+                        next_payload["templateParamStyle"] = "positional"
+                        next_payload["templateLanguage"] = payload.get("templateLanguage") or "en_US"
+                    else:
+                        logger.warning(
+                            "[WhatsApp] complainant template failed ticket=%s metaHttp=%s code=%s; session text fallback",
+                            ticket_ref, status_code, err_code,
+                        )
+                        next_payload["messageKind"] = "TEXT"
                     logger.warning(
-                        "[WhatsApp] complainant template shape retry ticket=%s metaHttp=%s shape=%s",
-                        ticket_ref, status_code, next_shape,
+                        "[WhatsApp] complainant template retry ticket=%s step=%s style=%s lang=%s code=%s msg=%s",
+                        ticket_ref,
+                        next_payload.get("templateRetryStep"),
+                        next_payload.get("templateParamStyle"),
+                        next_payload.get("templateLanguage"),
+                        err_code,
+                        err_msg[:180],
                     )
-                    retry_payload = dict(payload)
-                    retry_payload["messageKind"] = "COMPLAINANT_STATUS"
-                    retry_payload["templateShape"] = next_shape
-                    retry_payload["templateShapeRetried"] = True
-                    return await self.send_whatsapp_notification(retry_payload)
+                    return await self.send_whatsapp_notification(next_payload)
 
             safe = _safe_provider_error(res_json, error_msg_fallback)
             return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)

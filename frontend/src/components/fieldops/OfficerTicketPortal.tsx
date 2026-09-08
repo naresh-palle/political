@@ -46,6 +46,7 @@ export const OfficerTicketPortal: React.FC = () => {
   const [proofFiles, setProofFiles] = useState<{ name: string; url: string; type: "image" | "pdf" }[]>([]);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
+  const [complainantWaNote, setComplainantWaNote] = useState<string>("");
   const [showStatusForm, setShowStatusForm] = useState<boolean>(false);
   const [history, setHistory] = useState<any[]>([]);
 
@@ -337,6 +338,7 @@ export const OfficerTicketPortal: React.FC = () => {
       const result = await politicalApiService.updateFieldIssueStatus(issueId, updatePayload);
       const authoritative = result?.ticket?.status || result?.status || newStatus;
       const waStatus = result?.complainantNotification?.status;
+      const waErr = result?.complainantNotification?.errorMessage;
 
       setSubmitSuccess(true);
       setIssue((prev) =>
@@ -350,13 +352,15 @@ export const OfficerTicketPortal: React.FC = () => {
             }
           : prev
       );
-      if (waStatus === "FAILED") {
+      if (waStatus === "SENT" || waStatus === "DELIVERED") {
+        setComplainantWaNote("Complainant WhatsApp sent with template complainant_status_update_v1.");
+        setError("");
+      } else {
+        setComplainantWaNote(
+          `Complainant WhatsApp did not send${waErr ? `: ${waErr}` : ". Check the reporter phone on this ticket."}`
+        );
         setError(
-          `Ticket updated and volunteer notified. Complaint WhatsApp failed${
-            result?.complainantNotification?.errorMessage
-              ? `: ${result.complainantNotification.errorMessage}`
-              : "."
-          }`
+          `Ticket updated and volunteer notified. Complaint WhatsApp failed${waErr ? `: ${waErr}` : "."}`
         );
       }
     } catch (err: any) {
@@ -855,7 +859,11 @@ export const OfficerTicketPortal: React.FC = () => {
                   </div>
                   <p>• Grievance Status updated to: <strong className="text-white">{newStatus}</strong></p>
                   <p>• Official Remarks: "{remarks}"</p>
-                  <p>• Automated notification dispatched to Field Volunteer & Campaign Director.</p>
+                  <p>
+                    •{" "}
+                    {complainantWaNote ||
+                      "Complainant WhatsApp uses template complainant_status_update_v1."}
+                  </p>
                   <p className="text-[11px] text-emerald-300/80 font-mono italic">
                     ⏳ Auto-reverting to Grievance Dashboard in 3.5 seconds...
                   </p>
@@ -896,6 +904,12 @@ export const OfficerTicketPortal: React.FC = () => {
                       <option value="REJECTED">REJECTED — Invalid / Duplicate / Outside Scope</option>
                     </select>
                   </div>
+
+                  {!String(issue?.reporterPhone || (issue as any)?.citizenPhone || "").replace(/\D/g, "") ? (
+                    <p className="text-[11px] text-amber-300 bg-amber-950/40 border border-amber-500/40 rounded-xl px-3 py-2">
+                      This ticket has no reporter phone, so complainant WhatsApp cannot be delivered.
+                    </p>
+                  ) : null}
 
                   {/* Remarks */}
                   <div>

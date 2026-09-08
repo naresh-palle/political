@@ -63,9 +63,18 @@ def volunteer_notification_copy(ticket_number: str, new_status: str, remarks: st
     )
 
 
+def sanitize_template_text(value: Any, limit: int = 60) -> str:
+    """Meta rejects newlines and empty named/positional template parameters."""
+    text = " ".join(str(value or "").replace("\r", " ").replace("\n", " ").replace("\t", " ").split())
+    text = text.replace("{{", "").replace("}}", "")
+    return (text or "-")[:limit]
+
+
 def complainant_status_detail(new_status: str, remarks: str) -> str:
     """Fourth body parameter for complainant_status_update_v1 (Meta 60-char named params)."""
-    notes = (remarks or "").strip()
+    notes = sanitize_template_text(remarks, 60)
+    if notes == "-":
+        notes = ""
     if new_status == "IN_PROGRESS":
         return notes or "The concerned department has started working on the issue."
     if new_status == "RESOLVED":
@@ -81,14 +90,16 @@ def complainant_template_parameters(
     new_status: str,
     remarks: str,
 ) -> list:
-    name = (complainant_name or "Citizen").strip() or "Citizen"
-    ticket = (ticket_number or "ticket").replace("#", "").strip() or "ticket"
-    status_label = normalize_status(new_status).replace("_", " ") or "UPDATED"
+    name = sanitize_template_text(complainant_name or "Citizen")
+    if name == "-":
+        name = "Citizen"
+    ticket = sanitize_template_text((ticket_number or "ticket").replace("#", "") or "ticket")
+    status_label = sanitize_template_text(normalize_status(new_status).replace("_", " ") or "UPDATED")
     return [
-        name[:60],
-        ticket[:60],
-        status_label[:60],
-        complainant_status_detail(new_status, remarks)[:60],
+        name,
+        ticket,
+        status_label,
+        sanitize_template_text(complainant_status_detail(new_status, remarks)),
     ]
 
 
@@ -148,6 +159,7 @@ def first_phone(*values: Any) -> str:
 
 def complainant_phone_from_issue(issue: Dict[str, Any], payload: Optional[Dict[str, Any]] = None) -> str:
     payload = payload or {}
+    nested = payload.get("ticket") if isinstance(payload.get("ticket"), dict) else {}
     return first_phone(
         issue.get("reporterPhone"),
         issue.get("citizenPhone"),
@@ -155,6 +167,8 @@ def complainant_phone_from_issue(issue: Dict[str, Any], payload: Optional[Dict[s
         issue.get("phone"),
         issue.get("mobile"),
         issue.get("reporterMobile"),
+        nested.get("reporterPhone"),
+        nested.get("citizenPhone"),
         payload.get("reporterPhone"),
         payload.get("citizenPhone"),
     )
