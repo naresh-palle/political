@@ -687,6 +687,30 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     </a>
                   </div>
                 )}
+
+                {issue.secondaryContactName ? (
+                  <div className="min-w-0">
+                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">
+                      {issue.reporterType === "CITIZEN" ? "Secondary Name" : "Citizen Name"}
+                    </span>
+                    <strong className="text-[#F5EFE0] text-sm block mt-0.5 break-words">{issue.secondaryContactName}</strong>
+                  </div>
+                ) : null}
+
+                {issue.secondaryContactPhone ? (
+                  <div className="min-w-0">
+                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">
+                      {issue.reporterType === "CITIZEN" ? "Secondary Phone" : "Citizen Phone"}
+                    </span>
+                    <a
+                      href={`tel:${issue.secondaryContactPhone}`}
+                      className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold transition-colors whitespace-nowrap"
+                    >
+                      <Phone className="w-3.5 h-3.5 shrink-0" />
+                      {issue.secondaryContactPhone}
+                    </a>
+                  </div>
+                ) : null}
               </div>
             </div>
 

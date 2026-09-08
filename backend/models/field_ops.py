@@ -63,6 +63,12 @@ class FieldIssue(BaseModel):
 
     reportedBy: str
     reporterPhone: Optional[str] = None
+    reporterType: Optional[str] = None
+    reporterDesignation: Optional[str] = None
+    secondaryContactName: Optional[str] = None
+    secondaryContactPhone: Optional[str] = None
+    citizenGender: Optional[str] = None
+    citizenAge: Optional[int] = None
     reportedDate: str = Field(default_factory=lambda: datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     dueDate: Optional[str] = None
 

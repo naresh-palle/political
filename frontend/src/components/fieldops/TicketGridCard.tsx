@@ -27,7 +27,7 @@ export interface TicketGridCardProps {
   plain?: boolean;
   onOpen: () => void;
   onAssignDepartment?: (issueId: string, department: string) => void;
-  onOpenWhatsAppAssign: () => void;
+  onOpenWhatsAppAssign?: () => void;
 }
 
 /** Shared equal-height ticket grid used by Volunteer, Manager, and Political Admin. */

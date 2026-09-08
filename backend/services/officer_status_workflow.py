@@ -270,6 +270,8 @@ IDENTITY_FIELDS = (
     "reportedBy",
     "reporterType",
     "reporterDesignation",
+    "secondaryContactName",
+    "secondaryContactPhone",
     "title",
     "description",
     "category",

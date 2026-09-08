@@ -9,8 +9,7 @@ import {
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { formatIssueStatus } from "../../utils/statusLabels";
-import { canVolunteerAssignOrResend, isRejectedTicket } from "../../utils/ticketActions";
-import { assignmentSafeStatus, countByKpi, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_CONTROL, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE, volunteerAssignmentStatus } from "../../utils/ticketKpi";
+import { assignmentSafeStatus, countByKpi, kpiBucket, TICKET_TABLE_CELL, TICKET_TABLE_CLASS, TICKET_TABLE_HEAD_CELL, TICKET_TABLE_ROW_CLASS, TICKET_TABLE_SHELL, UNIQUE_TICKET_SURFACE, volunteerAssignmentStatus } from "../../utils/ticketKpi";
 import { allocateTicketNumber, formatTicketDisplay, ticketSearchHaystack } from "../../utils/ticketNumberDisplay";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
@@ -42,8 +41,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight,
-  MessageCircle
+  ChevronsRight
 } from "lucide-react";
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { TicketGridCard, TICKET_GRID_CLASS } from "./TicketGridCard";
@@ -302,6 +300,31 @@ export const resolveDeptValue = (deptStr?: string) => {
   return match || deptStr;
 };
 
+const FORM_CONTROL =
+  "w-full h-11 min-w-0 bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 text-xs text-[#F5EFE0] outline-none focus:border-[#D4A24C] box-border";
+
+const PhoneField: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  placeholder?: string;
+}> = ({ value, onChange, required, placeholder = "10 Digits..." }) => (
+  <div className="flex h-11 min-w-0 w-full">
+    <span className="inline-flex items-center justify-center px-3 h-11 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
+      +91
+    </span>
+    <input
+      type="tel"
+      required={required}
+      maxLength={10}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
+      className="w-full h-11 min-w-0 bg-[#0B1A2C] border border-[#22405E] rounded-r-lg px-3 text-xs text-[#F5EFE0] outline-none focus:border-[#D4A24C] box-border font-mono"
+    />
+  </div>
+);
+
 const FIXED_MANDALS_TOWNS = [
   { id: "MDL-BNG-TWN", name: "Banaganapalle Town (Town)", type: "TOWN" },
   { id: "MDL-KKL-TWN", name: "Koilakuntla Town (Town)", type: "TOWN" },
@@ -416,6 +439,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
   const [reporterDesignation, setReporterDesignation] = useState("");
   const [newReportedBy, setNewReportedBy] = useState("");
   const [newReporterPhone, setNewReporterPhone] = useState("");
+  const [secondaryContactName, setSecondaryContactName] = useState("");
+  const [secondaryContactPhone, setSecondaryContactPhone] = useState("");
   const [citizenAge, setCitizenAge] = useState("");
   const [citizenGender, setCitizenGender] = useState("Male");
 
@@ -577,6 +602,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         reporterType: reporterType,
         reporterDesignation: reporterDesignation.trim(),
         reporterPhone: newReporterPhone.trim(),
+        secondaryContactName: secondaryContactName.trim() || undefined,
+        secondaryContactPhone: secondaryContactPhone.trim() || undefined,
         aadharNumber: newAadharNumber.trim(),
         citizenGender: citizenGender as FieldIssue["citizenGender"],
         citizenAge: citizenAge ? Number(citizenAge) : undefined,
@@ -650,6 +677,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         setNewPlaceName("");
         setNewReportedBy("");
         setNewReporterPhone("");
+        setSecondaryContactName("");
+        setSecondaryContactPhone("");
         setReporterDesignation("");
         setReporterType("CITIZEN");
         setCitizenAge("");
@@ -659,9 +688,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           PGRS_DEPARTMENTS_LIST.find((d) => d.name === "8. Roads & Buildings (R&B) Department")?.subDetails[0] || ""
         );
         setOtherSchemeSubDetail("");
-
-        // Automatically open Assign & WhatsApp Notify modal for the newly created complaint!
-        setAssignModalIssue(created);
       }, 1200);
     } catch (err: any) {
       setFormError(err?.message || "Failed to submit complaint.");
@@ -747,7 +773,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           item.reportedBy.toLowerCase().includes(q) ||
           (item.reporterPhone || "").includes(q) ||
           (item.department || "").toLowerCase().includes(q) ||
-          (item.lastStatusRemarks || "").toLowerCase().includes(q)
+          (item.lastStatusRemarks || "").toLowerCase().includes(q) ||
+          (item.secondaryContactName || "").toLowerCase().includes(q) ||
+          (item.secondaryContactPhone || "").includes(q)
         );
       }
 
@@ -1472,7 +1500,6 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           <div className={TICKET_GRID_CLASS}>
             {paginatedIssues.map((issue) => {
               const timing = getTicketTimingDetails(issue);
-              const showAssign = canVolunteerAssignOrResend(issue.status);
 
               return (
                 <TicketGridCard
@@ -1481,14 +1508,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                   timing={timing}
                   departments={DEPARTMENTS}
                   resolveDeptValue={resolveDeptValue}
-                  showAssignControls={showAssign}
-                  assignButtonLabel={
-                    isRejectedTicket(issue.status) ? "Resend to Officer on WhatsApp" : "Assign & Notify on WhatsApp"
-                  }
+                  showAssignControls={false}
                   showProofCount={false}
                   onOpen={() => setSelectedIssue(issue)}
-                  onAssignDepartment={handleAssignDepartment}
-                  onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
                 />
               );
             })}
@@ -1504,7 +1526,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Category / Dept</th>
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Mandal / Location</th>
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Reported By</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Assign & Notify</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Department</th>
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Timeline</th>
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[4%] text-right`}>View</th>
                   </tr>
@@ -1563,45 +1585,10 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                             {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
                           </div>
                         </td>
-                        <td className={TICKET_TABLE_CELL} onClick={(e) => e.stopPropagation()}>
-                          {(() => {
-                            const canAssign = canVolunteerAssignOrResend(issue.status);
-                            if (!canAssign) {
-                              return (
-                                <div className="text-[11px] font-semibold text-[#F5EFE0]">
-                                  {issue.department || "General Administration"}
-                                </div>
-                              );
-                            }
-
-                            return (
-                              <div className="space-y-1">
-                                <select
-                                  value={resolveDeptValue(issue.department)}
-                                  onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                                  className={`${TICKET_TABLE_CONTROL} bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer`}
-                                >
-                                  <option value="">-- Select Department --</option>
-                                  {DEPARTMENTS.map((dept) => (
-                                    <option key={dept} value={dept}>
-                                      {dept}
-                                    </option>
-                                  ))}
-                                </select>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setAssignModalIssue(issue);
-                                  }}
-                                  className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-normal"
-                                >
-                                  <MessageCircle className="w-3 h-3 text-emerald-400 fill-emerald-400/20 shrink-0" />
-                                  {isRejectedTicket(issue.status) ? "Resend" : "WhatsApp"}
-                                </button>
-                              </div>
-                            );
-                          })()}
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="text-[11px] font-semibold text-[#F5EFE0]">
+                            {issue.department || "General Administration"}
+                          </div>
                         </td>
                         <td className={`${TICKET_TABLE_CELL} font-mono text-[10px]`}>
                           <div className="text-[#CBD5E1]">Reg: {timing.registeredTimeFormatted}</div>
@@ -1830,7 +1817,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     placeholder="Enter issue headline (e.g. Drinking Water Pipeline Leakage)..."
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    className={FORM_CONTROL}
                   />
                 </div>
 
@@ -1854,7 +1841,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         }
                         setOtherSchemeSubDetail("");
                       }}
-                      className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-medium cursor-pointer"
+                      className={`${FORM_CONTROL} font-medium cursor-pointer`}
                     >
                       {DEPARTMENTS.map((dept) => (
                         <option key={dept} value={dept}>
@@ -1873,11 +1860,11 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           <label className="block text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
                             Scheme / Work Sub-Details / పథకం వివరాలు *
                           </label>
-                          <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
                             <select
                               value={newSchemeSubDetail}
                               onChange={(e) => setNewSchemeSubDetail(e.target.value)}
-                              className="flex-1 min-w-0 bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-medium cursor-pointer"
+                              className={`${FORM_CONTROL} font-medium cursor-pointer`}
                             >
                               {subOptions.map((sub) => (
                                 <option key={sub} value={sub}>
@@ -1892,7 +1879,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                                 placeholder="Enter other scheme / work details..."
                                 value={otherSchemeSubDetail}
                                 onChange={(e) => setOtherSchemeSubDetail(e.target.value)}
-                                className="flex-1 min-w-0 bg-[#071322] border border-[#D4A24C]/50 focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                                className={FORM_CONTROL}
                               />
                             )}
                           </div>
@@ -1911,7 +1898,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           placeholder="Enter specific department / office name in English or Telugu..."
                           value={otherDepartmentText}
                           onChange={(e) => setOtherDepartmentText(e.target.value)}
-                          className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                          className={FORM_CONTROL}
                         />
                       </div>
                     )}
@@ -1927,7 +1914,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <select
                       value={newPriority}
                       onChange={(e) => setNewPriority(e.target.value as any)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none cursor-pointer"
+                      className={`${FORM_CONTROL} cursor-pointer`}
                     >
                       <option value="LOW">Low</option>
                       <option value="MEDIUM">Medium</option>
@@ -1943,7 +1930,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <select
                       value={newIssueType}
                       onChange={(e) => setNewIssueType(e.target.value as any)}
-                      className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none cursor-pointer"
+                      className={`${FORM_CONTROL} cursor-pointer`}
                     >
                       <option value="COMPLAINT">COMPLAINT (Grievance / Broken Civic Asset)</option>
                       <option value="REQUIREMENT">REQUIREMENT (New Need / Community Proposal)</option>
@@ -1960,7 +1947,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
                     {/* Fixed Mandal / Town Selector */}
                     <div>
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
@@ -1969,7 +1956,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       <select
                         value={selectedMandalId}
                         onChange={(e) => setSelectedMandalId(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none font-semibold cursor-pointer"
+                        className={`${FORM_CONTROL} font-semibold cursor-pointer`}
                       >
                         {FIXED_MANDALS_TOWNS.map((m) => (
                           <option key={m.id} value={m.id}>
@@ -1990,7 +1977,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         placeholder="In English or Telugu..."
                         value={villageWardText}
                         onChange={(e) => setVillageWardText(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                        className={FORM_CONTROL}
                       />
                     </div>
 
@@ -2004,7 +1991,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         placeholder="e.g. Near Bus Stand, పంచాయతీ కార్యాలయం వద్ద..."
                         value={newPlaceName}
                         onChange={(e) => setNewPlaceName(e.target.value)}
-                        className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                        className={FORM_CONTROL}
                       />
                     </div>
                   </div>
@@ -2072,8 +2059,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
                   {/* If Cadre or Leader is selected, pop up designation input */}
                   {(reporterType === "CADRE" || reporterType === "LEADER") && (
-                    <div className="p-3 rounded-lg bg-[#142B45]/60 border border-[#D4A24C]/40 animate-fadeIn space-y-1">
-                      <label className="block text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold">
+                    <div className="animate-fadeIn">
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
                         {reporterType === "LEADER" ? "Leader Position / Official Designation *" : "Cadre Role / Booth Responsibility *"}
                       </label>
                       <input
@@ -2082,23 +2069,27 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         placeholder="e.g. Mandal Convener, Booth Agent..."
                         value={reporterDesignation}
                         onChange={(e) => setReporterDesignation(e.target.value)}
-                        className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none"
+                        className={FORM_CONTROL}
                       />
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
                     <div className="min-w-0">
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                        Complainant Name / పేరు *
+                        {reporterType === "CITIZEN"
+                          ? "Complainant Name / పేరు *"
+                          : reporterType === "LEADER"
+                          ? "Leader Name / పేరు *"
+                          : "Cadre Name / పేరు *"}
                       </label>
-                      <textarea
+                      <input
+                        type="text"
                         required
-                        rows={2}
                         placeholder="Full Name (English or Telugu)..."
                         value={newReportedBy}
                         onChange={(e) => setNewReportedBy(e.target.value)}
-                        className="w-full min-w-0 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none break-words whitespace-pre-wrap resize-none"
+                        className={FORM_CONTROL}
                       />
                     </div>
 
@@ -2106,26 +2097,48 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
                         Phone Number / ఫోన్ సంఖ్య *
                       </label>
-                      <div className="flex items-center min-w-0">
-                        <span className="px-3 py-2 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
-                          +91
-                        </span>
-                        <input
-                          type="tel"
-                          required
-                          maxLength={10}
-                          placeholder="10 Digits..."
-                          value={newReporterPhone}
-                          onChange={(e) => setNewReporterPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                          className="w-full min-w-0 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-r-lg rounded-l-none px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
-                        />
-                      </div>
+                      <PhoneField
+                        required
+                        value={newReporterPhone}
+                        onChange={setNewReporterPhone}
+                      />
                     </div>
                   </div>
 
-                  {/* Age and Gender (for Citizen) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
+                    <div className="min-w-0">
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        {reporterType === "CITIZEN"
+                          ? "Secondary Name / ద్వితీయ పేరు"
+                          : "Citizen Name / పౌరుని పేరు"}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={
+                          reporterType === "CITIZEN"
+                            ? "Optional second contact name..."
+                            : "Citizen name (optional)..."
+                        }
+                        value={secondaryContactName}
+                        onChange={(e) => setSecondaryContactName(e.target.value)}
+                        className={FORM_CONTROL}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        {reporterType === "CITIZEN"
+                          ? "Secondary Phone / ద్వితీయ ఫోన్"
+                          : "Citizen Phone / పౌరుని ఫోన్"}
+                      </label>
+                      <PhoneField
+                        value={secondaryContactPhone}
+                        onChange={setSecondaryContactPhone}
+                      />
+                    </div>
+                  </div>
+
                   {reporterType === "CITIZEN" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 animate-fadeIn">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch animate-fadeIn">
                       <div>
                         <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
                           Age
@@ -2136,7 +2149,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           max={120}
                           value={citizenAge}
                           onChange={(e) => setCitizenAge(e.target.value)}
-                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none font-mono"
+                          className={`${FORM_CONTROL} font-mono`}
                         />
                       </div>
 
@@ -2147,7 +2160,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         <select
                           value={citizenGender}
                           onChange={(e) => setCitizenGender(e.target.value)}
-                          className="w-full bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] outline-none cursor-pointer"
+                          className={`${FORM_CONTROL} cursor-pointer`}
                         >
                           <option value="Male" className="bg-[#0B1A2C] text-[#F5EFE0]">Male</option>
                           <option value="Female" className="bg-[#0B1A2C] text-[#F5EFE0]">Female</option>

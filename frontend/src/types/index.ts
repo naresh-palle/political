@@ -526,6 +526,8 @@ export interface FieldIssue {
   reporterType?: "CITIZEN" | "CADRE" | "LEADER" | string;
   reporterDesignation?: string;
   reporterPhone?: string;
+  secondaryContactName?: string;
+  secondaryContactPhone?: string;
   aadharNumber?: string;
   schemeSubDetail?: string;
   citizenGender?: "Male" | "Female" | "Other" | string;

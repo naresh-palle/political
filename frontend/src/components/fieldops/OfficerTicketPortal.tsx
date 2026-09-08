@@ -748,6 +748,28 @@ export const OfficerTicketPortal: React.FC = () => {
                           <p className="text-[#8E9CAE] mt-1">Contact provided during intake</p>
                         )}
                       </div>
+                      {issue.secondaryContactName ? (
+                        <div className="min-w-0">
+                          <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">
+                            {issue.reporterType === "CITIZEN" ? "Secondary Name" : "Citizen Name"}
+                          </span>
+                          <strong className="text-[#F5EFE0] text-sm block mt-0.5 break-words">{issue.secondaryContactName}</strong>
+                        </div>
+                      ) : null}
+                      {issue.secondaryContactPhone ? (
+                        <div className="min-w-0">
+                          <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">
+                            {issue.reporterType === "CITIZEN" ? "Secondary Phone" : "Citizen Phone"}
+                          </span>
+                          <a
+                            href={`tel:${issue.secondaryContactPhone}`}
+                            className="inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-xl bg-[#0B1A2C] hover:bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold"
+                          >
+                            <Phone className="w-3.5 h-3.5 shrink-0" />
+                            {issue.secondaryContactPhone}
+                          </a>
+                        </div>
+                      ) : null}
                       {issue.citizenGender ? (
                         <div className="min-w-0">
                           <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Gender</span>
