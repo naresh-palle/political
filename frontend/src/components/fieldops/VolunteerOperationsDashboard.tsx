@@ -14,7 +14,6 @@ import { assignmentSafeStatus, countByKpi, kpiBucket, TICKET_TABLE_CELL, TICKET_
 import { allocateTicketNumber, formatTicketDisplay, ticketSearchHaystack } from "../../utils/ticketNumberDisplay";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
-import { OfficerStatusComments } from "./OfficerStatusComments";
 import {
   Plus,
   MapPin,
@@ -987,7 +986,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
 
   const isAssignTicketsMode = window.location.hash.toLowerCase().includes("assign-ticket");
 
-  // Ticket detail stays on volunteer home and officer comments. Assign Tickets is intake-only.
+  // Ticket detail stays on volunteer home. Assign Tickets is intake-only.
   if (selectedIssue && !isAssignTicketsMode) {
     return (
       <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6">
@@ -1070,7 +1069,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           {/* 📊 Ticket Assignment & Status Metric Summary Bar (KPI Counters - Screenshot 1) */}
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
             <div
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("ALL");
+                window.location.hash = "#/field-ops?status=ALL";
+              }}
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Total Tickets
@@ -1082,7 +1090,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
 
             <div
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("OPEN_UNASSIGNED");
+                window.location.hash = "#/field-ops?status=OPEN_UNASSIGNED";
+              }}
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Open / Unassigned
@@ -1094,7 +1111,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
 
             <div
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("ASSIGNED");
+                window.location.hash = "#/field-ops?status=ASSIGNED";
+              }}
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Assigned
@@ -1106,7 +1132,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
 
             <div
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("IN_PROGRESS");
+                window.location.hash = "#/field-ops?status=IN_PROGRESS";
+              }}
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 In Progress
@@ -1118,7 +1153,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
 
             <div
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("OVERDUE");
+                window.location.hash = "#/field-ops?status=OVERDUE";
+              }}
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Overdue Alerts
@@ -1130,7 +1174,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
 
             <div
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("RESOLVED");
+                window.location.hash = "#/field-ops?status=RESOLVED";
+              }}
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Resolved / Closed
@@ -1142,7 +1195,16 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
 
             <div
-              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} space-y-1`}
+              onClick={() => {
+                setSearchQuery("");
+                setFilterCategory("ALL");
+                setFilterPriority("ALL");
+                setFilterReporterType("ALL");
+                setDateFilter("ALL");
+                setFilterStatus("REJECTED");
+                window.location.hash = "#/field-ops?status=REJECTED";
+              }}
+              className={`p-3.5 rounded-xl border ${UNIQUE_TICKET_SURFACE.kpi} cursor-pointer space-y-1 transition-all`}
             >
               <span className="text-[10.5px] font-mono font-semibold uppercase text-[#D4A24C] block whitespace-normal break-words">
                 Rejected
@@ -1154,7 +1216,513 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
           </div>
 
-          <OfficerStatusComments issues={issues} onOpen={setSelectedIssue} />
+          {/* 2. Filter & Sort Master Toolbar */}
+          <div className="p-4 rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg space-y-3 overflow-visible">
+        <div className="flex flex-col xl:flex-row xl:items-stretch gap-3">
+          <div className="relative w-full xl:flex-1 min-w-0">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
+            <input
+              type="text"
+              placeholder="Search by ID, title, citizen, village..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8E9CAE] hover:text-white text-xs"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto xl:shrink-0">
+            {/* Sort Options Dropdown */}
+            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
+              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-transparent text-[#F5EFE0] text-xs font-medium focus:outline-none cursor-pointer"
+              >
+                <option value="NEWEST" className="bg-[#0B131E]">Newest Reported First</option>
+                <option value="OLDEST" className="bg-[#0B131E]">Oldest Reported First</option>
+                <option value="DUE_DATE" className="bg-[#0B131E]">Earliest Due (Urgent SLA)</option>
+                <option value="PRIORITY" className="bg-[#0B131E]">Highest Priority (Urgent → Low)</option>
+                <option value="STATUS" className="bg-[#0B131E]">By Lifecycle Status</option>
+                <option value="TITLE" className="bg-[#0B131E]">Alphabetical Title (A → Z)</option>
+              </select>
+            </div>
+
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-1.5 bg-[#0B131E] border border-[#223348] rounded-xl px-3 py-1.5 text-xs">
+              <span className="text-[10.5px] uppercase font-semibold text-[#8E9CAE] hidden sm:inline">Show:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-transparent text-[#D4A24C] font-bold text-xs focus:outline-none cursor-pointer"
+              >
+                <option value={10} className="bg-[#0B131E]">10 / page</option>
+                <option value={25} className="bg-[#0B131E]">25 / page</option>
+                <option value={50} className="bg-[#0B131E]">50 / page</option>
+                <option value={100} className="bg-[#0B131E]">100 / page</option>
+              </select>
+            </div>
+
+            {/* Grid vs Table View Mode Switcher */}
+            <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
+              <button
+                onClick={() => setViewMode("GRID")}
+                title="Grid Cards View"
+                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "GRID"
+                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                    : "text-[#CBD5E1] hover:text-white"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden sm:inline">Grid</span>
+              </button>
+              <button
+                onClick={() => setViewMode("TABLE")}
+                title="Data Table View"
+                className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "TABLE"
+                    ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm"
+                    : "text-[#CBD5E1] hover:text-white"
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="text-[11px] hidden sm:inline">Table</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Granular Filter Dropdowns */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+          {/* Status Filter */}
+          <div>
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFilterStatus(val);
+                window.location.hash = `#/field-ops?status=${val}`;
+              }}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Status: All (Total Records)</option>
+              <option value="OPEN_UNASSIGNED">Status: Open / Unassigned</option>
+              <option value="ASSIGNED">Status: Assigned</option>
+              <option value="IN_PROGRESS">Status: In Progress</option>
+              <option value="OVERDUE">Status: Overdue</option>
+              <option value="RESOLVED">Status: Resolved / Closed</option>
+              <option value="REJECTED">Status: Rejected</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Category: All</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Priority Filter */}
+          <div>
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Priority: All</option>
+              <option value="URGENT">🔴 Urgent</option>
+              <option value="HIGH">🟠 High</option>
+              <option value="MEDIUM">🟡 Medium</option>
+              <option value="LOW">🟢 Low</option>
+            </select>
+          </div>
+
+          {/* Date Filter */}
+          <div>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as any)}
+              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+            >
+              <option value="ALL">Date: All Time</option>
+              <option value="TODAY">Date: Today</option>
+              <option value="7DAYS">Date: Past 7 Days</option>
+              <option value="THIS_MONTH">Date: This Month</option>
+              <option value="CUSTOM">Date: Custom Range</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Custom Date Range Picker when CUSTOM is active */}
+        {dateFilter === "CUSTOM" && (
+          <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[#0B131E] border border-[#D4A24C]/40 text-xs animate-fadeIn">
+            <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">From:</span>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="bg-[#070D15] border border-[#223348] focus:border-[#D4A24C] text-[#F5EFE0] px-2.5 py-1.5 rounded-lg text-xs outline-none"
+            />
+            <span className="text-[10px] uppercase text-[#D4A24C] font-semibold">To:</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="bg-[#070D15] border border-[#223348] focus:border-[#D4A24C] text-[#F5EFE0] px-2.5 py-1.5 rounded-lg text-xs outline-none"
+            />
+            {(startDate || endDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
+                className="text-rose-400 hover:text-rose-200 text-xs font-semibold underline ml-1"
+              >
+                Clear Dates
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Row 3: Active Filter Chips & Clear All */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#223348]/70 text-xs">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] uppercase font-semibold text-[#8E9CAE]">Active Filters:</span>
+              {filterStatus !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Status: {filterStatus}
+                </span>
+              )}
+              {filterCategory !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Category: {filterCategory}
+                </span>
+              )}
+              {filterPriority !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Priority: {filterPriority}
+                </span>
+              )}
+              {dateFilter !== "ALL" && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Date: {dateFilter}
+                </span>
+              )}
+              {searchQuery && (
+                <span className="px-2 py-0.5 rounded-md bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30 text-[11px]">
+                  Query: &quot;{searchQuery}&quot;
+                </span>
+              )}
+            </div>
+
+            <button
+              onClick={clearAllFilters}
+              className="text-[#D4A24C] hover:underline font-semibold text-[11px] cursor-pointer"
+            >
+              Reset / Clear All Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Submitted Issues Feed: Grid or Table View */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0E1724]/75 rounded-2xl border border-[#223348]">
+            Loading submitted complaints...
+          </div>
+        ) : sortedAndFilteredIssues.length === 0 ? (
+          <div className="p-12 text-center text-sm text-[#8E9CAE] bg-[#0E1724]/75 rounded-2xl border border-[#223348] space-y-3">
+            <div className="w-12 h-12 rounded-full bg-[#131E2D] text-[#D4A24C] flex items-center justify-center mx-auto">
+              <FileText className="w-6 h-6" />
+            </div>
+            <p className="text-base text-[#F5EFE0] font-semibold">No complaints found matching current filters</p>
+            <p className="text-xs text-[#8E9CAE]">
+              Try clearing filters or click &quot;+ Add Complaint / Requirement&quot; to log a new issue.
+            </p>
+            <button
+              onClick={clearAllFilters}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs cursor-pointer shadow-md"
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : viewMode === "GRID" ? (
+          /* GRID VIEW */
+          <div className={TICKET_GRID_CLASS}>
+            {paginatedIssues.map((issue) => {
+              const timing = getTicketTimingDetails(issue);
+              const showAssign = canVolunteerAssignOrResend(issue.status);
+
+              return (
+                <TicketGridCard
+                  key={issue.id}
+                  issue={issue}
+                  timing={timing}
+                  departments={DEPARTMENTS}
+                  resolveDeptValue={resolveDeptValue}
+                  showAssignControls={showAssign}
+                  assignButtonLabel={
+                    isRejectedTicket(issue.status) ? "Resend to Officer on WhatsApp" : "Assign & Notify on WhatsApp"
+                  }
+                  showProofCount={false}
+                  onOpen={() => setSelectedIssue(issue)}
+                  onAssignDepartment={handleAssignDepartment}
+                  onOpenWhatsAppAssign={() => setAssignModalIssue(issue)}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          /* TABLE VIEW */
+          <div className={TICKET_TABLE_SHELL}>
+              <table className={TICKET_TABLE_CLASS}>
+                <thead>
+                  <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%] font-mono`}>ID & Status</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[26%]`}>Issue Title</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Category / Dept</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Mandal / Location</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Reported By</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Assign & Notify</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Timeline</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[4%] text-right`}>View</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedIssues.map((issue) => {
+                    const timing = getTicketTimingDetails(issue);
+                    const officerComment = issue.lastStatusRemarks?.trim();
+
+                    return (
+                      <tr
+                        key={issue.id}
+                        onClick={() => setSelectedIssue(issue)}
+                        className={TICKET_TABLE_ROW_CLASS}
+                      >
+                        <td className={`${TICKET_TABLE_CELL} font-mono`}>
+                          <div className="font-bold text-[#D4A24C]" title={formatTicketDisplay(issue)}>
+                            {formatTicketDisplay(issue)}
+                          </div>
+                          <span className={`mt-0.5 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded inline-block ${UNIQUE_TICKET_SURFACE.badge}`}>
+                            {formatIssueStatus(issue.status)}
+                          </span>
+                        </td>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-semibold text-[#F5EFE0] group-hover:text-[#D4A24C] transition-colors">
+                            {issue.title}
+                          </div>
+                          {issue.description ? (
+                            <div className="text-[11px] text-[#8E9CAE] mt-0.5">
+                              {issue.description}
+                            </div>
+                          ) : null}
+                          {officerComment ? (
+                            <div className="mt-1 p-1.5 rounded bg-[#142B45]/80 border border-[#D4A24C]/30 text-[11px] text-[#F5EFE0]">
+                              {officerComment}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="font-medium text-[#D8CFB8]">{issue.category}</div>
+                          {issue.department && (
+                            <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">
+                              {issue.department.split("(")[0]}
+                            </div>
+                          )}
+                        </td>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="text-[#F5EFE0] font-medium">{issue.mandalName}</div>
+                          {issue.villageName ? (
+                            <div className="text-[10.5px] text-[#8E9CAE] mt-0.5">{issue.villageName}</div>
+                          ) : null}
+                        </td>
+                        <td className={TICKET_TABLE_CELL}>
+                          <div className="text-[#F5EFE0] font-medium">{issue.reportedBy}</div>
+                          <div className="text-[10.5px] text-[#D4A24C] mt-0.5">
+                            {issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+                          </div>
+                        </td>
+                        <td className={TICKET_TABLE_CELL} onClick={(e) => e.stopPropagation()}>
+                          {(() => {
+                            const canAssign = canVolunteerAssignOrResend(issue.status);
+                            if (!canAssign) {
+                              return (
+                                <div className="text-[11px] font-semibold text-[#F5EFE0]">
+                                  {issue.department || "General Administration"}
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="space-y-1">
+                                <select
+                                  value={resolveDeptValue(issue.department)}
+                                  onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
+                                  className={`${TICKET_TABLE_CONTROL} bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-1.5 py-1 outline-none cursor-pointer`}
+                                >
+                                  <option value="">-- Select Department --</option>
+                                  {DEPARTMENTS.map((dept) => (
+                                    <option key={dept} value={dept}>
+                                      {dept}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAssignModalIssue(issue);
+                                  }}
+                                  className="w-full py-1 px-1.5 rounded-lg bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] text-[10px] font-bold border border-[#D4A24C]/40 inline-flex items-center justify-center gap-1 cursor-pointer whitespace-normal"
+                                >
+                                  <MessageCircle className="w-3 h-3 text-emerald-400 fill-emerald-400/20 shrink-0" />
+                                  {isRejectedTicket(issue.status) ? "Resend" : "WhatsApp"}
+                                </button>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                        <td className={`${TICKET_TABLE_CELL} font-mono text-[10px]`}>
+                          <div className="text-[#CBD5E1]">Reg: {timing.registeredTimeFormatted}</div>
+                          <div className="mt-0.5">
+                            {timing.isClosed ? (
+                              <span className="text-[#D4A24C] font-semibold">Done: {timing.closedTimeFormatted}</span>
+                            ) : (
+                              <span className="text-[#D4A24C]/90 font-semibold">Open {timing.durationText}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className={`${TICKET_TABLE_CELL} text-right`}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedIssue(issue);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-normal"
+                          >
+                            <Eye className="w-3 h-3 shrink-0" />
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+          </div>
+        )}
+
+        {/* Global Pagination Bar */}
+        {sortedAndFilteredIssues.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:px-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] text-xs">
+            <div className="text-[#8E9CAE] font-mono text-center sm:text-left">
+              Showing{" "}
+              <strong className="text-[#F5EFE0]">
+                {(currentPage - 1) * pageSize + 1}
+              </strong>{" "}
+              to{" "}
+              <strong className="text-[#F5EFE0]">
+                {Math.min(currentPage * pageSize, sortedAndFilteredIssues.length)}
+              </strong>{" "}
+              of{" "}
+              <strong className="text-[#D4A24C]">
+                {sortedAndFilteredIssues.length}
+              </strong>{" "}
+              records
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {/* First Page */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                title="First Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Prev Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                title="Previous Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Page Number Pills */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => {
+                    const prev = arr[idx - 1];
+                    return (
+                      <React.Fragment key={p}>
+                        {prev && p - prev > 1 && (
+                          <span className="px-1 text-[#8E9CAE]">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-7 h-7 rounded-lg font-mono font-bold text-xs transition-all cursor-pointer ${
+                            currentPage === p
+                              ? "bg-[#D4A24C] text-[#0B131E] shadow-sm"
+                              : "bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+              </div>
+
+              {/* Next Page */}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                title="Next Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Last Page */}
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                title="Last Page"
+                className="p-1.5 px-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
         </div>
         )}
 
