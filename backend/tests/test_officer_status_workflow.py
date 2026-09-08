@@ -248,6 +248,52 @@ def test_complainant_template_retries_positional_after_named_reject(monkeypatch)
     assert "parameter_name" not in calls[1]["template"]["components"][0]["parameters"][0]
 
 
+def test_whatsapp_auth_error_does_not_retry_template_shapes(monkeypatch):
+    import asyncio
+    from backend.services.whatsapp_service import WhatsAppCloudApiClient
+
+    client = WhatsAppCloudApiClient()
+    client.enabled = True
+    client.phone_number_id = "1326513833874482"
+    client.access_token = "expired-token"
+    calls = []
+
+    async def fake_post(body):
+        calls.append(body)
+        return {
+            "status_code": 401,
+            "res_json": {"error": {"code": 190, "message": "Authentication Error", "type": "OAuthException"}},
+            "error_msg_fallback": "Authentication Error",
+        }
+
+    monkeypatch.setattr(client, "_post_graph", fake_post)
+    result = asyncio.run(
+        client.send_whatsapp_notification(
+            {
+                "recipientPhone": "7893015454",
+                "messageKind": "COMPLAINANT_STATUS",
+                "templateName": "complainant_status_update_v1",
+                "complainantName": "Citizen",
+                "ticketNumber": "LL-1a081309359",
+                "newStatus": "RESOLVED",
+                "remarks": "Work completed",
+            }
+        )
+    )
+    assert len(calls) == 1
+    assert result["status"] == "FAILED"
+    assert result["errorCode"] == "190"
+    assert result["metaHttpStatus"] == 401
+    assert "WHATSAPP_ACCESS_TOKEN" in result["errorMessage"]
+
+
+def test_clean_meta_secret_strips_bearer_and_quotes():
+    from backend.services.whatsapp_service import _clean_meta_secret
+
+    assert _clean_meta_secret('Bearer EAAG123') == "EAAG123"
+    assert _clean_meta_secret('"EAAG123"') == "EAAG123"
+
+
 def test_runtime_persist_prevents_seed_assigned_from_winning(tmp_path, monkeypatch):
     from backend import server as srv
 

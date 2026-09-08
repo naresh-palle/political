@@ -2821,7 +2821,8 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
 
     volunteer_phone = volunteer_phone_from_issue(issue)
-    if volunteer_phone and volunteer_phone != complainant_phone:
+    auth_failed = str(whatsapp_result.get("errorCode") or "") in {"190", "102", "104", "463", "467"} or whatsapp_result.get("metaHttpStatus") == 401
+    if volunteer_phone and volunteer_phone != complainant_phone and not auth_failed:
         volunteer_wa_payload = dict(wa_payload)
         volunteer_wa_payload["recipientPhone"] = volunteer_phone
         volunteer_wa_payload["officerName"] = issue.get("assignedVolunteerName") or "Volunteer"

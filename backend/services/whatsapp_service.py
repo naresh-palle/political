@@ -121,8 +121,36 @@ def _mask_phone(phone: str) -> str:
     return f"{digits[:-4]}****{digits[-4:]}"
 
 
-def _safe_provider_error(res_json: Dict[str, Any], fallback: str = "") -> Dict[str, Any]:
+def _clean_meta_secret(value: Optional[str]) -> str:
+    text = str(value or "").replace("\r", "").replace("\n", "").replace("\t", "").strip().strip('"').strip("'")
+    if text.lower().startswith("bearer "):
+        text = text[7:].strip()
+    return text
+
+
+def _is_meta_auth_error(status_code: Optional[int], error_code: str) -> bool:
+    if status_code == 401:
+        return True
+    return str(error_code or "") in {"190", "102", "104", "463", "467"}
+
+
+META_AUTH_OPERATOR_MESSAGE = (
+    "Meta WhatsApp login expired (error 190). On Render, replace WHATSAPP_ACCESS_TOKEN "
+    "with a permanent System User token from Meta Business Suite, confirm WHATSAPP_PHONE_NUMBER_ID, "
+    "then restart the service."
+)
+
+
+def _safe_provider_error(res_json: Dict[str, Any], fallback: str = "", http_status: Optional[int] = None) -> Dict[str, Any]:
     error = (res_json or {}).get("error") or {}
+    code = str(error.get("code") or error.get("error_subcode") or "META_ERROR")
+    if _is_meta_auth_error(http_status, code):
+        return {
+            "errorCode": code if code != "META_ERROR" else "190",
+            "errorMessage": META_AUTH_OPERATOR_MESSAGE,
+            "errorType": error.get("type") or "OAuthException",
+            "fbtrace_id": error.get("fbtrace_id"),
+        }
     message = error.get("message") or fallback or "Unknown Meta Cloud API error"
     if isinstance(message, str):
         lowered = message.lower()
@@ -131,7 +159,7 @@ def _safe_provider_error(res_json: Dict[str, Any], fallback: str = "") -> Dict[s
                 message = "Meta Cloud API rejected the request."
                 break
     return {
-        "errorCode": str(error.get("code") or error.get("error_subcode") or "META_ERROR"),
+        "errorCode": code,
         "errorMessage": message,
         "errorType": error.get("type"),
         "fbtrace_id": error.get("fbtrace_id"),
@@ -145,10 +173,10 @@ class WhatsAppCloudApiClient:
     """
     def __init__(self):
         self.enabled = os.environ.get("WHATSAPP_ENABLED", "true").lower() == "true"
-        self.phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")
-        self.access_token = os.environ.get("WHATSAPP_ACCESS_TOKEN", "")
-        self.business_account_id = os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", "")
-        self.api_version = os.environ.get("WHATSAPP_API_VERSION", "v25.0")
+        self.phone_number_id = _clean_meta_secret(os.environ.get("WHATSAPP_PHONE_NUMBER_ID", ""))
+        self.access_token = _clean_meta_secret(os.environ.get("WHATSAPP_ACCESS_TOKEN", ""))
+        self.business_account_id = _clean_meta_secret(os.environ.get("WHATSAPP_BUSINESS_ACCOUNT_ID", ""))
+        self.api_version = (os.environ.get("WHATSAPP_API_VERSION", "v21.0") or "v21.0").strip() or "v21.0"
         self.template_name = os.environ.get("WHATSAPP_TEMPLATE_NAME", "officer_ticket_alert_v1")
         self.complainant_template_name = os.environ.get(
             "WHATSAPP_COMPLAINANT_TEMPLATE_NAME",
@@ -405,6 +433,7 @@ class WhatsAppCloudApiClient:
             status_code = posted["status_code"]
             res_json = posted["res_json"]
             error_msg_fallback = posted["error_msg_fallback"]
+            err_code = str(((res_json or {}).get("error") or {}).get("code") or "")
 
             if status_code == 200 and "messages" in res_json:
                 msg_id = res_json["messages"][0].get("id")
@@ -424,6 +453,11 @@ class WhatsAppCloudApiClient:
                     "apiVersion": self.api_version,
                     "templateName": template_for_log,
                 }
+
+            # Do not retry template shapes or session text when Meta login is expired.
+            if _is_meta_auth_error(status_code, err_code):
+                safe = _safe_provider_error(res_json, error_msg_fallback, http_status=status_code)
+                return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)
 
             # Session text is rejected outside the 24h window; use the approved citizen template.
             if message_kind == "TEXT" and int(payload.get("templateRetryStep") or 0) < 1:
@@ -478,7 +512,7 @@ class WhatsAppCloudApiClient:
                     )
                     return await self.send_whatsapp_notification(next_payload)
 
-            safe = _safe_provider_error(res_json, error_msg_fallback)
+            safe = _safe_provider_error(res_json, error_msg_fallback, http_status=status_code)
             return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)
         except Exception as e:
             logger.error("[WhatsApp] connection failure event=%s ticket=%s correlation=%s error=%s", event, ticket_ref, correlation_id, e)
