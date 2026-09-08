@@ -41,14 +41,14 @@ export function pdfFromCanvas(
   const pdf = new jsPDF({
     unit: "mm",
     format: [maxW, firstH],
-    orientation: orientation === "landscape" ? "l" : "p"
+    orientation: maxW >= firstH ? "l" : "p"
   });
 
   let offset = 0;
   slices.forEach((slice, index) => {
     const pageH = Math.min(maxH, slice + margin * 2);
     if (index > 0) {
-      pdf.addPage([maxW, pageH], orientation === "landscape" ? "l" : "p");
+      pdf.addPage([maxW, pageH], maxW >= pageH ? "l" : "p");
     }
     const innerH = pageH - margin * 2;
     pdf.setFillColor(255, 255, 255);

@@ -212,20 +212,21 @@ export async function exportTicketPdf(
     row(copy.labels.completed, line(issue.completedDate))
   ].join("");
 
-  const timelineHtml =
+  const extraRows = [
+    row(copy.labels.description, line(issue.description)),
+    issue.initialRemarks ? row(copy.labels.notes, issue.initialRemarks) : "",
+    row(copy.labels.officerComment, comment),
     history.length === 0
       ? ""
-      : `<h3>${escapeHtml(copy.labels.timeline)}</h3>
-        <table>
-          ${history
-            .map((entry) => {
-              const stamp = line(entry.updateDate || entry.createdAt);
-              const status = statusLabel(String(entry.newStatus), lang);
-              const body = [line(entry.volunteerName), line(entry.remarks)].filter((part) => part !== "—").join(" · ");
-              return row(`${status} · ${stamp}`, body || " ");
-            })
-            .join("")}
-        </table>`;
+      : history
+          .map((entry) => {
+            const stamp = line(entry.updateDate || entry.createdAt);
+            const status = statusLabel(String(entry.newStatus), lang);
+            const body = [line(entry.volunteerName), line(entry.remarks)].filter((part) => part !== "—").join(" · ");
+            return row(`${copy.labels.timeline}: ${status} · ${stamp}`, body || " ");
+          })
+          .join("")
+  ].join("");
 
   const host = document.createElement("div");
   host.setAttribute("data-ticket-pdf", "1");
@@ -238,33 +239,29 @@ export async function exportTicketPdf(
     "color:#1A2433",
     `font-family:${fontFamily}`,
     "padding:0",
-    "box-sizing:border-box"
+    "box-sizing:border-box",
+    "border:1px solid #071322"
   ].join(";");
   host.innerHTML = `
-    <div style="background:#071322;color:#D4A24C;padding:6px 8px;border:1px solid #071322;">
+    <div style="background:#071322;color:#D4A24C;padding:6px 8px;border-bottom:1px solid #071322;">
       <div style="font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;line-height:1.2;">${escapeHtml(copy.brand)}</div>
       <div style="font-size:13px;font-weight:700;color:#F5EFE0;margin-top:1px;line-height:1.25;">${escapeHtml(ticketId)}</div>
       <div style="font-size:9px;color:#F5EFE0;margin-top:1px;line-height:1.2;">${escapeHtml(copy.heading)}</div>
     </div>
-    <div style="padding:5px 6px 4px;border-left:1px solid #C9A24C;border-right:1px solid #C9A24C;font-size:12px;font-weight:700;color:#071322;line-height:1.3;">${escapeHtml(line(issue.title))}</div>
-    <table>${fieldRows}</table>
-    <h3>${escapeHtml(copy.labels.description)}</h3>
-    <p>${escapeHtml(line(issue.description))}</p>
-    ${issue.initialRemarks ? `<p><strong>${escapeHtml(copy.labels.notes)}:</strong> ${escapeHtml(issue.initialRemarks)}</p>` : ""}
-    <h3>${escapeHtml(copy.labels.officerComment)}</h3>
-    <p>${escapeHtml(comment)}</p>
-    ${timelineHtml}
+    <table>
+      <tr><th colspan="2" style="background:#F8F1DE;font-size:11px;padding:4px 6px;">${escapeHtml(line(issue.title))}</th></tr>
+      ${fieldRows}
+      ${extraRows}
+    </table>
     <style>
-      [data-ticket-pdf] table { width:100%; border-collapse:collapse; font-size:9.5px; line-height:1.25; border:1px solid #071322; }
+      [data-ticket-pdf] table { width:100%; border-collapse:collapse; font-size:9.5px; line-height:1.3; }
       [data-ticket-pdf] th, [data-ticket-pdf] td {
-        padding: 2px 5px;
+        padding: 3px 6px;
         border: 1px solid #071322;
         vertical-align: top;
         word-break: break-word;
       }
-      [data-ticket-pdf] th { width:30%; text-align:left; color:#071322; background:#F8F1DE; font-weight:700; }
-      [data-ticket-pdf] h3 { color:#8A6A28; font-size:9.5px; font-weight:700; margin:6px 0 2px; text-transform:uppercase; letter-spacing:0.04em; }
-      [data-ticket-pdf] p { font-size:9.5px; line-height:1.3; margin:0; padding:3px 5px; border:1px solid #C9A24C; }
+      [data-ticket-pdf] th { width:28%; text-align:left; color:#071322; background:#F8F1DE; font-weight:700; }
     </style>
   `;
   document.body.appendChild(host);
