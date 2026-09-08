@@ -32,7 +32,8 @@
     "reportedDate": "2026-09-07",
     "dueDate": "2026-09-14",
     "createdAt": "2026-09-07T10:00:00Z",
-    "updatedAt": "2026-09-07T10:00:00Z"
+    "updatedAt": "2026-09-07T10:00:00Z",
+    "ticketNumber": "LL-MLA-AC140-26-000001"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -67,7 +68,8 @@
     "reportedDate": "2026-09-07",
     "dueDate": "2026-09-15",
     "createdAt": "2026-09-07T10:05:00Z",
-    "updatedAt": "2026-09-07T10:05:00Z"
+    "updatedAt": "2026-09-07T10:05:00Z",
+    "ticketNumber": "LL-MLA-AC140-26-000002"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -102,11 +104,12 @@
     "dueDate": "2026-09-12",
     "createdAt": "2026-09-07T08:10:00Z",
     "updatedAt": "2026-09-07T08:20:00Z",
-    "lastStatusRemarks": "Department assigned to Panchayat Raj – Engineering.",
+    "lastStatusRemarks": "Department assigned to Panchayat Raj \u2013 Engineering.",
     "assignedOfficialName": "N. Palle",
     "assignedOfficialPhone": "+91 98857 65672",
-    "assignedDepartment": "1. Panchayat Raj – Engineering Department",
-    "department": "1. Panchayat Raj – Engineering Department"
+    "assignedDepartment": "1. Panchayat Raj \u2013 Engineering Department",
+    "department": "1. Panchayat Raj \u2013 Engineering Department",
+    "ticketNumber": "LL-MLA-AC140-26-000003"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -141,11 +144,12 @@
     "dueDate": "2026-09-14",
     "createdAt": "2026-09-07T08:25:00Z",
     "updatedAt": "2026-09-07T08:25:00Z",
-    "lastStatusRemarks": "Department assigned to Panchayat Raj – Engineering.",
+    "lastStatusRemarks": "Department assigned to Panchayat Raj \u2013 Engineering.",
     "assignedOfficialName": "N. Palle",
     "assignedOfficialPhone": "+91 98857 65672",
-    "assignedDepartment": "1. Panchayat Raj – Engineering Department",
-    "department": "1. Panchayat Raj – Engineering Department"
+    "assignedDepartment": "1. Panchayat Raj \u2013 Engineering Department",
+    "department": "1. Panchayat Raj \u2013 Engineering Department",
+    "ticketNumber": "LL-MLA-AC140-26-000004"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -185,7 +189,8 @@
     "department": "2. Rural Water Supply Scheme Department (RWS)",
     "assignedDepartment": "2. Rural Water Supply Scheme Department (RWS)",
     "assignedOfficialName": "K. Reddy",
-    "assignedOfficialPhone": "+91 89852 16765"
+    "assignedOfficialPhone": "+91 89852 16765",
+    "ticketNumber": "LL-MLA-AC140-26-000005"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -222,10 +227,11 @@
     "updatedAt": "2026-09-07T15:30:00Z",
     "lastStatusRemarks": "Tractor scheduled this evening. Sweeping started.",
     "lastStatusUpdateAt": "2026-09-07T15:30:00Z",
-    "department": "6. MGNREGS – Employment Guarantee Scheme",
-    "assignedDepartment": "6. MGNREGS – Employment Guarantee Scheme",
+    "department": "6. MGNREGS \u2013 Employment Guarantee Scheme",
+    "assignedDepartment": "6. MGNREGS \u2013 Employment Guarantee Scheme",
     "assignedOfficialName": "N. Palle",
-    "assignedOfficialPhone": "+91 98857 65672"
+    "assignedOfficialPhone": "+91 98857 65672",
+    "ticketNumber": "LL-MLA-AC140-26-000006"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -264,8 +270,9 @@
     "lastStatusUpdateAt": "2026-09-05T18:00:00Z",
     "assignedOfficialName": "N. Palle",
     "assignedOfficialPhone": "+91 98857 65672",
-    "assignedDepartment": "1. Panchayat Raj – Engineering Department",
-    "department": "1. Panchayat Raj – Engineering Department"
+    "assignedDepartment": "1. Panchayat Raj \u2013 Engineering Department",
+    "department": "1. Panchayat Raj \u2013 Engineering Department",
+    "ticketNumber": "LL-MLA-AC140-26-000007"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -305,7 +312,8 @@
     "department": "8. Roads & Buildings (R&B) Department",
     "assignedDepartment": "8. Roads & Buildings (R&B) Department",
     "assignedOfficialName": "R&B Section Officer",
-    "assignedOfficialPhone": "+91 98492 44556"
+    "assignedOfficialPhone": "+91 98492 44556",
+    "ticketNumber": "LL-MLA-AC140-26-000008"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -348,7 +356,8 @@
     "department": "2. Rural Water Supply Scheme Department (RWS)",
     "assignedDepartment": "2. Rural Water Supply Scheme Department (RWS)",
     "assignedOfficialName": "K. Reddy",
-    "assignedOfficialPhone": "+91 89852 16765"
+    "assignedOfficialPhone": "+91 89852 16765",
+    "ticketNumber": "LL-MLA-AC140-26-000009"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -387,11 +396,12 @@
     "lastStatusRemarks": "Four LED fittings replaced. Lane is lit after 7pm.",
     "lastStatusUpdateAt": "2026-09-07T09:10:00Z",
     "completedByPerson": "APCPDCL Lineman",
-    "completedDepartment": "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
-    "department": "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
-    "assignedDepartment": "14. Electricity Department (విద్యుత్ శాఖ - APCPDCL)",
+    "completedDepartment": "14. Electricity Department (\u0c35\u0c3f\u0c26\u0c4d\u0c2f\u0c41\u0c24\u0c4d \u0c36\u0c3e\u0c16 - APCPDCL)",
+    "department": "14. Electricity Department (\u0c35\u0c3f\u0c26\u0c4d\u0c2f\u0c41\u0c24\u0c4d \u0c36\u0c3e\u0c16 - APCPDCL)",
+    "assignedDepartment": "14. Electricity Department (\u0c35\u0c3f\u0c26\u0c4d\u0c2f\u0c41\u0c24\u0c4d \u0c36\u0c3e\u0c16 - APCPDCL)",
     "assignedOfficialName": "APCPDCL Lineman",
-    "assignedOfficialPhone": "+91 94906 11111"
+    "assignedOfficialPhone": "+91 94906 11111",
+    "ticketNumber": "LL-MLA-AC140-26-000010"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -428,10 +438,11 @@
     "updatedAt": "2026-09-06T12:00:00Z",
     "lastStatusRemarks": "Civil boundary dispute. Direct the parties to Revenue / civil court.",
     "lastStatusUpdateAt": "2026-09-06T12:00:00Z",
-    "department": "11. Revenue Department (రెవెన్యూ శాఖ)",
-    "assignedDepartment": "11. Revenue Department (రెవెన్యూ శాఖ)",
+    "department": "11. Revenue Department (\u0c30\u0c46\u0c35\u0c46\u0c28\u0c4d\u0c2f\u0c42 \u0c36\u0c3e\u0c16)",
+    "assignedDepartment": "11. Revenue Department (\u0c30\u0c46\u0c35\u0c46\u0c28\u0c4d\u0c2f\u0c42 \u0c36\u0c3e\u0c16)",
     "assignedOfficialName": "Revenue Inspector",
-    "assignedOfficialPhone": "+91 98480 22001"
+    "assignedOfficialPhone": "+91 98480 22001",
+    "ticketNumber": "LL-MLA-AC140-26-000011"
   },
   {
     "assignedVolunteerId": "usr-demo-volunteer",
@@ -471,6 +482,7 @@
     "department": "8. Roads & Buildings (R&B) Department",
     "assignedDepartment": "8. Roads & Buildings (R&B) Department",
     "assignedOfficialName": "R&B Section Officer",
-    "assignedOfficialPhone": "+91 98492 44556"
+    "assignedOfficialPhone": "+91 98492 44556",
+    "ticketNumber": "LL-MLA-AC140-26-000012"
   }
 ]
