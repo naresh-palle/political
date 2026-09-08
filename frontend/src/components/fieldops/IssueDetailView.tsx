@@ -309,6 +309,8 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     issue.assignedVolunteerName && !["Demo Volunteer", "Demo Volunteer (Field Agent)"].includes(issue.assignedVolunteerName)
       ? issue.assignedVolunteerName
       : currentUser.name;
+  const assignedOfficialDisplay =
+    issue.completedByPerson || issue.assignedOfficialName || "";
   const isDirector =
     currentUser.primaryRole === "DIRECTOR" ||
     currentUser.role === "campaign_manager" ||
@@ -472,11 +474,14 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                   <span className="text-base">👤</span>
                   <div>
                     <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">
-                      {timing.isClosed ? "Completed / Resolved By Person" : "Assigned Official / Agent"}
+                      {timing.isClosed ? "Completed / Resolved By Person" : "Assigned Official"}
                     </span>
                     <strong className="text-[#F5EFE0] font-semibold text-sm">
-                      {issue.completedByPerson || assignedAgentName}
+                      {assignedOfficialDisplay || "Unassigned"}
                     </strong>
+                    {issue.assignedOfficialPhone ? (
+                      <span className="text-[11px] font-mono text-[#D4A24C] block">{issue.assignedOfficialPhone}</span>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -521,17 +526,19 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
             <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">Reporter Details</span>
             <span className="font-medium text-[#F5EFE0] flex items-center gap-1.5 truncate">
               <User className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-              {issue.reportedBy} ({issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"})
+              {issue.reportedBy} ({issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
+              {issue.citizenAge ? ` · ${issue.citizenAge}` : ""}
+              {issue.citizenGender ? ` · ${issue.citizenGender}` : ""})
             </span>
           </div>
 
           <div className="space-y-1">
             <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">
-              {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed By Person" : "Assigned Person"}
+              {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed By Person" : "Assigned Official"}
             </span>
             <span className="font-mono text-emerald-400 flex items-center gap-1.5 font-semibold truncate">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              {issue.completedByPerson || assignedAgentName}
+              {assignedOfficialDisplay || "Unassigned"}
             </span>
           </div>
         </div>
@@ -544,12 +551,20 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
                   Issue Scope & Ground Description
                 </h3>
-                <span className="text-xs text-[#8E9CAE] font-mono shrink-0 text-right">Constituency Banaganapalle</span>
+                <span className="text-xs text-[#8E9CAE] font-mono shrink-0 text-right">
+                  {issue.assemblyConstituencyName || issue.parliamentConstituencyName || "Constituency Banaganapalle"}
+                </span>
               </div>
 
               <p className="text-sm text-[#CBD5E1] leading-relaxed whitespace-pre-wrap pt-1">
                 {issue.description || "No specific detailed description recorded during ground intake."}
               </p>
+
+              {issue.schemeSubDetail ? (
+                <div className="p-3 rounded-xl bg-[#142B45]/80 border border-[#D4A24C]/30 text-xs text-[#D4A24C] font-semibold">
+                  Scheme / Work: <span className="text-[#F5EFE0] font-medium">{issue.schemeSubDetail}</span>
+                </div>
+              ) : null}
 
               {issue.placeName && (
                 <div className="p-3 rounded-xl bg-[#0B131E] border border-[#223348] flex items-start gap-2 text-xs text-[#8E9CAE] mt-3">
@@ -557,6 +572,11 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                   <span>Exact Location Landmark: <strong className="text-[#F5EFE0]">{issue.placeName}</strong></span>
                 </div>
               )}
+              {issue.initialRemarks ? (
+                <div className="p-3 rounded-xl bg-[#0B131E] border border-[#223348] text-xs text-[#8E9CAE]">
+                  Ground intake notes: <strong className="text-[#F5EFE0] font-medium">{issue.initialRemarks}</strong>
+                </div>
+              ) : null}
             </div>
 
             <div className="h-full p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
@@ -577,16 +597,30 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
 
                 <div className="flex items-start justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
                   <span className="text-[#8E9CAE] shrink-0">
-                    {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By:" : "Assigned Field Agent:"}
+                    {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By:" : "Assigned Official:"}
                   </span>
                   <strong className="text-[#F5EFE0] text-right break-words min-w-0">
-                    {issue.completedByPerson || assignedAgentName}
+                    {assignedOfficialDisplay || "Unassigned"}
                   </strong>
+                </div>
+
+                {issue.assignedOfficialPhone && (
+                  <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                    <span className="text-[#8E9CAE] shrink-0">Official Contact:</span>
+                    <a href={`tel:${issue.assignedOfficialPhone}`} className="text-[#D4A24C] font-mono font-bold hover:underline whitespace-nowrap">
+                      {issue.assignedOfficialPhone}
+                    </a>
+                  </div>
+                )}
+
+                <div className="flex items-start justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+                  <span className="text-[#8E9CAE] shrink-0">Field Volunteer:</span>
+                  <strong className="text-[#F5EFE0] text-right break-words min-w-0">{assignedAgentName}</strong>
                 </div>
 
                 {issue.assignedVolunteerPhone && (
                   <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                    <span className="text-[#8E9CAE] shrink-0">Agent Contact:</span>
+                    <span className="text-[#8E9CAE] shrink-0">Volunteer Contact:</span>
                     <a href={`tel:${issue.assignedVolunteerPhone}`} className="text-[#D4A24C] font-mono font-bold hover:underline whitespace-nowrap">
                       {issue.assignedVolunteerPhone}
                     </a>
@@ -626,6 +660,20 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
                   </span>
                 </div>
+
+                {issue.citizenGender ? (
+                  <div className="min-w-0">
+                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Gender</span>
+                    <strong className="text-[#F5EFE0] text-sm block mt-0.5">{issue.citizenGender}</strong>
+                  </div>
+                ) : null}
+
+                {issue.citizenAge ? (
+                  <div className="min-w-0">
+                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Age</span>
+                    <strong className="text-[#F5EFE0] text-sm block mt-0.5">{issue.citizenAge}</strong>
+                  </div>
+                ) : null}
 
                 {issue.reporterPhone && (
                   <div className="min-w-0">
