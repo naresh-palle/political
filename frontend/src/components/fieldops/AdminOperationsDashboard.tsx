@@ -1196,7 +1196,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Mandal / Location</th>
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Reported By</th>
                     <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Volunteer</th>
-                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%] text-right`}>View</th>
+                    <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%] text-right whitespace-nowrap`}>View</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1243,17 +1243,18 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                         <td className={`${TICKET_TABLE_CELL} text-[#8E9CAE]`}>
                           {iss.assignedVolunteerName || "Unassigned"}
                         </td>
-                        <td className={`${TICKET_TABLE_CELL} text-right`}>
+                        <td className={`${TICKET_TABLE_CELL} text-right whitespace-nowrap [overflow-wrap:normal]`}>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedIssue(iss);
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-normal"
+                            className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-nowrap shrink-0"
+                            title="View ticket"
                           >
                             <Eye className="w-3 h-3 shrink-0" />
-                            View
+                            <span className="hidden sm:inline">View</span>
                           </button>
                         </td>
                       </tr>

@@ -1873,13 +1873,13 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <thead>
                 <tr className="text-[#D4A24C] uppercase text-[10px] font-semibold tracking-wider">
                   <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>ID & Status</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[26%]`}>Issue Title</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[22%]`}>Issue Title</th>
                   <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Category / Dept</th>
                   <th className={`${TICKET_TABLE_HEAD_CELL} w-[12%]`}>Mandal / Location</th>
                   <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Reported By</th>
                   <th className={`${TICKET_TABLE_HEAD_CELL} w-[14%]`}>Assign & Notify</th>
                   <th className={`${TICKET_TABLE_HEAD_CELL} w-[10%]`}>Timeline</th>
-                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[4%] text-right`}>View</th>
+                  <th className={`${TICKET_TABLE_HEAD_CELL} w-[8%] text-right whitespace-nowrap`}>View</th>
                 </tr>
               </thead>
               <tbody>
@@ -1993,16 +1993,18 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                           )}
                         </div>
                       </td>
-                      <td className={`${TICKET_TABLE_CELL} text-right`}>
+                      <td className={`${TICKET_TABLE_CELL} text-right whitespace-nowrap [overflow-wrap:normal]`}>
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedIssue(issue);
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-normal"
+                          className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-nowrap shrink-0"
+                          title="View ticket"
                         >
                           <Eye className="w-3 h-3 shrink-0" />
-                          View
+                          <span className="hidden sm:inline">View</span>
                         </button>
                       </td>
                     </tr>
