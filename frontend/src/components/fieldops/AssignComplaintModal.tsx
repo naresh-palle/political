@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { FieldIssue } from "../../types";
-import { Search, X, MessageCircle, CheckCircle2, Shield, Loader2, ExternalLink } from "lucide-react";
+import { Search, X, MessageCircle, Shield, Loader2 } from "lucide-react";
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
 import { politicalApiService } from "../../services/api";
 import { isRejectedTicket } from "../../utils/ticketActions";
@@ -183,6 +184,15 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     return filteredContacts.find((c) => c.id === selectedContactId) || filteredContacts[0];
   }, [selectedContactId, filteredContacts]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isOpen]);
+
   if (!isOpen || !issue) return null;
 
   const isResend = isRejectedTicket(issue.status);
@@ -257,127 +267,86 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[400000] overflow-y-auto overscroll-contain bg-black/80 animate-fadeIn"
       onClick={onClose}
     >
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
       <div
-        className="relative bg-[#09121F] border border-[#1E2E42] rounded-3xl w-full max-w-lg shadow-[0_25px_80px_rgba(0,0,0,0.95)] text-[#F5EFE0] overflow-hidden flex flex-col"
+        className="relative w-full max-w-lg max-h-[min(90vh,40rem)] flex flex-col overflow-hidden rounded-2xl bg-[#0E1724] border border-[#223348] text-[#F5EFE0] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Sticky Header */}
-        <div className="p-5 border-b border-[#1E2E42] bg-[#0E1826] flex items-start justify-between">
-          <div>
-            <span className="text-[11px] font-mono font-semibold text-[#D4A24C] uppercase tracking-wider block">
+        <div className="shrink-0 px-4 py-3 border-b border-[#223348] flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-[10px] font-mono font-semibold text-[#D4A24C] uppercase tracking-wider block">
               {isResend ? "Resend to officer" : "Assign complaint"}
             </span>
-            <h2 className="font-display text-lg sm:text-xl font-bold text-[#F5EFE0] leading-snug mt-0.5">
+            <h2 className="font-display text-base sm:text-lg font-semibold text-[#F5EFE0] leading-snug mt-0.5 break-words">
               {issue.title}
             </h2>
           </div>
           <button
+            type="button"
             onClick={() => {
               window.location.hash = returnHash;
               onClose();
             }}
-            className="w-8 h-8 rounded-full bg-[#142233] hover:bg-rose-950/80 border border-[#22354D] text-[#8E9CAE] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 ml-2"
+            className="w-8 h-8 rounded-lg bg-[#131E2D] hover:bg-[#1C2C42] border border-[#223348] text-[#8E9CAE] hover:text-white flex items-center justify-center cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-5 space-y-4 flex-1 overflow-y-auto max-h-[70vh]">
+        <div className="p-4 space-y-3 flex-1 overflow-y-auto min-h-0">
           {successMessage && (
-            <div className="p-4 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-semibold flex items-center justify-between gap-3 animate-fadeIn">
-              <div className="flex items-center gap-2">
-                {isSending ? (
-                  <Loader2 className="w-4.5 h-4.5 text-amber-400 animate-spin shrink-0" />
-                ) : (
-                  <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400 shrink-0" />
-                )}
-                <span className="font-bold text-[#F5EFE0]">{successMessage}</span>
-              </div>
-              <span className="text-[11px] font-mono text-emerald-400/90 animate-pulse shrink-0">
-                Closing...
-              </span>
-            </div>
+            <p className="text-xs text-[#D4A24C] font-medium">
+              {isSending ? "Assigning…" : successMessage}
+            </p>
           )}
 
-          {/* Meta Cloud API Credentials Quick Config Bar */}
-          <div className="p-3 rounded-2xl bg-[#071424] border border-[#1E3048] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-semibold text-[#D4A24C] flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-amber-400" />
-                Meta WhatsApp API Credentials Config
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowTokenConfig(!showTokenConfig)}
-                className="text-[10.5px] font-mono text-[#4E80B4] hover:text-[#D4A24C] underline cursor-pointer"
-              >
-                {showTokenConfig ? "Hide Config" : tokenInput ? "✓ Configured (Click to edit)" : "+ Enter Meta Access Token"}
-              </button>
-            </div>
-
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowTokenConfig(!showTokenConfig)}
+              className="text-[10px] font-mono text-[#8E9CAE] hover:text-[#D4A24C] underline cursor-pointer"
+            >
+              {showTokenConfig ? "Hide WhatsApp API settings" : tokenInput ? "WhatsApp API configured" : "WhatsApp API settings"}
+            </button>
             {showTokenConfig && (
-              <div className="space-y-2.5 pt-2 border-t border-[#1E3048] text-xs animate-fadeIn">
-                <div>
-                  <label className="block text-[10.5px] font-mono text-zinc-400 mb-1">
-                    Meta Temporary / System Access Token (starts with EAAG...):
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Paste Meta Token (EAAG...)"
-                    value={tokenInput}
-                    onChange={(e) => {
-                      setTokenInput(e.target.value);
-                      localStorage.setItem("WHATSAPP_ACCESS_TOKEN", e.target.value.trim());
-                    }}
-                    className="w-full bg-[#09182A] border border-[#223B59] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs font-mono text-[#F5EFE0] outline-none select-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10.5px] font-mono text-zinc-400 mb-1">
-                    Meta Phone Number ID (Default: 105654069273754):
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Meta Phone Number ID"
-                    value={phoneIdInput}
-                    onChange={(e) => {
-                      setPhoneIdInput(e.target.value);
-                      localStorage.setItem("WHATSAPP_PHONE_NUMBER_ID", e.target.value.trim());
-                    }}
-                    className="w-full bg-[#09182A] border border-[#223B59] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-xs font-mono text-[#F5EFE0] outline-none select-all"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-[10.5px] font-mono text-emerald-400 pt-0.5">
-                  <span>✓ Saved to local session automatically.</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowTokenConfig(false)}
-                    className="px-2.5 py-1 rounded bg-[#142B45] hover:bg-[#1C3A5E] text-[#F5EFE0] font-bold cursor-pointer"
-                  >
-                    Done
-                  </button>
-                </div>
+              <div className="mt-2 space-y-2 text-xs">
+                <input
+                  type="password"
+                  placeholder="Meta access token (EAAG…)"
+                  value={tokenInput}
+                  onChange={(e) => {
+                    setTokenInput(e.target.value);
+                    localStorage.setItem("WHATSAPP_ACCESS_TOKEN", e.target.value.trim());
+                  }}
+                  className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg px-3 text-xs font-mono text-[#F5EFE0] outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Meta Phone Number ID"
+                  value={phoneIdInput}
+                  onChange={(e) => {
+                    setPhoneIdInput(e.target.value);
+                    localStorage.setItem("WHATSAPP_PHONE_NUMBER_ID", e.target.value.trim());
+                  }}
+                  className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg px-3 text-xs font-mono text-[#F5EFE0] outline-none"
+                />
               </div>
             )}
           </div>
 
-          {/* 1. Category / Department Dropdown (All 17 Departments) */}
           <div>
-            <label className="block text-xs text-[#8E9CAE] font-medium mb-1.5">
-              Category / Department (All 17 PGRS Departments)
+            <label className="block text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold mb-1">
+              Category / Department
             </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-[#0D1826] border border-[#22354D] focus:border-[#D4A24C] rounded-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] outline-none cursor-pointer font-medium"
+              className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg px-3 text-sm text-[#F5EFE0] outline-none cursor-pointer"
             >
               {PGRS_DEPARTMENTS_LIST.map((dept) => (
                 <option key={dept.id} value={dept.name}>
@@ -387,101 +356,84 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
             </select>
           </div>
 
-          {/* 2. Assign to (from contact database) */}
-          <div className="space-y-2 pt-1">
-            <label className="block text-xs text-[#8E9CAE] font-medium">
+          <div className="space-y-2">
+            <label className="block text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold">
               Assign to (from contact database)
             </label>
-
-            {/* Search Input */}
             <div className="relative">
-              <Search className="w-4 h-4 text-[#8E9CAE] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#8E9CAE] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search by name or role..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#0D1826] border border-[#22354D] focus:border-[#4E80B4] rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-[#F5EFE0] placeholder-[#5C708A] outline-none transition-all"
+                className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg pl-9 pr-3 text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
               />
             </div>
-
-            {/* Department Filter Counter Badge */}
-            <div className={`text-[11px] font-semibold pt-1 flex items-center justify-between ${filteredContacts.length ? "text-emerald-400" : "text-amber-400"}`}>
-              <span>
-                {filteredContacts.length
-                  ? `${filteredContacts.length} Contact Database officer${filteredContacts.length === 1 ? "" : "s"} for ${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name}`
-                  : `No Contact Database officer for ${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name}`}
-              </span>
-            </div>
-
-            {/* Contacts Cards List */}
-            <div className="space-y-2 max-h-[230px] overflow-y-auto pr-1">
+            <p className="text-[11px] text-[#8E9CAE]">
+              {filteredContacts.length
+                ? `${filteredContacts.length} officer${filteredContacts.length === 1 ? "" : "s"} for ${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name}`
+                : `No officer for ${currentDeptObj.name.split(".")[1]?.trim() || currentDeptObj.name}`}
+            </p>
+            <div className="space-y-1.5 max-h-[12.5rem] overflow-y-auto">
               {filteredContacts.length === 0 ? (
-                <div className="p-3.5 rounded-2xl border border-[#4A3D22] bg-[#142438] text-xs text-[#D8CFB8] leading-relaxed">
+                <p className="text-xs text-[#8E9CAE] leading-relaxed">
                   Only the two live directory officers can be assigned: N. Palle (Panchayat Raj, Yaganti) and K. Reddy (RWS, Town Wards 11-20).
-                </div>
+                </p>
               ) : null}
               {filteredContacts.map((contact) => {
                 const isSelected = selectedContact?.id === contact.id;
-
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={contact.id}
                     onClick={() => setSelectedContactId(contact.id)}
-                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    className={`w-full text-left px-3 py-2 rounded-lg border cursor-pointer ${
                       isSelected
-                        ? "bg-[#142438] border-[#D4A24C] shadow-md ring-1 ring-[#D4A24C]/40"
-                        : "bg-[#0B1524] border-[#1C2C3F] hover:border-[#334A66] hover:bg-[#0F1D30]"
+                        ? "bg-[#131E2D] border-[#D4A24C]/50"
+                        : "bg-[#0B131E] border-[#223348] hover:border-[#D4A24C]/30"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="font-bold text-sm text-[#F5EFE0] flex items-center gap-1.5">
-                        {contact.isOfficer && <Shield className="w-3.5 h-3.5 text-amber-400" />}
-                        {contact.name}
-                      </div>
-                      {isSelected && (
-                        <span className="w-2 h-2 rounded-full bg-[#D4A24C] shadow-[0_0_8px_#D4A24C]" />
-                      )}
+                    <div className="font-semibold text-sm text-[#F5EFE0] flex items-center gap-1.5">
+                      {contact.isOfficer ? <Shield className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" /> : null}
+                      {contact.name}
                     </div>
-
-                    <div className="text-xs text-[#8E9CAE] mt-0.5 font-medium">
-                      {contact.designation}
+                    <div className="text-xs text-[#8E9CAE] mt-0.5">{contact.designation}</div>
+                    <div className="text-[11px] font-mono text-[#D4A24C] mt-0.5 flex flex-wrap gap-x-2">
+                      <span>{contact.phone}</span>
+                      {contact.mandalName ? <span>· {contact.mandalName}</span> : null}
+                      {contact.villageName ? <span>· {contact.villageName}</span> : null}
                     </div>
-
-                    <div className="text-[10.5px] font-mono text-[#D4A24C] mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span>📱 {contact.phone}</span>
-                      {contact.mandalName && <span>· 📍 {contact.mandalName}</span>}
-                      {contact.villageName && <span>· {contact.villageName}</span>}
-                    </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </div>
         </div>
 
-        {/* Modal Footer / WhatsApp Button */}
-        <div className="p-4 border-t border-[#1E2E42] bg-[#0A1320] flex items-center justify-center">
+        <div className="shrink-0 p-3 border-t border-[#223348]">
           <button
             type="button"
             disabled={isSending || filteredContacts.length === 0}
             onClick={handleAssignAndNotify}
-            className="w-full py-3 px-5 rounded-2xl bg-[#4A3D22] hover:bg-[#5E4D2B] text-[#F5EFE0] font-bold text-sm sm:text-base transition-all shadow-lg border border-[#D4A24C]/40 flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+            className="w-full h-11 px-4 rounded-xl bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] font-semibold text-sm border border-[#D4A24C]/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isSending ? (
               <>
-                <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
-                Sending WhatsApp Cloud Notification...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Sending WhatsApp notification...
               </>
             ) : (
               <>
-                <MessageCircle className="w-5 h-5 text-emerald-400 fill-emerald-400/20" />
+                <MessageCircle className="w-4 h-4" />
                 {isResend ? "Resend to Officer on WhatsApp" : "Assign and notify on WhatsApp"}
               </>
             )}
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </div>,
+    document.body
   );
 };

@@ -12,15 +12,10 @@ import { formatTicketDisplay } from "../../utils/ticketNumberDisplay";
 import {
   ArrowLeft,
   Clock,
-  CheckCircle2,
-  Calendar,
-  MapPin,
-  User,
   Phone,
   Camera,
   Send,
   Eye,
-  ChevronRight,
   X,
   MessageCircle,
   Upload,
@@ -30,6 +25,19 @@ import {
 import { AssignComplaintModal } from "./AssignComplaintModal";
 import { canVolunteerAssignOrResend, isRejectedTicket, isTicketOpenForAssign } from "../../utils/ticketActions";
 import { exportTicketPdf } from "../../utils/exportTicketPdf";
+
+const CHIP =
+  "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#D4A24C]/35 bg-[#0B131E] text-[#D4A24C]";
+const SECTION = "p-4 rounded-xl bg-[#0E1724] border border-[#223348] space-y-2";
+const BTN =
+  "h-9 px-3 rounded-lg bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] border border-[#223348] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer";
+
+const DetailField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div className="min-w-0">
+    <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold block">{label}</span>
+    <div className="text-sm text-[#F5EFE0] mt-0.5 break-words">{children}</div>
+  </div>
+);
 
 interface IssueDetailViewProps {
   issue: FieldIssue;
@@ -269,40 +277,9 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     };
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "NEW":
-        return "bg-amber-500/20 text-amber-300 border-amber-500/40";
-      case "ASSIGNED":
-        return "bg-blue-500/20 text-blue-300 border-blue-500/40";
-      case "IN_PROGRESS":
-        return "bg-indigo-500/20 text-indigo-300 border-indigo-500/40";
-      case "REJECTED":
-        return "bg-rose-500/20 text-rose-300 border-rose-500/40";
-      case "COMPLETED":
-      case "RESOLVED":
-        return "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
-      case "OVERDUE":
-      case "ESCALATED":
-        return "bg-red-500/20 text-red-300 border-red-500/40 animate-pulse";
-      default:
-        return "bg-zinc-800 text-zinc-300 border-zinc-600/40";
-    }
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case "URGENT":
-        return "bg-red-500/20 text-red-400 border-red-500/40";
-      case "HIGH":
-        return "bg-orange-500/20 text-orange-400 border-orange-500/40";
-      case "MEDIUM":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/40";
-      default:
-        return "bg-emerald-500/20 text-emerald-400 border-emerald-500/40";
-    }
-  };
-
+  const reporterKind =
+    issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen";
+  const timing = getTicketTimingDetails(issue);
   const isVolunteer =
     currentUser.primaryRole === "VOLUNTEER" || currentUser.role === "volunteer";
   const assignedAgentName =
@@ -323,48 +300,29 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
     currentUser.roleId === "SUPER_ADMIN" ||
     currentUser.roleId === "ADMIN" ||
     currentUser.role === "super_admin";
-
   const canAssign =
     ((isAdmin || isDirector) && isTicketOpenForAssign(liveIssue.status)) ||
     (isVolunteer && canVolunteerAssignOrResend(liveIssue.status));
   const canUpdateProof = isAdmin || isDirector;
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-2 sm:py-4 space-y-3 animate-fadeIn text-[#F5EFE0]">
-      {/* Navigation Breadcrumb Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-[#0E1724]/85 backdrop-blur-xl border border-[#223348] shadow-lg">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] hover:text-[#F5EFE0] border border-[#223348] text-xs font-bold transition-all cursor-pointer shadow-sm"
-          >
+    <div className="w-full max-w-7xl mx-auto space-y-3 animate-fadeIn text-[#F5EFE0]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={onBack} className={BTN}>
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Grievances</span>
           </button>
-
-          <div className="hidden sm:flex items-center gap-2 text-xs text-[#8E9CAE]">
-            <span>Grievance Desk</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[#D4A24C] font-mono font-bold">{formatTicketDisplay(issue)}</span>
-          </div>
+          <span className="text-xs text-[#8E9CAE] font-mono">{formatTicketDisplay(issue)}</span>
         </div>
-
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => exportTicketPdf(issue, history)}
-            className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] hover:text-[#F5EFE0] border border-[#D4A24C]/50 text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
-            title="Export this ticket as PDF"
-          >
+          <button type="button" onClick={() => exportTicketPdf(issue, history)} className={BTN} title="Export this ticket as PDF">
             <FileDown className="w-4 h-4" />
             <span>Export PDF</span>
           </button>
           {canAssign && (
-            <button
-              onClick={() => setIsAssignModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
-            >
-              <MessageCircle className="w-4 h-4 fill-white/20" />
+            <button type="button" onClick={() => setIsAssignModalOpen(true)} className={BTN}>
+              <MessageCircle className="w-4 h-4" />
               <span>
                 {isVolunteer && isRejectedTicket(liveIssue.status)
                   ? "Resend to Officer via WhatsApp"
@@ -373,10 +331,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
             </button>
           )}
           {canUpdateProof && (
-            <button
-              onClick={() => setIsUpdateModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center gap-2 shadow-md cursor-pointer"
-            >
+            <button type="button" onClick={() => setIsUpdateModalOpen(true)} className={BTN}>
               <Camera className="w-4 h-4" />
               <span>Update Status & Proof</span>
             </button>
@@ -384,387 +339,199 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
         </div>
       </div>
 
-      {/* Main Detail Header Card */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-mono font-bold uppercase px-3 py-1 rounded-lg bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30">
-              {formatTicketDisplay(issue)}
-            </span>
-            <span
-              className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${
-                issue.issueType === "GRIEVANCE"
-                  ? "bg-amber-950/70 text-amber-300 border-amber-500/40"
-                  : "bg-sky-950/70 text-sky-300 border-sky-500/40"
-              }`}
-            >
-              {issue.issueType === "GRIEVANCE" ? "Grievance Petition" : "Field Issue"}
-            </span>
-            <span
-              className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${getStatusBadge(
-                issue.status
-              )}`}
-            >
-              {formatIssueStatus(issue.status)}
-            </span>
-            <span
-              className={`text-xs font-semibold px-2.5 py-1 rounded border ${getPriorityBadge(
-                issue.priority
-              )}`}
-            >
-              {issue.priority} Priority
-            </span>
-          </div>
-
-          <div className="text-xs text-[#8E9CAE] font-mono">
-            Recorded On: <strong className="text-[#F5EFE0]">{issue.reportedDate}</strong>
-          </div>
+      <div className={SECTION}>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className={CHIP}>{formatTicketDisplay(issue)}</span>
+          <span className={CHIP}>{issue.issueType === "GRIEVANCE" ? "Grievance Petition" : "Field Issue"}</span>
+          <span className={CHIP}>{formatIssueStatus(issue.status)}</span>
+          <span className={CHIP}>{issue.priority} Priority</span>
+          <span className="text-xs text-[#8E9CAE] font-mono ml-auto">Recorded On: {issue.reportedDate}</span>
         </div>
-
-        <h1 className="font-display text-xl sm:text-2xl lg:text-3xl text-[#F5EFE0] font-semibold leading-snug">
-          {issue.title}
-        </h1>
-
-        {/* Turnaround & Timestamp Intelligence Banner */}
-        {(() => {
-          const timing = getTicketTimingDetails(issue);
-          return (
-            <div className="p-4 rounded-2xl bg-[#070D15] border border-[#D4A24C]/40 space-y-3">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div>
-                    <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold">Registered Timestamp</span>
-                    <strong className="text-[#F5EFE0]">{timing.registeredTimeFormatted}</strong>
-                  </div>
-                  <div className="border-l border-[#223348] pl-4">
-                    <span className="text-[10px] text-[#8E9CAE] block uppercase font-semibold font-mono">Closing Timestamp</span>
-                    {timing.isClosed ? (
-                      <strong className="text-emerald-400 font-mono">{timing.closedTimeFormatted}</strong>
-                    ) : (
-                      <strong className="text-amber-400 font-mono">{formatIssueStatus(issue.status) || "Open"}</strong>
-                    )}
-                  </div>
-                </div>
-
-                <div className={`px-3 py-1.5 rounded-xl font-bold tracking-wide uppercase border text-xs flex items-center gap-1.5 ${
-                  timing.isClosed
-                    ? "bg-emerald-950 text-emerald-300 border-emerald-500/40"
-                    : issue.status === "OVERDUE"
-                    ? "bg-rose-950 text-rose-300 border-rose-500/40 animate-pulse"
-                    : "bg-blue-950 text-blue-300 border-blue-500/40"
-                }`}>
-                  <span>⏱️</span>
-                  <span>{timing.isClosed ? `Total Resolution Time: ${timing.durationText}` : `Time Open: ${timing.durationText}`}</span>
-                </div>
-              </div>
-
-              {/* Explicit Completed/Resolved Person & Department Banner */}
-              <div className="p-3 rounded-xl bg-[#0E1B2B] border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🏛️</span>
-                  <div>
-                    <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Assigned / Resolving Department</span>
-                    <strong className="text-[#D4A24C] font-semibold text-sm">
-                      {issue.completedDepartment || issue.department || "General Administration"}
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 border-t sm:border-t-0 sm:border-l border-[#223348] pt-2 sm:pt-0 sm:pl-4">
-                  <span className="text-base">👤</span>
-                  <div>
-                    <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">
-                      {timing.isClosed ? "Completed / Resolved By Person" : "Assigned Official"}
-                    </span>
-                    <strong className="text-[#F5EFE0] font-semibold text-sm">
-                      {assignedOfficialDisplay || "Unassigned"}
-                    </strong>
-                    {issue.assignedOfficialPhone ? (
-                      <span className="text-[11px] font-mono text-[#D4A24C] block">{issue.assignedOfficialPhone}</span>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        <div className="p-4 rounded-2xl bg-[#142B45] border border-[#D4A24C]/40 space-y-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
+        <h1 className="font-display text-xl sm:text-2xl text-[#F5EFE0] font-semibold leading-snug">{issue.title}</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2">
+          <DetailField label="Registered Timestamp">{timing.registeredTimeFormatted}</DetailField>
+          <DetailField label="Closing Timestamp">
+            {timing.isClosed ? timing.closedTimeFormatted : formatIssueStatus(issue.status) || "Open"}
+          </DetailField>
+          <DetailField label={timing.isClosed ? "Total Resolution Time" : "Time Open"}>{timing.durationText}</DetailField>
+          <DetailField label="Category & Dept">{issue.department || issue.category}</DetailField>
+          <DetailField label="Mandal & Location">
+            {issue.mandalName} · {issue.villageName}
+          </DetailField>
+          <DetailField label="Reporter Details">
+            {issue.reportedBy} ({reporterKind}
+            {issue.citizenAge ? ` · ${issue.citizenAge}` : ""}
+            {issue.citizenGender ? ` · ${issue.citizenGender}` : ""})
+          </DetailField>
+          <DetailField label={timing.isClosed ? "Completed / Resolved By Person" : "Assigned Official"}>
+            {assignedOfficialDisplay || "Unassigned"}
+            {issue.assignedOfficialPhone ? (
+              <span className="block font-mono text-xs text-[#D4A24C]">{issue.assignedOfficialPhone}</span>
+            ) : null}
+          </DetailField>
+          <DetailField label="Assigned / Resolving Department">
+            {issue.completedDepartment || issue.department || "General Administration"}
+          </DetailField>
+        </div>
+        <div>
+          <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold block">
             Officer status comment · {formatIssueStatus(issue.status)}
           </span>
-          <p className="text-sm text-[#F5EFE0] leading-relaxed whitespace-pre-wrap break-words">
+          <p className="text-sm text-[#F5EFE0] leading-relaxed whitespace-pre-wrap break-words mt-0.5">
             {issue.lastStatusRemarks?.trim()
               || (issue as any).rejectionReason
               || "Waiting for the department officer to add a status comment."}
           </p>
-          {issue.lastStatusUpdateAt && (
-            <span className="text-[11px] font-mono text-[#8E9CAE] block">
+          {issue.lastStatusUpdateAt ? (
+            <span className="text-[11px] font-mono text-[#8E9CAE] block mt-1">
               Last officer update: {issue.lastStatusUpdateAt.replace("T", " ").slice(0, 19)}
             </span>
-          )}
-        </div>
-
-        {/* Highlights Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#0B131E]/90 border border-[#223348] text-xs">
-          <div className="space-y-1">
-            <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">Category & Dept</span>
-            <span className="font-medium text-[#D4A24C] block truncate">
-              {issue.department || issue.category}
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">Mandal & Location</span>
-            <span className="font-medium text-[#F5EFE0] flex items-center gap-1.5 truncate">
-              <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-              {issue.mandalName} · {issue.villageName}
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">Reporter Details</span>
-            <span className="font-medium text-[#F5EFE0] flex items-center gap-1.5 truncate">
-              <User className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-              {issue.reportedBy} ({issue.reporterType === "LEADER" ? "Leader" : issue.reporterType === "CADRE" ? "Cadre" : "Citizen"}
-              {issue.citizenAge ? ` · ${issue.citizenAge}` : ""}
-              {issue.citizenGender ? ` · ${issue.citizenGender}` : ""})
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10.5px] uppercase text-[#8E9CAE] block font-semibold">
-              {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed By Person" : "Assigned Official"}
-            </span>
-            <span className="font-mono text-emerald-400 flex items-center gap-1.5 font-semibold truncate">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              {assignedOfficialDisplay || "Unassigned"}
-            </span>
-          </div>
+          ) : null}
         </div>
       </div>
 
-      {/* 2×2 cells: card borders fill the cell so bottoms align and gaps stay tight */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:auto-rows-fr">
-            <div className="h-full p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
-              <div className="flex items-start justify-between gap-3 border-b border-[#223348]/70 pb-3">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
-                  Issue Scope & Ground Description
-                </h3>
-                <span className="text-xs text-[#8E9CAE] font-mono shrink-0 text-right">
-                  {issue.assemblyConstituencyName || issue.parliamentConstituencyName || "Constituency Banaganapalle"}
-                </span>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className={SECTION}>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C]">Issue Scope & Ground Description</h3>
+            <span className="text-xs text-[#8E9CAE] font-mono shrink-0 text-right">
+              {issue.assemblyConstituencyName || issue.parliamentConstituencyName || "Constituency Banaganapalle"}
+            </span>
+          </div>
+          <p className="text-sm text-[#CBD5E1] leading-relaxed whitespace-pre-wrap">
+            {issue.description || "No specific detailed description recorded during ground intake."}
+          </p>
+          {issue.schemeSubDetail ? (
+            <p className="text-xs text-[#8E9CAE]">
+              Scheme / Work: <span className="text-[#F5EFE0]">{issue.schemeSubDetail}</span>
+            </p>
+          ) : null}
+          {issue.placeName ? (
+            <p className="text-xs text-[#8E9CAE]">
+              Exact Location Landmark: <strong className="text-[#F5EFE0] font-medium">{issue.placeName}</strong>
+            </p>
+          ) : null}
+          {issue.initialRemarks ? (
+            <p className="text-xs text-[#8E9CAE]">
+              Ground intake notes: <strong className="text-[#F5EFE0] font-medium">{issue.initialRemarks}</strong>
+            </p>
+          ) : null}
+        </div>
 
-              <p className="text-sm text-[#CBD5E1] leading-relaxed whitespace-pre-wrap pt-1">
-                {issue.description || "No specific detailed description recorded during ground intake."}
-              </p>
+        <div className={SECTION}>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C]">Field Squad Assignment</h3>
+            <span className="text-xs text-[#8E9CAE] shrink-0">Active Ticket</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+            <DetailField label="Assigned Department">
+              {issue.completedDepartment || issue.department || "General Administration"}
+            </DetailField>
+            <DetailField label={issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By" : "Assigned Official"}>
+              {assignedOfficialDisplay || "Unassigned"}
+            </DetailField>
+            {issue.assignedOfficialPhone ? (
+              <DetailField label="Official Contact">
+                <a href={`tel:${issue.assignedOfficialPhone}`} className="font-mono text-[#D4A24C] hover:underline">
+                  {issue.assignedOfficialPhone}
+                </a>
+              </DetailField>
+            ) : null}
+            <DetailField label="Field Volunteer">{assignedAgentName}</DetailField>
+            {issue.assignedVolunteerPhone ? (
+              <DetailField label="Volunteer Contact">
+                <a href={`tel:${issue.assignedVolunteerPhone}`} className="font-mono text-[#D4A24C] hover:underline">
+                  {issue.assignedVolunteerPhone}
+                </a>
+              </DetailField>
+            ) : null}
+            <DetailField label="Target Due Date">{issue.dueDate || "Within 72 Hours"}</DetailField>
+          </div>
+          {canUpdateProof ? (
+            <button type="button" onClick={() => setIsUpdateModalOpen(true)} className={`${BTN} w-full justify-center`}>
+              <Camera className="w-4 h-4" />
+              <span>Update Status & Upload Proof</span>
+            </button>
+          ) : null}
+        </div>
 
-              {issue.schemeSubDetail ? (
-                <div className="p-3 rounded-xl bg-[#142B45]/80 border border-[#D4A24C]/30 text-xs text-[#D4A24C] font-semibold">
-                  Scheme / Work: <span className="text-[#F5EFE0] font-medium">{issue.schemeSubDetail}</span>
-                </div>
-              ) : null}
+        <div className={SECTION}>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C]">Citizen / Reporter Identification</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+            <DetailField label="Reporter Name">
+              {issue.reportedBy}
+              <span className="block text-xs text-[#D4A24C] mt-0.5">
+                {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
+                {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
+              </span>
+            </DetailField>
+            {issue.citizenGender ? <DetailField label="Gender">{issue.citizenGender}</DetailField> : null}
+            {issue.citizenAge ? <DetailField label="Age">{issue.citizenAge}</DetailField> : null}
+            {issue.reporterPhone ? (
+              <DetailField label="Direct Phone Contact">
+                <a href={`tel:${issue.reporterPhone}`} className="inline-flex items-center gap-1.5 font-mono text-[#D4A24C] hover:underline">
+                  <Phone className="w-3.5 h-3.5" />
+                  {issue.reporterPhone}
+                </a>
+              </DetailField>
+            ) : null}
+            {issue.secondaryContactName ? (
+              <DetailField label={issue.reporterType === "CITIZEN" ? "Secondary Name" : "Citizen Name"}>
+                {issue.secondaryContactName}
+              </DetailField>
+            ) : null}
+            {issue.secondaryContactPhone ? (
+              <DetailField label={issue.reporterType === "CITIZEN" ? "Secondary Phone" : "Citizen Phone"}>
+                <a href={`tel:${issue.secondaryContactPhone}`} className="inline-flex items-center gap-1.5 font-mono text-[#D4A24C] hover:underline">
+                  <Phone className="w-3.5 h-3.5" />
+                  {issue.secondaryContactPhone}
+                </a>
+              </DetailField>
+            ) : null}
+          </div>
+        </div>
 
-              {issue.placeName && (
-                <div className="p-3 rounded-xl bg-[#0B131E] border border-[#223348] flex items-start gap-2 text-xs text-[#8E9CAE] mt-3">
-                  <MapPin className="w-4 h-4 text-[#D4A24C] shrink-0 mt-0.5" />
-                  <span>Exact Location Landmark: <strong className="text-[#F5EFE0]">{issue.placeName}</strong></span>
-                </div>
-              )}
-              {issue.initialRemarks ? (
-                <div className="p-3 rounded-xl bg-[#0B131E] border border-[#223348] text-xs text-[#8E9CAE]">
-                  Ground intake notes: <strong className="text-[#F5EFE0] font-medium">{issue.initialRemarks}</strong>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="h-full p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
-              <div className="flex items-center justify-between gap-2 border-b border-[#223348]/70 pb-2">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
-                  Field Squad Assignment
-                </h3>
-                <span className="text-xs text-emerald-400 font-semibold shrink-0">Active Ticket</span>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div className="flex items-start justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                  <span className="text-[#8E9CAE] shrink-0">Assigned Department:</span>
-                  <strong className="text-[#D4A24C] text-right break-words min-w-0">
-                    {issue.completedDepartment || issue.department || "General Administration"}
-                  </strong>
-                </div>
-
-                <div className="flex items-start justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                  <span className="text-[#8E9CAE] shrink-0">
-                    {issue.status === "COMPLETED" || issue.status === "RESOLVED" ? "Completed / Resolved By:" : "Assigned Official:"}
-                  </span>
-                  <strong className="text-[#F5EFE0] text-right break-words min-w-0">
-                    {assignedOfficialDisplay || "Unassigned"}
-                  </strong>
-                </div>
-
-                {issue.assignedOfficialPhone && (
-                  <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                    <span className="text-[#8E9CAE] shrink-0">Official Contact:</span>
-                    <a href={`tel:${issue.assignedOfficialPhone}`} className="text-[#D4A24C] font-mono font-bold hover:underline whitespace-nowrap">
-                      {issue.assignedOfficialPhone}
-                    </a>
-                  </div>
-                )}
-
-                <div className="flex items-start justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                  <span className="text-[#8E9CAE] shrink-0">Field Volunteer:</span>
-                  <strong className="text-[#F5EFE0] text-right break-words min-w-0">{assignedAgentName}</strong>
-                </div>
-
-                {issue.assignedVolunteerPhone && (
-                  <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                    <span className="text-[#8E9CAE] shrink-0">Volunteer Contact:</span>
-                    <a href={`tel:${issue.assignedVolunteerPhone}`} className="text-[#D4A24C] font-mono font-bold hover:underline whitespace-nowrap">
-                      {issue.assignedVolunteerPhone}
-                    </a>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                  <span className="text-[#8E9CAE] shrink-0">Target Due Date:</span>
-                  <span className={`font-semibold ${issue.status === "OVERDUE" ? "text-rose-400" : "text-[#F5EFE0]"}`}>
-                    {issue.dueDate || "Within 72 Hours"}
-                  </span>
-                </div>
-              </div>
-
-              {canUpdateProof && (
-                <button
-                  onClick={() => setIsUpdateModalOpen(true)}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer mt-2"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>Update Status & Upload Proof</span>
-                </button>
-              )}
-            </div>
-
-            <div className="h-full p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-3 shadow-lg">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[#223348]/70 pb-2">
-                Citizen / Reporter Identification
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-1">
-                <div className="min-w-0">
-                  <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Reporter Name</span>
-                  <strong className="text-[#F5EFE0] text-sm block mt-0.5 break-words">{issue.reportedBy}</strong>
-                  <span className="text-[11px] text-[#D4A24C] block mt-0.5">
-                    {issue.reporterType === "LEADER" ? "Party Leader" : issue.reporterType === "CADRE" ? "Party Cadre" : "Citizen"}
-                    {issue.reporterDesignation ? ` · ${issue.reporterDesignation}` : ""}
-                  </span>
-                </div>
-
-                {issue.citizenGender ? (
-                  <div className="min-w-0">
-                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Gender</span>
-                    <strong className="text-[#F5EFE0] text-sm block mt-0.5">{issue.citizenGender}</strong>
-                  </div>
-                ) : null}
-
-                {issue.citizenAge ? (
-                  <div className="min-w-0">
-                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Age</span>
-                    <strong className="text-[#F5EFE0] text-sm block mt-0.5">{issue.citizenAge}</strong>
-                  </div>
-                ) : null}
-
-                {issue.reporterPhone && (
-                  <div className="min-w-0">
-                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">Direct Phone Contact</span>
-                    <a
-                      href={`tel:${issue.reporterPhone}`}
-                      className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold transition-colors whitespace-nowrap"
-                    >
-                      <Phone className="w-3.5 h-3.5 shrink-0" />
-                      {issue.reporterPhone}
-                    </a>
-                  </div>
-                )}
-
-                {issue.secondaryContactName ? (
-                  <div className="min-w-0">
-                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">
-                      {issue.reporterType === "CITIZEN" ? "Secondary Name" : "Citizen Name"}
-                    </span>
-                    <strong className="text-[#F5EFE0] text-sm block mt-0.5 break-words">{issue.secondaryContactName}</strong>
-                  </div>
-                ) : null}
-
-                {issue.secondaryContactPhone ? (
-                  <div className="min-w-0">
-                    <span className="text-[#8E9CAE] block text-[10.5px] uppercase font-semibold">
-                      {issue.reporterType === "CITIZEN" ? "Secondary Phone" : "Citizen Phone"}
-                    </span>
-                    <a
-                      href={`tel:${issue.secondaryContactPhone}`}
-                      className="inline-flex items-center gap-2 mt-1 px-3.5 py-1.5 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold transition-colors whitespace-nowrap"
-                    >
-                      <Phone className="w-3.5 h-3.5 shrink-0" />
-                      {issue.secondaryContactPhone}
-                    </a>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="h-full p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg min-h-0">
-          <div className="flex items-center justify-between border-b border-[#223348]/70 pb-2">
-            <h3 className="text-sm font-semibold text-[#F5EFE0] flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#D4A24C]" />
+        <div className={SECTION}>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2">
+              <Clock className="w-4 h-4" />
               Audit & Activity Timeline
             </h3>
             <span className="text-xs text-[#8E9CAE] font-mono">
               {loadingHistory ? "Loading…" : `${history.length} record${history.length === 1 ? "" : "s"}`}
             </span>
           </div>
-
           {loadingHistory ? (
-            <div className="p-6 text-center text-xs text-[#8E9CAE]">Loading timeline updates...</div>
+            <p className="text-xs text-[#8E9CAE]">Loading timeline updates...</p>
           ) : history.length === 0 ? (
-            <div className="p-4 rounded-xl bg-[#0B131E] text-center text-xs text-[#8E9CAE] border border-[#223348]">
+            <p className="text-xs text-[#8E9CAE]">
               Intake registered on {issue.reportedDate}. No additional ground actions logged yet.
-            </div>
+            </p>
           ) : (
-            <div
-              className={`space-y-3 ${history.length > 6 ? "max-h-[50vh] overflow-y-auto pr-1" : ""}`}
-            >
+            <div className={`space-y-2 ${history.length > 6 ? "max-h-[50vh] overflow-y-auto pr-1" : ""}`}>
               {history.map((record) => (
-                <div
-                  key={record.id}
-                  className="p-3.5 rounded-xl bg-[#0B131E] border border-[#223348] text-xs space-y-2"
-                >
+                <div key={record.id} className="text-xs space-y-1 py-2 border-t border-[#223348] first:border-t-0 first:pt-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${getStatusBadge(record.newStatus)}`}>
-                      {formatIssueStatus(record.newStatus)}
-                    </span>
+                    <span className={CHIP}>{formatIssueStatus(record.newStatus)}</span>
                     <span className="text-[11px] text-[#8E9CAE] font-mono">{record.updateDate}</span>
                   </div>
-
-                  <p className="text-xs text-[#CBD5E1] leading-relaxed">{record.remarks}</p>
-
-                  {record.volunteerName && (
-                    <div className="text-[10px] text-[#8E9CAE] pt-1.5 border-t border-[#223348]/60">
+                  <p className="text-[#CBD5E1] leading-relaxed">{record.remarks}</p>
+                  {record.volunteerName ? (
+                    <p className="text-[10px] text-[#8E9CAE]">
                       Logged by: <span className="text-[#D4A24C] font-semibold">{record.volunteerName}</span>
-                    </div>
-                  )}
+                    </p>
+                  ) : null}
                 </div>
               ))}
             </div>
           )}
-            </div>
         </div>
+      </div>
 
       {issue.attachments && issue.attachments.length > 0 && (
-        <div className="p-5 sm:p-6 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] space-y-4 shadow-lg">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2 border-b border-[#223348]/70 pb-2">
-            <Camera className="w-4 h-4 text-[#D4A24C]" />
+        <div className="p-4 rounded-xl bg-[#0E1724] border border-[#223348] space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2">
+            <Camera className="w-4 h-4" />
             Uploaded Proof Documents & Photos ({issue.attachments.length})
           </h3>
 

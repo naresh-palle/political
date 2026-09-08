@@ -782,7 +782,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   // If an issue is selected, display the full-page dedicated IssueDetailView
   if (selectedIssue) {
     return (
-      <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6">
+      <div className="w-full max-w-7xl mx-auto py-3 sm:py-4 px-3 sm:px-4 lg:px-6">
         <IssueDetailView
           issue={selectedIssue}
           currentUser={currentUser}
