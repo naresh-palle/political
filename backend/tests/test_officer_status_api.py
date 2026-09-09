@@ -98,6 +98,57 @@ def test_officer_status_creates_volunteer_notification_and_audit(monkeypatch):
     assert srv.IN_MEMORY_ISSUE_HISTORY[0]["previousStatus"] == "ASSIGNED"
 
 
+def test_complainant_131030_returns_ticket_whatsapp_link(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    srv.IN_MEMORY_NOTIFICATIONS.clear()
+    srv.IN_MEMORY_ISSUE_HISTORY.clear()
+    srv.IN_MEMORY_NOTIFICATION_AUDITS.clear()
+    srv.IN_MEMORY_STATUS_IDEMPOTENCY.clear()
+
+    issue = _issue()
+    mock_issues = MagicMock()
+    mock_issues.find_one = AsyncMock(return_value=dict(issue))
+    mock_issues.update_one = AsyncMock(return_value=MagicMock(matched_count=1, upserted_id=None))
+    mock_col = MagicMock()
+    mock_col.insert_one = AsyncMock(return_value=None)
+    mock_col.find = MagicMock(return_value=_Cursor([]))
+    mock_col.find_one = AsyncMock(return_value=None)
+
+    class _DB:
+        field_issues = mock_issues
+        issue_history = mock_col
+        work_updates = mock_col
+        notifications = mock_col
+        field_notifications = mock_col
+        notification_audits = mock_col
+
+    monkeypatch.setattr(srv, "db", _DB())
+
+    async def fake_wa(payload):
+        assert payload.get("recipientPhone") in ("9876543210", "919876543210")
+        return {
+            "success": False,
+            "status": "FAILED",
+            "errorCode": "131030",
+            "errorMessage": "allowed list",
+            "providerMessageId": None,
+        }
+
+    monkeypatch.setattr(srv.whatsapp_client, "send_whatsapp_notification", fake_wa)
+    result = asyncio.run(
+        srv.update_field_issue_status("iss-e2e-1", {"status": "IN_PROGRESS", "remarks": "Work started at site."})
+    )
+    notify = result["complainantNotification"]
+    assert notify["status"] == "FAILED"
+    assert notify["errorCode"] == "131030"
+    assert notify["phoneSource"] == "TICKET"
+    assert notify["clickToChatUrl"].startswith("https://wa.me/919876543210")
+    assert "directory" in result["message"].lower() or "ticket" in result["message"].lower()
+
+
 def test_assign_notify_does_not_overwrite_in_progress(monkeypatch):
     import asyncio
     from backend import server as srv

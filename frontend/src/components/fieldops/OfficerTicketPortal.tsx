@@ -54,6 +54,7 @@ export const OfficerTicketPortal: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
   const [complainantWaNote, setComplainantWaNote] = useState<string>("");
+  const [complainantWaLink, setComplainantWaLink] = useState<string>("");
   const [showStatusForm, setShowStatusForm] = useState<boolean>(false);
   const [history, setHistory] = useState<any[]>([]);
 
@@ -121,6 +122,8 @@ export const OfficerTicketPortal: React.FC = () => {
   useEffect(() => {
     setShowStatusForm(false);
     setSubmitSuccess(false);
+    setComplainantWaLink("");
+    setComplainantWaNote("");
     if (!issueId) return;
     politicalApiService.getIssueHistory(issueId).then((rows) => {
       if (Array.isArray(rows)) setHistory(rows);
@@ -345,6 +348,8 @@ export const OfficerTicketPortal: React.FC = () => {
       const authoritative = result?.ticket?.status || result?.status || newStatus;
       const waStatus = result?.complainantNotification?.status;
       const waErr = result?.complainantNotification?.errorMessage;
+      const waCode = String(result?.complainantNotification?.errorCode || "");
+      const waLink = String(result?.complainantNotification?.clickToChatUrl || "");
 
       setSubmitSuccess(true);
       setIssue((prev) =>
@@ -358,8 +363,14 @@ export const OfficerTicketPortal: React.FC = () => {
             }
           : prev
       );
+      setComplainantWaLink(waLink);
       if (waStatus === "SENT" || waStatus === "DELIVERED") {
         setComplainantWaNote("Complainant WhatsApp sent with template complainant_status_update_v1.");
+        setError("");
+      } else if (waCode === "131030" || /allowed list/i.test(waErr || "")) {
+        setComplainantWaNote(
+          "Walk-in complainant numbers are not stored in any directory. Send the status from this ticket WhatsApp link."
+        );
         setError("");
       } else {
         setComplainantWaNote(
@@ -909,6 +920,17 @@ export const OfficerTicketPortal: React.FC = () => {
                     {complainantWaNote ||
                       "Complainant WhatsApp uses template complainant_status_update_v1."}
                   </p>
+                  {complainantWaLink ? (
+                    <a
+                      href={complainantWaLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4A24C] text-[#071322] text-xs font-bold cursor-pointer"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Send complainant WhatsApp
+                    </a>
+                  ) : null}
                   <p className="text-[11px] text-emerald-300/80 font-mono italic">
                     ⏳ Auto-reverting to Grievance Dashboard in 3.5 seconds...
                   </p>

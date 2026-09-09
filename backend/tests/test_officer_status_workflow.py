@@ -96,6 +96,14 @@ def test_complainant_phone_prefers_ticket_fields():
     assert nested.endswith("43003")
 
 
+def test_complainant_click_to_chat_uses_ticket_phone_not_directory():
+    from backend.services.officer_status_workflow import complainant_click_to_chat_url
+
+    url = complainant_click_to_chat_url("9876543210", "Hello citizen")
+    assert url.startswith("https://wa.me/919876543210?text=")
+    assert "Hello" in url
+
+
 def test_preserve_in_progress_against_open():
     from backend.services.officer_status_workflow import merge_issue_docs, should_preserve_progress_status
 
@@ -298,6 +306,50 @@ def test_whatsapp_auth_error_does_not_retry_template_shapes(monkeypatch):
     assert result["errorCode"] == "190"
     assert result["metaHttpStatus"] == 401
     assert "WHATSAPP_ACCESS_TOKEN" in result["errorMessage"]
+
+
+def test_whatsapp_131030_does_not_retry_and_skips_allowed_list(monkeypatch):
+    import asyncio
+    from backend.services.whatsapp_service import WhatsAppCloudApiClient, META_RECIPIENT_LIST_MESSAGE
+
+    client = WhatsAppCloudApiClient()
+    client.enabled = True
+    client.phone_number_id = "1"
+    client.access_token = "token"
+    calls = []
+
+    async def fake_post(body):
+        calls.append(body)
+        return {
+            "status_code": 400,
+            "res_json": {
+                "error": {
+                    "code": 131030,
+                    "message": "(#131030) Recipient phone number not in allowed list",
+                }
+            },
+            "error_msg_fallback": "Recipient phone number not in allowed list",
+        }
+
+    monkeypatch.setattr(client, "_post_graph", fake_post)
+    result = asyncio.run(
+        client.send_whatsapp_notification(
+            {
+                "recipientPhone": "7893015454",
+                "messageKind": "COMPLAINANT_STATUS",
+                "templateName": "complainant_status_update_v1",
+                "complainantName": "Walk-in Citizen",
+                "ticketNumber": "LL-walkin-1",
+                "newStatus": "RESOLVED",
+                "remarks": "Work completed",
+            }
+        )
+    )
+    assert len(calls) == 1
+    assert result["status"] == "FAILED"
+    assert result["errorCode"] == "131030"
+    assert result["errorMessage"] == META_RECIPIENT_LIST_MESSAGE
+    assert "Contact Database" in result["errorMessage"]
 
 
 def test_clean_meta_secret_strips_bearer_and_quotes():

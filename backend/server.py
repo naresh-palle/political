@@ -52,6 +52,7 @@ try:
         EVENT_BY_STATUS,
         complainant_phone_from_issue,
         complainant_whatsapp_text,
+        complainant_click_to_chat_url,
         mask_phone,
         normalize_status,
         ticket_display_number,
@@ -81,6 +82,7 @@ except ImportError:
         EVENT_BY_STATUS,
         complainant_phone_from_issue,
         complainant_whatsapp_text,
+        complainant_click_to_chat_url,
         mask_phone,
         normalize_status,
         ticket_display_number,
@@ -2883,6 +2885,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     wa_status = whatsapp_result.get("status") or "FAILED"
     if wa_status not in ("SENT", "DELIVERED", "FAILED", "PENDING"):
         wa_status = "SENT" if whatsapp_result.get("success") else "FAILED"
+    click_to_chat_url = complainant_click_to_chat_url(complainant_phone, wa_text)
 
     volunteer_phone = volunteer_phone_from_issue(issue)
     auth_failed = str(whatsapp_result.get("errorCode") or "") in {"190", "102", "104", "463", "467"} or whatsapp_result.get("metaHttpStatus") == 401
@@ -2938,6 +2941,8 @@ async def update_field_issue_status(issue_id: str, payload: dict):
             "providerMessageId": whatsapp_result.get("providerMessageId"),
             "errorCode": whatsapp_result.get("errorCode"),
             "errorMessage": whatsapp_result.get("errorMessage"),
+            "clickToChatUrl": click_to_chat_url,
+            "phoneSource": "TICKET",
         },
         "whatsappResult": {
             "status": wa_status,
@@ -2953,7 +2958,11 @@ async def update_field_issue_status(issue_id: str, payload: dict):
             + (
                 " Complaint Person WhatsApp sent."
                 if wa_status in ("SENT", "DELIVERED")
-                else " Complaint Person WhatsApp failed."
+                else (
+                    " Citizen numbers stay on the ticket only — use the WhatsApp link to notify the complainant."
+                    if str(whatsapp_result.get("errorCode") or "") == "131030"
+                    else " Complaint Person WhatsApp failed."
+                )
             )
         ),
     }

@@ -144,6 +144,21 @@ META_AUTH_OPERATOR_MESSAGE = (
     "then restart the service."
 )
 
+META_RECIPIENT_LIST_MESSAGE = (
+    "Citizen WhatsApp uses the phone written on this ticket only. "
+    "Walk-in complainants are not stored in Contact Database and do not need to be added to any allowed list. "
+    "A Meta test WhatsApp number can only message a few tester phones. "
+    "Set Render WHATSAPP_PHONE_NUMBER_ID to a live Business number to auto-send every ticket phone, "
+    "or notify this citizen from the ticket WhatsApp link."
+)
+
+
+def _is_meta_recipient_list_error(status_code: Optional[int], error_code: str, message: str = "") -> bool:
+    if str(error_code or "") in {"131030", "130472"}:
+        return True
+    lowered = (message or "").lower()
+    return "not in allowed list" in lowered
+
 
 def _safe_provider_error(res_json: Dict[str, Any], fallback: str = "", http_status: Optional[int] = None) -> Dict[str, Any]:
     error = (res_json or {}).get("error") or {}
@@ -156,6 +171,13 @@ def _safe_provider_error(res_json: Dict[str, Any], fallback: str = "", http_stat
             "fbtrace_id": error.get("fbtrace_id"),
         }
     message = error.get("message") or fallback or "Unknown Meta Cloud API error"
+    if _is_meta_recipient_list_error(http_status, code, str(message or "")):
+        return {
+            "errorCode": "131030",
+            "errorMessage": META_RECIPIENT_LIST_MESSAGE,
+            "errorType": error.get("type"),
+            "fbtrace_id": error.get("fbtrace_id"),
+        }
     if isinstance(message, str):
         lowered = message.lower()
         for secret_hint in ("bearer ", "eaa", "access token", "authorization"):
@@ -462,6 +484,10 @@ class WhatsAppCloudApiClient:
             if _is_meta_auth_error(status_code, err_code):
                 safe = _safe_provider_error(res_json, error_msg_fallback, http_status=status_code)
                 return _fail(safe["errorCode"], safe["errorMessage"], http_status=status_code)
+
+            err_msg_early = str(((res_json or {}).get("error") or {}).get("message") or error_msg_fallback or "")
+            if _is_meta_recipient_list_error(status_code, err_code, err_msg_early):
+                return _fail("131030", META_RECIPIENT_LIST_MESSAGE, http_status=status_code)
 
             # Session text is rejected outside the 24h window; use the approved citizen template.
             if message_kind == "TEXT" and int(payload.get("templateRetryStep") or 0) < 1:

@@ -166,7 +166,25 @@ def first_phone(*values: Any) -> str:
     return ""
 
 
+def e164_whatsapp_digits(phone: str) -> str:
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    if len(digits) == 10:
+        return f"91{digits}"
+    return digits
+
+
+def complainant_click_to_chat_url(phone: str, text: str) -> str:
+    """wa.me link from the ticket phone. Citizens are never looked up in Contact Database."""
+    from urllib.parse import quote
+
+    digits = e164_whatsapp_digits(phone)
+    if len(digits) < 11:
+        return ""
+    return f"https://wa.me/{digits}?text={quote(text or '')}"
+
+
 def complainant_phone_from_issue(issue: Dict[str, Any], payload: Optional[Dict[str, Any]] = None) -> str:
+    """Phone written on the ticket only — never Contact Database, users, or Meta allowed lists."""
     payload = payload or {}
     nested = payload.get("ticket") if isinstance(payload.get("ticket"), dict) else {}
     return first_phone(
