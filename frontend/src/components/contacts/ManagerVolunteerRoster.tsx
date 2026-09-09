@@ -299,21 +299,21 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
           })}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg">
-          <table className="min-w-[980px] w-full text-left text-xs text-[#CBD5E1]">
+        <div className="rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg">
+          <table className="w-full table-fixed text-left text-xs text-[#CBD5E1]">
             <thead className="bg-[#0B131E] text-[#8E9CAE] uppercase font-semibold border-b border-[#223348] text-[10.5px]">
               <tr>
-                <th className="p-3.5">Volunteer</th>
-                <th className="p-3.5">Status</th>
-                <th className="p-3.5">Area</th>
-                <th className="p-3.5">Villages</th>
-                <th className="p-3.5">Email</th>
-                <th className="p-3.5">Phone</th>
-                <th className="p-3.5 text-center">Assigned</th>
-                <th className="p-3.5 text-center">Pending</th>
-                <th className="p-3.5 text-center">Overdue</th>
-                <th className="p-3.5 text-center">Done</th>
-                <th className="p-3.5">Contact</th>
+                <th className="px-2 py-2 w-[16%] whitespace-normal break-words">Volunteer</th>
+                <th className="px-2 py-2 w-[8%] whitespace-normal break-words">Status</th>
+                <th className="px-2 py-2 w-[12%] whitespace-normal break-words">Area</th>
+                <th className="px-2 py-2 w-[14%] whitespace-normal break-words">Villages</th>
+                <th className="px-2 py-2 w-[15%] whitespace-normal break-words">Email</th>
+                <th className="px-2 py-2 w-[11%] whitespace-normal break-words">Phone</th>
+                <th className="px-2 py-2 w-[4%] text-center whitespace-normal break-words">Assigned</th>
+                <th className="px-2 py-2 w-[4%] text-center whitespace-normal break-words">Pending</th>
+                <th className="px-2 py-2 w-[4%] text-center whitespace-normal break-words">Overdue</th>
+                <th className="px-2 py-2 w-[4%] text-center whitespace-normal break-words">Done</th>
+                <th className="px-2 py-2 w-[8%] whitespace-normal break-words">Contact</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#223348]/60">
@@ -323,48 +323,48 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                 return (
                   <tr
                     key={vol.id}
-                    className="hover:bg-[#131E2D]/60 transition-colors cursor-pointer"
+                    className="align-top hover:bg-[#131E2D]/60 transition-colors cursor-pointer"
                     onClick={() => openAssignTickets(vol.id)}
                   >
-                    <td className="p-3.5">
-                      <strong className="text-[#F5EFE0] block font-semibold whitespace-normal break-words">{vol.name}</strong>
-                      <span className="text-[11px] text-[#8E9CAE] block whitespace-normal break-words">
+                    <td className="px-2 py-2">
+                      <strong className="text-[#F5EFE0] block font-semibold whitespace-normal break-words leading-snug">{vol.name}</strong>
+                      <span className="text-[11px] text-[#8E9CAE] block whitespace-normal break-words leading-snug">
                         {vol.designation || vol.roleTitle || "Field Volunteer"}
                       </span>
                     </td>
-                    <td className="p-3.5">
-                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase ${UNIQUE_TICKET_SURFACE.badge}`}>
+                    <td className="px-2 py-2">
+                      <span className={`inline-block px-2 py-0.5 rounded-md text-[10.5px] font-bold uppercase whitespace-normal break-words ${UNIQUE_TICKET_SURFACE.badge}`}>
                         {vol.status || "ACTIVE"}
                       </span>
                     </td>
-                    <td className="p-3.5 whitespace-normal break-words text-[#F5EFE0]">{area || "—"}</td>
-                    <td className="p-3.5 whitespace-normal break-words">{villages.length ? villages.join(", ") : "—"}</td>
-                    <td className="p-3.5 whitespace-normal break-words">{email || "—"}</td>
-                    <td className="p-3.5 font-mono whitespace-normal break-words">{phone ? `+91 ${phone.slice(-10)}` : "—"}</td>
-                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{assignedCount}</td>
-                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{pendingCount}</td>
-                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{overdueCount}</td>
-                    <td className="p-3.5 text-center font-bold text-[#D4A24C]">{doneCount}</td>
-                    <td className="p-3.5" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex flex-wrap items-center gap-1.5">
+                    <td className="px-2 py-2 whitespace-normal break-words leading-snug text-[#F5EFE0]">{area || "—"}</td>
+                    <td className="px-2 py-2 whitespace-normal break-words leading-snug">{villages.length ? villages.join(", ") : "—"}</td>
+                    <td className="px-2 py-2 whitespace-normal break-all leading-snug">{email || "—"}</td>
+                    <td className="px-2 py-2 font-mono whitespace-normal break-all leading-snug">{phone ? `+91 ${phone.slice(-10)}` : "—"}</td>
+                    <td className="px-2 py-2 text-center font-bold text-[#D4A24C] leading-snug">{assignedCount}</td>
+                    <td className="px-2 py-2 text-center font-bold text-[#D4A24C] leading-snug">{pendingCount}</td>
+                    <td className="px-2 py-2 text-center font-bold text-[#D4A24C] leading-snug">{overdueCount}</td>
+                    <td className="px-2 py-2 text-center font-bold text-[#D4A24C] leading-snug">{doneCount}</td>
+                    <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-wrap items-center gap-1">
                         {wa ? (
                           <a
                             href={wa}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5"
+                            className="px-1.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-[10.5px] font-semibold inline-flex items-center gap-1"
                           >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            WhatsApp
+                            <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span className="whitespace-normal break-words">WhatsApp</span>
                           </a>
                         ) : null}
                         {tel ? (
                           <a
                             href={tel}
-                            className="p-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5"
+                            className="px-1.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[10.5px] font-semibold inline-flex items-center gap-1"
                           >
-                            <Phone className="w-3.5 h-3.5" />
-                            Call
+                            <Phone className="w-3.5 h-3.5 shrink-0" />
+                            <span className="whitespace-normal break-words">Call</span>
                           </a>
                         ) : null}
                       </div>
