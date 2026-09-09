@@ -537,7 +537,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         assignedVolunteerPhone: currentUser.phone || "",
         directorId: currentUser.directorId || "usr-demo-director",
         directorName: currentUser.directorName || "Manager1",
-        initialRemarks: `Reported by ${reporterType} ${reporterType === "CITIZEN" && citizenAge ? `(Age: ${citizenAge}, Gender: ${citizenGender}) ` : ""}${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${currentUser.name}.`,
+        initialRemarks: `Reported by ${reporterType}${citizenAge || citizenGender ? ` (Age: ${citizenAge || "—"}, Gender: ${citizenGender}) ` : " "}${reporterDesignation ? `(${reporterDesignation})` : ""}. Assigned to ${currentUser.name}.`,
         attachments: allAttachments,
         createdBy: currentUser.id,
         createdByRole: "VOLUNTEER"
@@ -1127,38 +1127,35 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     </div>
                   </div>
 
-                  {reporterType === "CITIZEN" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch animate-fadeIn">
-                      <div>
-                        <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                          Age
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={120}
-                          value={citizenAge}
-                          onChange={(e) => setCitizenAge(e.target.value)}
-                          className={`${FORM_CONTROL} font-mono`}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
-                          Gender
-                        </label>
-                        <select
-                          value={citizenGender}
-                          onChange={(e) => setCitizenGender(e.target.value)}
-                          className={`${FORM_CONTROL} cursor-pointer`}
-                        >
-                          <option value="Male" className="bg-[#0B1A2C] text-[#F5EFE0]">Male</option>
-                          <option value="Female" className="bg-[#0B1A2C] text-[#F5EFE0]">Female</option>
-                          <option value="Other" className="bg-[#0B1A2C] text-[#F5EFE0]">Other</option>
-                        </select>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
+                    <div className="min-w-0">
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Gender
+                      </label>
+                      <select
+                        value={citizenGender}
+                        onChange={(e) => setCitizenGender(e.target.value)}
+                        className={`${FORM_CONTROL} cursor-pointer`}
+                      >
+                        <option value="Male" className="bg-[#0B1A2C] text-[#F5EFE0]">Male</option>
+                        <option value="Female" className="bg-[#0B1A2C] text-[#F5EFE0]">Female</option>
+                        <option value="Other" className="bg-[#0B1A2C] text-[#F5EFE0]">Other</option>
+                      </select>
                     </div>
-                  )}
+                    <div className="min-w-0">
+                      <label className="block text-[10.5px] uppercase tracking-wider text-[#B9AF95] font-semibold mb-1">
+                        Age
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={120}
+                        value={citizenAge}
+                        onChange={(e) => setCitizenAge(e.target.value)}
+                        className={`${FORM_CONTROL} font-mono`}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* 11. Multi-Proof (Photos & Documents) Upload (Not Mandatory) */}

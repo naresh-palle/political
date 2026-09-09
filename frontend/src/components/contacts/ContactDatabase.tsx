@@ -27,7 +27,7 @@ export interface ContactRecord {
   name: string;
   phone: string;
   email?: string;
-  category: "INFLUENCER" | "CADRE" | "CITIZEN" | "GOVT_OFFICIAL" | "DWCRA_LEAD" | "YOUTH_LEADER" | "OTHER";
+  category: "INFLUENCER" | "CADRE" | "PARTY_LEADER" | "CITIZEN" | "GOVT_OFFICIAL" | "DWCRA_LEAD" | "YOUTH_LEADER" | "OTHER";
   designation: string;
   mandalId: string;
   mandalName: string;
@@ -105,7 +105,7 @@ const EMPTY_CONTACT: Partial<ContactRecord> = {
   name: "",
   phone: "+91 ",
   email: "",
-  category: "CADRE",
+  category: "PARTY_LEADER",
   designation: "",
   department: "",
   subDepartment: "",
@@ -113,10 +113,7 @@ const EMPTY_CONTACT: Partial<ContactRecord> = {
   mandalId: "",
   villageName: "",
   villageId: "",
-  voterId: "",
-  age: undefined,
-  politicalAlignment: "STRONG_SUPPORTER",
-  occupation: "",
+  politicalAlignment: "OFFICIAL",
   gender: "Male",
   notes: ""
 };
@@ -269,10 +266,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
   const subOptions = selectedDept ? [...selectedDept.subDetails, OTHER_SUB] : [OTHER_SUB];
   const isOfficer = newContact.category === "GOVT_OFFICIAL";
 
+  const isPartyLeaderCategory = (category: ContactRecord["category"]) =>
+    category === "PARTY_LEADER" || category === "CADRE";
+
   const matchesSearchCategory = (category: ContactRecord["category"], selected: string) => {
     if (selected === "ALL") return true;
-    if (selected === "CADRE" || selected === "GOVT_OFFICIAL") return category === selected;
-    if (selected === "OTHER") return category !== "CADRE" && category !== "GOVT_OFFICIAL";
+    if (selected === "GOVT_OFFICIAL") return category === "GOVT_OFFICIAL";
+    if (selected === "PARTY_LEADER" || selected === "CADRE") return isPartyLeaderCategory(category);
+    if (selected === "OTHER") return category !== "GOVT_OFFICIAL" && !isPartyLeaderCategory(category);
     return category === selected;
   };
 
@@ -296,10 +297,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
           c.mandalName,
           c.villageName,
           c.designation,
-          c.occupation,
           c.department,
-          c.subDepartment,
-          hidePhone ? "" : c.voterId
+          c.subDepartment
         ]
           .filter(Boolean)
           .join(" ")
@@ -310,21 +309,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     });
   }, [directoryContacts, filterCategory, filterMandal, filterGender, searchQuery, hidePhone]);
 
-  // Statistics
   const stats = useMemo(() => {
-    const influencers = directoryContacts.filter((c) => c.category === "INFLUENCER").length;
-    const cadres = directoryContacts.filter((c) => c.category === "CADRE" || c.category === "YOUTH_LEADER").length;
     const officials = directoryContacts.filter((c) => c.category === "GOVT_OFFICIAL").length;
-    const citizens = directoryContacts.filter((c) => c.category === "CITIZEN" || c.category === "DWCRA_LEAD").length;
-    const supporters = directoryContacts.filter((c) => c.politicalAlignment === "STRONG_SUPPORTER").length;
-
+    const leaders = directoryContacts.filter((c) => isPartyLeaderCategory(c.category)).length;
     return {
       total: directoryContacts.length,
-      influencers,
-      cadres,
       officials,
-      citizens,
-      supporters
+      leaders,
+      other: directoryContacts.length - officials - leaders
     };
   }, [directoryContacts]);
 
@@ -345,7 +337,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     name: newContact.name || "",
     phone: newContact.phone || "",
     email: newContact.email || undefined,
-    category: (newContact.category as ContactRecord["category"]) || "CADRE",
+    category: (newContact.category as ContactRecord["category"]) || "PARTY_LEADER",
     designation: newContact.designation || "",
     department: resolvedDepartment(),
     subDepartment: resolvedSubDepartment(),
@@ -353,10 +345,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     mandalName: newContact.mandalName || "",
     villageId: newContact.villageId || "",
     villageName: newContact.villageName || "",
-    voterId: newContact.voterId || undefined,
-    age: Number.isFinite(newContact.age) ? newContact.age : undefined,
     gender: (newContact.gender as ContactRecord["gender"]) || "Male",
-    politicalAlignment: (newContact.politicalAlignment as ContactRecord["politicalAlignment"]) || "STRONG_SUPPORTER",
+    politicalAlignment: (newContact.politicalAlignment as ContactRecord["politicalAlignment"]) || "OFFICIAL",
     occupation: newContact.occupation || "",
     avatarUrl: newContact.avatarUrl,
     grievanceCount: extras?.grievanceCount ?? 0,
@@ -418,8 +408,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     setEditingId(contact.id);
     setOtherDepartment(knownDept === OTHER_DEPT ? contact.department || "" : "");
     setOtherSubDepartment(knownSub === OTHER_SUB ? contact.subDepartment || "" : "");
+    const category = isPartyLeaderCategory(contact.category)
+      ? "PARTY_LEADER"
+      : contact.category === "GOVT_OFFICIAL"
+        ? "GOVT_OFFICIAL"
+        : "OTHER";
     setNewContact({
       ...contact,
+      category,
       department: knownDept || contact.department,
       subDepartment: knownSub || contact.subDepartment
     });
@@ -458,22 +454,9 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
     "px-2 py-0.5 rounded-md bg-[#4A3D22] text-[#F5E0B0] border border-[#D4A24C] text-[10.5px] font-bold";
 
   const getCategoryBadge = (cat: ContactRecord["category"]) => {
-    switch (cat) {
-      case "INFLUENCER":
-        return <span className={goldBadge}>Influencer</span>;
-      case "CADRE":
-        return <span className={goldBadge}>Party Cadre</span>;
-      case "GOVT_OFFICIAL":
-        return <span className={goldBadge}>Govt Officer</span>;
-      case "DWCRA_LEAD":
-        return <span className={goldBadge}>DWCRA Lead</span>;
-      case "YOUTH_LEADER":
-        return <span className={goldBadge}>Youth Wing</span>;
-      case "OTHER":
-        return <span className={goldBadge}>Other</span>;
-      default:
-        return <span className={goldBadge}>Citizen</span>;
-    }
+    if (cat === "GOVT_OFFICIAL") return <span className={goldBadge}>Govt Officer</span>;
+    if (isPartyLeaderCategory(cat)) return <span className={goldBadge}>Party Leader</span>;
+    return <span className={goldBadge}>Other</span>;
   };
 
   return (
@@ -494,7 +477,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               ? "Your volunteer team is listed here. Matching directory contacts were removed and replaced with this roster."
               : canManageContacts
               ? "You can view, edit, or delete every contact in this directory."
-              : "Verified Citizens, Community Influencers, Booth Agents, Nodal Officers & DWCRA Leaders"}
+              : "Govt Officers, Party Leaders, and other constituency contacts"}
           </p>
         </div>
 
@@ -547,19 +530,13 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       ) : null}
 
       {/* 2. Directory KPI Metrics — same gold surface as Manager landing */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 p-3 rounded-2xl bg-[#091422] border border-[#22354D]">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 rounded-2xl bg-[#091422] border border-[#22354D]">
         {(
           [
-            { label: "Total Verified", hint: "Directory", value: stats.total },
-            { label: "Influencers", hint: "Elders", value: stats.influencers },
-            { label: "Field Cadres", hint: "Booth", value: stats.cadres },
-            { label: "Govt Officers", hint: "Dept", value: stats.officials },
-            { label: "Citizens & DWCRA", hint: "Leads", value: stats.citizens },
-            {
-              label: "Strong Supporters",
-              hint: stats.total > 0 ? `${Math.round((stats.supporters / stats.total) * 100)}%` : "0%",
-              value: stats.supporters
-            }
+            { label: "Total", hint: "Directory", value: stats.total },
+            { label: "Govt Officer", hint: "Dept", value: stats.officials },
+            { label: "Party Leader", hint: "Party", value: stats.leaders },
+            { label: "Other", hint: "Directory", value: stats.other }
           ] as const
         ).map((card) => (
           <div
@@ -588,7 +565,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8E9CAE]" />
             <input
               type="text"
-              placeholder={hidePhone ? "Search by name, village, department, designation..." : "Search by name, phone, village, designation, voter ID..."}
+              placeholder={hidePhone ? "Search by name, village, department, designation..." : "Search by name, phone, village, designation..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
@@ -639,8 +616,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Category: All Types</option>
-              <option value="CADRE">Party Cadre</option>
               <option value="GOVT_OFFICIAL">Govt Officer</option>
+              <option value="PARTY_LEADER">Party Leader</option>
               <option value="OTHER">Other</option>
             </select>
           </div>
@@ -679,7 +656,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
         <div className="p-10 rounded-2xl bg-[#0E1724]/90 border border-[#223348] text-center space-y-2">
           <p className="text-sm font-semibold text-[#F5EFE0]">No contacts in this directory yet</p>
           <p className="text-xs text-[#8E9CAE]">
-            Add a contact with name, phone, category, designation, mandal, village, and the remaining directory fields.
+            Add a contact with name, phone, category, designation, mandal, and village.
           </p>
         </div>
       ) : viewMode === "GRID" ? (
@@ -947,13 +924,9 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                       setNewContact(next);
                     }}
                   >
-                    <option value="CADRE">Party Cadre</option>
+                    <option value="PARTY_LEADER">Party Leader</option>
                     <option value="GOVT_OFFICIAL">Govt Officer</option>
                     <option value="OTHER">Other</option>
-                    {newContact.category &&
-                    !["CADRE", "GOVT_OFFICIAL", "OTHER"].includes(newContact.category) ? (
-                      <option value={newContact.category}>{newContact.category.replace(/_/g, " ")}</option>
-                    ) : null}
                   </select>
                 </div>
 
@@ -981,14 +954,16 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   />
                 </div>
                 <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Voter ID</label>
-                  <input
-                    type="text"
-                    placeholder="AP/140/012/00000"
-                    value={newContact.voterId || ""}
-                    onChange={(e) => setNewContact({ ...newContact, voterId: e.target.value })}
+                  <label className="text-[#8E9CAE] block mb-1 font-medium">Gender</label>
+                  <select
+                    value={newContact.gender}
+                    onChange={(e) => setNewContact({ ...newContact, gender: e.target.value as ContactRecord["gender"] })}
                     className={FIELD_CLASS}
-                  />
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
 
@@ -1110,49 +1085,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Gender</label>
-                  <select
-                    value={newContact.gender}
-                    onChange={(e) => setNewContact({ ...newContact, gender: e.target.value as ContactRecord["gender"] })}
-                    className={FIELD_CLASS}
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[#8E9CAE] block mb-1 font-medium">Age</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={120}
-                    placeholder="e.g. 42"
-                    value={newContact.age ?? ""}
-                    onChange={(e) =>
-                      setNewContact({
-                        ...newContact,
-                        age: e.target.value === "" ? undefined : Number(e.target.value)
-                      })
-                    }
-                    className={FIELD_CLASS}
-                  />
-                </div>
-              </div>
-
-              <div className="min-w-0">
-                <label className="text-[#8E9CAE] block mb-1 font-medium">Occupation</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Farmer / Booth Convener"
-                  value={newContact.occupation || ""}
-                  onChange={(e) => setNewContact({ ...newContact, occupation: e.target.value })}
-                  className={FIELD_CLASS}
-                />
-              </div>
-
               <div>
                 <label className="text-[#8E9CAE] block mb-1 font-medium">Strategic Notes / Influence Context</label>
                 <textarea
@@ -1224,24 +1156,6 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 <span className="text-[10px] text-[#8E9CAE] block">Gender</span>
                 <strong className="text-[#F5EFE0]">{selectedContact.gender}</strong>
               </div>
-              {selectedContact.age != null ? (
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[10px] text-[#8E9CAE] block">Age</span>
-                <strong className="text-[#F5EFE0]">{selectedContact.age}</strong>
-              </div>
-              ) : null}
-              {selectedContact.occupation ? (
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[10px] text-[#8E9CAE] block">Occupation</span>
-                <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.occupation}</strong>
-              </div>
-              ) : null}
-              {!hidePhone && selectedContact.voterId ? (
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
-                <span className="text-[10px] text-[#8E9CAE] block">Voter ID</span>
-                <strong className="text-[#F5EFE0] font-mono whitespace-normal break-words">{selectedContact.voterId}</strong>
-              </div>
-              ) : null}
               {selectedContact.department ? (
               <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348] col-span-2">
                 <span className="text-[10px] text-[#8E9CAE] block">Department / Sub-department</span>

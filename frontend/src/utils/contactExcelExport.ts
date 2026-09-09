@@ -24,12 +24,13 @@ const ROW_ALT = "#F3E6C8";
 const TEXT = "#1A2433";
 
 const ROLE_LABEL: Record<string, string> = {
-  INFLUENCER: "Influencer",
-  CADRE: "Party Cadre",
-  CITIZEN: "Citizen",
+  INFLUENCER: "Other",
+  CADRE: "Party Leader",
+  PARTY_LEADER: "Party Leader",
+  CITIZEN: "Other",
   GOVT_OFFICIAL: "Govt Officer",
-  DWCRA_LEAD: "DWCRA Lead",
-  YOUTH_LEADER: "Youth Wing",
+  DWCRA_LEAD: "Other",
+  YOUTH_LEADER: "Other",
   OTHER: "Other"
 };
 

@@ -73,22 +73,24 @@ const COPY = {
 } as const;
 
 const ROLE_EN: Record<string, string> = {
-  INFLUENCER: "Influencer",
-  CADRE: "Party Cadre",
-  CITIZEN: "Citizen",
+  INFLUENCER: "Other",
+  CADRE: "Party Leader",
+  PARTY_LEADER: "Party Leader",
+  CITIZEN: "Other",
   GOVT_OFFICIAL: "Govt Officer",
-  DWCRA_LEAD: "DWCRA Lead",
-  YOUTH_LEADER: "Youth Wing",
+  DWCRA_LEAD: "Other",
+  YOUTH_LEADER: "Other",
   OTHER: "Other"
 };
 
 const ROLE_TE: Record<string, string> = {
-  INFLUENCER: "ప్రభావవంతుడు",
-  CADRE: "పార్టీ క్యాడర్",
-  CITIZEN: "పౌరుడు",
+  INFLUENCER: "ఇతరం",
+  CADRE: "పార్టీ నాయకుడు",
+  PARTY_LEADER: "పార్టీ నాయకుడు",
+  CITIZEN: "ఇతరం",
   GOVT_OFFICIAL: "ప్రభుత్వ అధికారి",
-  DWCRA_LEAD: "DWCRA నాయకురాలు",
-  YOUTH_LEADER: "యువజన నాయకుడు",
+  DWCRA_LEAD: "ఇతరం",
+  YOUTH_LEADER: "ఇతరం",
   OTHER: "ఇతరం"
 };
 
