@@ -351,7 +351,7 @@ def issue_from_client_payload(issue_id: str, payload: Optional[Dict[str, Any]] =
         if _has_value(merged.get(key)):
             issue[key] = merged[key]
     if not issue.get("title"):
-        issue["title"] = f"Grievance Ticket #{issue_id}"
+        issue["title"] = f"Grievance Ticket {issue_id}"
     return issue
 
 
@@ -400,7 +400,7 @@ def merge_issue_docs(base: Optional[Dict[str, Any]], overlay: Optional[Dict[str,
 
 def ticket_display_number(issue: Dict[str, Any]) -> str:
     try:
-        from backend.services.ticket_number_display import raw_ticket_number
+        from backend.services.ticket_number_display import whatsapp_ticket_ref
     except ImportError:
-        from services.ticket_number_display import raw_ticket_number
-    return raw_ticket_number(issue)
+        from services.ticket_number_display import whatsapp_ticket_ref
+    return whatsapp_ticket_ref(issue)

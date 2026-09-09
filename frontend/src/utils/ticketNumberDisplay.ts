@@ -3,6 +3,7 @@
 export type TicketLike = {
   id?: string;
   ticketNumber?: string;
+  ticketLabel?: string;
   assemblyConstituencyId?: string;
   assemblyConstituencyName?: string;
   parliamentConstituencyId?: string;
@@ -126,4 +127,70 @@ export function ticketSearchHaystack(issue: TicketLike): string {
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
+}
+
+export const CATALOG_OPEN_PREFIX = "iss-ll-sec-open-";
+const CATALOG_OPEN_RE = /^iss-ll-sec-open-(\d+)$/i;
+const CATALOG_ISSUE_RE = /^iss-ll-sec-[a-z]+-\d+$/i;
+const GENERATED_HEX_ID_RE = /^iss-[0-9a-f]+$/i;
+
+function itemIssueId(item: TicketLike | string | null | undefined): string {
+  if (typeof item === "string") return item.trim();
+  return String(item?.id || "").trim();
+}
+
+/** Timestamp/uuid hex ids like iss-1a0867aef1e. Empty counts as generated. */
+export function isGeneratedHexIssueId(issueId?: string | null): boolean {
+  const text = String(issueId || "").trim();
+  if (!text) return true;
+  return GENERATED_HEX_ID_RE.test(text);
+}
+
+export function isCatalogIssueId(issueId?: string | null): boolean {
+  return CATALOG_ISSUE_RE.test(String(issueId || "").trim());
+}
+
+export function nextCatalogOpenSequence(existing: TicketLike[] | string[] | null | undefined): number {
+  let max = 0;
+  for (const item of existing || []) {
+    const match = itemIssueId(item).match(CATALOG_OPEN_RE);
+    if (!match) continue;
+    const seq = Number.parseInt(match[1], 10);
+    if (Number.isFinite(seq) && seq > max) max = seq;
+  }
+  return max + 1;
+}
+
+/** Next seed-style id: iss-ll-sec-open-03 after open-01/open-02. Drops hex timestamps. */
+export function allocateCatalogIssueId(
+  existing?: TicketLike[] | string[] | null,
+  candidate?: string | null
+): string {
+  const existingIds = new Set<string>();
+  for (const item of existing || []) {
+    const raw = itemIssueId(item);
+    if (raw) existingIds.add(raw);
+  }
+  const text = String(candidate || "").trim();
+  if (text && !isGeneratedHexIssueId(text) && !existingIds.has(text)) {
+    return text;
+  }
+  let seq = nextCatalogOpenSequence(existing);
+  while (true) {
+    const issueId = `${CATALOG_OPEN_PREFIX}${String(seq).padStart(2, "0")}`;
+    if (!existingIds.has(issueId)) return issueId;
+    seq += 1;
+  }
+}
+
+/** Public ticket string for Meta templates. Catalog id, never a hex timestamp. */
+export function whatsAppTicketRef(issue: TicketLike | null | undefined): string {
+  if (!issue) return "ticket";
+  const id = String(issue.id || "").trim();
+  if (isCatalogIssueId(id)) return id;
+  const label = stripTicketNumberParens(String(issue.ticketLabel || issue.ticketNumber || ""));
+  if (isCatalogIssueId(label)) return label;
+  if (label) return label;
+  if (id && !isGeneratedHexIssueId(id)) return id;
+  return id || "ticket";
 }

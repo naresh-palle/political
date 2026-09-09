@@ -68,7 +68,11 @@ try:
         issue_from_client_payload,
         ASSIGNMENT_STATUSES,
     )
-    from services.ticket_number_display import allocate_ticket_number, format_ticket_display
+    from services.ticket_number_display import (
+        allocate_catalog_issue_id,
+        allocate_ticket_number,
+        whatsapp_ticket_ref,
+    )
     from services.role_scope import (
         actor_role,
         build_manager_dashboard,
@@ -98,7 +102,11 @@ except ImportError:
         issue_from_client_payload,
         ASSIGNMENT_STATUSES,
     )
-    from backend.services.ticket_number_display import allocate_ticket_number, format_ticket_display
+    from backend.services.ticket_number_display import (
+        allocate_catalog_issue_id,
+        allocate_ticket_number,
+        whatsapp_ticket_ref,
+    )
     from backend.services.role_scope import (
         actor_role,
         build_manager_dashboard,
@@ -1903,7 +1911,7 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     # Dynamic fallback item so dynamic ticket IDs never 404
     found = {
         "id": issue_id,
-        "title": f"Public Grievance Ticket #{issue_id}",
+        "title": f"Public Grievance Ticket {whatsapp_ticket_ref({'id': issue_id})}",
         "description": "Ground grievance ticket assigned for department resolution and tracking.",
         "category": "Panchayat Raj & Rural Water Supply",
         "department": "Panchayat Raj",
@@ -1940,7 +1948,14 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
 async def create_field_issue(payload: dict):
     now_str = datetime.now(timezone.utc).isoformat()
     payload = payload or {}
-    issue_id = str(payload.get("id") or "").strip() or f"iss-{uuid.uuid4().hex[:8]}"
+    existing_numbers = known_field_issue_ticket_records()
+    if not _mongo_circuit_open:
+        try:
+            extra = await db.field_issues.find({}, {"id": 1, "ticketNumber": 1, "_id": 0}).to_list(length=5000)
+            existing_numbers.extend(extra or [])
+        except Exception as e:
+            log_mongo_notice("ticket sequence catalog", e)
+    issue_id = allocate_catalog_issue_id(existing_numbers, payload.get("id"))
     issue_doc = {
         **payload,
         "id": issue_id,
@@ -1951,15 +1966,12 @@ async def create_field_issue(payload: dict):
         "createdBy": payload.get("createdBy") or "system",
         "createdByRole": payload.get("createdByRole") or "VOLUNTEER",
         "isImmutable": True,
+        "stateId": payload.get("stateId") or "AP",
+        "assemblyConstituencyId": payload.get("assemblyConstituencyId") or "BNG-AC",
+        "assemblyConstituencyName": payload.get("assemblyConstituencyName")
+        or "Banaganapalle Assembly (AC-140)",
     }
     issue_doc.pop("_id", None)
-    existing_numbers = known_field_issue_ticket_records(exclude_id=issue_id)
-    if not _mongo_circuit_open:
-        try:
-            extra = await db.field_issues.find({}, {"id": 1, "ticketNumber": 1, "_id": 0}).to_list(length=5000)
-            existing_numbers.extend(extra or [])
-        except Exception as e:
-            log_mongo_notice("ticket sequence catalog", e)
     issue_doc["ticketNumber"] = allocate_ticket_number(issue_doc, existing_numbers=existing_numbers)
     persisted = sanitize_doc(dict(issue_doc))
     IN_MEMORY_FIELD_ISSUES[issue_id] = persisted
@@ -2034,6 +2046,7 @@ async def add_work_update(issue_id: str, payload: dict):
     prev_status = "UNKNOWN"
     director_id = None
     issue_title = ""
+    issue = None
     try:
         issue = await db.field_issues.find_one({"id": issue_id})
         if issue:
@@ -2042,6 +2055,13 @@ async def add_work_update(issue_id: str, payload: dict):
             issue_title = issue.get("title", "")
     except Exception:
         pass
+    if not issue:
+        issue = resolve_stored_issue(issue_id)
+        if issue:
+            prev_status = issue.get("status", prev_status)
+            director_id = issue.get("directorId") or director_id
+            issue_title = issue.get("title") or issue_title
+    ticket_ref = whatsapp_ticket_ref(issue or {"id": issue_id})
         
     update_record = {
         "id": update_id,
@@ -2078,7 +2098,7 @@ async def add_work_update(issue_id: str, payload: dict):
                 "recipientUserId": director_id,
                 "recipientRole": "DIRECTOR",
                 "type": "WORK_COMPLETED" if new_status in ["COMPLETED", "RESOLVED"] else "PROOF_UPLOADED",
-                "title": f"Status Update ({new_status}) for #{issue_id}",
+                "title": f"Status Update ({new_status}) for {ticket_ref}",
                 "message": f"{volunteer_name} updated {issue_title}: \"{remarks[:80]}...\"",
                 "issueId": issue_id,
                 "volunteerId": volunteer_id,
@@ -2510,13 +2530,15 @@ async def send_whatsapp_otp(payload: dict):
     phone = payload.get("phone", "").replace("+", "").replace(" ", "").replace("-", "")
     issue_id = payload.get("issueId") or "iss-ll-sec-asg-01"
     otp = "482910"
+    otp_issue = resolve_stored_issue(issue_id) or {"id": issue_id}
+    ticket_ref = whatsapp_ticket_ref(otp_issue)
     
     clean_phone = phone[-10:] if len(phone) >= 10 else phone
     formatted_phone = f"91{clean_phone}" if len(clean_phone) == 10 else clean_phone
     
     wa_payload = {
         "recipientPhone": formatted_phone,
-        "textMessage": f"🏛️ *LeaderLens Official Verification*\n\nYour 6-Digit WhatsApp OTP Code is: *{otp}*\n\nUse this code to verify your identity on the Officer Portal for ticket #{issue_id}."
+        "textMessage": f"🏛️ *LeaderLens Official Verification*\n\nYour 6-Digit WhatsApp OTP Code is: *{otp}*\n\nUse this code to verify your identity on the Officer Portal for ticket {ticket_ref}."
     }
     
     result = await whatsapp_client.send_whatsapp_notification(wa_payload)
@@ -2534,35 +2556,6 @@ async def verify_whatsapp_otp(payload: dict):
     if len(otp) == 6:
         return {"success": True, "message": "WhatsApp OTP verified successfully"}
     return {"success": False, "message": "Invalid 6-digit OTP code"}
-
-
-@api_router.post("/field-ops/issues")
-async def create_field_issue(payload: dict):
-    now_str = datetime.now(timezone.utc).isoformat()
-    issue_id = payload.get("id") or f"iss-{uuid.uuid4().hex[:8]}"
-    
-    issue_doc = {
-        **payload,
-        "id": issue_id,
-        "status": payload.get("status", "NEW"),
-        "createdAt": payload.get("createdAt") or now_str,
-        "updatedAt": now_str
-    }
-    issue_doc["ticketNumber"] = allocate_ticket_number(
-        issue_doc,
-        existing_numbers=known_field_issue_ticket_records(exclude_id=issue_id),
-    )
-    
-    try:
-        await db.field_issues.update_one({"id": issue_id}, {"$set": issue_doc}, upsert=True)
-    except Exception as e:
-        log_mongo_notice("persist field_issue", e)
-        
-    if "_id" in issue_doc:
-        issue_doc.pop("_id")
-    IN_MEMORY_FIELD_ISSUES[issue_id] = sanitize_doc(dict(issue_doc))
-    persist_field_issue(IN_MEMORY_FIELD_ISSUES[issue_id])
-    return issue_doc
 
 
 @api_router.put("/field-ops/issues/{issue_id}/status")
@@ -2649,7 +2642,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
     completed_dept = issue.get("assignedDepartment") or issue.get("department") or "Assigned Department"
     actor_id = issue.get("departmentContactId") or issue.get("assignedOfficialPhone") or "dept-officer"
     ticket_number = ticket_display_number(issue)
-    ticket_label = format_ticket_display(issue)
+    ticket_label = whatsapp_ticket_ref(issue)
     event_type = EVENT_BY_STATUS[new_status]
 
     update_doc = {
@@ -2866,7 +2859,7 @@ async def update_field_issue_status(issue_id: str, payload: dict):
         "event": event_type,
         "eventType": event_type,
         "ticketNumber": ticket_label,
-        "rawTicketId": issue_id,
+        "rawTicketId": ticket_label,
         "issueId": issue_id,
         "textMessage": wa_text,
         "correlationId": correlation_id,
@@ -3004,7 +2997,7 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     if not issue:
         issue = {
             "id": issue_id,
-            "title": payload.get("title") or payload.get("issueTitle") or f"Grievance Ticket #{issue_id}",
+            "title": payload.get("title") or payload.get("issueTitle") or f"Grievance Ticket {whatsapp_ticket_ref({'id': issue_id, **payload})}",
             "description": payload.get("description") or "Public grievance ticket logged on ground.",
             "category": payload.get("assignedDeptName") or "Public Service",
             "department": payload.get("assignedDeptName") or "Public Service",
@@ -3024,6 +3017,10 @@ async def assign_and_notify_whatsapp(issue_id: str, payload: dict):
     mem = IN_MEMORY_FIELD_ISSUES.get(issue_id)
     if mem:
         issue = merge_issue_docs(issue, mem)
+    if payload.get("ticketNumber") and not issue.get("ticketNumber"):
+        issue["ticketNumber"] = payload.get("ticketNumber")
+    if payload.get("ticketLabel"):
+        issue["ticketLabel"] = payload.get("ticketLabel")
         
     # 2. Server-side Context Resolution: Resolve Political Leader / Admin
     #    Do NOT trust frontend leader overrides. Derive from database.

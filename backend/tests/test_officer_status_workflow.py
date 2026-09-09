@@ -129,7 +129,8 @@ def test_preserve_in_progress_against_open():
     assert assigned["status"] == "ASSIGNED"
     assert assigned["assignedVolunteerId"] == "usr-demo-volunteer"
     assert assigned["department"] == "R&B"
-    assert ticket_display_number({"id": "iss-ab12"}).startswith("LL-")
+    assert ticket_display_number({"id": "iss-ll-sec-open-01"}) == "iss-ll-sec-open-01"
+    assert ticket_display_number({"id": "iss-ab12", "ticketNumber": "LL-MLA-AC140-26-000008"}) == "LL-MLA-AC140-26-000008"
     assert normalize_status(" in_progress ") == "IN_PROGRESS"
 
 

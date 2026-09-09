@@ -21,7 +21,13 @@ import {
   MOCK_ELECTED_REPRESENTATIVES,
   USER_PROFILES
 } from "./mockData";
-import { allocateTicketNumber } from "../utils/ticketNumberDisplay";
+import {
+  allocateCatalogIssueId,
+  allocateTicketNumber,
+  isCatalogIssueId,
+  stripTicketNumberParens,
+  whatsAppTicketRef
+} from "../utils/ticketNumberDisplay";
 
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
 const BASE_URL = (import.meta as any).env?.BASE_URL || "/";
@@ -1343,7 +1349,6 @@ export const politicalApiService = {
   },
 
   async createFieldIssue(payload: any): Promise<any> {
-    const issueId = String(payload?.id || "").trim() || `iss-${Date.now().toString(16)}`;
     let localIssues: any[] = [];
     try {
       const savedRaw = localStorage.getItem("leaders_lens_created_field_issues");
@@ -1353,6 +1358,7 @@ export const politicalApiService = {
         ...(remoteRaw ? JSON.parse(remoteRaw) : [])
       ];
     } catch (e) {}
+    const issueId = allocateCatalogIssueId(localIssues, payload?.id);
     const body = {
       ...payload,
       id: issueId,
@@ -1702,9 +1708,10 @@ export const politicalApiService = {
               recipientRole: "VOLUNTEER",
               type: "TICKET_STATUS_UPDATED",
               title: `Officer update: ${issue.status.replace(/_/g, " ")}`,
-              message: `${issue.lastStatusRemarks?.trim() || "Department updated this ticket."} (Ticket ${issue.id})`,
+              message: `${issue.lastStatusRemarks?.trim() || "Department updated this ticket."} (Ticket ${whatsAppTicketRef(issue)})`,
               issueId: issue.id,
               resourceId: issue.id,
+              ticketNumber: issue.ticketNumber,
               status: issue.status,
               volunteerId: recipientUserId,
               priority: issue.status === "REJECTED" || issue.status === "RESOLVED" ? "HIGH" : "NORMAL",
@@ -1859,12 +1866,20 @@ export const politicalApiService = {
       citizenPhone?: string;
       mandalName?: string;
       ticketLabel?: string;
+      ticketNumber?: string;
     }
   ): Promise<{ success: boolean; notification: any; issue?: any }> {
     const cleanDigits = (payload.assignedOfficialPhone || "").replace(/\D/g, "");
     const formattedPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
     const actionUrl = payload.actionUrl || `${window.location.origin}/#/officer-portal?ticket=${issueId}`;
     const cleanTicketId = issueId.replace(/^#/, "");
+    const templateTicket =
+      (isCatalogIssueId(cleanTicketId) ? cleanTicketId : "") ||
+      stripTicketNumberParens(String((payload as any).ticketLabel || "")) ||
+      whatsAppTicketRef({
+        id: cleanTicketId,
+        ticketNumber: (payload as any).ticketNumber
+      });
 
     const backendPayload = {
       ...payload,
@@ -1873,7 +1888,9 @@ export const politicalApiService = {
       to: formattedPhone,
       phone: formattedPhone,
       actionUrl,
-      templateName: "officer_ticket_alert_v1"
+      templateName: "officer_ticket_alert_v1",
+      ticketLabel: templateTicket,
+      rawTicketId: templateTicket
     };
 
     // Direct Meta WhatsApp Cloud API call if token exists in localStorage, window, env, or fallback
@@ -1924,7 +1941,7 @@ export const politicalApiService = {
                   type: "body",
                   parameters: [
                     { type: "text", text: officerName },
-                    { type: "text", text: cleanTicketId },
+                    { type: "text", text: templateTicket },
                     { type: "text", text: deptName },
                     { type: "text", text: mandalName }
                   ]
@@ -1980,7 +1997,7 @@ export const politicalApiService = {
             type: "text",
             text: {
               preview_url: true,
-              body: `🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${officerName},\n\nYou have been assigned Grievance Ticket *${(payload as any).ticketLabel || "#" + cleanTicketId}*.\n*Department:* ${deptName}\n*Mandal:* ${mandalName}\n\n🔗 *Click link below to view ticket info & update status:*\n${actionUrl}`
+              body: `🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${officerName},\n\nYou have been assigned Grievance Ticket *${templateTicket}*.\n*Department:* ${deptName}\n*Mandal:* ${mandalName}\n\n🔗 *Click link below to view ticket info & update status:*\n${actionUrl}`
             }
           })
         });
@@ -2011,7 +2028,7 @@ export const politicalApiService = {
               type: "text",
               text: {
                 preview_url: true,
-                body: `🏛️ *LeaderLens Grievance Registration*\n\nDear Citizen,\n\nYour grievance/complaint ticket *${(payload as any).ticketLabel || "#" + cleanTicketId}* has been registered and assigned to *${payload.assignedOfficialName || "Department Nodal Officer"}* (${payload.assignedDeptName || "Department"}).\n\nOur field operations team and department officers are reviewing your issue and work will be initiated shortly.\n\nThank you,\nOffice of Hon. B. C. Janardhan Reddy (MLA)\nBanaganapalle Constituency`
+                body: `🏛️ *LeaderLens Grievance Registration*\n\nDear Citizen,\n\nYour grievance/complaint ticket *${templateTicket}* has been registered and assigned to *${payload.assignedOfficialName || "Department Nodal Officer"}* (${payload.assignedDeptName || "Department"}).\n\nOur field operations team and department officers are reviewing your issue and work will be initiated shortly.\n\nThank you,\nOffice of Hon. B. C. Janardhan Reddy (MLA)\nBanaganapalle Constituency`
               }
             })
           });
@@ -2058,7 +2075,7 @@ export const politicalApiService = {
       providerMessageId: `wmid.client.${Date.now()}`,
       status: "DELIVERED",
       sentAt: nowIso,
-      messageContent: `Hello ${officerName},\n\nA new issue #${issueId} has been raised on behalf of B. C. Janardhan Reddy (MLA).\nDepartment: ${deptName}\nPlease review and take action.`
+      messageContent: `Hello ${officerName},\n\nA new issue ${templateTicket} has been raised on behalf of B. C. Janardhan Reddy (MLA).\nDepartment: ${deptName}\nPlease review and take action.`
     };
 
     return {
@@ -2096,7 +2113,7 @@ export const politicalApiService = {
         providerMessageId: `wmid.retry.${Date.now()}`,
         status: "DELIVERED",
         sentAt: nowIso,
-        messageContent: `Retried notification for issue #${issueId}`
+        messageContent: `Retried notification for issue ${whatsAppTicketRef({ id: issueId })}`
       }
     };
   },

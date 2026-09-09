@@ -6,7 +6,7 @@ import {
 } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { countByKpi, UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
-import { allocateTicketNumber, formatTicketDisplay } from "../../utils/ticketNumberDisplay";
+import { allocateCatalogIssueId, allocateTicketNumber, whatsAppTicketRef } from "../../utils/ticketNumberDisplay";
 import { getTicketIdFromHash, clearTicketIdFromHash } from "../../utils/ticketHash";
 import { IssueDetailView } from "./IssueDetailView";
 import {
@@ -542,10 +542,12 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
         createdBy: currentUser.id,
         createdByRole: "VOLUNTEER"
       };
+      payload.id = allocateCatalogIssueId(issues);
       payload.ticketNumber = allocateTicketNumber(payload, undefined, issues);
 
       const created = await politicalApiService.createFieldIssue(payload);
       setIssues([created, ...issues]);
+      const createdRef = whatsAppTicketRef(created);
 
       // 3. Automated Notification Dispatch: Director, MLA, and Relevant Department Person
       const notifTasks = [
@@ -555,7 +557,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           recipientRole: "DIRECTOR",
           type: "NEW_COMPLAINT",
           title: `New Ground ${newIssueType === "COMPLAINT" ? "Complaint" : "Requirement"} Logged`,
-          message: `Volunteer ${currentUser.name} logged [${newPriority}] issue ${formatTicketDisplay(created)}: "${newTitle.trim()}" in ${mandalObj.name} (${villageWardText.trim()}). Assigned to ${currentUser.name}.`,
+          message: `Volunteer ${currentUser.name} logged [${newPriority}] issue ${createdRef}: "${newTitle.trim()}" in ${mandalObj.name} (${villageWardText.trim()}). Assigned to ${currentUser.name}.`,
           issueId: created.id,
           priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
         }),
@@ -575,7 +577,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           recipientRole: "DEPARTMENT_OFFICER",
           type: "NEW_COMPLAINT",
           title: `Department Forwarding: ${newDepartment}`,
-          message: `Official grievance ticket ${formatTicketDisplay(created)} forwarded to ${newDepartment} for ground resolution in ${mandalObj.name}. Contact: ${newReporterPhone || assignedPersonPhone}.`,
+          message: `Official grievance ticket ${createdRef} forwarded to ${newDepartment} for ground resolution in ${mandalObj.name}. Contact: ${newReporterPhone || assignedPersonPhone}.`,
           issueId: created.id,
           priority: newPriority === "URGENT" || newPriority === "HIGH" ? "HIGH" : "NORMAL"
         })

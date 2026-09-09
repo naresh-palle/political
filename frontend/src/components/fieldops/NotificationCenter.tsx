@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { FieldNotification, FieldIssue, UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { setTicketIdInHash } from "../../utils/ticketHash";
+import { isCatalogIssueId, isGeneratedHexIssueId, whatsAppTicketRef } from "../../utils/ticketNumberDisplay";
 import { IssueDetailModal } from "./IssueDetailModal";
 import {
   Bell,
@@ -141,14 +142,27 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const extractLinkedIssueId = (item: FieldNotification): string => {
     const extra = item as any;
     const candidates = [extra.issueId, extra.resourceId, extra.ticketNumber, extra.message, extra.title];
+    let fallback = "";
     for (const value of candidates) {
       if (!value || typeof value !== "string") continue;
       const trimmed = value.trim();
-      if (/^iss-[a-zA-Z0-9-]+$/i.test(trimmed)) return trimmed;
-      const match = trimmed.match(/iss-[a-zA-Z0-9-]+/i);
-      if (match) return match[0];
+      const direct = /^iss-[a-zA-Z0-9-]+$/i.test(trimmed) ? trimmed : "";
+      const match = direct || trimmed.match(/iss-[a-zA-Z0-9-]+/i)?.[0] || "";
+      if (!match) continue;
+      if (isCatalogIssueId(match)) return match;
+      if (!fallback && !isGeneratedHexIssueId(match)) fallback = match;
+      if (!fallback) fallback = match;
     }
-    return "";
+    return fallback;
+  };
+
+  const notificationTicketLabel = (item: FieldNotification): string => {
+    const extra = item as any;
+    return whatsAppTicketRef({
+      id: extra.issueId || extra.resourceId || extractLinkedIssueId(item),
+      ticketNumber: extra.ticketNumber,
+      ticketLabel: extra.ticketLabel
+    });
   };
 
   const handleInspectIssue = async (item: FieldNotification, e?: React.MouseEvent) => {
@@ -466,7 +480,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       <Tag className="w-3.5 h-3.5" /> Associated Ground Issue
                     </div>
                     <div className="text-sm font-bold text-white mt-0.5 font-mono break-all">
-                      Ticket {extractLinkedIssueId(selectedNotification) || (selectedNotification as any).ticketNumber || selectedNotification.issueId}
+                      Ticket {notificationTicketLabel(selectedNotification)}
                     </div>
                     {(selectedNotification as any).status && (
                       <div className="text-[11px] text-[#F5EFE0] mt-1">

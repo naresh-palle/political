@@ -434,6 +434,7 @@ def test_create_field_issue_persists_without_nameerror(monkeypatch):
     srv.IN_MEMORY_FIELD_ISSUES.clear()
     monkeypatch.setattr(srv, "_mongo_circuit_open", True)
     monkeypatch.setattr(srv, "db", srv._OfflineDB())
+    monkeypatch.setattr(srv, "load_runtime_field_issues", lambda: [])
 
     created = asyncio.run(
         srv.create_field_issue(
@@ -447,9 +448,32 @@ def test_create_field_issue_persists_without_nameerror(monkeypatch):
             }
         )
     )
-    assert created["id"] == "iss-1a081309359"
+    assert created["id"] == "iss-ll-sec-open-03"
+    assert created["ticketNumber"] == "LL-MLA-AC140-26-000008"
     assert created["title"] == "Broken street light on Ward 2"
-    assert srv.IN_MEMORY_FIELD_ISSUES["iss-1a081309359"]["title"] == "Broken street light on Ward 2"
+    assert "1a081309359" not in created["id"]
+    assert srv.IN_MEMORY_FIELD_ISSUES["iss-ll-sec-open-03"]["title"] == "Broken street light on Ward 2"
+
+
+def test_create_field_issue_without_client_id_uses_catalog(monkeypatch):
+    import asyncio
+    from backend import server as srv
+
+    srv.IN_MEMORY_FIELD_ISSUES.clear()
+    monkeypatch.setattr(srv, "_mongo_circuit_open", True)
+    monkeypatch.setattr(srv, "db", srv._OfflineDB())
+    monkeypatch.setattr(srv, "load_runtime_field_issues", lambda: [])
+
+    created = asyncio.run(
+        srv.create_field_issue(
+            {
+                "title": "Drain overflow near bus stand",
+                "description": "Storm water backing into shops.",
+            }
+        )
+    )
+    assert created["id"] == "iss-ll-sec-open-03"
+    assert created["ticketNumber"].startswith("LL-MLA-AC140-")
 
 
 def test_officer_status_upserts_unknown_ticket(monkeypatch):

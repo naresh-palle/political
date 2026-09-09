@@ -43,7 +43,7 @@ class WorkUpdate(BaseModel):
 
 class FieldIssue(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: f"iss-{uuid.uuid4().hex[:8]}")
+    id: str = Field(default="")
     title: str
     description: str
     category: str  # Road, Water Supply, Electricity, Welfare, Revenue, Healthcare, Sanitation, Drainage, Education, Other

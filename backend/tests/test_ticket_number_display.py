@@ -99,3 +99,54 @@ def test_legacy_id_still_displays_with_constituency():
     }
     assert raw_ticket_number(legacy) == "LL-ll-sec-asg-01"
     assert format_ticket_display(legacy) == "LL-ll-sec-asg-01 (Banaganapalle)"
+
+
+def test_catalog_issue_id_follows_open_seed_sequence():
+    from backend.services.ticket_number_display import (
+        allocate_catalog_issue_id,
+        is_generated_hex_issue_id,
+        whatsapp_ticket_ref,
+    )
+
+    catalog = [
+        {"id": "iss-ll-sec-open-01"},
+        {"id": "iss-ll-sec-open-02"},
+        {"id": "iss-ll-sec-asg-01"},
+    ]
+    assert allocate_catalog_issue_id(catalog) == "iss-ll-sec-open-03"
+    assert allocate_catalog_issue_id(catalog, "iss-1a0867aef1e") == "iss-ll-sec-open-03"
+    assert allocate_catalog_issue_id(catalog, "iss-ll-sec-open-99") == "iss-ll-sec-open-99"
+    assert is_generated_hex_issue_id("iss-1a0867aef1e")
+    assert not is_generated_hex_issue_id("iss-ll-sec-open-02")
+    assert whatsapp_ticket_ref({"id": "iss-1a0867aef1e", "ticketNumber": "LL-MLA-AC140-26-000008"}) == "LL-MLA-AC140-26-000008"
+    assert whatsapp_ticket_ref({"id": "iss-ll-sec-open-03"}) == "iss-ll-sec-open-03"
+
+
+def test_officer_alert_template_body_uses_catalog_id():
+    from backend.services.whatsapp_service import WhatsAppMessageBuilder
+
+    payload = WhatsAppMessageBuilder.build_ticket_notification_payload(
+        ticket={
+            "id": "iss-ll-sec-open-03",
+            "ticketNumber": "LL-MLA-AC140-26-000008",
+            "title": "Pipeline leak",
+            "assemblyConstituencyName": "Banaganapalle Assembly (AC-140)",
+        },
+        leader={"name": "B. C. Janardhan Reddy", "designation": "MLA"},
+        officer={"name": "N. Palle (Senior Executive Officer)", "phone": "9885765672"},
+        department={"name": "1. Panchayat Raj – Engineering Department"},
+    )
+    assert payload["rawTicketId"] == "iss-ll-sec-open-03"
+    assert "iss-ll-sec-open-03" in payload["textMessage"]
+    assert "1a0867aef1e" not in payload["textMessage"]
+    hex_payload = WhatsAppMessageBuilder.build_ticket_notification_payload(
+        ticket={
+            "id": "iss-1a0867aef1e",
+            "ticketNumber": "LL-MLA-AC140-26-000008",
+            "title": "Pipeline leak",
+        },
+        leader={"name": "B. C. Janardhan Reddy", "designation": "MLA"},
+        officer={"name": "N. Palle", "phone": "9885765672"},
+        department={"name": "Panchayat Raj"},
+    )
+    assert hex_payload["rawTicketId"] == "LL-MLA-AC140-26-000008"

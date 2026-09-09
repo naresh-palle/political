@@ -5,7 +5,7 @@ import { Search, X, MessageCircle, Shield, Loader2 } from "lucide-react";
 import { PGRS_DEPARTMENTS_LIST } from "./VolunteerOperationsDashboard";
 import { politicalApiService } from "../../services/api";
 import { isRejectedTicket } from "../../utils/ticketActions";
-import { formatTicketDisplay } from "../../utils/ticketNumberDisplay";
+import { whatsAppTicketRef } from "../../utils/ticketNumberDisplay";
 
 export interface AssignContactOption {
   id: string;
@@ -212,8 +212,9 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     // Direct WhatsApp web link fallback with interactive Officer Portal URL
     const rawDigits = targetPhone.replace(/[^0-9]/g, "");
     const formattedPhone = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
+    const ticketRef = whatsAppTicketRef(issue);
     const actionUrl = `${window.location.origin}/#/officer-portal?ticket=${issue.id}`;
-    const waText = encodeURIComponent(`🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${targetName},\n\nYou have been assigned Grievance Ticket *${formatTicketDisplay(issue)}*.\n*Title:* ${issue.title}\n*Department:* ${currentDeptObj.name}\n*Mandal:* ${issue.mandalName || "Banaganapalle"}\n\n🔗 *Click link below to view full ticket info & update resolution status:*\n${actionUrl}`);
+    const waText = encodeURIComponent(`🏛️ *LeaderLens Ticket Assignment Notification*\n\nDear ${targetName},\n\nYou have been assigned Grievance Ticket *${ticketRef}*.\n*Title:* ${issue.title}\n*Department:* ${currentDeptObj.name}\n*Mandal:* ${issue.mandalName || "Banaganapalle"}\n\n🔗 *Click link below to view full ticket info & update resolution status:*\n${actionUrl}`);
     setDirectWaLink(`https://api.whatsapp.com/send?phone=${formattedPhone}&text=${waText}`);
 
     setIsSending(true);
@@ -234,7 +235,8 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
         actionUrl: actionUrl,
         reporterPhone: issue.reporterPhone || (issue as any)?.citizenPhone,
         mandalName: issue.mandalName || "Banaganapalle",
-        ticketLabel: formatTicketDisplay(issue)
+        ticketLabel: ticketRef,
+        ticketNumber: issue.ticketNumber
       } as any);
 
       if (res.success && res.notification?.status === "DELIVERED") {

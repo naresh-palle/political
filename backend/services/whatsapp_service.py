@@ -62,17 +62,18 @@ class WhatsAppMessageBuilder:
         if not location_str:
             location_str = ticket.get("placeName") or "Constituency Jurisdiction"
             
-        ticket_id = ticket.get("id", "LL-TICKET")
+        stored_id = str(ticket.get("id") or "ticket")
         try:
-            from backend.services.ticket_number_display import format_ticket_display
+            from backend.services.ticket_number_display import format_ticket_display, whatsapp_ticket_ref
         except ImportError:
-            from services.ticket_number_display import format_ticket_display
+            from services.ticket_number_display import format_ticket_display, whatsapp_ticket_ref
+        ticket_id = whatsapp_ticket_ref(ticket)
         ticket_number = format_ticket_display(ticket)
         issue_title = ticket.get("title", "Public Grievance / Requirement")
         priority = (ticket.get("priority") or "MEDIUM").upper()
         dept_name = department.get("name") or ticket.get("category") or "Public Service"
         
-        secure_link = f"{base_portal_url}/#/officer-portal?ticket={ticket_id}"
+        secure_link = f"{base_portal_url}/#/officer-portal?ticket={stored_id}"
         
         text_message = (
             f"Hello {officer_name},\n\n"
@@ -83,7 +84,7 @@ class WhatsAppMessageBuilder:
             f"Location:\n{location_str}\n\n"
             f"Department:\n{dept_name}\n\n"
             f"Priority:\n{priority}\n\n"
-            f"Ticket:\n{ticket_number}\n\n"
+            f"Ticket:\n{ticket_id}\n\n"
             f"Please review and take necessary action.\n\n"
             f"Update Ticket:\n{secure_link}\n\n"
             f"Thank you,\nLeaderLens"
@@ -97,7 +98,7 @@ class WhatsAppMessageBuilder:
             "5": location_str,
             "6": dept_name,
             "7": priority,
-            "8": ticket_number,
+            "8": ticket_id,
             "9": secure_link
         }
         
@@ -111,6 +112,7 @@ class WhatsAppMessageBuilder:
             "deptName": dept_name,
             "ticketNumber": ticket_number,
             "rawTicketId": ticket_id.replace("#", ""),
+            "id": stored_id,
             "reporterPhone": ticket.get("reporterPhone") or ticket.get("citizenPhone"),
             "textMessage": text_message,
             "templateVariables": template_variables,
@@ -273,7 +275,14 @@ class WhatsAppCloudApiClient:
                 }
             }
         if self.template_name.strip().lower() == "officer_ticket_alert_v1":
-            clean_ticket_id = (payload.get("rawTicketId") or payload.get("ticketNumber") or "ticket").replace("#", "")
+            try:
+                from backend.services.ticket_number_display import whatsapp_ticket_ref
+            except ImportError:
+                from services.ticket_number_display import whatsapp_ticket_ref
+            clean_ticket_id = whatsapp_ticket_ref(payload).replace("#", "")
+            button_ticket = str(
+                payload.get("id") or payload.get("issueId") or payload.get("rawTicketId") or clean_ticket_id
+            ).replace("#", "")
             officer_name = payload.get("officerName", "Department Officer")
             leader_name = payload.get("leaderName") or "the constituency administration"
             dept_name = payload.get("deptName", "Assigned Department")
@@ -301,7 +310,7 @@ class WhatsAppCloudApiClient:
                             "type": "button",
                             "sub_type": "url",
                             "index": "0",
-                            "parameters": [{"type": "text", "text": clean_ticket_id}]
+                            "parameters": [{"type": "text", "text": button_ticket}]
                         }
                     ]
                 }

@@ -125,3 +125,67 @@ def allocate_ticket_number(
     if sequence is None:
         sequence = next_ticket_sequence(existing_numbers, issue)
     return f"LL-{office_code_from_issue(issue)}-{geo}-{ticket_year_code(issue)}-{int(sequence):06d}"
+
+
+CATALOG_OPEN_PREFIX = "iss-ll-sec-open-"
+_CATALOG_OPEN_RE = re.compile(r"^iss-ll-sec-open-(\d+)$", re.I)
+_CATALOG_ISSUE_RE = re.compile(r"^iss-ll-sec-[a-z]+-\d+$", re.I)
+_GENERATED_HEX_ID_RE = re.compile(r"^iss-[0-9a-f]+$", re.I)
+
+
+def is_generated_hex_issue_id(issue_id: Any) -> bool:
+    """Timestamp/uuid hex ids like iss-1a0867aef1e. Empty counts as generated."""
+    text = str(issue_id or "").strip()
+    if not text:
+        return True
+    return bool(_GENERATED_HEX_ID_RE.fullmatch(text))
+
+
+def is_catalog_issue_id(issue_id: Any) -> bool:
+    return bool(_CATALOG_ISSUE_RE.fullmatch(str(issue_id or "").strip()))
+
+
+def _issue_id_from_item(item: Any) -> str:
+    if isinstance(item, dict):
+        return str(item.get("id") or "").strip()
+    return str(item or "").strip()
+
+
+def next_catalog_open_sequence(existing: Optional[list] = None) -> int:
+    highest = 0
+    for item in existing or []:
+        match = _CATALOG_OPEN_RE.fullmatch(_issue_id_from_item(item))
+        if match:
+            highest = max(highest, int(match.group(1)))
+    return highest + 1
+
+
+def allocate_catalog_issue_id(existing: Optional[list] = None, candidate: Any = None) -> str:
+    """Next seed-style id: iss-ll-sec-open-03 after open-01/open-02. Drops hex timestamps."""
+    existing_ids = {raw for raw in (_issue_id_from_item(item) for item in existing or []) if raw}
+    text = str(candidate or "").strip()
+    if text and not is_generated_hex_issue_id(text) and text not in existing_ids:
+        return text
+    seq = next_catalog_open_sequence(existing)
+    while True:
+        issue_id = f"{CATALOG_OPEN_PREFIX}{seq:02d}"
+        if issue_id not in existing_ids:
+            return issue_id
+        seq += 1
+
+
+def whatsapp_ticket_ref(issue: Optional[Dict[str, Any]]) -> str:
+    """Public ticket string for Meta templates. Catalog id, never a hex timestamp."""
+    if not issue:
+        return "ticket"
+    issue_id = str(issue.get("id") or "").strip()
+    if is_catalog_issue_id(issue_id):
+        return issue_id
+    label = strip_ticket_number_parens(issue.get("ticketLabel") or issue.get("ticketNumber"))
+    if is_catalog_issue_id(label):
+        return label
+    if label:
+        return label
+    if issue_id and not is_generated_hex_issue_id(issue_id):
+        return issue_id
+    return issue_id or "ticket"
