@@ -214,7 +214,10 @@ export const OfficerTicketPortal: React.FC = () => {
       const res = await politicalApiService.sendWhatsAppOTP(cleanPhone, issueId);
       if (res.success) {
         setOtpSent(true);
-        setOtpMessage(`✓ 6-Digit WhatsApp OTP (${res.otp || "482910"}) dispatched to +91 ${cleanPhone.slice(-10)} via WhatsApp Cloud API!`);
+        setOtpMessage(
+          res.message ||
+            `✓ A 6-digit verification code was sent on WhatsApp to +91 ${cleanPhone.slice(-10)}. Enter it below. The code expires in 5 minutes.`
+        );
         setResendTimer(45);
       } else {
         setError(res.message || "Failed to send WhatsApp OTP.");
@@ -238,7 +241,7 @@ export const OfficerTicketPortal: React.FC = () => {
 
     setVerifying(true);
     try {
-      const res = await politicalApiService.verifyWhatsAppOTP(phoneInput, otpInput.trim());
+      const res = await politicalApiService.verifyWhatsAppOTP(phoneInput, otpInput.trim(), issueId);
       if (res.success) {
         setIsVerified(true);
         setOtpMessage("✓ WhatsApp Identity Verified Successfully! Ticket Details Unlocked.");
@@ -531,7 +534,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     type="text"
                     required
                     maxLength={6}
-                    placeholder="Enter 6-digit OTP (e.g. 482910)..."
+                    placeholder="Enter 6-digit code from WhatsApp"
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.4em] text-[#F5EFE0] outline-none"

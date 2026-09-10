@@ -215,6 +215,12 @@ class WhatsAppCloudApiClient:
         self.complainant_param_names = [p.strip() for p in raw_names.split(",") if p.strip()][:4]
         if len(self.complainant_param_names) < 4:
             self.complainant_param_names = ["name", "ticket", "status", "detail"]
+        self.otp_template_name = (
+            os.environ.get("WHATSAPP_OTP_TEMPLATE_NAME", "officer_verification_otp") or "officer_verification_otp"
+        ).strip()
+        self.otp_template_lang = (
+            os.environ.get("WHATSAPP_OTP_TEMPLATE_LANG", "en") or "en"
+        ).strip()
 
     def _graph_url(self) -> str:
         return f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
@@ -393,6 +399,36 @@ class WhatsAppCloudApiClient:
             },
         }
 
+    def _authentication_otp_request_body(self, phone: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Meta Authentication / copy-code template. {{1}} is the OTP; never log this body."""
+        otp = str(payload.get("otpCode") or "").strip()
+        template_name = (payload.get("templateName") or self.otp_template_name or "officer_verification_otp").strip()
+        lang = payload.get("templateLanguage") or self.otp_template_lang or "en"
+        include_button = bool(payload.get("otpIncludeButton", True))
+        components: list = [
+            {"type": "body", "parameters": [{"type": "text", "text": otp}]},
+        ]
+        if include_button:
+            components.append(
+                {
+                    "type": "button",
+                    "sub_type": "url",
+                    "index": "0",
+                    "parameters": [{"type": "text", "text": otp}],
+                }
+            )
+        return {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": phone,
+            "type": "template",
+            "template": {
+                "name": template_name,
+                "language": {"code": lang},
+                "components": components,
+            },
+        }
+
     async def send_whatsapp_notification(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         phone = payload.get("recipientPhone", "").replace("+", "").replace(" ", "").replace("-", "")
         if len(phone) == 10:
@@ -402,10 +438,13 @@ class WhatsAppCloudApiClient:
         event = payload.get("event") or payload.get("eventType") or "WHATSAPP_DISPATCH"
         ticket_ref = payload.get("rawTicketId") or payload.get("ticketNumber") or payload.get("issueId")
         message_kind = (payload.get("messageKind") or "TEMPLATE").upper()
-        template_for_log = payload.get("templateName") or (
-            self.complainant_template_name if message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE")
-            else ("status_update_text" if message_kind == "TEXT" else self.template_name)
-        )
+        if message_kind in ("AUTHENTICATION_OTP", "OTP_TEMPLATE"):
+            template_for_log = payload.get("templateName") or self.otp_template_name or "officer_verification_otp"
+        else:
+            template_for_log = payload.get("templateName") or (
+                self.complainant_template_name if message_kind in ("COMPLAINANT_STATUS", "STATUS_TEMPLATE")
+                else ("status_update_text" if message_kind == "TEXT" else self.template_name)
+            )
         masked = _mask_phone(phone)
         sent_at = datetime.now(timezone.utc).isoformat()
 
@@ -424,7 +463,7 @@ class WhatsAppCloudApiClient:
                 "correlationId": correlation_id,
                 "recipientPhone": phone,
                 "metaHttpStatus": http_status,
-                "messageContent": payload.get("textMessage"),
+                "messageContent": None if message_kind in ("AUTHENTICATION_OTP", "OTP_TEMPLATE") else payload.get("textMessage"),
                 "apiVersion": self.api_version,
             }
 
@@ -460,6 +499,9 @@ class WhatsAppCloudApiClient:
                 or self.complainant_template_name
                 or "complainant_status_update_v1"
             )
+        elif message_kind in ("AUTHENTICATION_OTP", "OTP_TEMPLATE"):
+            request_body = self._authentication_otp_request_body(phone, payload)
+            template_for_log = payload.get("templateName") or self.otp_template_name or "officer_verification_otp"
         else:
             request_body = self._template_request_body(phone, payload)
 
@@ -482,7 +524,7 @@ class WhatsAppCloudApiClient:
                     "providerMessageId": msg_id,
                     "sentAt": sent_at,
                     "recipientPhone": phone,
-                    "messageContent": payload.get("textMessage"),
+                    "messageContent": None if message_kind in ("AUTHENTICATION_OTP", "OTP_TEMPLATE") else payload.get("textMessage"),
                     "correlationId": correlation_id,
                     "metaHttpStatus": status_code,
                     "apiVersion": self.api_version,
@@ -497,6 +539,41 @@ class WhatsAppCloudApiClient:
             err_msg_early = str(((res_json or {}).get("error") or {}).get("message") or error_msg_fallback or "")
             if _is_meta_recipient_list_error(status_code, err_code, err_msg_early):
                 return _fail("131030", META_RECIPIENT_LIST_MESSAGE, http_status=status_code)
+
+            # Authentication OTP: retry language and drop the copy-code button. Never fall back to session text.
+            if message_kind in ("AUTHENTICATION_OTP", "OTP_TEMPLATE"):
+                retry_step = int(payload.get("templateRetryStep") or 0)
+                err_msg = str(((res_json or {}).get("error") or {}).get("message") or error_msg_fallback or "")
+                if retry_step < 2 and (status_code == 400 or err_code in ("100", "132000", "132001", "132012", "132018")):
+                    next_payload = dict(payload)
+                    next_payload["messageKind"] = "AUTHENTICATION_OTP"
+                    next_payload["templateRetryStep"] = retry_step + 1
+                    current_lang = payload.get("templateLanguage") or self.otp_template_lang or "en"
+                    if retry_step == 0:
+                        next_payload["otpIncludeButton"] = payload.get("otpIncludeButton", True)
+                        next_payload["templateLanguage"] = "en_US" if current_lang != "en_US" else "en"
+                    else:
+                        next_payload["otpIncludeButton"] = False
+                        next_payload["templateLanguage"] = current_lang
+                    logger.warning(
+                        "[WhatsApp] officer OTP template retry ticket=%s step=%s lang=%s button=%s code=%s",
+                        ticket_ref,
+                        next_payload.get("templateRetryStep"),
+                        next_payload.get("templateLanguage"),
+                        next_payload.get("otpIncludeButton"),
+                        err_code,
+                    )
+                    return await self.send_whatsapp_notification(next_payload)
+                if err_code in ("132001", "132000") or "template" in err_msg.lower():
+                    return _fail(
+                        err_code or "OTP_TEMPLATE_MISSING",
+                        (
+                            "Officer WhatsApp OTP needs an approved Meta Authentication template. "
+                            f"Create it in WhatsApp Manager as {self.otp_template_name} "
+                            f"(language {self.otp_template_lang}) and set WHATSAPP_OTP_TEMPLATE_NAME on Render if the name differs."
+                        ),
+                        http_status=status_code,
+                    )
 
             # Session text is rejected outside the 24h window; use the approved citizen template.
             if message_kind == "TEXT" and int(payload.get("templateRetryStep") or 0) < 1:

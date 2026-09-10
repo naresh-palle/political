@@ -80,6 +80,17 @@ try:
         issue_in_scope,
         issue_mongo_query,
     )
+    from services.officer_otp import (
+        OTP_TTL_SECONDS,
+        build_challenge,
+        challenge_key,
+        cooldown_remaining,
+        evaluate_verify,
+        generate_otp,
+        last4 as otp_last4,
+        normalize_phone as normalize_otp_phone,
+    )
+    from services.officer_otp import IN_MEMORY_OFFICER_OTPS
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
     from backend.services.officer_status_workflow import (
@@ -114,6 +125,17 @@ except ImportError:
         issue_in_scope,
         issue_mongo_query,
     )
+    from backend.services.officer_otp import (
+        OTP_TTL_SECONDS,
+        build_challenge,
+        challenge_key,
+        cooldown_remaining,
+        evaluate_verify,
+        generate_otp,
+        last4 as otp_last4,
+        normalize_phone as normalize_otp_phone,
+    )
+    from backend.services.officer_otp import IN_MEMORY_OFFICER_OTPS
 
 mongo_url = (
     os.environ.get("MONGO_URL")
@@ -2525,37 +2547,119 @@ async def get_field_issue_by_id(issue_id: str, userId: Optional[str] = None, use
     return sanitize_doc(issue)
 
 
+async def _load_officer_otp_challenge(key: str):
+    mem = IN_MEMORY_OFFICER_OTPS.get(key)
+    if _mongo_circuit_open:
+        return mem
+    try:
+        col = getattr(db, "officer_otp_challenges", None)
+        if col is None:
+            return mem
+        doc = await mongo_wait(
+            col.find_one({"key": key}, {"_id": 0}),
+            timeout=2.0,
+            fallback=None,
+            tag="otp_find",
+        )
+        return doc or mem
+    except Exception as e:
+        log_mongo_notice("otp_find", e)
+        return mem
+
+
+async def _save_officer_otp_challenge(key: str, doc: dict):
+    stored = dict(doc or {})
+    stored["key"] = key
+    IN_MEMORY_OFFICER_OTPS[key] = stored
+    if _mongo_circuit_open:
+        return
+    try:
+        col = getattr(db, "officer_otp_challenges", None)
+        if col is None:
+            return
+        await mongo_write(
+            col.update_one({"key": key}, {"$set": stored}, upsert=True),
+            timeout=4.0,
+            tag="otp_save",
+        )
+    except Exception as e:
+        log_mongo_notice("otp_save", e)
+
+
+async def _delete_officer_otp_challenge(key: str):
+    IN_MEMORY_OFFICER_OTPS.pop(key, None)
+    if _mongo_circuit_open:
+        return
+    try:
+        col = getattr(db, "officer_otp_challenges", None)
+        if col is None:
+            return
+        await mongo_write(col.delete_one({"key": key}), timeout=4.0, tag="otp_del")
+    except Exception as e:
+        log_mongo_notice("otp_del", e)
+
+
 @api_router.post("/field-ops/send-whatsapp-otp")
 async def send_whatsapp_otp(payload: dict):
-    phone = payload.get("phone", "").replace("+", "").replace(" ", "").replace("-", "")
-    issue_id = payload.get("issueId") or "iss-ll-sec-asg-01"
-    otp = "482910"
-    otp_issue = resolve_stored_issue(issue_id) or {"id": issue_id}
-    ticket_ref = whatsapp_ticket_ref(otp_issue)
-    
-    clean_phone = phone[-10:] if len(phone) >= 10 else phone
-    formatted_phone = f"91{clean_phone}" if len(clean_phone) == 10 else clean_phone
-    
-    wa_payload = {
-        "recipientPhone": formatted_phone,
-        "textMessage": f"🏛️ *LeaderLens Official Verification*\n\nYour 6-Digit WhatsApp OTP Code is: *{otp}*\n\nUse this code to verify your identity on the Officer Portal for ticket {ticket_ref}."
-    }
-    
-    result = await whatsapp_client.send_whatsapp_notification(wa_payload)
+    payload = payload or {}
+    phone = normalize_otp_phone(payload.get("phone") or "")
+    issue_id = str(payload.get("issueId") or "").strip()
+    if len("".join(ch for ch in phone if ch.isdigit())) < 10:
+        return {"success": False, "message": "Enter a valid 10-digit WhatsApp mobile number."}
+
+    key = challenge_key(phone, issue_id)
+    existing = await _load_officer_otp_challenge(key)
+    wait = cooldown_remaining(existing)
+    if wait > 0:
+        return {"success": False, "message": f"Please wait {wait} seconds before requesting another code."}
+
+    otp = generate_otp()
+    challenge = build_challenge(phone, issue_id, otp)
+    await _save_officer_otp_challenge(key, challenge)
+
+    otp_issue = resolve_stored_issue(issue_id) if issue_id else None
+    ticket_ref = whatsapp_ticket_ref(otp_issue or {"id": issue_id}) if issue_id else ""
+    result = await whatsapp_client.send_whatsapp_notification(
+        {
+            "recipientPhone": phone,
+            "messageKind": "AUTHENTICATION_OTP",
+            "otpCode": otp,
+            "issueId": issue_id,
+            "rawTicketId": ticket_ref,
+            "event": "OFFICER_PORTAL_OTP",
+        }
+    )
+
+    if not result.get("success"):
+        await _delete_officer_otp_challenge(key)
+        return {
+            "success": False,
+            "message": result.get("errorMessage") or "WhatsApp could not send the verification code.",
+            "errorCode": result.get("errorCode"),
+        }
+
     return {
         "success": True,
-        "otp": otp,
-        "message": f"WhatsApp OTP code ({otp}) sent to +91 {clean_phone}",
-        "whatsappResult": result
+        "message": (
+            f"A 6-digit verification code was sent on WhatsApp to the number ending {otp_last4(phone)}. "
+            "Enter it below. The code expires in 5 minutes."
+        ),
+        "expiresIn": OTP_TTL_SECONDS,
     }
 
 
 @api_router.post("/field-ops/verify-whatsapp-otp")
 async def verify_whatsapp_otp(payload: dict):
-    otp = (payload.get("otp") or "").strip()
-    if len(otp) == 6:
-        return {"success": True, "message": "WhatsApp OTP verified successfully"}
-    return {"success": False, "message": "Invalid 6-digit OTP code"}
+    payload = payload or {}
+    phone = normalize_otp_phone(payload.get("phone") or "")
+    issue_id = str(payload.get("issueId") or "").strip()
+    otp = str(payload.get("otp") or "").strip()
+    key = challenge_key(phone, issue_id)
+    challenge = await _load_officer_otp_challenge(key)
+    ok, message, updated = evaluate_verify(challenge, phone, issue_id, otp)
+    if updated is not None:
+        await _save_officer_otp_challenge(key, updated)
+    return {"success": bool(ok), "message": message}
 
 
 @api_router.put("/field-ops/issues/{issue_id}/status")

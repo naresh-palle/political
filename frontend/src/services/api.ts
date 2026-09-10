@@ -1483,40 +1483,43 @@ export const politicalApiService = {
       throw error;
     }
   },
-  async sendWhatsAppOTP(phone: string, issueId: string): Promise<{ success: boolean; otp?: string; message: string }> {
+  async sendWhatsAppOTP(phone: string, issueId: string): Promise<{ success: boolean; message: string; expiresIn?: number }> {
     const cleanDigits = phone.replace(/\D/g, "");
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/send-whatsapp-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: cleanDigits, issueId })
-      }, 5000);
-      if (res.ok) return await res.json();
+      }, 20000);
+      const data = await res.json().catch(() => ({} as any));
+      if (typeof data?.success === "boolean") {
+        return {
+          success: Boolean(data.success),
+          message: String(data.message || (data.success ? "Verification code sent on WhatsApp." : "Failed to send the verification code.")),
+          expiresIn: typeof data.expiresIn === "number" ? data.expiresIn : undefined
+        };
+      }
     } catch (e) {}
-
-    const mockOtp = "482910";
     return {
-      success: true,
-      otp: mockOtp,
-      message: `WhatsApp OTP (${mockOtp}) dispatched to +91 ${cleanDigits.slice(-10)}`
+      success: false,
+      message: "Could not send the WhatsApp verification code. Try again."
     };
   },
 
-  async verifyWhatsAppOTP(phone: string, otp: string): Promise<{ success: boolean; message: string }> {
+  async verifyWhatsAppOTP(phone: string, otp: string, issueId?: string): Promise<{ success: boolean; message: string }> {
     const cleanDigits = phone.replace(/\D/g, "");
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/field-ops/verify-whatsapp-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanDigits, otp })
-      }, 5000);
-      if (res.ok) return await res.json();
+        body: JSON.stringify({ phone: cleanDigits, otp, issueId: issueId || "" })
+      }, 15000);
+      const data = await res.json().catch(() => ({} as any));
+      if (typeof data?.success === "boolean") {
+        return { success: data.success, message: data.message || (data.success ? "Verified." : "Incorrect verification code.") };
+      }
     } catch (e) {}
-
-    if (otp.trim().length === 6) {
-      return { success: true, message: "WhatsApp OTP verified successfully" };
-    }
-    return { success: false, message: "Invalid 6-digit OTP code" };
+    return { success: false, message: "Could not verify the WhatsApp code. Try again." };
   },
 
   async getFieldIssueById(issueId: string, userId?: string, userRole?: string): Promise<any> {

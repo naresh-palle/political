@@ -11,6 +11,16 @@ def isolate_runtime_field_issues(tmp_path, monkeypatch):
 
         monkeypatch.setattr(srv, "RUNTIME_FIELD_ISSUES_PATH", runtime_path)
         srv.IN_MEMORY_FIELD_ISSUES.clear()
+        try:
+            srv.IN_MEMORY_OFFICER_OTPS.clear()
+        except Exception:
+            pass
+    except Exception:
+        pass
+    try:
+        from backend.services.officer_otp import IN_MEMORY_OFFICER_OTPS
+
+        IN_MEMORY_OFFICER_OTPS.clear()
     except Exception:
         pass
     yield
