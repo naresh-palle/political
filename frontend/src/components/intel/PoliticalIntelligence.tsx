@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Construction,
   Database,
   Download,
   Loader2,
@@ -19,15 +20,23 @@ type Tab =
   | "import"
   | "intelligence";
 
-const TABS: { id: Tab; label: string }[] = [
+const TABS: { id: Tab; label: string; gated?: boolean }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
+  { id: "constituencies", label: "Constituencies" },
+  { id: "leaders", label: "Leaders", gated: true },
+  { id: "social", label: "Social Media", gated: true },
+  { id: "districts", label: "District Progress", gated: true },
+  { id: "verify", label: "Verification Queue" },
+  { id: "import", label: "Import / Export" },
+  { id: "intelligence", label: "Intelligence" }
+];
+
+const WORKFLOW_STEPS: { id: Tab; label: string }[] = [
   { id: "constituencies", label: "Constituencies" },
   { id: "leaders", label: "Leaders" },
   { id: "social", label: "Social Media" },
   { id: "districts", label: "District Progress" },
-  { id: "verify", label: "Verification Queue" },
-  { id: "import", label: "Import / Export" },
-  { id: "intelligence", label: "Intelligence" }
+  { id: "verify", label: "Verification" }
 ];
 
 const ROLES = [
@@ -117,6 +126,33 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     if (!districtId) return null;
     return rows.find((d: PiDistrictProgress) => d.id === districtId) || null;
   }, [dashboard, districtId]);
+
+  const hasConstituency = useMemo(
+    () => Boolean(acId && constRows.some((row) => row.assemblyConstituencyId === acId)),
+    [acId, constRows]
+  );
+  const hasLeader = useMemo(
+    () => Boolean(acId && leaders.some((row) => !row.assemblyConstituencyId || row.assemblyConstituencyId === acId)),
+    [acId, leaders]
+  );
+  const hasSocial = useMemo(() => accounts.length > 0 && hasLeader, [accounts, hasLeader]);
+
+  const tabOpen: Record<Tab, boolean> = {
+    dashboard: true,
+    constituencies: true,
+    leaders: hasConstituency,
+    social: hasLeader,
+    districts: hasSocial,
+    verify: true,
+    import: true,
+    intelligence: true
+  };
+
+  const constructionCopy: Partial<Record<Tab, string>> = {
+    leaders: "Leaders stay under construction until a constituency is saved for the selected assembly.",
+    social: "Social media stays under construction until at least one leader is saved for this assembly.",
+    districts: "District progress stays under construction until social media is saved for this assembly."
+  };
 
   const flash = (msg: string, isError = false) => {
     setOk(isError ? "" : msg);
@@ -246,6 +282,13 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     if (tab === "dashboard" || tab === "districts") refreshDashboard().catch((e) => flash(e.message, true));
   }, [tab, queueStatus, intelPlatform, intelParty, rankBy, stateId, districtId, pcId, acId]);
 
+  useEffect(() => {
+    loadConstituencies().catch(() => {});
+    loadLeaders()
+      .then(() => loadAccounts())
+      .catch(() => {});
+  }, [acId, districtId, stateId, userId]);
+
   const saveConstituency = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -265,9 +308,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         estimatedXUsers: num(constForm.estimatedXUsers),
         estimatedYouTubeUsers: num(constForm.estimatedYouTubeUsers)
       });
-      flash("Constituency record saved. Estimates are stored as estimates.");
+      flash("Constituency record saved. Next: enter leaders for this assembly.");
       await loadConstituencies();
       await refreshDashboard();
+      setTab("leaders");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
@@ -286,8 +330,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         parliamentConstituencyId: pcId,
         assemblyConstituencyId: acId
       });
-      flash("Leader saved and linked to Contact Database.");
+      flash("Leader saved and linked to Contact Database. Next: add social media.");
       await loadLeaders();
+      setTab("social");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
@@ -308,8 +353,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         avgCommentsLast10: num(socialForm.avgCommentsLast10),
         avgViewsLast10: num(socialForm.avgViewsLast10)
       });
-      flash("Social account saved. A new snapshot was stored; previous follower counts were kept.");
+      flash("Social account saved. Next: review district progress.");
       await loadAccounts();
+      setTab("districts");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
@@ -368,17 +414,50 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
       </header>
 
       <div className="flex flex-wrap gap-1.5">
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setTab(item.id)}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
-              tab === item.id ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
+        {TABS.map((item) => {
+          const locked = Boolean(item.gated && !tabOpen[item.id]);
+          const active = tab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider text-left ${
+                active ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
+              }`}
+            >
+              <span className="block">{item.label}</span>
+              {locked ? <span className={`block text-[8px] tracking-wide ${active ? "text-[#071322]/80" : "text-[#D4A24C]"}`}>Under construction</span> : null}
+            </button>
+          );
+        })}
+      </div>
+      <div className={`${CARD} text-[11px] text-[#B9AF95]`}>
+        <p className="text-[10px] uppercase tracking-wider font-bold text-[#D4A24C] mb-1">How to enter data</p>
+        <ol className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+          {WORKFLOW_STEPS.map((step, index) => {
+            const done =
+              (step.id === "constituencies" && hasConstituency) ||
+              (step.id === "leaders" && hasLeader) ||
+              (step.id === "social" && hasSocial) ||
+              (step.id === "districts" && hasSocial && tabOpen.districts) ||
+              (step.id === "verify" && hasSocial);
+            const current = tab === step.id;
+            return (
+              <li key={step.id} className={`rounded-lg border px-2 py-1.5 ${current ? "border-[#D4A24C] text-[#F5EFE0]" : "border-[#22405E]"}`}>
+                <span className="text-[#D4A24C] font-bold">{index + 1}. {step.label}</span>
+                <span className="block">
+                  {done
+                    ? "Saved"
+                    : step.id === "constituencies"
+                      ? "Start here"
+                      : step.id === "verify"
+                        ? "After district progress"
+                        : "Under construction until previous step is saved"}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
       {(error || ok) && (
@@ -534,7 +613,15 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         </section>
       )}
 
-      {tab === "leaders" && (
+      {tab === "leaders" && !tabOpen.leaders && (
+        <UnderConstruction
+          title="Leaders"
+          reason={constructionCopy.leaders || ""}
+          actionLabel="Go to Constituencies"
+          onAction={() => setTab("constituencies")}
+        />
+      )}
+      {tab === "leaders" && tabOpen.leaders && (
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <form onSubmit={saveLeader} className={`${CARD} space-y-3`}>
             <h2 className="text-sm font-bold text-[#F5EFE0]">Leader entry</h2>
@@ -582,7 +669,15 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         </section>
       )}
 
-      {tab === "social" && (
+      {tab === "social" && !tabOpen.social && (
+        <UnderConstruction
+          title="Social Media"
+          reason={constructionCopy.social || ""}
+          actionLabel="Go to Leaders"
+          onAction={() => setTab("leaders")}
+        />
+      )}
+      {tab === "social" && tabOpen.social && (
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <form onSubmit={saveAccount} className={`${CARD} space-y-3`}>
             <h2 className="text-sm font-bold text-[#F5EFE0]">Social media account</h2>
@@ -647,7 +742,15 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         </section>
       )}
 
-      {tab === "districts" && (
+      {tab === "districts" && !tabOpen.districts && (
+        <UnderConstruction
+          title="District Progress"
+          reason={constructionCopy.districts || ""}
+          actionLabel="Go to Social Media"
+          onAction={() => setTab("social")}
+        />
+      )}
+      {tab === "districts" && tabOpen.districts && (
         <section className="space-y-3">
           <StateDistrictBar
             stateId={stateId}
@@ -677,6 +780,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
           ) : (
             <EmptyState text="No progress yet for this district." />
           )}
+          <button className={BTN} type="button" onClick={() => setTab("verify")}>Continue to verification</button>
           {districtDetail && (
             <div className={CARD}>
               <h3 className="font-bold text-[#F5EFE0] mb-2">{districtDetail.district?.name} constituencies</h3>
@@ -871,6 +975,34 @@ function Kpi({ label, value, hint }: { label: string; value: React.ReactNode; hi
       <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">{label}</span>
       <span className="text-2xl font-bold font-display text-[#D4A24C] mt-0.5 block">{value}</span>
       {hint && <span className="text-[10px] text-[#B9AF95]">{hint}</span>}
+    </div>
+  );
+}
+
+function UnderConstruction({
+  title,
+  reason,
+  actionLabel,
+  onAction
+}: {
+  title: string;
+  reason: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <div className={`${CARD} space-y-3`}>
+      <div className="flex items-center gap-2">
+        <Construction className="w-5 h-5 text-[#D4A24C]" />
+        <h2 className="text-sm font-bold text-[#F5EFE0]">{title} — under construction</h2>
+      </div>
+      <p className="text-xs text-[#B9AF95]">{reason}</p>
+      <ol className="text-xs text-[#F5EFE0] space-y-1 list-decimal list-inside">
+        {WORKFLOW_STEPS.map((step) => (
+          <li key={step.id}>{step.label}</li>
+        ))}
+      </ol>
+      <button className={BTN} type="button" onClick={onAction}>{actionLabel}</button>
     </div>
   );
 }
