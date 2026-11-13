@@ -351,9 +351,6 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4A24C] font-bold">Political Intelligence</p>
           <h1 className="text-2xl font-display text-[#F5EFE0]">Constituency data collection</h1>
-          <p className="text-xs text-[#B9AF95] mt-1">
-            Live Mongo records via Render. Geography and parties come from existing masters. Missing metrics are never shown as zero.
-          </p>
         </div>
         {isSuper && (
           <button
