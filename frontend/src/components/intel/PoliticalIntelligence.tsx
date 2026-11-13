@@ -155,24 +155,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       if (cancelled) return;
       const parliamentRows = (pcs as ParliamentInfo[]) || [];
       const assemblyRows = Array.isArray(acs) ? acs : [];
-      let districtRows = Array.isArray(dist) ? dist : [];
-      const covered = new Set<string>();
-      districtRows.forEach((d) => (d.assemblyConstituencyIds || []).forEach((id: string) => covered.add(id)));
-      const sparse = assemblyRows.length > 0 && covered.size < Math.min(20, assemblyRows.length);
-      if (sparse || (!districtRows.length && assemblyRows.length)) {
-        const buckets: Record<string, any> = {};
-        const pcName = Object.fromEntries(parliamentRows.map((p) => [p.id, p.name]));
-        for (const ac of assemblyRows) {
-          const parentPc = ac.parliamentConstituencyId || ac.parliamentId;
-          const name = pcName[parentPc] || ac.name || "Unknown";
-          const id = `${stateId}-DIST-${String(name).toUpperCase().replace(/[^A-Z0-9]+/g, "-")}`;
-          const bucket = buckets[id] || { id, name, stateId, assemblyConstituencyIds: [], parliamentConstituencyIds: [] };
-          if (!bucket.assemblyConstituencyIds.includes(ac.id)) bucket.assemblyConstituencyIds.push(ac.id);
-          if (parentPc && !bucket.parliamentConstituencyIds.includes(parentPc)) bucket.parliamentConstituencyIds.push(parentPc);
-          buckets[id] = bucket;
-        }
-        districtRows = Object.values(buckets).sort((a, b) => String(a.name).localeCompare(String(b.name)));
-      }
+      const districtRows = [...(Array.isArray(dist) ? dist : [])].sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
       setParliaments(parliamentRows);
       setAssemblies(assemblyRows);
       setDistricts(districtRows);

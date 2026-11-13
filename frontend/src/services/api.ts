@@ -307,6 +307,7 @@ let cachedAssemblies: AssemblyInfo[] | null = null;
 let cachedParties: PoliticalParty[] | null = null;
 let cachedReps: ElectedRepresentative[] | null = null;
 let cachedUsers: UserProfile[] | null = null;
+let cachedDistricts: any[] | null = null;
 
 async function loadStaticGeography() {
   if (!cachedStates) {
@@ -2156,6 +2157,20 @@ export const politicalApiService = {
     return this.getDistrictsByState(stateId, userId);
   },
   async getDistrictsByState(stateId?: string, userId?: string): Promise<any[]> {
+    const staticRows = async () => {
+      if (!cachedDistricts) {
+        try {
+          const cleanBase = BASE_URL.endsWith("/") ? BASE_URL : `${BASE_URL}/`;
+          const res = await fetch(`${cleanBase}data/geography/districts.json`);
+          cachedDistricts = res.ok ? await res.json() : [];
+        } catch {
+          cachedDistricts = [];
+        }
+      }
+      const rows = Array.isArray(cachedDistricts) ? cachedDistricts : [];
+      if (!stateId) return rows;
+      return rows.filter((d: any) => String(d.stateId || "").toUpperCase() === stateId.toUpperCase());
+    };
     try {
       const q = new URLSearchParams();
       if (stateId) q.set("stateId", stateId);
@@ -2163,12 +2178,22 @@ export const politicalApiService = {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/districts?${q.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) return data;
+        if (Array.isArray(data) && data.length > 0) {
+          const fallback = await staticRows();
+          if (fallback.length > 0) {
+            const apiNames = new Set(data.map((d: any) => String(d.name || "").toLowerCase()));
+            const masterNames = new Set(fallback.map((d: any) => String(d.name || "").toLowerCase()));
+            const missing = [...masterNames].some((n) => !apiNames.has(n));
+            const extra = [...apiNames].some((n) => !masterNames.has(n));
+            if (missing || extra) return fallback;
+          }
+          return data;
+        }
       }
     } catch (e) {
-      // Fallback below
+      // Fallback to current district master
     }
-    return [];
+    return staticRows();
   },
   getPiDistrictAssemblies(userId: string, districtId: string) {
     return this.piRequest(`/geography/districts/${encodeURIComponent(districtId)}/assemblies`, userId);

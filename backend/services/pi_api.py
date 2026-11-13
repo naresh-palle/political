@@ -182,38 +182,11 @@ async def _geo_lookups() -> Dict[str, Any]:
 
 async def _resolved_districts(state_id: Optional[str] = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     geo = await _geo_lookups()
-    derived, maps = build_district_catalog(geo.get("assembly_rows") or geo["assemblies"].values(), geo.get("parliament_rows") or geo["parliaments"].values(), state_id)
-    stored = await _list("districts")
-    stored_maps = await _list("assembly_district_map")
-    by_id = {d.get("id"): d for d in derived if d.get("id")}
-    for row in stored:
-        if state_id and str(row.get("stateId") or "").upper() != str(state_id).upper():
-            continue
-        existing = by_id.get(row.get("id"))
-        if existing:
-            existing["name"] = existing.get("name") or row.get("name")
-        else:
-            by_id[row.get("id")] = {
-                **row,
-                "assemblyConstituencyIds": list(row.get("assemblyConstituencyIds") or []),
-                "parliamentConstituencyIds": list(row.get("parliamentConstituencyIds") or []),
-            }
-    map_by_ac = {m.get("assemblyConstituencyId"): m for m in maps if m.get("assemblyConstituencyId")}
-    for item in stored_maps:
-        ac_id = item.get("assemblyConstituencyId")
-        if not ac_id:
-            continue
-        if state_id and str(item.get("stateId") or "").upper() != str(state_id).upper():
-            continue
-        map_by_ac[ac_id] = item
-        d_id = item.get("districtId")
-        if d_id and d_id in by_id and ac_id not in by_id[d_id]["assemblyConstituencyIds"]:
-            by_id[d_id]["assemblyConstituencyIds"].append(ac_id)
-        pc_id = item.get("parliamentConstituencyId")
-        if d_id and d_id in by_id and pc_id and pc_id not in by_id[d_id]["parliamentConstituencyIds"]:
-            by_id[d_id]["parliamentConstituencyIds"].append(pc_id)
-    rows = sorted(by_id.values(), key=lambda r: (r.get("name") or ""))
-    return rows, list(map_by_ac.values())
+    return build_district_catalog(
+        geo.get("assembly_rows") or geo["assemblies"].values(),
+        geo.get("parliament_rows") or geo["parliaments"].values(),
+        state_id,
+    )
 
 
 def register_pi_routes(api_router) -> None:

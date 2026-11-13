@@ -301,7 +301,10 @@ def test_ap_districts_cascade_from_existing_geography():
     acs = json.loads((root / "data" / "assemblies.json").read_text())
     pcs = json.loads((root / "data" / "parliaments.json").read_text())
     districts, maps = build_district_catalog(acs, pcs, "AP")
-    assert len(districts) >= 20
+    from backend.services.district_master import CURRENT_DISTRICTS, TS_DISTRICT_BY_NAME
+    ap_names = {d["name"] for d in districts}
+    assert ap_names == set(CURRENT_DISTRICTS["AP"])
+    assert not {"Araku", "Amalapuram", "Hindupur", "Bhongir"} & ap_names
     nandyal = next(d for d in districts if d["name"] == "Nandyal")
     assert "AP-AC-139" in nandyal["assemblyConstituencyIds"]
     assert "AP-PC-17" in nandyal["parliamentConstituencyIds"]
@@ -314,5 +317,16 @@ def test_ap_districts_cascade_from_existing_geography():
     banaga = next(m for m in maps if m["assemblyConstituencyId"] == "AP-AC-139")
     assert banaga["districtName"] == "Nandyal"
     assert banaga["parliamentConstituencyId"] == "AP-PC-17"
-    ts_districts, _ = build_district_catalog(acs, pcs, "TS")
-    assert len(ts_districts) >= 5
+    ts_districts, ts_maps = build_district_catalog(acs, pcs, "TS")
+    ts_names = {d["name"] for d in ts_districts}
+    assert ts_names == set(CURRENT_DISTRICTS["TS"])
+    assert {"Siddipet", "Jagtial", "Hanumakonda", "Narayanpet", "Mulugu"} <= ts_names
+    siddipet = next(d for d in ts_districts if d["name"] == "Siddipet")
+    assert siddipet["assemblyConstituencyIds"]
+    jagtial = next(d for d in ts_districts if d["name"] == "Jagtial")
+    assert jagtial["assemblyConstituencyIds"]
+    assert len(CURRENT_DISTRICTS["AP"]) == 26
+    assert len(CURRENT_DISTRICTS["TS"]) == 33
+    ts_missing = [_norm(a["name"]) for a in acs if a.get("stateId") == "TS" and _norm(a.get("name")) not in TS_DISTRICT_BY_NAME]
+    assert ts_missing == []
+    assert any(m["districtName"] == "Siddipet" for m in ts_maps)

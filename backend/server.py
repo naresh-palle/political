@@ -2349,6 +2349,39 @@ async def get_geographic_drilldown(
 
 # ----------------- SEED & IDEMPOTENT SYNC ENDPOINT -----------------
 
+async def sync_current_districts(assemblies=None, parliaments=None):
+    """Upsert the current administrative district master into MongoDB."""
+    try:
+        from backend.services.geo_districts import build_district_catalog
+    except ImportError:
+        from services.geo_districts import build_district_catalog
+    if assemblies is None:
+        assemblies = load_json_fallback("assemblies.json")
+    if parliaments is None:
+        parliaments = load_json_fallback("parliaments.json")
+    rows, maps = build_district_catalog(assemblies, parliaments)
+    keep_ids = []
+    for district in rows:
+        did = district.get("id")
+        if not did:
+            continue
+        keep_ids.append(did)
+        await db.districts.update_one({"id": did}, {"$set": district}, upsert=True)
+    if keep_ids:
+        await db.districts.delete_many({"id": {"$nin": keep_ids}})
+    keep_map_ids = []
+    for mapping in maps:
+        mid = mapping.get("id")
+        if not mid:
+            continue
+        keep_map_ids.append(mid)
+        await db.assembly_district_map.update_one({"id": mid}, {"$set": mapping}, upsert=True)
+    if keep_map_ids:
+        await db.assembly_district_map.delete_many({"id": {"$nin": keep_map_ids}})
+    logger.info("Synced %s current districts into MongoDB", len(keep_ids))
+    return keep_ids
+
+
 @api_router.post("/geography/seed")
 async def trigger_geography_seed():
     states = load_json_fallback("states.json")
@@ -2395,6 +2428,8 @@ async def trigger_geography_seed():
         await db.social_media_snapshots.create_index([("accountId", 1), ("collectionDate", 1)])
         await db.assembly_district_map.create_index("assemblyConstituencyId")
         await db.constituency_contacts.create_index("politicalPersonId")
+        await db.districts.create_index("id", unique=True)
+        await db.districts.create_index("stateId")
 
         await db.countries.update_one({"id": "IND"}, {"$set": {"id": "IND", "name": "India", "code": "IND"}}, upsert=True)
 
@@ -2409,6 +2444,8 @@ async def trigger_geography_seed():
         for a in assemblies:
             await db.assembly_constituencies.update_one({"id": a["id"]}, {"$set": a}, upsert=True)
             imported_acs += 1
+
+        await sync_current_districts(assemblies, parliaments)
 
         for u in users:
             await db.users.update_one({"email": u["email"]}, {"$set": u}, upsert=True)
@@ -3393,6 +3430,10 @@ async def startup_db_seed():
             logger.info("MongoDB collections empty, executing comprehensive auto-seed...")
             await trigger_geography_seed()
         await apply_demo_display_name_fixes()
+        try:
+            await sync_current_districts()
+        except Exception as dist_exc:
+            log_mongo_notice("current district sync", dist_exc)
         await refresh_live_officer_ticket_seeds()
         await purge_mock_audit_logs()
         try:
