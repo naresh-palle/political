@@ -499,7 +499,7 @@ def register_pi_routes(api_router) -> None:
         if not ac_id:
             raise HTTPException(status_code=400, detail="assemblyConstituencyId is required")
         if not in_scope(caps, payload.get("stateId"), ac_id):
-            raise HTTPException(status_code=403, detail="Out of geography scope")
+            raise HTTPException(status_code=403, detail="This assembly is outside your assigned geography.")
         existing = None
         for row in await _list("constituency_statistics"):
             if row.get("assemblyConstituencyId") == ac_id:
@@ -586,7 +586,7 @@ def register_pi_routes(api_router) -> None:
         if not name or not ac_id or not party_id:
             raise HTTPException(status_code=400, detail="name, assemblyConstituencyId and partyId are required")
         if not in_scope(caps, payload.get("stateId"), ac_id):
-            raise HTTPException(status_code=403, detail="Out of geography scope")
+            raise HTTPException(status_code=403, detail="This assembly is outside your assigned geography.")
         geo = await _geo_lookups()
         if party_id not in geo["parties"] and party_id not in {p.get("abbreviation", "").upper() for p in geo["parties"].values()}:
             raise HTTPException(status_code=400, detail="Political party must be selected from the party master")
@@ -739,7 +739,7 @@ def register_pi_routes(api_router) -> None:
         if not person:
             raise HTTPException(status_code=404, detail="Leader not found")
         if not in_scope(caps, person.get("stateId"), person.get("assemblyConstituencyId")):
-            raise HTTPException(status_code=403, detail="Out of geography scope")
+            raise HTTPException(status_code=403, detail="This assembly is outside your assigned geography.")
         status = str(payload.get("verificationStatus") or "PENDING").upper()
         if status not in ACCOUNT_STATUSES:
             status = "PENDING"
