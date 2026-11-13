@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Database,
   Download,
@@ -10,6 +10,8 @@ import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
+type EntryGroup = "constituency" | "leaders" | "social";
+type SaveKind = "constituency" | "leader" | "social" | null;
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
@@ -17,6 +19,12 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "verify", label: "Verification Queue" },
   { id: "import", label: "Import / Export" },
   { id: "intelligence", label: "Intelligence" }
+];
+
+const ENTRY_GROUPS: { id: EntryGroup; label: string }[] = [
+  { id: "constituency", label: "Constituency" },
+  { id: "leaders", label: "Leaders" },
+  { id: "social", label: "Social media" }
 ];
 
 const ROLES = [
@@ -69,7 +77,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     currentUser.roleId === "CAMPAIGN_MANAGER";
 
   const [tab, setTab] = useState<Tab>("dashboard");
-  const [loading, setLoading] = useState(false);
+  const [entryGroup, setEntryGroup] = useState<EntryGroup>("constituency");
+  const [pageLoading, setPageLoading] = useState(false);
+  const [saving, setSaving] = useState<SaveKind>(null);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [dashboard, setDashboard] = useState<PiDashboard | null>(null);
@@ -99,9 +109,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [districtDetail, setDistrictDetail] = useState<any>(null);
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const [snapshotAccount, setSnapshotAccount] = useState("");
-  const leadersSectionRef = useRef<HTMLDivElement>(null);
-  const socialSectionRef = useRef<HTMLDivElement>(null);
-  const districtsSectionRef = useRef<HTMLDivElement>(null);
 
   const partyById = useMemo(() => Object.fromEntries(parties.map((p) => [p.id, p])), [parties]);
   const selectedDistrictProgress = useMemo(() => {
@@ -125,14 +132,14 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   };
 
   const refreshDashboard = async () => {
-    setLoading(true);
+    setPageLoading(true);
     try {
       const data = await politicalApiService.getPiDashboard(userId, stateId, districtId || undefined);
       setDashboard(data);
     } catch (e: any) {
       flash(e.message || "Could not load dashboard", true);
     } finally {
-      setLoading(false);
+      setPageLoading(false);
     }
   };
 
@@ -199,10 +206,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const selectedAssemblyName = filteredAcs.find((a) => a.id === acId)?.name || "";
   const selectedDistrictName = districts.find((d) => d.id === districtId)?.name || "";
 
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
-    window.setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-  };
-
   const loadConstituencies = async () => {
     const data = await politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 100 });
     setConstRows(data.items || []);
@@ -251,7 +254,13 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
 
   const saveConstituency = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    e.stopPropagation();
+    if (saving) return;
+    if (!acId) {
+      flash("Select an assembly constituency.", true);
+      return;
+    }
+    setSaving("constituency");
     try {
       const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
       await politicalApiService.savePiConstituency(userId, {
@@ -271,17 +280,27 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       flash("Constituency record saved.");
       await loadConstituencies();
       await refreshDashboard();
-      scrollToSection(leadersSectionRef);
+      setEntryGroup("leaders");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
-      setLoading(false);
+      setSaving(null);
     }
   };
 
   const saveLeader = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    e.stopPropagation();
+    if (saving) return;
+    if (!acId) {
+      flash("Select an assembly constituency.", true);
+      return;
+    }
+    if (!String(leaderForm.name || "").trim() || !leaderForm.partyId) {
+      flash("Enter the leader name and party.", true);
+      return;
+    }
+    setSaving("leader");
     try {
       await politicalApiService.savePiLeader(userId, {
         ...leaderForm,
@@ -292,17 +311,23 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       });
       flash("Leader saved.");
       await loadLeaders();
-      scrollToSection(socialSectionRef);
+      setEntryGroup("social");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
-      setLoading(false);
+      setSaving(null);
     }
   };
 
   const saveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    e.stopPropagation();
+    if (saving) return;
+    if (!socialForm.personId) {
+      flash("Select a leader for this account.", true);
+      return;
+    }
+    setSaving("social");
     try {
       const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
       await politicalApiService.savePiAccount(userId, {
@@ -315,11 +340,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       });
       flash("Social account saved.");
       await loadAccounts();
-      scrollToSection(districtsSectionRef);
+      setTab("verify");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
-      setLoading(false);
+      setSaving(null);
     }
   };
 
@@ -354,6 +379,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         </div>
         {isSuper && (
           <button
+            type="button"
             className={BTN}
             onClick={async () => {
               try {
@@ -373,6 +399,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
       <div className="flex flex-wrap gap-1.5">
         {TABS.map((item) => (
           <button
+            type="button"
             key={item.id}
             onClick={() => setTab(item.id)}
             className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
@@ -402,7 +429,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             states={states}
             districts={districts}
           />
-          {loading && !dashboard ? (
+          {pageLoading && !dashboard ? (
             <div className="p-8 text-center text-[#D4A24C] text-xs"><Loader2 className="w-4 h-4 inline animate-spin" /> Loading live metrics…</div>
           ) : !dashboard ? (
             <EmptyState text="No constituency statistics yet. Enter a constituency or load SAMPLE data." />
@@ -496,7 +523,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             <p className="text-[11px] text-[#B9AF95] mt-1">
               {selectedAssemblyName
                 ? `${selectedAssemblyName}${selectedDistrictName ? ` · ${selectedDistrictName}` : ""}`
-                : "Select district, parliament, and assembly. Leaders, social accounts, and district progress stay on this constituency."}
+                : "Select district, parliament, and assembly."}
             </p>
             <div className="mt-3">
               <GeoFilters
@@ -509,8 +536,25 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             </div>
           </div>
 
+          <div className="grid grid-cols-3 gap-1.5">
+            {ENTRY_GROUPS.map((group) => (
+              <button
+                type="button"
+                key={group.id}
+                onClick={() => setEntryGroup(group.id)}
+                className={`px-2 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
+                  entryGroup === group.id ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
+                }`}
+              >
+                {group.label}
+              </button>
+            ))}
+          </div>
+
+          {entryGroup === "constituency" && (
+          <>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <form onSubmit={saveConstituency} className={`${CARD} space-y-3`}>
+            <form noValidate onSubmit={saveConstituency} className={`${CARD} space-y-3`}>
               <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency entry</h2>
               <Field label="Total voters" type="number" value={constForm.totalVoters || ""} onChange={(v) => setConstForm({ ...constForm, totalVoters: v })} />
               <Field label="Rural % " type="number" value={constForm.ruralPercent || ""} onChange={(v) => setConstForm({ ...constForm, ruralPercent: v })} />
@@ -524,7 +568,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
               <Field label="Data collection date" type="date" value={constForm.dataCollectionDate || ""} onChange={(v) => setConstForm({ ...constForm, dataCollectionDate: v })} />
               <Field label="Data source" value={constForm.dataSource || ""} onChange={(v) => setConstForm({ ...constForm, dataSource: v })} />
               <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
-              <button className={BTN} disabled={loading || !acId}>{loading ? "Saving…" : "Save constituency"}</button>
+              <button type="submit" className={BTN} disabled={!!saving || !acId}>{saving === "constituency" ? "Saving…" : "Save constituency"}</button>
             </form>
             <div className={CARD}>
               <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Entered constituencies</h2>
@@ -555,166 +599,127 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
               )}
             </div>
           </div>
-
-          <div ref={leadersSectionRef} className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <form onSubmit={saveLeader} className={`${CARD} space-y-3`}>
-              <h2 className="text-sm font-bold text-[#F5EFE0]">Leaders</h2>
-              <p className="text-[11px] text-[#B9AF95]">{selectedAssemblyName || "Uses the assembly selected above."}</p>
-              <Field label="Name" value={leaderForm.name || ""} onChange={(v) => setLeaderForm({ ...leaderForm, name: v })} required />
-              <label className={LABEL}>Political party (master)</label>
-              <select className={INPUT} value={leaderForm.partyId || ""} onChange={(e) => setLeaderForm({ ...leaderForm, partyId: e.target.value })} required>
-                <option value="">Select party</option>
-                {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName || p.name}</option>)}
-              </select>
-              <label className={LABEL}>Political role</label>
-              <select className={INPUT} value={leaderForm.politicalRole} onChange={(e) => setLeaderForm({ ...leaderForm, politicalRole: e.target.value })}>
-                {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
-              </select>
-              <label className={LABEL}>Current / former</label>
-              <select className={INPUT} value={leaderForm.currentFormerStatus} onChange={(e) => setLeaderForm({ ...leaderForm, currentFormerStatus: e.target.value })}>
-                <option value="CURRENT">CURRENT</option>
-                <option value="FORMER">FORMER</option>
-              </select>
-              <Field label="Election year" type="number" value={leaderForm.electionYear || ""} onChange={(v) => setLeaderForm({ ...leaderForm, electionYear: v })} />
-              <Field label="Data source" value={leaderForm.dataSource || ""} onChange={(v) => setLeaderForm({ ...leaderForm, dataSource: v })} />
-              <Field label="Remarks" value={leaderForm.remarks || ""} onChange={(v) => setLeaderForm({ ...leaderForm, remarks: v })} />
-              <button className={BTN} disabled={loading || !acId}>{loading ? "Saving…" : "Save leader"}</button>
-            </form>
+          {selectedDistrictProgress && (
             <div className={CARD}>
-              <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Leaders in this constituency</h2>
-              {leaders.length === 0 ? <EmptyState text="No leaders for this geography." /> : (
-                <div className="space-y-2">
-                  {leaders.map((row) => {
-                    const party = partyById[row.partyId];
-                    return (
+              <h2 className="text-sm font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</h2>
+              <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} entered · {selectedDistrictProgress.constituenciesPending} pending</p>
+              <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.totalLeaders} leaders · {selectedDistrictProgress.totalAccounts} accounts · {selectedDistrictProgress.verifiedAccounts} verified</p>
+            </div>
+          )}
+          </>
+          )}
+
+          {entryGroup === "leaders" && (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <form noValidate onSubmit={saveLeader} className={`${CARD} space-y-3`}>
+                <h2 className="text-sm font-bold text-[#F5EFE0]">Leaders</h2>
+                <Field label="Name" value={leaderForm.name || ""} onChange={(v) => setLeaderForm({ ...leaderForm, name: v })} />
+                <label className={LABEL}>Political party (master)</label>
+                <select className={INPUT} value={leaderForm.partyId || ""} onChange={(e) => setLeaderForm({ ...leaderForm, partyId: e.target.value })}>
+                  <option value="">Select party</option>
+                  {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName || p.name}</option>)}
+                </select>
+                <label className={LABEL}>Political role</label>
+                <select className={INPUT} value={leaderForm.politicalRole} onChange={(e) => setLeaderForm({ ...leaderForm, politicalRole: e.target.value })}>
+                  {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+                </select>
+                <label className={LABEL}>Current / former</label>
+                <select className={INPUT} value={leaderForm.currentFormerStatus} onChange={(e) => setLeaderForm({ ...leaderForm, currentFormerStatus: e.target.value })}>
+                  <option value="CURRENT">CURRENT</option>
+                  <option value="FORMER">FORMER</option>
+                </select>
+                <Field label="Election year" type="number" value={leaderForm.electionYear || ""} onChange={(v) => setLeaderForm({ ...leaderForm, electionYear: v })} />
+                <Field label="Data source" value={leaderForm.dataSource || ""} onChange={(v) => setLeaderForm({ ...leaderForm, dataSource: v })} />
+                <Field label="Remarks" value={leaderForm.remarks || ""} onChange={(v) => setLeaderForm({ ...leaderForm, remarks: v })} />
+                <button type="submit" className={BTN} disabled={!!saving || !acId}>{saving === "leader" ? "Saving…" : "Save leader"}</button>
+              </form>
+              <div className={CARD}>
+                <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Leaders in this constituency</h2>
+                {leaders.length === 0 ? <EmptyState text="No leaders for this geography." /> : (
+                  <div className="space-y-2">
+                    {leaders.map((row) => {
+                      const party = partyById[row.partyId];
+                      return (
+                        <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-[#F5EFE0]">{row.name}</span>
+                            <span className="text-[10px] font-bold" style={{ color: party?.primaryColor || "#D4A24C" }}>{row.partyId}</span>
+                          </div>
+                          <p className="text-[11px] text-[#B9AF95]">{(row.roles || []).map((r: any) => r.politicalRole).join(" · ") || "—"} · {row.assemblyConstituencyId}</p>
+                          <p className="text-[11px] text-[#B9AF95]">Contact {row.contactId || "—"} · {row.verificationStatus}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {entryGroup === "social" && (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <form noValidate onSubmit={saveAccount} className={`${CARD} space-y-3`}>
+                <h2 className="text-sm font-bold text-[#F5EFE0]">Social media</h2>
+                <label className={LABEL}>Leader</label>
+                <select className={INPUT} value={socialForm.personId || ""} onChange={(e) => {
+                  const person = leaders.find((l) => l.id === e.target.value);
+                  setSocialForm({ ...socialForm, personId: e.target.value, partyId: person?.partyId });
+                }}>
+                  <option value="">Select leader</option>
+                  {leaders.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.partyId})</option>)}
+                </select>
+                <p className="text-[11px] text-[#B9AF95]">Party is taken from the leader record: {socialForm.partyId || "—"}</p>
+                <label className={LABEL}>Platform</label>
+                <select className={INPUT} value={socialForm.platform} onChange={(e) => setSocialForm({ ...socialForm, platform: e.target.value })}>
+                  {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <Field label="Profile URL" value={socialForm.profileUrl || ""} onChange={(v) => setSocialForm({ ...socialForm, profileUrl: v })} />
+                <Field label="Account identifier" value={socialForm.accountIdentifier || ""} onChange={(v) => setSocialForm({ ...socialForm, accountIdentifier: v })} />
+                <Field label="Followers / subscribers" type="number" value={socialForm.followers || ""} onChange={(v) => setSocialForm({ ...socialForm, followers: v })} />
+                <Field label="Posts last 30 days" type="number" value={socialForm.postsLast30Days || ""} onChange={(v) => setSocialForm({ ...socialForm, postsLast30Days: v })} />
+                <Field label="Avg likes (last 10)" type="number" value={socialForm.avgLikesLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgLikesLast10: v })} />
+                <Field label="Avg comments (last 10)" type="number" value={socialForm.avgCommentsLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgCommentsLast10: v })} />
+                <Field label="Avg views (YouTube)" type="number" value={socialForm.avgViewsLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgViewsLast10: v })} />
+                <label className={LABEL}>Status</label>
+                <select className={INPUT} value={socialForm.verificationStatus} onChange={(e) => setSocialForm({ ...socialForm, verificationStatus: e.target.value })}>
+                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <Field label="Date collected" type="date" value={socialForm.dataCollectionDate || ""} onChange={(v) => setSocialForm({ ...socialForm, dataCollectionDate: v })} />
+                <Field label="Data source" value={socialForm.dataSource || ""} onChange={(v) => setSocialForm({ ...socialForm, dataSource: v })} />
+                <Field label="Remarks" value={socialForm.remarks || ""} onChange={(v) => setSocialForm({ ...socialForm, remarks: v })} />
+                <button type="submit" className={BTN} disabled={!!saving}>{saving === "social" ? "Saving…" : "Save account + snapshot"}</button>
+              </form>
+              <div className={CARD}>
+                <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Accounts in this constituency</h2>
+                {accounts.length === 0 ? <EmptyState text="No social accounts yet for this constituency." /> : (
+                  <div className="space-y-2">
+                    {accounts.map((row) => (
                       <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-bold text-[#F5EFE0]">{row.name}</span>
-                          <span className="text-[10px] font-bold" style={{ color: party?.primaryColor || "#D4A24C" }}>{row.partyId}</span>
+                          <span className="font-bold text-[#F5EFE0]">{row.leaderName} · {row.platform}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
                         </div>
-                        <p className="text-[11px] text-[#B9AF95]">{(row.roles || []).map((r: any) => r.politicalRole).join(" · ") || "—"} · {row.assemblyConstituencyId}</p>
-                        <p className="text-[11px] text-[#B9AF95]">Contact {row.contactId || "—"} · {row.verificationStatus}</p>
+                        <p className="text-[11px] text-[#B9AF95] break-all">{row.profileUrl}</p>
+                        <p className="text-[11px] text-[#B9AF95]">
+                          Followers {row.followers ?? "—"} · Engagement {row.engagementPercent == null ? "—" : `${row.engagementPercent}%`} ({row.engagementFormulaVersion})
+                        </p>
+                        <p className="text-[11px] text-[#B9AF95]">Growth 30d {row.growth30 == null ? "—" : `${row.growth30}%`} · 90d {row.growth90 == null ? "—" : `${row.growth90}%`}</p>
+                        <button type="button" className="text-[11px] text-[#D4A24C] underline mt-1" onClick={async () => {
+                          setSnapshotAccount(row.id);
+                          setSnapshots(await politicalApiService.getPiSnapshots(userId, row.id));
+                        }}>History</button>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div ref={socialSectionRef} className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <form onSubmit={saveAccount} className={`${CARD} space-y-3`}>
-              <h2 className="text-sm font-bold text-[#F5EFE0]">Social media</h2>
-              <p className="text-[11px] text-[#B9AF95]">Accounts belong to leaders in this constituency.</p>
-              <label className={LABEL}>Leader</label>
-              <select className={INPUT} value={socialForm.personId || ""} onChange={(e) => {
-                const person = leaders.find((l) => l.id === e.target.value);
-                setSocialForm({ ...socialForm, personId: e.target.value, partyId: person?.partyId });
-              }} required>
-                <option value="">Select leader</option>
-                {leaders.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.partyId})</option>)}
-              </select>
-              <p className="text-[11px] text-[#B9AF95]">Party is taken from the leader record: {socialForm.partyId || "—"}</p>
-              <label className={LABEL}>Platform</label>
-              <select className={INPUT} value={socialForm.platform} onChange={(e) => setSocialForm({ ...socialForm, platform: e.target.value })}>
-                {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-              <Field label="Profile URL" value={socialForm.profileUrl || ""} onChange={(v) => setSocialForm({ ...socialForm, profileUrl: v })} />
-              <Field label="Account identifier" value={socialForm.accountIdentifier || ""} onChange={(v) => setSocialForm({ ...socialForm, accountIdentifier: v })} />
-              <Field label="Followers / subscribers" type="number" value={socialForm.followers || ""} onChange={(v) => setSocialForm({ ...socialForm, followers: v })} />
-              <Field label="Posts last 30 days" type="number" value={socialForm.postsLast30Days || ""} onChange={(v) => setSocialForm({ ...socialForm, postsLast30Days: v })} />
-              <Field label="Avg likes (last 10)" type="number" value={socialForm.avgLikesLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgLikesLast10: v })} />
-              <Field label="Avg comments (last 10)" type="number" value={socialForm.avgCommentsLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgCommentsLast10: v })} />
-              <Field label="Avg views (YouTube)" type="number" value={socialForm.avgViewsLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgViewsLast10: v })} />
-              <label className={LABEL}>Status</label>
-              <select className={INPUT} value={socialForm.verificationStatus} onChange={(e) => setSocialForm({ ...socialForm, verificationStatus: e.target.value })}>
-                {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <Field label="Date collected" type="date" value={socialForm.dataCollectionDate || ""} onChange={(v) => setSocialForm({ ...socialForm, dataCollectionDate: v })} />
-              <Field label="Data source" value={socialForm.dataSource || ""} onChange={(v) => setSocialForm({ ...socialForm, dataSource: v })} />
-              <Field label="Remarks" value={socialForm.remarks || ""} onChange={(v) => setSocialForm({ ...socialForm, remarks: v })} />
-              <button className={BTN} disabled={loading}>{loading ? "Saving…" : "Save account + snapshot"}</button>
-            </form>
-            <div className={CARD}>
-              <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Accounts in this constituency</h2>
-              {accounts.length === 0 ? <EmptyState text="No social accounts yet for this constituency." /> : (
-                <div className="space-y-2">
-                  {accounts.map((row) => (
-                    <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-[#F5EFE0]">{row.leaderName} · {row.platform}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
-                      </div>
-                      <p className="text-[11px] text-[#B9AF95] break-all">{row.profileUrl}</p>
-                      <p className="text-[11px] text-[#B9AF95]">
-                        Followers {row.followers ?? "—"} · Engagement {row.engagementPercent == null ? "—" : `${row.engagementPercent}%`} ({row.engagementFormulaVersion})
-                      </p>
-                      <p className="text-[11px] text-[#B9AF95]">Growth 30d {row.growth30 == null ? "—" : `${row.growth30}%`} · 90d {row.growth90 == null ? "—" : `${row.growth90}%`}</p>
-                      <button className="text-[11px] text-[#D4A24C] underline mt-1" onClick={async () => {
-                        setSnapshotAccount(row.id);
-                        setSnapshots(await politicalApiService.getPiSnapshots(userId, row.id));
-                      }}>History</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {snapshotAccount && (
-                <div className="mt-3 text-[11px] text-[#B9AF95]">
-                  Snapshots for {snapshotAccount}: {snapshots.length === 0 ? "none" : snapshots.map((s) => `${(s.collectionDate || "").slice(0, 10)} → ${s.followers ?? "—"}`).join(" · ")}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div ref={districtsSectionRef} className="space-y-3">
-            <div className={CARD}>
-              <h2 className="text-sm font-bold text-[#F5EFE0]">District progress</h2>
-              <p className="text-[11px] text-[#B9AF95] mt-1">{selectedDistrictName || "Choose a district above to see coverage for this constituency’s district."}</p>
-            </div>
-            {!districtId ? (
-              <EmptyState text="Choose a district with the geography filters above." />
-            ) : selectedDistrictProgress ? (
-              <div className={CARD}>
-                <div className="font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</div>
-                <p className="text-sm text-[#D4A24C]">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} entered · {selectedDistrictProgress.constituenciesPending} pending</p>
-                <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.totalLeaders} leaders · {selectedDistrictProgress.totalAccounts} accounts · {selectedDistrictProgress.verifiedAccounts} verified · {selectedDistrictProgress.needsRecheck} recheck</p>
-                <p className="text-[11px] text-[#B9AF95]">Updated {selectedDistrictProgress.lastUpdated ? String(selectedDistrictProgress.lastUpdated).slice(0, 10) : "—"}</p>
+                    ))}
+                  </div>
+                )}
+                {snapshotAccount && (
+                  <div className="mt-3 text-[11px] text-[#B9AF95]">
+                    Snapshots for {snapshotAccount}: {snapshots.length === 0 ? "none" : snapshots.map((s) => `${(s.collectionDate || "").slice(0, 10)} → ${s.followers ?? "—"}`).join(" · ")}
+                  </div>
+                )}
               </div>
-            ) : (
-              <EmptyState text="No progress yet for this district." />
-            )}
-            <button className={BTN} type="button" onClick={() => setTab("verify")}>Continue to verification</button>
-            {districtDetail && (
-              <div className={CARD}>
-                <h3 className="font-bold text-[#F5EFE0] mb-2">{districtDetail.district?.name} constituencies</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs table-fixed">
-                    <thead><tr className="text-[#D4A24C] text-left"><th className="py-1">Constituency</th><th>Entered</th><th>Leaders</th><th>Accounts</th><th>Last collection</th></tr></thead>
-                    <tbody>
-                      {(districtDetail.constituencies || []).map((c: any) => (
-                        <tr
-                          key={c.assemblyConstituencyId}
-                          className="border-t border-[#22405E] text-[#F5EFE0] cursor-pointer hover:bg-[#131E2D]"
-                          onClick={() => {
-                            setDistrictId(districtDetail.district?.id || districtId);
-                            setPcId(c.parliamentConstituencyId || "");
-                            setAcId(c.assemblyConstituencyId);
-                            scrollToSection(leadersSectionRef);
-                          }}
-                        >
-                          <td className="py-1.5 break-words">{c.name}</td>
-                          <td>{c.entered ? "Yes" : "No"}</td>
-                          <td>{c.leaders}</td>
-                          <td>{c.accounts}</td>
-                          <td>{(c.lastCollectionDate || "").slice(0, 10) || "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -722,7 +727,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         <section className={CARD}>
           <div className="flex flex-wrap gap-2 mb-3">
             {["PENDING", "NEEDS_RECHECK", "VERIFIED", "REJECTED"].map((s) => (
-              <button key={s} onClick={() => setQueueStatus(s)} className={`px-2 py-1 rounded text-[10px] font-bold border ${queueStatus === s ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s}</button>
+              <button type="button" key={s} onClick={() => setQueueStatus(s)} className={`px-2 py-1 rounded text-[10px] font-bold border ${queueStatus === s ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s}</button>
             ))}
           </div>
           {queue.length === 0 ? <EmptyState text="No records in this verification bucket." /> : (
