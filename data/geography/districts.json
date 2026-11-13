@@ -1,0 +1,7443 @@
+[
+  {
+    "id": "AN-DIST-NICOBAR",
+    "name": "Nicobar",
+    "stateId": "AN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AN-DIST-NORTH-AND-MIDDLE-ANDAMAN",
+    "name": "North and Middle Andaman",
+    "stateId": "AN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AN-DIST-SOUTH-ANDAMAN",
+    "name": "South Andaman",
+    "stateId": "AN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AP-DIST-ALLURI-SITHARAMA-RAJU",
+    "name": "Alluri Sitharama Raju",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-28",
+      "AP-AC-29",
+      "AP-AC-53"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-1"
+    ]
+  },
+  {
+    "id": "AP-DIST-ANAKAPALLI",
+    "name": "Anakapalli",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-26",
+      "AP-AC-27",
+      "AP-AC-30",
+      "AP-AC-32",
+      "AP-AC-33",
+      "AP-AC-34"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-5"
+    ]
+  },
+  {
+    "id": "AP-DIST-ANANTAPUR",
+    "name": "Anantapur",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-148",
+      "AP-AC-149",
+      "AP-AC-150",
+      "AP-AC-151",
+      "AP-AC-152",
+      "AP-AC-153",
+      "AP-AC-154"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-19"
+    ]
+  },
+  {
+    "id": "AP-DIST-ANNAMAYYA",
+    "name": "Annamayya",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-125",
+      "AP-AC-133",
+      "AP-AC-130",
+      "AP-AC-163",
+      "AP-AC-164",
+      "AP-AC-165",
+      "AP-AC-169"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-24"
+    ]
+  },
+  {
+    "id": "AP-DIST-BAPATLA",
+    "name": "Bapatla",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-89",
+      "AP-AC-90",
+      "AP-AC-92",
+      "AP-AC-104",
+      "AP-AC-105",
+      "AP-AC-106"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-14",
+      "AP-PC-15"
+    ]
+  },
+  {
+    "id": "AP-DIST-CHITTOOR",
+    "name": "Chittoor",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-170",
+      "AP-AC-171",
+      "AP-AC-172",
+      "AP-AC-173",
+      "AP-AC-174",
+      "AP-AC-175",
+      "AP-AC-176"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-25"
+    ]
+  },
+  {
+    "id": "AP-DIST-DR-B-R-AMBEDKAR-KONASEEMA",
+    "name": "Dr. B.R. Ambedkar Konaseema",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-45",
+      "AP-AC-46",
+      "AP-AC-47",
+      "AP-AC-48",
+      "AP-AC-49",
+      "AP-AC-50",
+      "AP-AC-51"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-7"
+    ]
+  },
+  {
+    "id": "AP-DIST-EAST-GODAVARI",
+    "name": "East Godavari",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-43",
+      "AP-AC-40",
+      "AP-AC-52",
+      "AP-AC-54",
+      "AP-AC-55",
+      "AP-AC-56",
+      "AP-AC-57",
+      "AP-AC-67"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-6",
+      "AP-PC-8"
+    ]
+  },
+  {
+    "id": "AP-DIST-ELURU",
+    "name": "Eluru",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-65",
+      "AP-AC-66",
+      "AP-AC-68",
+      "AP-AC-70",
+      "AP-AC-73",
+      "AP-AC-18",
+      "AP-AC-69"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-10"
+    ]
+  },
+  {
+    "id": "AP-DIST-GUNTUR",
+    "name": "Guntur",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-86",
+      "AP-AC-87",
+      "AP-AC-88",
+      "AP-AC-91",
+      "AP-AC-93",
+      "AP-AC-94",
+      "AP-AC-95"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-13"
+    ]
+  },
+  {
+    "id": "AP-DIST-KAKINADA",
+    "name": "Kakinada",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-35",
+      "AP-AC-36",
+      "AP-AC-37",
+      "AP-AC-41",
+      "AP-AC-42",
+      "AP-AC-44"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-6"
+    ]
+  },
+  {
+    "id": "AP-DIST-KRISHNA",
+    "name": "Krishna",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-71",
+      "AP-AC-72",
+      "AP-AC-74",
+      "AP-AC-75",
+      "AP-AC-76",
+      "AP-AC-77",
+      "AP-AC-78"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-11"
+    ]
+  },
+  {
+    "id": "AP-DIST-KURNOOL",
+    "name": "Kurnool",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-141",
+      "AP-AC-142",
+      "AP-AC-143",
+      "AP-AC-144",
+      "AP-AC-145",
+      "AP-AC-146",
+      "AP-AC-147"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-18"
+    ]
+  },
+  {
+    "id": "AP-DIST-NTR",
+    "name": "NTR",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-79",
+      "AP-AC-80",
+      "AP-AC-81",
+      "AP-AC-82",
+      "AP-AC-83",
+      "AP-AC-84",
+      "AP-AC-85"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-12"
+    ]
+  },
+  {
+    "id": "AP-DIST-NANDYAL",
+    "name": "Nandyal",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-134",
+      "AP-AC-135",
+      "AP-AC-136",
+      "AP-AC-137",
+      "AP-AC-138",
+      "AP-AC-139",
+      "AP-AC-140"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-17"
+    ]
+  },
+  {
+    "id": "AP-DIST-PALNADU",
+    "name": "Palnadu",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-96",
+      "AP-AC-97",
+      "AP-AC-98",
+      "AP-AC-99",
+      "AP-AC-100",
+      "AP-AC-101"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-14",
+      "AP-PC-15"
+    ]
+  },
+  {
+    "id": "AP-DIST-PARVATHIPURAM-MANYAM",
+    "name": "Parvathipuram Manyam",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-10",
+      "AP-AC-11",
+      "AP-AC-12",
+      "AP-AC-130"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-1"
+    ]
+  },
+  {
+    "id": "AP-DIST-PRAKASAM",
+    "name": "Prakasam",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-102",
+      "AP-AC-103",
+      "AP-AC-107",
+      "AP-AC-108",
+      "AP-AC-110",
+      "AP-AC-111",
+      "AP-AC-112",
+      "AP-AC-113",
+      "AP-AC-109",
+      "AP-AC-115"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-15",
+      "AP-PC-16",
+      "AP-PC-22"
+    ]
+  },
+  {
+    "id": "AP-DIST-SPSR-NELLORE",
+    "name": "SPSR Nellore",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-114",
+      "AP-AC-116",
+      "AP-AC-117",
+      "AP-AC-118",
+      "AP-AC-119",
+      "AP-AC-120"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-22"
+    ]
+  },
+  {
+    "id": "AP-DIST-SRI-SATHYA-SAI",
+    "name": "Sri Sathya Sai",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-155",
+      "AP-AC-156",
+      "AP-AC-157",
+      "AP-AC-158",
+      "AP-AC-159",
+      "AP-AC-160",
+      "AP-AC-161"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-20"
+    ]
+  },
+  {
+    "id": "AP-DIST-SRIKAKULAM",
+    "name": "Srikakulam",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-1",
+      "AP-AC-2",
+      "AP-AC-3",
+      "AP-AC-4",
+      "AP-AC-5",
+      "AP-AC-6",
+      "AP-AC-7",
+      "AP-AC-8"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-2",
+      "AP-PC-3"
+    ]
+  },
+  {
+    "id": "AP-DIST-TIRUPATI",
+    "name": "Tirupati",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-121",
+      "AP-AC-122",
+      "AP-AC-123",
+      "AP-AC-162",
+      "AP-AC-166",
+      "AP-AC-167",
+      "AP-AC-168"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-23"
+    ]
+  },
+  {
+    "id": "AP-DIST-VISAKHAPATNAM",
+    "name": "Visakhapatnam",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-20",
+      "AP-AC-21",
+      "AP-AC-22",
+      "AP-AC-23",
+      "AP-AC-24",
+      "AP-AC-25",
+      "AP-AC-31"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-4",
+      "AP-PC-5"
+    ]
+  },
+  {
+    "id": "AP-DIST-VIZIANAGARAM",
+    "name": "Vizianagaram",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-9",
+      "AP-AC-13",
+      "AP-AC-14",
+      "AP-AC-15",
+      "AP-AC-16",
+      "AP-AC-17",
+      "AP-AC-19"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-3",
+      "AP-PC-4"
+    ]
+  },
+  {
+    "id": "AP-DIST-WEST-GODAVARI",
+    "name": "West Godavari",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-58",
+      "AP-AC-59",
+      "AP-AC-60",
+      "AP-AC-61",
+      "AP-AC-62",
+      "AP-AC-63",
+      "AP-AC-64"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-9"
+    ]
+  },
+  {
+    "id": "AP-DIST-YSR",
+    "name": "YSR Kadapa",
+    "stateId": "AP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "AP-AC-124",
+      "AP-AC-126",
+      "AP-AC-127",
+      "AP-AC-128",
+      "AP-AC-129",
+      "AP-AC-131",
+      "AP-AC-132"
+    ],
+    "parliamentConstituencyIds": [
+      "AP-PC-21"
+    ]
+  },
+  {
+    "id": "AR-DIST-ANJAW",
+    "name": "Anjaw",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-BICHOM",
+    "name": "Bichom",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-CHANGLANG",
+    "name": "Changlang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-DIBANG-VALLEY",
+    "name": "Dibang Valley",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-EAST-KAMENG",
+    "name": "East Kameng",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-EAST-SIANG",
+    "name": "East Siang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-ITANAGAR-CAPITAL-COMPLEX",
+    "name": "Itanagar Capital Complex",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-KAMLE",
+    "name": "Kamle",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-KEYI-PANYOR",
+    "name": "Keyi Panyor",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-KRA-DAADI",
+    "name": "Kra Daadi",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-KURUNG-KUMEY",
+    "name": "Kurung Kumey",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-LEPA-RADA",
+    "name": "Lepa Rada",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-LOHIT",
+    "name": "Lohit",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-LONGDING",
+    "name": "Longding",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-LOWER-DIBANG-VALLEY",
+    "name": "Lower Dibang Valley",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-LOWER-SIANG",
+    "name": "Lower Siang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-LOWER-SUBANSIRI",
+    "name": "Lower Subansiri",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-NAMSAI",
+    "name": "Namsai",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-PAKKE-KESSANG",
+    "name": "Pakke Kessang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-PAPUM-PARE",
+    "name": "Papum Pare",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-SHI-YOMI",
+    "name": "Shi Yomi",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-SIANG",
+    "name": "Siang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-TAWANG",
+    "name": "Tawang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-TIRAP",
+    "name": "Tirap",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-UPPER-SIANG",
+    "name": "Upper Siang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-UPPER-SUBANSIRI",
+    "name": "Upper Subansiri",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-WEST-KAMENG",
+    "name": "West Kameng",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AR-DIST-WEST-SIANG",
+    "name": "West Siang",
+    "stateId": "AR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-BAJALI",
+    "name": "Bajali",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-BAKSA",
+    "name": "Baksa",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-BARPETA",
+    "name": "Barpeta",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-BISWANATH",
+    "name": "Biswanath",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-BONGAIGAON",
+    "name": "Bongaigaon",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-CACHAR",
+    "name": "Cachar",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-CHARAIDEO",
+    "name": "Charaideo",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-CHIRANG",
+    "name": "Chirang",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-DARRANG",
+    "name": "Darrang",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-DHEMAJI",
+    "name": "Dhemaji",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-DHUBRI",
+    "name": "Dhubri",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-DIBRUGARH",
+    "name": "Dibrugarh",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-DIMA-HASAO",
+    "name": "Dima Hasao",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-GOALPARA",
+    "name": "Goalpara",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-GOLAGHAT",
+    "name": "Golaghat",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-HAILAKANDI",
+    "name": "Hailakandi",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-HOJAI",
+    "name": "Hojai",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-JORHAT",
+    "name": "Jorhat",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-KAMRUP",
+    "name": "Kamrup",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-KAMRUP-METROPOLITAN",
+    "name": "Kamrup Metropolitan",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-KARBI-ANGLONG",
+    "name": "Karbi Anglong",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-KARIMGANJ",
+    "name": "Karimganj",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-KOKRAJHAR",
+    "name": "Kokrajhar",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-LAKHIMPUR",
+    "name": "Lakhimpur",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-MAJULI",
+    "name": "Majuli",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-MORIGAON",
+    "name": "Morigaon",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-NAGAON",
+    "name": "Nagaon",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-NALBARI",
+    "name": "Nalbari",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-SIVASAGAR",
+    "name": "Sivasagar",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-SONITPUR",
+    "name": "Sonitpur",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-SOUTH-SALMARA-MANKACHAR",
+    "name": "South Salmara-Mankachar",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-TAMULPUR",
+    "name": "Tamulpur",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-TINSUKIA",
+    "name": "Tinsukia",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-UDALGURI",
+    "name": "Udalguri",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "AS-DIST-WEST-KARBI-ANGLONG",
+    "name": "West Karbi Anglong",
+    "stateId": "AS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-ARARIA",
+    "name": "Araria",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-ARWAL",
+    "name": "Arwal",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-AURANGABAD",
+    "name": "Aurangabad",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-BANKA",
+    "name": "Banka",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-BEGUSARAI",
+    "name": "Begusarai",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-BHAGALPUR",
+    "name": "Bhagalpur",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-BHOJPUR",
+    "name": "Bhojpur",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-BUXAR",
+    "name": "Buxar",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-DARBHANGA",
+    "name": "Darbhanga",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-EAST-CHAMPARAN",
+    "name": "East Champaran",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-GAYA",
+    "name": "Gaya",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-GOPALGANJ",
+    "name": "Gopalganj",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-JAMUI",
+    "name": "Jamui",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-JEHANABAD",
+    "name": "Jehanabad",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-KAIMUR",
+    "name": "Kaimur",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-KATIHAR",
+    "name": "Katihar",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-KHAGARIA",
+    "name": "Khagaria",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-KISHANGANJ",
+    "name": "Kishanganj",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-LAKHISARAI",
+    "name": "Lakhisarai",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-MADHEPURA",
+    "name": "Madhepura",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-MADHUBANI",
+    "name": "Madhubani",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-MUNGER",
+    "name": "Munger",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-MUZAFFARPUR",
+    "name": "Muzaffarpur",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-NALANDA",
+    "name": "Nalanda",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-NAWADA",
+    "name": "Nawada",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-PATNA",
+    "name": "Patna",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-PURNIA",
+    "name": "Purnia",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-ROHTAS",
+    "name": "Rohtas",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SAHARSA",
+    "name": "Saharsa",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SAMASTIPUR",
+    "name": "Samastipur",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SARAN",
+    "name": "Saran",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SHEIKHPURA",
+    "name": "Sheikhpura",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SHEOHAR",
+    "name": "Sheohar",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SITAMARHI",
+    "name": "Sitamarhi",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SIWAN",
+    "name": "Siwan",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-SUPAUL",
+    "name": "Supaul",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-VAISHALI",
+    "name": "Vaishali",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "BR-DIST-WEST-CHAMPARAN",
+    "name": "West Champaran",
+    "stateId": "BR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-BALOD",
+    "name": "Balod",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-BALODA-BAZAR",
+    "name": "Baloda Bazar",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-BALRAMPUR-RAMANUJGANJ",
+    "name": "Balrampur-Ramanujganj",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-BASTAR",
+    "name": "Bastar",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-BEMETARA",
+    "name": "Bemetara",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-BIJAPUR",
+    "name": "Bijapur",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-BILASPUR",
+    "name": "Bilaspur",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-DANTEWADA",
+    "name": "Dantewada",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-DHAMTARI",
+    "name": "Dhamtari",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-DURG",
+    "name": "Durg",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-GARIABAND",
+    "name": "Gariaband",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-GAURELA-PENDRA-MARWAHI",
+    "name": "Gaurela-Pendra-Marwahi",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-JANJGIR-CHAMPA",
+    "name": "Janjgir-Champa",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-JASHPUR",
+    "name": "Jashpur",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-KABIRDHAM",
+    "name": "Kabirdham",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-KANKER",
+    "name": "Kanker",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-KHAIRAGARH-CHHUIKHADAN-GANDAI",
+    "name": "Khairagarh-Chhuikhadan-Gandai",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-KONDAGAON",
+    "name": "Kondagaon",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-KORBA",
+    "name": "Korba",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-KOREA",
+    "name": "Korea",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-MAHASAMUND",
+    "name": "Mahasamund",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-MANENDRAGARH-CHIRMIRI-BHARATPUR",
+    "name": "Manendragarh-Chirmiri-Bharatpur",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-MOHLA-MANPUR-AMBAGARH-CHOWKI",
+    "name": "Mohla-Manpur-Ambagarh Chowki",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-MUNGELI",
+    "name": "Mungeli",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-NARAYANPUR",
+    "name": "Narayanpur",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-RAIGARH",
+    "name": "Raigarh",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-RAIPUR",
+    "name": "Raipur",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-RAJNANDGAON",
+    "name": "Rajnandgaon",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-SAKTI",
+    "name": "Sakti",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-SARANGARH-BILAIGARH",
+    "name": "Sarangarh-Bilaigarh",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-SUKMA",
+    "name": "Sukma",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-SURAJPUR",
+    "name": "Surajpur",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CG-DIST-SURGUJA",
+    "name": "Surguja",
+    "stateId": "CG",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "CH-DIST-CHANDIGARH",
+    "name": "Chandigarh",
+    "stateId": "CH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-CENTRAL-DELHI",
+    "name": "Central Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-EAST-DELHI",
+    "name": "East Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-NEW-DELHI",
+    "name": "New Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-NORTH-DELHI",
+    "name": "North Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-NORTH-EAST-DELHI",
+    "name": "North East Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-NORTH-WEST-DELHI",
+    "name": "North West Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-SHAHDARA",
+    "name": "Shahdara",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-SOUTH-DELHI",
+    "name": "South Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-SOUTH-EAST-DELHI",
+    "name": "South East Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-SOUTH-WEST-DELHI",
+    "name": "South West Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DL-DIST-WEST-DELHI",
+    "name": "West Delhi",
+    "stateId": "DL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DN-DIST-DADRA-AND-NAGAR-HAVELI",
+    "name": "Dadra and Nagar Haveli",
+    "stateId": "DN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DN-DIST-DAMAN",
+    "name": "Daman",
+    "stateId": "DN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "DN-DIST-DIU",
+    "name": "Diu",
+    "stateId": "DN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GA-DIST-NORTH-GOA",
+    "name": "North Goa",
+    "stateId": "GA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GA-DIST-SOUTH-GOA",
+    "name": "South Goa",
+    "stateId": "GA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-AHMEDABAD",
+    "name": "Ahmedabad",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-AMRELI",
+    "name": "Amreli",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-ANAND",
+    "name": "Anand",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-ARAVALLI",
+    "name": "Aravalli",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-BANASKANTHA",
+    "name": "Banaskantha",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-BHARUCH",
+    "name": "Bharuch",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-BHAVNAGAR",
+    "name": "Bhavnagar",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-BOTAD",
+    "name": "Botad",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-CHHOTA-UDAIPUR",
+    "name": "Chhota Udaipur",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-DAHOD",
+    "name": "Dahod",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-DANG",
+    "name": "Dang",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-DEVBHUMI-DWARKA",
+    "name": "Devbhumi Dwarka",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-GANDHINAGAR",
+    "name": "Gandhinagar",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-GIR-SOMNATH",
+    "name": "Gir Somnath",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-JAMNAGAR",
+    "name": "Jamnagar",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-JUNAGADH",
+    "name": "Junagadh",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-KHEDA",
+    "name": "Kheda",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-KUTCH",
+    "name": "Kutch",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-MAHISAGAR",
+    "name": "Mahisagar",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-MEHSANA",
+    "name": "Mehsana",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-MORBI",
+    "name": "Morbi",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-NARMADA",
+    "name": "Narmada",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-NAVSARI",
+    "name": "Navsari",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-PANCHMAHAL",
+    "name": "Panchmahal",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-PATAN",
+    "name": "Patan",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-PORBANDAR",
+    "name": "Porbandar",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-RAJKOT",
+    "name": "Rajkot",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-SABARKANTHA",
+    "name": "Sabarkantha",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-SURAT",
+    "name": "Surat",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-SURENDRANAGAR",
+    "name": "Surendranagar",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-TAPI",
+    "name": "Tapi",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-VADODARA",
+    "name": "Vadodara",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "GJ-DIST-VALSAD",
+    "name": "Valsad",
+    "stateId": "GJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-BILASPUR",
+    "name": "Bilaspur",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-CHAMBA",
+    "name": "Chamba",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-HAMIRPUR",
+    "name": "Hamirpur",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-KANGRA",
+    "name": "Kangra",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-KINNAUR",
+    "name": "Kinnaur",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-KULLU",
+    "name": "Kullu",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-LAHAUL-AND-SPITI",
+    "name": "Lahaul and Spiti",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-MANDI",
+    "name": "Mandi",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-SHIMLA",
+    "name": "Shimla",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-SIRMAUR",
+    "name": "Sirmaur",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-SOLAN",
+    "name": "Solan",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HP-DIST-UNA",
+    "name": "Una",
+    "stateId": "HP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-AMBALA",
+    "name": "Ambala",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-BHIWANI",
+    "name": "Bhiwani",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-CHARKHI-DADRI",
+    "name": "Charkhi Dadri",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-FARIDABAD",
+    "name": "Faridabad",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-FATEHABAD",
+    "name": "Fatehabad",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-GURUGRAM",
+    "name": "Gurugram",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-HISAR",
+    "name": "Hisar",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-JHAJJAR",
+    "name": "Jhajjar",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-JIND",
+    "name": "Jind",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-KAITHAL",
+    "name": "Kaithal",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-KARNAL",
+    "name": "Karnal",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-KURUKSHETRA",
+    "name": "Kurukshetra",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-MAHENDRAGARH",
+    "name": "Mahendragarh",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-NUH",
+    "name": "Nuh",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-PALWAL",
+    "name": "Palwal",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-PANCHKULA",
+    "name": "Panchkula",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-PANIPAT",
+    "name": "Panipat",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-REWARI",
+    "name": "Rewari",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-ROHTAK",
+    "name": "Rohtak",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-SIRSA",
+    "name": "Sirsa",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-SONIPAT",
+    "name": "Sonipat",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "HR-DIST-YAMUNANAGAR",
+    "name": "Yamunanagar",
+    "stateId": "HR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-BOKARO",
+    "name": "Bokaro",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-CHATRA",
+    "name": "Chatra",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-DEOGHAR",
+    "name": "Deoghar",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-DHANBAD",
+    "name": "Dhanbad",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-DUMKA",
+    "name": "Dumka",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-EAST-SINGHBHUM",
+    "name": "East Singhbhum",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-GARHWA",
+    "name": "Garhwa",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-GIRIDIH",
+    "name": "Giridih",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-GODDA",
+    "name": "Godda",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-GUMLA",
+    "name": "Gumla",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-HAZARIBAGH",
+    "name": "Hazaribagh",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-JAMTARA",
+    "name": "Jamtara",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-KHUNTI",
+    "name": "Khunti",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-KODERMA",
+    "name": "Koderma",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-LATEHAR",
+    "name": "Latehar",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-LOHARDAGA",
+    "name": "Lohardaga",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-PAKUR",
+    "name": "Pakur",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-PALAMU",
+    "name": "Palamu",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-RAMGARH",
+    "name": "Ramgarh",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-RANCHI",
+    "name": "Ranchi",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-SAHIBGANJ",
+    "name": "Sahibganj",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-SERAIKELA-KHARSAWAN",
+    "name": "Seraikela-Kharsawan",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-SIMDEGA",
+    "name": "Simdega",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JH-DIST-WEST-SINGHBHUM",
+    "name": "West Singhbhum",
+    "stateId": "JH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-ANANTNAG",
+    "name": "Anantnag",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-BANDIPORA",
+    "name": "Bandipora",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-BARAMULLA",
+    "name": "Baramulla",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-BUDGAM",
+    "name": "Budgam",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-DODA",
+    "name": "Doda",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-GANDERBAL",
+    "name": "Ganderbal",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-JAMMU",
+    "name": "Jammu",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-KATHUA",
+    "name": "Kathua",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-KISHTWAR",
+    "name": "Kishtwar",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-KULGAM",
+    "name": "Kulgam",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-KUPWARA",
+    "name": "Kupwara",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-POONCH",
+    "name": "Poonch",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-PULWAMA",
+    "name": "Pulwama",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-RAJOURI",
+    "name": "Rajouri",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-RAMBAN",
+    "name": "Ramban",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-REASI",
+    "name": "Reasi",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-SAMBA",
+    "name": "Samba",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-SHOPIAN",
+    "name": "Shopian",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-SRINAGAR",
+    "name": "Srinagar",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "JK-DIST-UDHAMPUR",
+    "name": "Udhampur",
+    "stateId": "JK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-BAGALKOTE",
+    "name": "Bagalkote",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-BALLARI",
+    "name": "Ballari",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-BELAGAVI",
+    "name": "Belagavi",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-BENGALURU-RURAL",
+    "name": "Bengaluru Rural",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-BENGALURU-URBAN",
+    "name": "Bengaluru Urban",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-BIDAR",
+    "name": "Bidar",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-CHAMARAJANAGARA",
+    "name": "Chamarajanagara",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-CHIKKABALLAPURA",
+    "name": "Chikkaballapura",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-CHIKKAMAGALURU",
+    "name": "Chikkamagaluru",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-CHITRADURGA",
+    "name": "Chitradurga",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-DAKSHINA-KANNADA",
+    "name": "Dakshina Kannada",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-DAVANAGERE",
+    "name": "Davanagere",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-DHARWAD",
+    "name": "Dharwad",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-GADAG",
+    "name": "Gadag",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-HASSAN",
+    "name": "Hassan",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-HAVERI",
+    "name": "Haveri",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-KALABURAGI",
+    "name": "Kalaburagi",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-KODAGU",
+    "name": "Kodagu",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-KOLAR",
+    "name": "Kolar",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-KOPPAL",
+    "name": "Koppal",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-MANDYA",
+    "name": "Mandya",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-MYSURU",
+    "name": "Mysuru",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-RAICHUR",
+    "name": "Raichur",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-RAMANAGARA",
+    "name": "Ramanagara",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-SHIVAMOGGA",
+    "name": "Shivamogga",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-TUMAKURU",
+    "name": "Tumakuru",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-UDUPI",
+    "name": "Udupi",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-UTTARA-KANNADA",
+    "name": "Uttara Kannada",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-VIJAYANAGARA",
+    "name": "Vijayanagara",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-VIJAYAPURA",
+    "name": "Vijayapura",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KA-DIST-YADGIR",
+    "name": "Yadgir",
+    "stateId": "KA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-ALAPPUZHA",
+    "name": "Alappuzha",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-ERNAKULAM",
+    "name": "Ernakulam",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-IDUKKI",
+    "name": "Idukki",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-KANNUR",
+    "name": "Kannur",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-KASARAGOD",
+    "name": "Kasaragod",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-KOLLAM",
+    "name": "Kollam",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-KOTTAYAM",
+    "name": "Kottayam",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-KOZHIKODE",
+    "name": "Kozhikode",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-MALAPPURAM",
+    "name": "Malappuram",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-PALAKKAD",
+    "name": "Palakkad",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-PATHANAMTHITTA",
+    "name": "Pathanamthitta",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-THIRUVANANTHAPURAM",
+    "name": "Thiruvananthapuram",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-THRISSUR",
+    "name": "Thrissur",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "KL-DIST-WAYANAD",
+    "name": "Wayanad",
+    "stateId": "KL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "LA-DIST-KARGIL",
+    "name": "Kargil",
+    "stateId": "LA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "LA-DIST-LEH",
+    "name": "Leh",
+    "stateId": "LA",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "LD-DIST-LAKSHADWEEP",
+    "name": "Lakshadweep",
+    "stateId": "LD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-AHMEDNAGAR",
+    "name": "Ahmednagar",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-AKOLA",
+    "name": "Akola",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-AMRAVATI",
+    "name": "Amravati",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-BEED",
+    "name": "Beed",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-BHANDARA",
+    "name": "Bhandara",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-BULDHANA",
+    "name": "Buldhana",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-CHANDRAPUR",
+    "name": "Chandrapur",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-CHHATRAPATI-SAMBHAJINAGAR",
+    "name": "Chhatrapati Sambhajinagar",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-DHARASHIV",
+    "name": "Dharashiv",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-DHULE",
+    "name": "Dhule",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-GADCHIROLI",
+    "name": "Gadchiroli",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-GONDIA",
+    "name": "Gondia",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-HINGOLI",
+    "name": "Hingoli",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-JALGAON",
+    "name": "Jalgaon",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-JALNA",
+    "name": "Jalna",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-KOLHAPUR",
+    "name": "Kolhapur",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-LATUR",
+    "name": "Latur",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-MUMBAI-CITY",
+    "name": "Mumbai City",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-MUMBAI-SUBURBAN",
+    "name": "Mumbai Suburban",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-NAGPUR",
+    "name": "Nagpur",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-NANDED",
+    "name": "Nanded",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-NANDURBAR",
+    "name": "Nandurbar",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-NASHIK",
+    "name": "Nashik",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-PALGHAR",
+    "name": "Palghar",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-PARBHANI",
+    "name": "Parbhani",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-PUNE",
+    "name": "Pune",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-RAIGAD",
+    "name": "Raigad",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-RATNAGIRI",
+    "name": "Ratnagiri",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-SANGLI",
+    "name": "Sangli",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-SATARA",
+    "name": "Satara",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-SINDHUDURG",
+    "name": "Sindhudurg",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-SOLAPUR",
+    "name": "Solapur",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-THANE",
+    "name": "Thane",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-WARDHA",
+    "name": "Wardha",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-WASHIM",
+    "name": "Washim",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MH-DIST-YAVATMAL",
+    "name": "Yavatmal",
+    "stateId": "MH",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-EAST-GARO-HILLS",
+    "name": "East Garo Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-EAST-JAINTIA-HILLS",
+    "name": "East Jaintia Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-EAST-KHASI-HILLS",
+    "name": "East Khasi Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-EASTERN-WEST-KHASI-HILLS",
+    "name": "Eastern West Khasi Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-NORTH-GARO-HILLS",
+    "name": "North Garo Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-RI-BHOI",
+    "name": "Ri Bhoi",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-SOUTH-GARO-HILLS",
+    "name": "South Garo Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-SOUTH-WEST-GARO-HILLS",
+    "name": "South West Garo Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-SOUTH-WEST-KHASI-HILLS",
+    "name": "South West Khasi Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-WEST-GARO-HILLS",
+    "name": "West Garo Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-WEST-JAINTIA-HILLS",
+    "name": "West Jaintia Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "ML-DIST-WEST-KHASI-HILLS",
+    "name": "West Khasi Hills",
+    "stateId": "ML",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-BISHNUPUR",
+    "name": "Bishnupur",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-CHANDEL",
+    "name": "Chandel",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-CHURACHANDPUR",
+    "name": "Churachandpur",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-IMPHAL-EAST",
+    "name": "Imphal East",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-IMPHAL-WEST",
+    "name": "Imphal West",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-JIRIBAM",
+    "name": "Jiribam",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-KAKCHING",
+    "name": "Kakching",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-KAMJONG",
+    "name": "Kamjong",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-KANGPOKPI",
+    "name": "Kangpokpi",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-NONEY",
+    "name": "Noney",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-PHERZAWL",
+    "name": "Pherzawl",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-SENAPATI",
+    "name": "Senapati",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-TAMENGLONG",
+    "name": "Tamenglong",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-TENGNOUPAL",
+    "name": "Tengnoupal",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-THOUBAL",
+    "name": "Thoubal",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MN-DIST-UKHRUL",
+    "name": "Ukhrul",
+    "stateId": "MN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-AGAR-MALWA",
+    "name": "Agar Malwa",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-ALIRAJPUR",
+    "name": "Alirajpur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-ANUPPUR",
+    "name": "Anuppur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-ASHOKNAGAR",
+    "name": "Ashoknagar",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-BALAGHAT",
+    "name": "Balaghat",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-BARWANI",
+    "name": "Barwani",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-BETUL",
+    "name": "Betul",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-BHIND",
+    "name": "Bhind",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-BHOPAL",
+    "name": "Bhopal",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-BURHANPUR",
+    "name": "Burhanpur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-CHHATARPUR",
+    "name": "Chhatarpur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-CHHINDWARA",
+    "name": "Chhindwara",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-DAMOH",
+    "name": "Damoh",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-DATIA",
+    "name": "Datia",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-DEWAS",
+    "name": "Dewas",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-DHAR",
+    "name": "Dhar",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-DINDORI",
+    "name": "Dindori",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-GUNA",
+    "name": "Guna",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-GWALIOR",
+    "name": "Gwalior",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-HARDA",
+    "name": "Harda",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-INDORE",
+    "name": "Indore",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-JABALPUR",
+    "name": "Jabalpur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-JHABUA",
+    "name": "Jhabua",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-KATNI",
+    "name": "Katni",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-KHANDWA",
+    "name": "Khandwa",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-KHARGONE",
+    "name": "Khargone",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-MAIHAR",
+    "name": "Maihar",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-MANDLA",
+    "name": "Mandla",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-MANDSAUR",
+    "name": "Mandsaur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-MAUGANJ",
+    "name": "Mauganj",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-MORENA",
+    "name": "Morena",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-NARMADAPURAM",
+    "name": "Narmadapuram",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-NARSINGHPUR",
+    "name": "Narsinghpur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-NEEMUCH",
+    "name": "Neemuch",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-NIWARI",
+    "name": "Niwari",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-PANDHURNA",
+    "name": "Pandhurna",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-PANNA",
+    "name": "Panna",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-RAISEN",
+    "name": "Raisen",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-RAJGARH",
+    "name": "Rajgarh",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-RATLAM",
+    "name": "Ratlam",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-REWA",
+    "name": "Rewa",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SAGAR",
+    "name": "Sagar",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SATNA",
+    "name": "Satna",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SEHORE",
+    "name": "Sehore",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SEONI",
+    "name": "Seoni",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SHAHDOL",
+    "name": "Shahdol",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SHAJAPUR",
+    "name": "Shajapur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SHEOPUR",
+    "name": "Sheopur",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SHIVPURI",
+    "name": "Shivpuri",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SIDHI",
+    "name": "Sidhi",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-SINGRAULI",
+    "name": "Singrauli",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-TIKAMGARH",
+    "name": "Tikamgarh",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-UJJAIN",
+    "name": "Ujjain",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-UMARIA",
+    "name": "Umaria",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MP-DIST-VIDISHA",
+    "name": "Vidisha",
+    "stateId": "MP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-AIZAWL",
+    "name": "Aizawl",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-CHAMPHAI",
+    "name": "Champhai",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-HNAHTHIAL",
+    "name": "Hnahthial",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-KHAWZAWL",
+    "name": "Khawzawl",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-KOLASIB",
+    "name": "Kolasib",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-LAWNGTLAI",
+    "name": "Lawngtlai",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-LUNGLEI",
+    "name": "Lunglei",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-MAMIT",
+    "name": "Mamit",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-SAITUAL",
+    "name": "Saitual",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-SERCHHIP",
+    "name": "Serchhip",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "MZ-DIST-SIAHA",
+    "name": "Siaha",
+    "stateId": "MZ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-CHUMOUKEDIMA",
+    "name": "Chumoukedima",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-DIMAPUR",
+    "name": "Dimapur",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-KIPHIRE",
+    "name": "Kiphire",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-KOHIMA",
+    "name": "Kohima",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-LONGLENG",
+    "name": "Longleng",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-MELURI",
+    "name": "Meluri",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-MOKOKCHUNG",
+    "name": "Mokokchung",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-MON",
+    "name": "Mon",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-NIULAND",
+    "name": "Niuland",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-NOKLAK",
+    "name": "Noklak",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-PEREN",
+    "name": "Peren",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-PHEK",
+    "name": "Phek",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-SHAMATOR",
+    "name": "Shamator",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-TSEMINYU",
+    "name": "Tseminyu",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-TUENSANG",
+    "name": "Tuensang",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-WOKHA",
+    "name": "Wokha",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "NL-DIST-ZUNHEBOTO",
+    "name": "Zunheboto",
+    "stateId": "NL",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-ANGUL",
+    "name": "Angul",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-BALANGIR",
+    "name": "Balangir",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-BALASORE",
+    "name": "Balasore",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-BARGARH",
+    "name": "Bargarh",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-BHADRAK",
+    "name": "Bhadrak",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-BOUDH",
+    "name": "Boudh",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-CUTTACK",
+    "name": "Cuttack",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-DEOGARH",
+    "name": "Deogarh",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-DHENKANAL",
+    "name": "Dhenkanal",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-GAJAPATI",
+    "name": "Gajapati",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-GANJAM",
+    "name": "Ganjam",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-JAGATSINGHPUR",
+    "name": "Jagatsinghpur",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-JAJPUR",
+    "name": "Jajpur",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-JHARSUGUDA",
+    "name": "Jharsuguda",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-KALAHANDI",
+    "name": "Kalahandi",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-KANDHAMAL",
+    "name": "Kandhamal",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-KENDRAPARA",
+    "name": "Kendrapara",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-KENDUJHAR",
+    "name": "Kendujhar",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-KHORDHA",
+    "name": "Khordha",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-KORAPUT",
+    "name": "Koraput",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-MALKANGIRI",
+    "name": "Malkangiri",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-MAYURBHANJ",
+    "name": "Mayurbhanj",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-NABARANGPUR",
+    "name": "Nabarangpur",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-NAYAGARH",
+    "name": "Nayagarh",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-NUAPADA",
+    "name": "Nuapada",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-PURI",
+    "name": "Puri",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-RAYAGADA",
+    "name": "Rayagada",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-SAMBALPUR",
+    "name": "Sambalpur",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-SUBARNAPUR",
+    "name": "Subarnapur",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "OD-DIST-SUNDARGARH",
+    "name": "Sundargarh",
+    "stateId": "OD",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-AMRITSAR",
+    "name": "Amritsar",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-BARNALA",
+    "name": "Barnala",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-BATHINDA",
+    "name": "Bathinda",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-FARIDKOT",
+    "name": "Faridkot",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-FATEHGARH-SAHIB",
+    "name": "Fatehgarh Sahib",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-FAZILKA",
+    "name": "Fazilka",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-FEROZEPUR",
+    "name": "Ferozepur",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-GURDASPUR",
+    "name": "Gurdaspur",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-HOSHIARPUR",
+    "name": "Hoshiarpur",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-JALANDHAR",
+    "name": "Jalandhar",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-KAPURTHALA",
+    "name": "Kapurthala",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-LUDHIANA",
+    "name": "Ludhiana",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-MALERKOTLA",
+    "name": "Malerkotla",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-MANSA",
+    "name": "Mansa",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-MOGA",
+    "name": "Moga",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-PATHANKOT",
+    "name": "Pathankot",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-PATIALA",
+    "name": "Patiala",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-RUPNAGAR",
+    "name": "Rupnagar",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-SAHIBZADA-AJIT-SINGH-NAGAR",
+    "name": "Sahibzada Ajit Singh Nagar",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-SANGRUR",
+    "name": "Sangrur",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-SHAHEED-BHAGAT-SINGH-NAGAR",
+    "name": "Shaheed Bhagat Singh Nagar",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-SRI-MUKTSAR-SAHIB",
+    "name": "Sri Muktsar Sahib",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PB-DIST-TARN-TARAN",
+    "name": "Tarn Taran",
+    "stateId": "PB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PY-DIST-KARAIKAL",
+    "name": "Karaikal",
+    "stateId": "PY",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PY-DIST-MAHE",
+    "name": "Mahe",
+    "stateId": "PY",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PY-DIST-PUDUCHERRY",
+    "name": "Puducherry",
+    "stateId": "PY",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "PY-DIST-YANAM",
+    "name": "Yanam",
+    "stateId": "PY",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-AJMER",
+    "name": "Ajmer",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-ALWAR",
+    "name": "Alwar",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-BANSWARA",
+    "name": "Banswara",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-BARAN",
+    "name": "Baran",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-BARMER",
+    "name": "Barmer",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-BHARATPUR",
+    "name": "Bharatpur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-BHILWARA",
+    "name": "Bhilwara",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-BIKANER",
+    "name": "Bikaner",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-BUNDI",
+    "name": "Bundi",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-CHITTORGARH",
+    "name": "Chittorgarh",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-CHURU",
+    "name": "Churu",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-DAUSA",
+    "name": "Dausa",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-DHOLPUR",
+    "name": "Dholpur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-DUNGARPUR",
+    "name": "Dungarpur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-HANUMANGARH",
+    "name": "Hanumangarh",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-JAIPUR",
+    "name": "Jaipur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-JAISALMER",
+    "name": "Jaisalmer",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-JALORE",
+    "name": "Jalore",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-JHALAWAR",
+    "name": "Jhalawar",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-JHUNJHUNU",
+    "name": "Jhunjhunu",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-JODHPUR",
+    "name": "Jodhpur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-KARAULI",
+    "name": "Karauli",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-KOTA",
+    "name": "Kota",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-NAGAUR",
+    "name": "Nagaur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-PALI",
+    "name": "Pali",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-PRATAPGARH",
+    "name": "Pratapgarh",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-RAJSAMAND",
+    "name": "Rajsamand",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-SAWAI-MADHOPUR",
+    "name": "Sawai Madhopur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-SIKAR",
+    "name": "Sikar",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-SIROHI",
+    "name": "Sirohi",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-SRI-GANGANAGAR",
+    "name": "Sri Ganganagar",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-TONK",
+    "name": "Tonk",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "RJ-DIST-UDAIPUR",
+    "name": "Udaipur",
+    "stateId": "RJ",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "SK-DIST-GANGTOK",
+    "name": "Gangtok",
+    "stateId": "SK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "SK-DIST-GYALSHING",
+    "name": "Gyalshing",
+    "stateId": "SK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "SK-DIST-MANGAN",
+    "name": "Mangan",
+    "stateId": "SK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "SK-DIST-NAMCHI",
+    "name": "Namchi",
+    "stateId": "SK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "SK-DIST-PAKYONG",
+    "name": "Pakyong",
+    "stateId": "SK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "SK-DIST-SORENG",
+    "name": "Soreng",
+    "stateId": "SK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-ARIYALUR",
+    "name": "Ariyalur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-CHENGALPATTU",
+    "name": "Chengalpattu",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-CHENNAI",
+    "name": "Chennai",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-COIMBATORE",
+    "name": "Coimbatore",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-CUDDALORE",
+    "name": "Cuddalore",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-DHARMAPURI",
+    "name": "Dharmapuri",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-DINDIGUL",
+    "name": "Dindigul",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-ERODE",
+    "name": "Erode",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-KALLAKURICHI",
+    "name": "Kallakurichi",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-KANCHEEPURAM",
+    "name": "Kancheepuram",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-KANNIYAKUMARI",
+    "name": "Kanniyakumari",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-KARUR",
+    "name": "Karur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-KRISHNAGIRI",
+    "name": "Krishnagiri",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-MADURAI",
+    "name": "Madurai",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-MAYILADUTHURAI",
+    "name": "Mayiladuthurai",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-NAGAPATTINAM",
+    "name": "Nagapattinam",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-NAMAKKAL",
+    "name": "Namakkal",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-NILGIRIS",
+    "name": "Nilgiris",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-PERAMBALUR",
+    "name": "Perambalur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-PUDUKKOTTAI",
+    "name": "Pudukkottai",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-RAMANATHAPURAM",
+    "name": "Ramanathapuram",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-RANIPET",
+    "name": "Ranipet",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-SALEM",
+    "name": "Salem",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-SIVAGANGA",
+    "name": "Sivaganga",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TENKASI",
+    "name": "Tenkasi",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-THANJAVUR",
+    "name": "Thanjavur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-THENI",
+    "name": "Theni",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-THOOTHUKUDI",
+    "name": "Thoothukudi",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TIRUCHIRAPPALLI",
+    "name": "Tiruchirappalli",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TIRUNELVELI",
+    "name": "Tirunelveli",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TIRUPATHUR",
+    "name": "Tirupathur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TIRUPPUR",
+    "name": "Tiruppur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TIRUVALLUR",
+    "name": "Tiruvallur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TIRUVANNAMALAI",
+    "name": "Tiruvannamalai",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-TIRUVARUR",
+    "name": "Tiruvarur",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-VELLORE",
+    "name": "Vellore",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-VILUPPURAM",
+    "name": "Viluppuram",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TN-DIST-VIRUDHUNAGAR",
+    "name": "Virudhunagar",
+    "stateId": "TN",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-DHALAI",
+    "name": "Dhalai",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-GOMATI",
+    "name": "Gomati",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-KHOWAI",
+    "name": "Khowai",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-NORTH-TRIPURA",
+    "name": "North Tripura",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-SEPAHIJALA",
+    "name": "Sepahijala",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-SOUTH-TRIPURA",
+    "name": "South Tripura",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-UNAKOTI",
+    "name": "Unakoti",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TR-DIST-WEST-TRIPURA",
+    "name": "West Tripura",
+    "stateId": "TR",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "TS-DIST-ADILABAD",
+    "name": "Adilabad",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-7",
+      "TS-AC-8"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-1"
+    ]
+  },
+  {
+    "id": "TS-DIST-BHADRADRI-KOTHAGUDEM",
+    "name": "Bhadradri Kothagudem",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-110",
+      "TS-AC-111",
+      "TS-AC-119",
+      "TS-AC-117",
+      "TS-AC-118"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-16",
+      "TS-PC-17"
+    ]
+  },
+  {
+    "id": "TS-DIST-HANUMAKONDA",
+    "name": "Hanumakonda",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-104",
+      "TS-AC-105",
+      "TS-AC-106"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-15"
+    ]
+  },
+  {
+    "id": "TS-DIST-HYDERABAD",
+    "name": "Hyderabad",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-61",
+      "TS-AC-57",
+      "TS-AC-59",
+      "TS-AC-60",
+      "TS-AC-62",
+      "TS-AC-63",
+      "TS-AC-64",
+      "TS-AC-70",
+      "TS-AC-58",
+      "TS-AC-65",
+      "TS-AC-66",
+      "TS-AC-67",
+      "TS-AC-68",
+      "TS-AC-69",
+      "TS-AC-71"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-7",
+      "TS-PC-8",
+      "TS-PC-9"
+    ]
+  },
+  {
+    "id": "TS-DIST-JAGTIAL",
+    "name": "Jagtial",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-11",
+      "TS-AC-20",
+      "TS-AC-21"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-2",
+      "TS-PC-4"
+    ]
+  },
+  {
+    "id": "TS-DIST-JANGAON",
+    "name": "Jangaon",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-98",
+      "TS-AC-99",
+      "TS-AC-100"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-14",
+      "TS-PC-15"
+    ]
+  },
+  {
+    "id": "TS-DIST-JAYASHANKAR-BHUPALPALLY",
+    "name": "Jayashankar Bhupalpally",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-108"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-15"
+    ]
+  },
+  {
+    "id": "TS-DIST-JOGULAMBA-GADWAL",
+    "name": "Jogulamba Gadwal",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-79",
+      "TS-AC-80"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-12"
+    ]
+  },
+  {
+    "id": "TS-DIST-KAMAREDDY",
+    "name": "Kamareddy",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-13",
+      "TS-AC-14",
+      "TS-AC-15",
+      "TS-AC-16"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-5"
+    ]
+  },
+  {
+    "id": "TS-DIST-KARIMNAGAR",
+    "name": "Karimnagar",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-25",
+      "TS-AC-28",
+      "TS-AC-29",
+      "TS-AC-30"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-3"
+    ]
+  },
+  {
+    "id": "TS-DIST-KHAMMAM",
+    "name": "Khammam",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-112",
+      "TS-AC-113",
+      "TS-AC-114",
+      "TS-AC-115",
+      "TS-AC-116"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-17"
+    ]
+  },
+  {
+    "id": "TS-DIST-KUMURAM-BHEEM-ASIFABAD",
+    "name": "Kumuram Bheem Asifabad",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-1",
+      "TS-AC-2"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-1"
+    ]
+  },
+  {
+    "id": "TS-DIST-MAHABUBABAD",
+    "name": "Mahabubabad",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-101",
+      "TS-AC-102"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-16"
+    ]
+  },
+  {
+    "id": "TS-DIST-MAHABUBNAGAR",
+    "name": "Mahabubnagar",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-74",
+      "TS-AC-75",
+      "TS-AC-76"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-11"
+    ]
+  },
+  {
+    "id": "TS-DIST-MANCHERIAL",
+    "name": "Mancherial",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-3",
+      "TS-AC-4",
+      "TS-AC-24"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-2"
+    ]
+  },
+  {
+    "id": "TS-DIST-MEDAK",
+    "name": "Medak",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-34",
+      "TS-AC-37"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-6"
+    ]
+  },
+  {
+    "id": "TS-DIST-MEDCHAL-MALKAJGIRI",
+    "name": "Medchal-Malkajgiri",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-43",
+      "TS-AC-44",
+      "TS-AC-45",
+      "TS-AC-46",
+      "TS-AC-47"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-7"
+    ]
+  },
+  {
+    "id": "TS-DIST-MULUGU",
+    "name": "Mulugu",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-109"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-16"
+    ]
+  },
+  {
+    "id": "TS-DIST-NAGARKURNOOL",
+    "name": "Nagarkurnool",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-81",
+      "TS-AC-82",
+      "TS-AC-83",
+      "TS-AC-85"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-12"
+    ]
+  },
+  {
+    "id": "TS-DIST-NALGONDA",
+    "name": "Nalgonda",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-86",
+      "TS-AC-87",
+      "TS-AC-88",
+      "TS-AC-92",
+      "TS-AC-93",
+      "TS-AC-95"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-13",
+      "TS-PC-14"
+    ]
+  },
+  {
+    "id": "TS-DIST-NARAYANPET",
+    "name": "Narayanpet",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-73",
+      "TS-AC-77"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-11"
+    ]
+  },
+  {
+    "id": "TS-DIST-NIRMAL",
+    "name": "Nirmal",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-5",
+      "TS-AC-9",
+      "TS-AC-10"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-1"
+    ]
+  },
+  {
+    "id": "TS-DIST-NIZAMABAD",
+    "name": "Nizamabad",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-12",
+      "TS-AC-17",
+      "TS-AC-18",
+      "TS-AC-19",
+      "TS-AC-13"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-4"
+    ]
+  },
+  {
+    "id": "TS-DIST-PEDDAPALLI",
+    "name": "Peddapalli",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-6",
+      "TS-AC-22",
+      "TS-AC-23"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-2"
+    ]
+  },
+  {
+    "id": "TS-DIST-RAJANNA-SIRCILLA",
+    "name": "Rajanna Sircilla",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-26",
+      "TS-AC-27"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-3"
+    ]
+  },
+  {
+    "id": "TS-DIST-RANGAREDDY",
+    "name": "Rangareddy",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-49",
+      "TS-AC-50",
+      "TS-AC-51",
+      "TS-AC-52",
+      "TS-AC-53",
+      "TS-AC-84",
+      "TS-AC-48"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-7",
+      "TS-PC-10",
+      "TS-PC-11",
+      "TS-PC-14"
+    ]
+  },
+  {
+    "id": "TS-DIST-SANGAREDDY",
+    "name": "Sangareddy",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-35",
+      "TS-AC-36",
+      "TS-AC-38",
+      "TS-AC-39",
+      "TS-AC-40"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-5",
+      "TS-PC-6"
+    ]
+  },
+  {
+    "id": "TS-DIST-SIDDIPET",
+    "name": "Siddipet",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-31",
+      "TS-AC-33",
+      "TS-AC-41",
+      "TS-AC-42"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-3",
+      "TS-PC-6"
+    ]
+  },
+  {
+    "id": "TS-DIST-SURYAPET",
+    "name": "Suryapet",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-89",
+      "TS-AC-90",
+      "TS-AC-91",
+      "TS-AC-96"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-13",
+      "TS-PC-14"
+    ]
+  },
+  {
+    "id": "TS-DIST-VIKARABAD",
+    "name": "Vikarabad",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-54",
+      "TS-AC-55",
+      "TS-AC-56",
+      "TS-AC-72"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-10",
+      "TS-PC-11"
+    ]
+  },
+  {
+    "id": "TS-DIST-WANAPARTHY",
+    "name": "Wanaparthy",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-78"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-12"
+    ]
+  },
+  {
+    "id": "TS-DIST-WARANGAL",
+    "name": "Warangal",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-107",
+      "TS-AC-103"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-15",
+      "TS-PC-16"
+    ]
+  },
+  {
+    "id": "TS-DIST-YADADRI-BHUVANAGIRI",
+    "name": "Yadadri Bhuvanagiri",
+    "stateId": "TS",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [
+      "TS-AC-94",
+      "TS-AC-97"
+    ],
+    "parliamentConstituencyIds": [
+      "TS-PC-14"
+    ]
+  },
+  {
+    "id": "UK-DIST-ALMORA",
+    "name": "Almora",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-BAGESHWAR",
+    "name": "Bageshwar",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-CHAMOLI",
+    "name": "Chamoli",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-CHAMPAWAT",
+    "name": "Champawat",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-DEHRADUN",
+    "name": "Dehradun",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-HARIDWAR",
+    "name": "Haridwar",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-NAINITAL",
+    "name": "Nainital",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-PAURI-GARHWAL",
+    "name": "Pauri Garhwal",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-PITHORAGARH",
+    "name": "Pithoragarh",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-RUDRAPRAYAG",
+    "name": "Rudraprayag",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-TEHRI-GARHWAL",
+    "name": "Tehri Garhwal",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-UDHAM-SINGH-NAGAR",
+    "name": "Udham Singh Nagar",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UK-DIST-UTTARKASHI",
+    "name": "Uttarkashi",
+    "stateId": "UK",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-AGRA",
+    "name": "Agra",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-ALIGARH",
+    "name": "Aligarh",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-AMBEDKAR-NAGAR",
+    "name": "Ambedkar Nagar",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-AMETHI",
+    "name": "Amethi",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-AMROHA",
+    "name": "Amroha",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-AURAIYA",
+    "name": "Auraiya",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-AYODHYA",
+    "name": "Ayodhya",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-AZAMGARH",
+    "name": "Azamgarh",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BAGHPAT",
+    "name": "Baghpat",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BAHRAICH",
+    "name": "Bahraich",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BALLIA",
+    "name": "Ballia",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BALRAMPUR",
+    "name": "Balrampur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BANDA",
+    "name": "Banda",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BARABANKI",
+    "name": "Barabanki",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BAREILLY",
+    "name": "Bareilly",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BASTI",
+    "name": "Basti",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BHADOHI",
+    "name": "Bhadohi",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BIJNOR",
+    "name": "Bijnor",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BUDAUN",
+    "name": "Budaun",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-BULANDSHAHR",
+    "name": "Bulandshahr",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-CHANDAULI",
+    "name": "Chandauli",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-CHITRAKOOT",
+    "name": "Chitrakoot",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-DEORIA",
+    "name": "Deoria",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-ETAH",
+    "name": "Etah",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-ETAWAH",
+    "name": "Etawah",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-FARRUKHABAD",
+    "name": "Farrukhabad",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-FATEHPUR",
+    "name": "Fatehpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-FIROZABAD",
+    "name": "Firozabad",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-GAUTAM-BUDDHA-NAGAR",
+    "name": "Gautam Buddha Nagar",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-GHAZIABAD",
+    "name": "Ghaziabad",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-GHAZIPUR",
+    "name": "Ghazipur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-GONDA",
+    "name": "Gonda",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-GORAKHPUR",
+    "name": "Gorakhpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-HAMIRPUR",
+    "name": "Hamirpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-HAPUR",
+    "name": "Hapur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-HARDOI",
+    "name": "Hardoi",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-HATHRAS",
+    "name": "Hathras",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-JALAUN",
+    "name": "Jalaun",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-JAUNPUR",
+    "name": "Jaunpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-JHANSI",
+    "name": "Jhansi",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-KANNAUJ",
+    "name": "Kannauj",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-KANPUR-DEHAT",
+    "name": "Kanpur Dehat",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-KANPUR-NAGAR",
+    "name": "Kanpur Nagar",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-KASGANJ",
+    "name": "Kasganj",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-KAUSHAMBI",
+    "name": "Kaushambi",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-KUSHINAGAR",
+    "name": "Kushinagar",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-LAKHIMPUR-KHERI",
+    "name": "Lakhimpur Kheri",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-LALITPUR",
+    "name": "Lalitpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-LUCKNOW",
+    "name": "Lucknow",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MAHARAJGANJ",
+    "name": "Maharajganj",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MAHOBA",
+    "name": "Mahoba",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MAINPURI",
+    "name": "Mainpuri",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MATHURA",
+    "name": "Mathura",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MAU",
+    "name": "Mau",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MEERUT",
+    "name": "Meerut",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MIRZAPUR",
+    "name": "Mirzapur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MORADABAD",
+    "name": "Moradabad",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-MUZAFFARNAGAR",
+    "name": "Muzaffarnagar",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-PILIBHIT",
+    "name": "Pilibhit",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-PRATAPGARH",
+    "name": "Pratapgarh",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-PRAYAGRAJ",
+    "name": "Prayagraj",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-RAEBARELI",
+    "name": "Raebareli",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-RAMPUR",
+    "name": "Rampur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SAHARANPUR",
+    "name": "Saharanpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SAMBHAL",
+    "name": "Sambhal",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SANT-KABIR-NAGAR",
+    "name": "Sant Kabir Nagar",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SHAHJAHANPUR",
+    "name": "Shahjahanpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SHAMLI",
+    "name": "Shamli",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SHRAVASTI",
+    "name": "Shravasti",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SIDDHARTHNAGAR",
+    "name": "Siddharthnagar",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SITAPUR",
+    "name": "Sitapur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SONBHADRA",
+    "name": "Sonbhadra",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-SULTANPUR",
+    "name": "Sultanpur",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-UNNAO",
+    "name": "Unnao",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "UP-DIST-VARANASI",
+    "name": "Varanasi",
+    "stateId": "UP",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-ALIPURDUAR",
+    "name": "Alipurduar",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-BANKURA",
+    "name": "Bankura",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-BIRBHUM",
+    "name": "Birbhum",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-COOCH-BEHAR",
+    "name": "Cooch Behar",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-DAKSHIN-DINAJPUR",
+    "name": "Dakshin Dinajpur",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-DARJEELING",
+    "name": "Darjeeling",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-HOOGHLY",
+    "name": "Hooghly",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-HOWRAH",
+    "name": "Howrah",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-JALPAIGURI",
+    "name": "Jalpaiguri",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-JHARGRAM",
+    "name": "Jhargram",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-KALIMPONG",
+    "name": "Kalimpong",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-KOLKATA",
+    "name": "Kolkata",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-MALDA",
+    "name": "Malda",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-MURSHIDABAD",
+    "name": "Murshidabad",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-NADIA",
+    "name": "Nadia",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-NORTH-24-PARGANAS",
+    "name": "North 24 Parganas",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-PASCHIM-BARDHAMAN",
+    "name": "Paschim Bardhaman",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-PASCHIM-MEDINIPUR",
+    "name": "Paschim Medinipur",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-PURBA-BARDHAMAN",
+    "name": "Purba Bardhaman",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-PURBA-MEDINIPUR",
+    "name": "Purba Medinipur",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-PURULIA",
+    "name": "Purulia",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-SOUTH-24-PARGANAS",
+    "name": "South 24 Parganas",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  },
+  {
+    "id": "WB-DIST-UTTAR-DINAJPUR",
+    "name": "Uttar Dinajpur",
+    "stateId": "WB",
+    "isActive": true,
+    "source": "CURRENT_ADMIN_DISTRICT_MASTER",
+    "assemblyConstituencyIds": [],
+    "parliamentConstituencyIds": []
+  }
+]
