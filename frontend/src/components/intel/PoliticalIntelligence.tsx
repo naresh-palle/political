@@ -89,7 +89,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [parliaments, setParliaments] = useState<ParliamentInfo[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
   const [assemblies, setAssemblies] = useState<any[]>([]);
-  const [stateId, setStateId] = useState("AP");
+  const [stateId, setStateId] = useState((currentUser.stateId && currentUser.stateId.length <= 5) ? currentUser.stateId : "AP");
   const [districtId, setDistrictId] = useState("");
   const [pcId, setPcId] = useState("");
   const [acId, setAcId] = useState("");
@@ -119,16 +119,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   };
 
   const loadMasters = async () => {
-    const [st, pt, pc, dist] = await Promise.all([
+    const [st, pt] = await Promise.all([
       politicalApiService.getStates(),
-      politicalApiService.getPoliticalParties?.() || Promise.resolve([]),
-      politicalApiService.getParliamentsByState ? politicalApiService.getParliamentsByState("AP") : Promise.resolve([]),
-      politicalApiService.getPiDistricts(userId, "AP").catch(() => [])
+      politicalApiService.getPoliticalParties()
     ]);
     setStates(st || []);
     setParties((pt as PoliticalParty[]) || []);
-    setParliaments((pc as ParliamentInfo[]) || []);
-    setDistricts(Array.isArray(dist) ? dist : []);
   };
 
   const refreshDashboard = async () => {
@@ -149,28 +145,78 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   }, [userId]);
 
   useEffect(() => {
-    politicalApiService.getPiDistricts(userId, stateId).then(setDistricts).catch(() => setDistricts([]));
-    politicalApiService.getParliamentsByState(stateId).then((pc) => setParliaments((pc as ParliamentInfo[]) || [])).catch(() => {});
+    let cancelled = false;
+    (async () => {
+      const [pcs, acs, dist] = await Promise.all([
+        politicalApiService.getParliamentsByState(stateId).catch(() => []),
+        politicalApiService.getAssemblies(stateId).catch(() => []),
+        politicalApiService.getDistrictsByState(stateId, userId).catch(() => [])
+      ]);
+      if (cancelled) return;
+      const parliamentRows = (pcs as ParliamentInfo[]) || [];
+      const assemblyRows = Array.isArray(acs) ? acs : [];
+      let districtRows = Array.isArray(dist) ? dist : [];
+      const covered = new Set<string>();
+      districtRows.forEach((d) => (d.assemblyConstituencyIds || []).forEach((id: string) => covered.add(id)));
+      const sparse = assemblyRows.length > 0 && covered.size < Math.min(20, assemblyRows.length);
+      if (sparse || (!districtRows.length && assemblyRows.length)) {
+        const buckets: Record<string, any> = {};
+        const pcName = Object.fromEntries(parliamentRows.map((p) => [p.id, p.name]));
+        for (const ac of assemblyRows) {
+          const parentPc = ac.parliamentConstituencyId || ac.parliamentId;
+          const name = pcName[parentPc] || ac.name || "Unknown";
+          const id = `${stateId}-DIST-${String(name).toUpperCase().replace(/[^A-Z0-9]+/g, "-")}`;
+          const bucket = buckets[id] || { id, name, stateId, assemblyConstituencyIds: [], parliamentConstituencyIds: [] };
+          if (!bucket.assemblyConstituencyIds.includes(ac.id)) bucket.assemblyConstituencyIds.push(ac.id);
+          if (parentPc && !bucket.parliamentConstituencyIds.includes(parentPc)) bucket.parliamentConstituencyIds.push(parentPc);
+          buckets[id] = bucket;
+        }
+        districtRows = Object.values(buckets).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+      }
+      setParliaments(parliamentRows);
+      setAssemblies(assemblyRows);
+      setDistricts(districtRows);
+    })().catch(() => {
+      if (!cancelled) {
+        setParliaments([]);
+        setAssemblies([]);
+        setDistricts([]);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [stateId, userId]);
 
-  useEffect(() => {
-    if (!districtId) {
-      setAssemblies([]);
-      return;
-    }
-    politicalApiService.getPiDistrictAssemblies(userId, districtId).then(setAssemblies).catch(() => setAssemblies([]));
-  }, [districtId, userId]);
-
   const filteredPcs = useMemo(() => {
-    const pcIds = new Set(assemblies.map((a) => a.parliamentConstituencyId).filter(Boolean));
-    if (!pcIds.size) return parliaments.filter((p) => p.stateId === stateId);
-    return parliaments.filter((p) => pcIds.has(p.id));
-  }, [assemblies, parliaments, stateId]);
+    const inState = parliaments.filter((p) => !p.stateId || String(p.stateId).toUpperCase() === String(stateId).toUpperCase());
+    if (!districtId) return inState;
+    const district = districts.find((d) => d.id === districtId);
+    const pcIds = new Set<string>(district?.parliamentConstituencyIds || []);
+    if (!pcIds.size) {
+      const acIds = new Set(district?.assemblyConstituencyIds || []);
+      assemblies.forEach((a) => {
+        if (acIds.has(a.id) && (a.parliamentConstituencyId || a.parliamentId)) {
+          pcIds.add(a.parliamentConstituencyId || a.parliamentId);
+        }
+      });
+    }
+    if (!pcIds.size) return inState;
+    return inState.filter((p) => pcIds.has(p.id));
+  }, [assemblies, districts, districtId, parliaments, stateId]);
 
   const filteredAcs = useMemo(() => {
-    if (!pcId) return assemblies;
-    return assemblies.filter((a) => a.parliamentConstituencyId === pcId);
-  }, [assemblies, pcId]);
+    let rows = assemblies;
+    if (districtId) {
+      const district = districts.find((d) => d.id === districtId);
+      const acIds = new Set(district?.assemblyConstituencyIds || []);
+      if (acIds.size) rows = rows.filter((a) => acIds.has(a.id));
+    }
+    if (pcId) {
+      rows = rows.filter((a) => (a.parliamentConstituencyId || a.parliamentId) === pcId);
+    }
+    return rows;
+  }, [assemblies, districts, districtId, pcId]);
 
   const loadConstituencies = async () => {
     const data = await politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 100 });
@@ -816,7 +862,7 @@ function GeoFilters(props: {
         <label className={LABEL}>Assembly constituency</label>
         <select className={INPUT} value={props.acId} onChange={(e) => props.setAcId(e.target.value)}>
           <option value="">Select AC</option>
-          {props.acs.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          {props.acs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>)}
         </select>
       </div>
     </div>

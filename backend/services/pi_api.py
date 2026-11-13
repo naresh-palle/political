@@ -5,11 +5,12 @@ import csv
 import io
 from copy import deepcopy
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException, Query
 from fastapi.responses import PlainTextResponse
 
+from .geo_districts import build_district_catalog
 from .political_intelligence import (
     ACCOUNT_STATUSES,
     MEMORY,
@@ -167,40 +168,75 @@ async def _audit(actor: Dict[str, Any], action: str, target: str, metadata: Opti
 
 async def _geo_lookups() -> Dict[str, Any]:
     srv = _srv()
-    assemblies = await srv.mongo_wait(srv.db.assembly_constituencies.find({}, {"_id": 0}).to_list(500), timeout=3.0, fallback=None, tag="pi_acs") or srv.load_json_fallback("assemblies.json")
-    parliaments = await srv.mongo_wait(srv.db.parliament_constituencies.find({}, {"_id": 0}).to_list(200), timeout=3.0, fallback=None, tag="pi_pcs") or srv.load_json_fallback("parliaments.json")
+    assemblies = await srv.mongo_wait(srv.db.assembly_constituencies.find({}, {"_id": 0}).to_list(5000), timeout=5.0, fallback=None, tag="pi_acs") or srv.load_json_fallback("assemblies.json")
+    parliaments = await srv.mongo_wait(srv.db.parliament_constituencies.find({}, {"_id": 0}).to_list(1000), timeout=4.0, fallback=None, tag="pi_pcs") or srv.load_json_fallback("parliaments.json")
     parties = await srv.mongo_wait(srv.db.political_parties.find({}, {"_id": 0}).to_list(100), timeout=3.0, fallback=None, tag="pi_parties") or srv.load_json_fallback("political_parties.json")
     return {
         "assemblies": {a.get("id"): a for a in assemblies if a.get("id")},
         "parliaments": {p.get("id"): p for p in parliaments if p.get("id")},
         "parties": {p.get("id"): p for p in parties if p.get("id")},
+        "assembly_rows": [a for a in assemblies if a.get("id")],
+        "parliament_rows": [p for p in parliaments if p.get("id")],
     }
+
+
+async def _resolved_districts(state_id: Optional[str] = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    geo = await _geo_lookups()
+    derived, maps = build_district_catalog(geo.get("assembly_rows") or geo["assemblies"].values(), geo.get("parliament_rows") or geo["parliaments"].values(), state_id)
+    stored = await _list("districts")
+    stored_maps = await _list("assembly_district_map")
+    by_id = {d.get("id"): d for d in derived if d.get("id")}
+    for row in stored:
+        if state_id and str(row.get("stateId") or "").upper() != str(state_id).upper():
+            continue
+        existing = by_id.get(row.get("id"))
+        if existing:
+            existing["name"] = existing.get("name") or row.get("name")
+        else:
+            by_id[row.get("id")] = {
+                **row,
+                "assemblyConstituencyIds": list(row.get("assemblyConstituencyIds") or []),
+                "parliamentConstituencyIds": list(row.get("parliamentConstituencyIds") or []),
+            }
+    map_by_ac = {m.get("assemblyConstituencyId"): m for m in maps if m.get("assemblyConstituencyId")}
+    for item in stored_maps:
+        ac_id = item.get("assemblyConstituencyId")
+        if not ac_id:
+            continue
+        if state_id and str(item.get("stateId") or "").upper() != str(state_id).upper():
+            continue
+        map_by_ac[ac_id] = item
+        d_id = item.get("districtId")
+        if d_id and d_id in by_id and ac_id not in by_id[d_id]["assemblyConstituencyIds"]:
+            by_id[d_id]["assemblyConstituencyIds"].append(ac_id)
+        pc_id = item.get("parliamentConstituencyId")
+        if d_id and d_id in by_id and pc_id and pc_id not in by_id[d_id]["parliamentConstituencyIds"]:
+            by_id[d_id]["parliamentConstituencyIds"].append(pc_id)
+    rows = sorted(by_id.values(), key=lambda r: (r.get("name") or ""))
+    return rows, list(map_by_ac.values())
 
 
 def register_pi_routes(api_router) -> None:
     @api_router.get("/geography/districts")
     async def get_districts(stateId: Optional[str] = None, userId: Optional[str] = None):
-        actor = await _load_actor(userId) if userId else {}
-        caps = actor_capabilities(actor) if actor else {"isSuper": True, "scopeStateId": None}
-        rows = await _list("districts")
-        if stateId:
-            rows = [r for r in rows if str(r.get("stateId") or "").upper() == stateId.upper()]
-        rows = [r for r in rows if in_scope(caps, r.get("stateId"))]
+        rows, _maps = await _resolved_districts(stateId)
         return rows
 
     @api_router.get("/geography/districts/{district_id}/assemblies")
     async def get_district_assemblies(district_id: str, userId: Optional[str] = None):
-        maps = [m for m in await _list("assembly_district_map") if m.get("districtId") == district_id]
+        rows, maps = await _resolved_districts()
+        district = next((d for d in rows if d.get("id") == district_id), None)
         geo = await _geo_lookups()
+        ac_ids = []
+        if district:
+            ac_ids = list(district.get("assemblyConstituencyIds") or [])
+        if not ac_ids:
+            ac_ids = [m.get("assemblyConstituencyId") for m in maps if m.get("districtId") == district_id]
         out = []
-        for item in maps:
-            ac = geo["assemblies"].get(item.get("assemblyConstituencyId")) or {
-                "id": item.get("assemblyConstituencyId"),
-                "name": item.get("assemblyConstituencyId"),
-                "parliamentConstituencyId": item.get("parliamentConstituencyId"),
-                "stateId": item.get("stateId"),
-            }
+        for ac_id in ac_ids:
+            ac = geo["assemblies"].get(ac_id) or {"id": ac_id, "name": ac_id}
             out.append({**ac, "districtId": district_id})
+        out.sort(key=lambda a: (a.get("number") or 0, a.get("name") or ""))
         return out
 
     @api_router.get("/pi/meta")
@@ -255,19 +291,14 @@ def register_pi_routes(api_router) -> None:
         }
 
     async def _district_progress_rows(caps, state_id=None):
-        districts = await _list("districts")
-        maps = await _list("assembly_district_map")
+        districts, maps = await _resolved_districts(state_id)
         stats = await _list("constituency_statistics")
         persons = await _list("political_persons")
         accounts = await _list("social_media_accounts")
         person_by_id = {p.get("id"): p for p in persons}
         rows = []
         for district in districts:
-            if state_id and str(district.get("stateId") or "").upper() != str(state_id).upper():
-                continue
-            if not in_scope(caps, district.get("stateId")):
-                continue
-            ac_ids = [m.get("assemblyConstituencyId") for m in maps if m.get("districtId") == district.get("id")]
+            ac_ids = list(district.get("assemblyConstituencyIds") or [m.get("assemblyConstituencyId") for m in maps if m.get("districtId") == district.get("id")])
             entered_ids = [s.get("assemblyConstituencyId") for s in stats if s.get("districtId") == district.get("id") or s.get("assemblyConstituencyId") in ac_ids]
             d_persons = [p for p in persons if p.get("districtId") == district.get("id") or p.get("assemblyConstituencyId") in ac_ids]
             d_accounts = [a for a in accounts if person_by_id.get(a.get("personId"), {}).get("districtId") == district.get("id") or person_by_id.get(a.get("personId"), {}).get("assemblyConstituencyId") in ac_ids]
@@ -309,10 +340,13 @@ def register_pi_routes(api_router) -> None:
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
         _require(caps, "view")
-        district = await _get("districts", district_id)
+        districts, maps = await _resolved_districts()
+        district = next((d for d in districts if d.get("id") == district_id), None) or await _get("districts", district_id)
         if not district:
             raise HTTPException(status_code=404, detail="District not found")
-        maps = [m for m in await _list("assembly_district_map") if m.get("districtId") == district_id]
+        maps = [m for m in maps if m.get("districtId") == district_id]
+        if not maps and district.get("assemblyConstituencyIds"):
+            maps = [{"assemblyConstituencyId": ac_id, "parliamentConstituencyId": None, "districtId": district_id} for ac_id in district["assemblyConstituencyIds"]]
         stats_by_ac = {s.get("assemblyConstituencyId"): s for s in await _list("constituency_statistics")}
         ac_ids = {m.get("assemblyConstituencyId") for m in maps}
         persons = [

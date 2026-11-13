@@ -2153,8 +2153,22 @@ export const politicalApiService = {
     return this.piRequest(`/pi/dashboard${q}`, userId);
   },
   getPiDistricts(userId: string, stateId?: string) {
-    const q = stateId ? `?stateId=${encodeURIComponent(stateId)}` : "";
-    return this.piRequest(`/geography/districts${q}`, userId);
+    return this.getDistrictsByState(stateId, userId);
+  },
+  async getDistrictsByState(stateId?: string, userId?: string): Promise<any[]> {
+    try {
+      const q = new URLSearchParams();
+      if (stateId) q.set("stateId", stateId);
+      if (userId) q.set("userId", userId);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/districts?${q.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      // Fallback below
+    }
+    return [];
   },
   getPiDistrictAssemblies(userId: string, districtId: string) {
     return this.piRequest(`/geography/districts/${encodeURIComponent(districtId)}/assemblies`, userId);

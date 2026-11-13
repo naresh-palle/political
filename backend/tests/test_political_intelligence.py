@@ -289,3 +289,30 @@ def test_constituency_update_preserves_history_and_links_contact(monkeypatch):
     intel = _run(gets["/pi/intelligence"](userId=admin["id"], stateId="AP", districtId=None, parliamentConstituencyId=None, assemblyConstituencyId=None, platform=None, partyId=None, rankBy="followers"))
     assert intel["audienceEstimates"]["facebook"] == 250
     assert intel["socialScoreDisclaimer"]
+
+
+def test_ap_districts_cascade_from_existing_geography():
+    import json
+    from pathlib import Path
+
+    from backend.services.geo_districts import AP_DISTRICT_BY_NAME, _norm, build_district_catalog
+
+    root = Path(__file__).resolve().parents[1]
+    acs = json.loads((root / "data" / "assemblies.json").read_text())
+    pcs = json.loads((root / "data" / "parliaments.json").read_text())
+    districts, maps = build_district_catalog(acs, pcs, "AP")
+    assert len(districts) >= 20
+    nandyal = next(d for d in districts if d["name"] == "Nandyal")
+    assert "AP-AC-139" in nandyal["assemblyConstituencyIds"]
+    assert "AP-PC-17" in nandyal["parliamentConstituencyIds"]
+    kurnool = next(d for d in districts if d["name"] == "Kurnool")
+    assert "AP-AC-147" in kurnool["assemblyConstituencyIds"]
+    kadapa = next(d for d in districts if d["name"] == "YSR Kadapa")
+    assert "AP-AC-132" in kadapa["assemblyConstituencyIds"]
+    missing = [_norm(a["name"]) for a in acs if a.get("stateId") == "AP" and _norm(a.get("name")) not in AP_DISTRICT_BY_NAME]
+    assert missing == []
+    banaga = next(m for m in maps if m["assemblyConstituencyId"] == "AP-AC-139")
+    assert banaga["districtName"] == "Nandyal"
+    assert banaga["parliamentConstituencyId"] == "AP-PC-17"
+    ts_districts, _ = build_district_catalog(acs, pcs, "TS")
+    assert len(ts_districts) >= 5

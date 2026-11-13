@@ -598,6 +598,27 @@ async def get_parliaments_by_state(state_id: str, q: Optional[str] = None):
         results = [p for p in results if q_lower in p['name'].lower() or q_lower in p['code'].lower()]
     return results
 
+@api_router.get("/geography/states/{state_id}/assembly-constituencies")
+async def get_assemblies_by_state(state_id: str, q: Optional[str] = None):
+    try:
+        query = {"stateId": state_id.upper()}
+        acs = await db.assembly_constituencies.find(query, {"_id": 0}).sort("number", 1).to_list(5000)
+        if acs:
+            if q:
+                q_lower = q.lower()
+                acs = [a for a in acs if q_lower in str(a.get("name") or "").lower() or q_lower in str(a.get("code") or "").lower()]
+            return acs
+    except Exception as e:
+        log_mongo_notice("get_assemblies_by_state", e)
+
+    fallback = load_json_fallback("assemblies.json")
+    results = [a for a in fallback if str(a.get("stateId") or "").upper() == state_id.upper()]
+    if q:
+        q_lower = q.lower()
+        results = [a for a in results if q_lower in str(a.get("name") or "").lower() or q_lower in str(a.get("code") or "").lower()]
+    results.sort(key=lambda a: (a.get("number") or 0, a.get("name") or ""))
+    return results
+
 @api_router.get("/geography/parliament-constituencies/{pc_id}/assembly-constituencies")
 async def get_assemblies_by_parliament(pc_id: str, q: Optional[str] = None):
     try:
