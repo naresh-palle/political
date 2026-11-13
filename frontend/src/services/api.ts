@@ -2149,9 +2149,12 @@ export const politicalApiService = {
     return data;
   },
 
-  getPiDashboard(userId: string, stateId?: string) {
-    const q = stateId ? `?stateId=${encodeURIComponent(stateId)}` : "";
-    return this.piRequest(`/pi/dashboard${q}`, userId);
+  getPiDashboard(userId: string, stateId?: string, districtId?: string) {
+    const q = new URLSearchParams();
+    if (stateId) q.set("stateId", stateId);
+    if (districtId) q.set("districtId", districtId);
+    const suffix = q.toString() ? `?${q.toString()}` : "";
+    return this.piRequest(`/pi/dashboard${suffix}`, userId);
   },
   getPiDistricts(userId: string, stateId?: string) {
     return this.getDistrictsByState(stateId, userId);

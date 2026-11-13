@@ -283,9 +283,17 @@ def test_constituency_update_preserves_history_and_links_contact(monkeypatch):
     )
     contacts = _run(gets["/pi/contacts"](userId=admin["id"]))
     assert any(c.get("id") == leader["contactId"] for c in contacts)
-    dash = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="AP"))
+    dash = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="AP", districtId=None))
     assert dash["constituenciesEntered"] >= 1
     assert dash["totalLeaders"] >= 1
+    recent = dash.get("recentCollections") or []
+    assert any(row.get("recordType") == "constituency" and row.get("assemblyConstituencyId") == "AP-AC-139" for row in recent)
+    assert any(row.get("recordType") == "leader" for row in recent)
+    nandyal = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="AP", districtId="AP-DIST-NANDYAL"))
+    assert any(row.get("districtId") == "AP-DIST-NANDYAL" for row in (nandyal.get("recentCollections") or []))
+    other = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="TS", districtId=None))
+    assert other["constituenciesEntered"] == 0
+    assert not any(row.get("assemblyConstituencyId") == "AP-AC-139" for row in (other.get("recentCollections") or []))
     intel = _run(gets["/pi/intelligence"](userId=admin["id"], stateId="AP", districtId=None, parliamentConstituencyId=None, assemblyConstituencyId=None, platform=None, partyId=None, rankBy="followers"))
     assert intel["audienceEstimates"]["facebook"] == 250
     assert intel["socialScoreDisclaimer"]

@@ -37,10 +37,12 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
   const [logoErr, setLogoErr] = useState(false);
 
   const [states, setStates] = useState<StateInfo[]>([]);
-  const [parliaments, setParliaments] = useState<ParliamentInfo[]>([]);
-  const [assemblies, setAssemblies] = useState<AssemblyInfo[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [allParliaments, setAllParliaments] = useState<ParliamentInfo[]>([]);
+  const [allAssemblies, setAllAssemblies] = useState<AssemblyInfo[]>([]);
 
   const [selectedState, setSelectedState] = useState<string>("AP");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [selectedParliament, setSelectedParliament] = useState<string>("");
   const [selectedAssembly, setSelectedAssembly] = useState<string>("");
   const [currentAssemblyDetails, setCurrentAssemblyDetails] = useState<AssemblyInfo | null>(null);
@@ -64,24 +66,20 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
 
       const defaultState = stateList.find((s) => s.id === "AP") ? "AP" : stateList[0]?.id || "AP";
       setSelectedState(defaultState);
+      setSelectedDistrict("");
+      setSelectedParliament("");
+      setSelectedAssembly("");
+      setCurrentAssemblyDetails(null);
 
-      const parlList = await politicalApiService.getParliamentsByState(defaultState);
+      const [distList, parlList, assemList] = await Promise.all([
+        politicalApiService.getDistrictsByState(defaultState),
+        politicalApiService.getParliamentsByState(defaultState),
+        politicalApiService.getAssemblies(defaultState)
+      ]);
       if (!mounted) return;
-      setParliaments(parlList);
-
-      if (parlList.length > 0) {
-        const defaultPc = parlList[0].id;
-        setSelectedParliament(defaultPc);
-
-        const assemList = await politicalApiService.getAssembliesByParliament(defaultPc);
-        if (!mounted) return;
-        setAssemblies(assemList);
-
-        if (assemList.length > 0) {
-          setSelectedAssembly(assemList[0].id);
-          setCurrentAssemblyDetails(assemList[0]);
-        }
-      }
+      setDistricts(Array.isArray(distList) ? distList : []);
+      setAllParliaments(parlList || []);
+      setAllAssemblies(assemList || []);
       setLoading(false);
     })();
     return () => {
@@ -119,26 +117,31 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
 
   const handleStateChange = async (stateId: string) => {
     setSelectedState(stateId);
+    setSelectedDistrict("");
     setSelectedParliament("");
     setSelectedAssembly("");
     setCurrentAssemblyDetails(null);
     setSearchFilter("");
-    setParliaments([]);
-    setAssemblies([]);
+    setDistricts([]);
+    setAllParliaments([]);
+    setAllAssemblies([]);
 
-    const parlList = await politicalApiService.getParliamentsByState(stateId);
-    setParliaments(parlList);
+    const [distList, parlList, assemList] = await Promise.all([
+      politicalApiService.getDistrictsByState(stateId),
+      politicalApiService.getParliamentsByState(stateId),
+      politicalApiService.getAssemblies(stateId)
+    ]);
+    setDistricts(Array.isArray(distList) ? distList : []);
+    setAllParliaments(parlList || []);
+    setAllAssemblies(assemList || []);
+  };
 
-    if (parlList.length > 0) {
-      const firstPc = parlList[0].id;
-      setSelectedParliament(firstPc);
-      const assemList = await politicalApiService.getAssembliesByParliament(firstPc);
-      setAssemblies(assemList);
-      if (assemList.length > 0) {
-        setSelectedAssembly(assemList[0].id);
-        setCurrentAssemblyDetails(assemList[0]);
-      }
-    }
+  const handleDistrictChange = (districtId: string) => {
+    setSelectedDistrict(districtId);
+    setSelectedParliament("");
+    setSelectedAssembly("");
+    setCurrentAssemblyDetails(null);
+    setSearchFilter("");
   };
 
   const handleParliamentChange = async (parliamentId: string) => {
@@ -146,14 +149,6 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
     setSelectedAssembly("");
     setCurrentAssemblyDetails(null);
     setSearchFilter("");
-    setAssemblies([]);
-
-    const assemList = await politicalApiService.getAssembliesByParliament(parliamentId);
-    setAssemblies(assemList);
-    if (assemList.length > 0) {
-      setSelectedAssembly(assemList[0].id);
-      setCurrentAssemblyDetails(assemList[0]);
-    }
   };
 
   const handleAssemblyChange = (assemblyId: string) => {
@@ -161,6 +156,32 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
     const found = assemblies.find((a) => a.id === assemblyId) || null;
     setCurrentAssemblyDetails(found);
   };
+
+  const parliaments = useMemo(() => {
+    if (!selectedDistrict) return [];
+    const district = districts.find((d) => d.id === selectedDistrict);
+    const pcIds = new Set<string>(district?.parliamentConstituencyIds || []);
+    if (!pcIds.size) {
+      const acIds = new Set(district?.assemblyConstituencyIds || []);
+      allAssemblies.forEach((a) => {
+        const pc = a.parliamentId || (a as AssemblyInfo & { parliamentConstituencyId?: string }).parliamentConstituencyId;
+        if (acIds.has(a.id) && pc) pcIds.add(pc);
+      });
+    }
+    if (!pcIds.size) return [];
+    return allParliaments.filter((p) => pcIds.has(p.id));
+  }, [allAssemblies, allParliaments, districts, selectedDistrict]);
+
+  const assemblies = useMemo(() => {
+    if (!selectedDistrict) return [];
+    const district = districts.find((d) => d.id === selectedDistrict);
+    const acIds = new Set(district?.assemblyConstituencyIds || []);
+    let rows = acIds.size ? allAssemblies.filter((a) => acIds.has(a.id)) : [];
+    if (selectedParliament) {
+      rows = rows.filter((a) => (a.parliamentId || (a as AssemblyInfo & { parliamentConstituencyId?: string }).parliamentConstituencyId) === selectedParliament);
+    }
+    return rows;
+  }, [allAssemblies, districts, selectedDistrict, selectedParliament]);
 
   const filteredAssemblies = useMemo(() => {
     if (!searchFilter.trim()) return assemblies;
@@ -298,7 +319,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
           </div>
 
           <form onSubmit={handleSubmit} className="px-6 sm:px-8 pt-7 pb-6 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <FieldGroup label="State / Union Territory" step="A">
                 <SelectShell>
                   <select
@@ -316,46 +337,63 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                 </SelectShell>
               </FieldGroup>
 
-              <FieldGroup label="Parliament · Lok Sabha" step="B">
+              <FieldGroup label="District" step="B">
                 <SelectShell>
                   <select
-                    data-testid="select-parliament"
-                    value={selectedParliament}
-                    disabled={!selectedState || parliaments.length === 0}
-                    onChange={(e) => handleParliamentChange(e.target.value)}
+                    data-testid="select-district"
+                    value={selectedDistrict}
+                    disabled={!selectedState || loading}
+                    onChange={(e) => handleDistrictChange(e.target.value)}
                     className={`${fieldClass} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {parliaments.length === 0 ? (
-                      <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">Loading Parliamentary Constituencies...</option>
-                    ) : (
-                      parliaments.map((pc) => (
-                        <option key={pc.id} value={pc.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
-                          {pc.name} ({pc.code})
-                        </option>
-                      ))
-                    )}
+                    <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">Select district</option>
+                    {districts.map((d) => (
+                      <option key={d.id} value={d.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
+                        {d.name}
+                      </option>
+                    ))}
                   </select>
                 </SelectShell>
               </FieldGroup>
 
-              <FieldGroup label="Assembly · Vidhan Sabha" step="C">
+              <FieldGroup label="Parliament · Lok Sabha" step="C">
+                <SelectShell>
+                  <select
+                    data-testid="select-parliament"
+                    value={selectedDistrict ? selectedParliament : ""}
+                    disabled={!selectedDistrict}
+                    onChange={(e) => handleParliamentChange(e.target.value)}
+                    className={`${fieldClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">
+                      {selectedDistrict ? "Select PC" : "Select district first"}
+                    </option>
+                    {selectedDistrict ? parliaments.map((pc) => (
+                      <option key={pc.id} value={pc.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
+                        {pc.name} ({pc.code})
+                      </option>
+                    )) : null}
+                  </select>
+                </SelectShell>
+              </FieldGroup>
+
+              <FieldGroup label="Assembly · Vidhan Sabha" step="D">
                 <SelectShell>
                   <select
                     data-testid="select-assembly"
-                    value={selectedAssembly}
-                    disabled={!selectedParliament || assemblies.length === 0}
+                    value={selectedDistrict ? selectedAssembly : ""}
+                    disabled={!selectedDistrict}
                     onChange={(e) => handleAssemblyChange(e.target.value)}
                     className={`${fieldClass} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {assemblies.length === 0 ? (
-                      <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">Loading Assembly Constituencies...</option>
-                    ) : (
-                      assemblies.map((ac) => (
-                        <option key={ac.id} value={ac.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
-                          {ac.name} ({ac.code})
-                        </option>
-                      ))
-                    )}
+                    <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">
+                      {selectedDistrict ? "Select AC" : "Select district first"}
+                    </option>
+                    {selectedDistrict ? assemblies.map((ac) => (
+                      <option key={ac.id} value={ac.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
+                        {ac.name} ({ac.code})
+                      </option>
+                    )) : null}
                   </select>
                 </SelectShell>
               </FieldGroup>

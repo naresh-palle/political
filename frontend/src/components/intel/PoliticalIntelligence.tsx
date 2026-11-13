@@ -5,7 +5,7 @@ import {
   Loader2,
   MapPin
 } from "lucide-react";
-import { UserProfile, PiDashboard, PiDistrictProgress, StateInfo, PoliticalParty, ParliamentInfo } from "../../types";
+import { UserProfile, PiDashboard, PiDistrictProgress, PiRecentCollection, StateInfo, PoliticalParty, ParliamentInfo } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 
@@ -112,6 +112,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [snapshotAccount, setSnapshotAccount] = useState("");
 
   const partyById = useMemo(() => Object.fromEntries(parties.map((p) => [p.id, p])), [parties]);
+  const selectedDistrictProgress = useMemo(() => {
+    const rows = dashboard?.districts || [];
+    if (!districtId) return null;
+    return rows.find((d: PiDistrictProgress) => d.id === districtId) || null;
+  }, [dashboard, districtId]);
 
   const flash = (msg: string, isError = false) => {
     setOk(isError ? "" : msg);
@@ -130,7 +135,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const refreshDashboard = async () => {
     setLoading(true);
     try {
-      const data = await politicalApiService.getPiDashboard(userId, stateId);
+      const data = await politicalApiService.getPiDashboard(userId, stateId, districtId || undefined);
       setDashboard(data);
     } catch (e: any) {
       flash(e.message || "Could not load dashboard", true);
@@ -172,8 +177,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   }, [stateId, userId]);
 
   const filteredPcs = useMemo(() => {
+    if (!districtId) return [];
     const inState = parliaments.filter((p) => !p.stateId || String(p.stateId).toUpperCase() === String(stateId).toUpperCase());
-    if (!districtId) return inState;
     const district = districts.find((d) => d.id === districtId);
     const pcIds = new Set<string>(district?.parliamentConstituencyIds || []);
     if (!pcIds.size) {
@@ -184,17 +189,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         }
       });
     }
-    if (!pcIds.size) return inState;
+    if (!pcIds.size) return [];
     return inState.filter((p) => pcIds.has(p.id));
   }, [assemblies, districts, districtId, parliaments, stateId]);
 
   const filteredAcs = useMemo(() => {
-    let rows = assemblies;
-    if (districtId) {
-      const district = districts.find((d) => d.id === districtId);
-      const acIds = new Set(district?.assemblyConstituencyIds || []);
-      if (acIds.size) rows = rows.filter((a) => acIds.has(a.id));
-    }
+    if (!districtId) return [];
+    const district = districts.find((d) => d.id === districtId);
+    const acIds = new Set(district?.assemblyConstituencyIds || []);
+    let rows = acIds.size ? assemblies.filter((a) => acIds.has(a.id)) : [];
     if (pcId) {
       rows = rows.filter((a) => (a.parliamentConstituencyId || a.parliamentId) === pcId);
     }
@@ -386,6 +389,16 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
 
       {tab === "dashboard" && (
         <section className="space-y-4">
+          <StateDistrictBar
+            stateId={stateId}
+            setStateId={setStateId}
+            districtId={districtId}
+            setDistrictId={setDistrictId}
+            setPcId={setPcId}
+            setAcId={setAcId}
+            states={states}
+            districts={districts}
+          />
           {loading && !dashboard ? (
             <div className="p-8 text-center text-[#D4A24C] text-xs"><Loader2 className="w-4 h-4 inline animate-spin" /> Loading live metrics…</div>
           ) : !dashboard ? (
@@ -402,22 +415,72 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 <Kpi label="Recheck" value={dashboard.needsRecheck} />
                 <Kpi label="Verified %" value={dashboard.verificationPercent == null ? "—" : `${dashboard.verificationPercent}%`} />
               </div>
-              <p className="text-[11px] text-[#B9AF95]">Last collection: {dashboard.lastDataCollectionDate || "—"}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {(dashboard.districts || []).map((d) => (
-                  <button key={d.id} onClick={() => { setDistrictId(d.id); setTab("districts"); }} className={`text-left ${CARD}`}>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-[#F5EFE0]">{d.name}</span>
-                      <MapPin className="w-4 h-4 text-[#D4A24C]" />
-                    </div>
-                    <p className="text-sm text-[#D4A24C] mt-1">{d.constituenciesEntered}/{d.totalConstituencies} constituencies entered</p>
-                    <p className="text-[11px] text-[#B9AF95]">{d.verificationPercent == null ? "No accounts yet" : `${d.verificationPercent}% verified`} · {d.needsRecheck} recheck</p>
-                    <div className="mt-2 h-1.5 rounded bg-[#142B45]">
-                      <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${d.totalConstituencies ? (d.constituenciesEntered / d.totalConstituencies) * 100 : 0}%` }} />
-                    </div>
-                  </button>
-                ))}
+              <div className={CARD}>
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-2">
+                  <h2 className="text-sm font-bold text-[#F5EFE0]">Last collection</h2>
+                  <p className="text-[11px] text-[#B9AF95]">
+                    Latest in this {districtId ? "district" : "state"}: {(dashboard.lastDataCollectionDate || "").slice(0, 10) || "—"}
+                  </p>
+                </div>
+                {(dashboard.recentCollections || []).length === 0 ? (
+                  <EmptyState text="No collections yet for this state and district. Save a constituency, leader, or social account to see it here." />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs table-fixed">
+                      <thead>
+                        <tr className="text-[#D4A24C] text-left">
+                          <th className="py-1">Collected</th>
+                          <th>Type</th>
+                          <th>District</th>
+                          <th>Assembly</th>
+                          <th>Summary</th>
+                          <th>Entered by</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(dashboard.recentCollections || []).map((row: PiRecentCollection) => (
+                          <tr
+                            key={`${row.recordType}-${row.id}`}
+                            className="text-[#F5EFE0] border-t border-[#22405E] cursor-pointer hover:bg-[#131E2D]"
+                            onClick={() => {
+                              if (row.districtId) setDistrictId(row.districtId);
+                              if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
+                              setTab(row.recordType === "social" ? "social" : row.recordType === "leader" ? "leaders" : "constituencies");
+                            }}
+                          >
+                            <td className="py-1.5 break-words">{(row.collectedAt || "").slice(0, 10) || "—"}</td>
+                            <td className="break-words capitalize">{row.recordType || "—"}</td>
+                            <td className="break-words">{row.districtName || "—"}</td>
+                            <td className="break-words">{row.assemblyName || "—"}</td>
+                            <td className="break-words">{row.summary || "—"}</td>
+                            <td className="break-words">{row.enteredByName || "—"}</td>
+                            <td>
+                              <span className={`px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus || "—"}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
+              {selectedDistrictProgress && (
+                <button
+                  onClick={() => { setDistrictId(selectedDistrictProgress.id); setTab("districts"); }}
+                  className={`text-left ${CARD} w-full`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</span>
+                    <MapPin className="w-4 h-4 text-[#D4A24C]" />
+                  </div>
+                  <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} constituencies entered</p>
+                  <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.verificationPercent == null ? "No accounts yet" : `${selectedDistrictProgress.verificationPercent}% verified`} · {selectedDistrictProgress.needsRecheck} recheck</p>
+                  <div className="mt-2 h-1.5 rounded bg-[#142B45]">
+                    <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${selectedDistrictProgress.totalConstituencies ? (selectedDistrictProgress.constituenciesEntered / selectedDistrictProgress.totalConstituencies) * 100 : 0}%` }} />
+                  </div>
+                </button>
+              )}
             </>
           )}
         </section>
@@ -586,16 +649,34 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
 
       {tab === "districts" && (
         <section className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {(dashboard?.districts || []).map((d: PiDistrictProgress) => (
-              <button key={d.id} className={`text-left ${CARD}`} onClick={async () => setDistrictDetail(await politicalApiService.getPiDistrictDetail(userId, d.id))}>
-                <div className="font-bold text-[#F5EFE0]">{d.name}</div>
-                <p className="text-sm text-[#D4A24C]">{d.constituenciesEntered}/{d.totalConstituencies} entered · {d.constituenciesPending} pending</p>
-                <p className="text-[11px] text-[#B9AF95]">{d.totalLeaders} leaders · {d.totalAccounts} accounts · {d.verifiedAccounts} verified · {d.needsRecheck} recheck</p>
-                <p className="text-[11px] text-[#B9AF95]">Updated {d.lastUpdated ? String(d.lastUpdated).slice(0, 10) : "—"}</p>
-              </button>
-            ))}
-          </div>
+          <StateDistrictBar
+            stateId={stateId}
+            setStateId={setStateId}
+            districtId={districtId}
+            setDistrictId={(id) => {
+              setDistrictId(id);
+              setDistrictDetail(null);
+            }}
+            setPcId={setPcId}
+            setAcId={setAcId}
+            states={states}
+            districts={districts}
+          />
+          {!districtId ? (
+            <EmptyState text="Choose a state, then a district, to see progress for that district only." />
+          ) : selectedDistrictProgress ? (
+            <button
+              className={`text-left ${CARD} w-full`}
+              onClick={async () => setDistrictDetail(await politicalApiService.getPiDistrictDetail(userId, selectedDistrictProgress.id))}
+            >
+              <div className="font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</div>
+              <p className="text-sm text-[#D4A24C]">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} entered · {selectedDistrictProgress.constituenciesPending} pending</p>
+              <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.totalLeaders} leaders · {selectedDistrictProgress.totalAccounts} accounts · {selectedDistrictProgress.verifiedAccounts} verified · {selectedDistrictProgress.needsRecheck} recheck</p>
+              <p className="text-[11px] text-[#B9AF95]">Updated {selectedDistrictProgress.lastUpdated ? String(selectedDistrictProgress.lastUpdated).slice(0, 10) : "—"}</p>
+            </button>
+          ) : (
+            <EmptyState text="No progress yet for this district." />
+          )}
           {districtDetail && (
             <div className={CARD}>
               <h3 className="font-bold text-[#F5EFE0] mb-2">{districtDetail.district?.name} constituencies</h3>
@@ -812,6 +893,49 @@ function Field({ label, value, onChange, type = "text", required = false }: { la
   );
 }
 
+function StateDistrictBar(props: {
+  stateId: string; setStateId: (v: string) => void;
+  districtId: string; setDistrictId: (v: string) => void;
+  setPcId: (v: string) => void;
+  setAcId: (v: string) => void;
+  states: StateInfo[]; districts: any[];
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div>
+        <label className={LABEL}>State</label>
+        <select
+          className={INPUT}
+          value={props.stateId}
+          onChange={(e) => {
+            props.setStateId(e.target.value);
+            props.setDistrictId("");
+            props.setPcId("");
+            props.setAcId("");
+          }}
+        >
+          {props.states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className={LABEL}>District</label>
+        <select
+          className={INPUT}
+          value={props.districtId}
+          onChange={(e) => {
+            props.setDistrictId(e.target.value);
+            props.setPcId("");
+            props.setAcId("");
+          }}
+        >
+          <option value="">All districts in this state</option>
+          {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function GeoFilters(props: {
   stateId: string; setStateId: (v: string) => void;
   districtId: string; setDistrictId: (v: string) => void;
@@ -836,16 +960,26 @@ function GeoFilters(props: {
       </div>
       <div>
         <label className={LABEL}>Parliament constituency</label>
-        <select className={INPUT} value={props.pcId} onChange={(e) => { props.setPcId(e.target.value); props.setAcId(""); }}>
-          <option value="">Select PC</option>
-          {props.pcs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <select
+          className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
+          value={props.districtId ? props.pcId : ""}
+          disabled={!props.districtId}
+          onChange={(e) => { props.setPcId(e.target.value); props.setAcId(""); }}
+        >
+          <option value="">{props.districtId ? "Select PC" : "Select district first"}</option>
+          {props.districtId ? props.pcs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>) : null}
         </select>
       </div>
       <div>
         <label className={LABEL}>Assembly constituency</label>
-        <select className={INPUT} value={props.acId} onChange={(e) => props.setAcId(e.target.value)}>
-          <option value="">Select AC</option>
-          {props.acs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>)}
+        <select
+          className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
+          value={props.districtId ? props.acId : ""}
+          disabled={!props.districtId}
+          onChange={(e) => props.setAcId(e.target.value)}
+        >
+          <option value="">{props.districtId ? "Select AC" : "Select district first"}</option>
+          {props.districtId ? props.acs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>) : null}
         </select>
       </div>
     </div>

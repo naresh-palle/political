@@ -189,6 +189,90 @@ async def _resolved_districts(state_id: Optional[str] = None) -> Tuple[List[Dict
     )
 
 
+def _collected_at(doc: Dict[str, Any]) -> str:
+    return str(doc.get("dataCollectionDate") or doc.get("updatedAt") or doc.get("createdAt") or "")
+
+
+def recent_collection_rows(
+    stats: List[Dict[str, Any]],
+    persons: List[Dict[str, Any]],
+    accounts: List[Dict[str, Any]],
+    district_names: Dict[str, str],
+    assembly_names: Dict[str, str],
+    limit: int = 25,
+) -> List[Dict[str, Any]]:
+    """Newest constituency, leader, and social saves for the Data Entry Dashboard."""
+    rows: List[Dict[str, Any]] = []
+    person_by_id = {p.get("id"): p for p in persons if p.get("id")}
+
+    def _geo(doc: Dict[str, Any], fallback: Optional[Dict[str, Any]] = None) -> Tuple[str, str, str, str]:
+        src = doc if doc.get("districtId") or doc.get("assemblyConstituencyId") else (fallback or {})
+        district_id = str(src.get("districtId") or doc.get("districtId") or "")
+        ac_id = str(src.get("assemblyConstituencyId") or doc.get("assemblyConstituencyId") or "")
+        return (
+            str(src.get("stateId") or doc.get("stateId") or ""),
+            district_id,
+            district_names.get(district_id) or district_id or "—",
+            src.get("assemblyName") or assembly_names.get(ac_id) or ac_id or "—",
+        )
+
+    for stat in stats:
+        state_id, district_id, district_name, assembly_name = _geo(stat)
+        rows.append(
+            {
+                "id": stat.get("id"),
+                "recordType": "constituency",
+                "collectedAt": _collected_at(stat),
+                "stateId": state_id,
+                "districtId": district_id,
+                "districtName": district_name,
+                "assemblyConstituencyId": stat.get("assemblyConstituencyId"),
+                "assemblyName": assembly_name,
+                "summary": assembly_name,
+                "enteredByName": stat.get("enteredByName") or "—",
+                "verificationStatus": stat.get("verificationStatus") or "—",
+            }
+        )
+    for person in persons:
+        state_id, district_id, district_name, assembly_name = _geo(person)
+        rows.append(
+            {
+                "id": person.get("id"),
+                "recordType": "leader",
+                "collectedAt": _collected_at(person),
+                "stateId": state_id,
+                "districtId": district_id,
+                "districtName": district_name,
+                "assemblyConstituencyId": person.get("assemblyConstituencyId"),
+                "assemblyName": assembly_name,
+                "summary": person.get("name") or "Leader",
+                "enteredByName": person.get("enteredByName") or "—",
+                "verificationStatus": person.get("verificationStatus") or "—",
+            }
+        )
+    for account in accounts:
+        person = person_by_id.get(account.get("personId")) or {}
+        state_id, district_id, district_name, assembly_name = _geo(account, person)
+        platform = str(account.get("platform") or "social")
+        rows.append(
+            {
+                "id": account.get("id"),
+                "recordType": "social",
+                "collectedAt": _collected_at(account),
+                "stateId": state_id,
+                "districtId": district_id,
+                "districtName": district_name,
+                "assemblyConstituencyId": person.get("assemblyConstituencyId") or account.get("assemblyConstituencyId"),
+                "assemblyName": assembly_name,
+                "summary": f"{person.get('name') or 'Account'} · {platform}",
+                "enteredByName": account.get("enteredByName") or person.get("enteredByName") or "—",
+                "verificationStatus": account.get("verificationStatus") or "—",
+            }
+        )
+    rows.sort(key=lambda row: row.get("collectedAt") or "", reverse=True)
+    return rows[:limit]
+
+
 def register_pi_routes(api_router) -> None:
     @api_router.get("/geography/districts")
     async def get_districts(stateId: Optional[str] = None, userId: Optional[str] = None):
@@ -228,7 +312,11 @@ def register_pi_routes(api_router) -> None:
         }
 
     @api_router.get("/pi/dashboard")
-    async def pi_dashboard(userId: Optional[str] = None, stateId: Optional[str] = None):
+    async def pi_dashboard(
+        userId: Optional[str] = None,
+        stateId: Optional[str] = None,
+        districtId: Optional[str] = None,
+    ):
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
         _require(caps, "view")
@@ -239,17 +327,40 @@ def register_pi_routes(api_router) -> None:
         if stateId:
             maps = [m for m in maps if str(m.get("stateId") or "").upper() == stateId.upper()]
         persons = [p for p in await _list("political_persons") if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
+        if stateId:
+            persons = [p for p in persons if str(p.get("stateId") or "").upper() == stateId.upper()]
         accounts = await _list("social_media_accounts")
         person_ids = {p.get("id") for p in persons}
         accounts = [a for a in accounts if a.get("personId") in person_ids]
+        catalog, catalog_maps = await _resolved_districts(stateId)
+        if not maps:
+            maps = catalog_maps
+        if districtId:
+            district = next((d for d in catalog if d.get("id") == districtId), None)
+            ac_ids = set((district or {}).get("assemblyConstituencyIds") or [])
+            if not ac_ids:
+                ac_ids = {m.get("assemblyConstituencyId") for m in maps if m.get("districtId") == districtId}
+            stats = [s for s in stats if s.get("districtId") == districtId or s.get("assemblyConstituencyId") in ac_ids]
+            persons = [p for p in persons if p.get("districtId") == districtId or p.get("assemblyConstituencyId") in ac_ids]
+            person_ids = {p.get("id") for p in persons}
+            accounts = [a for a in accounts if a.get("personId") in person_ids]
+            maps = [m for m in maps if m.get("districtId") == districtId or m.get("assemblyConstituencyId") in ac_ids]
         verified = [a for a in accounts if a.get("verificationStatus") == "VERIFIED"]
         pending = [a for a in accounts if a.get("verificationStatus") == "PENDING"]
         recheck = [a for a in accounts if a.get("verificationStatus") == "NEEDS_RECHECK"]
-        total_ac = len({m.get("assemblyConstituencyId") for m in maps}) or len({s.get("assemblyConstituencyId") for s in stats})
-        entered = len({s.get("assemblyConstituencyId") for s in stats})
-        last_dates = [s.get("dataCollectionDate") or s.get("updatedAt") for s in stats if s.get("dataCollectionDate") or s.get("updatedAt")]
+        total_ac = len({m.get("assemblyConstituencyId") for m in maps if m.get("assemblyConstituencyId")}) or len(
+            {s.get("assemblyConstituencyId") for s in stats if s.get("assemblyConstituencyId")}
+        )
+        entered = len({s.get("assemblyConstituencyId") for s in stats if s.get("assemblyConstituencyId")})
+        last_dates = [_collected_at(s) for s in stats if _collected_at(s)]
         last_dates.sort()
         districts = await _district_progress_rows(caps, stateId)
+        if districtId:
+            districts = [d for d in districts if d.get("id") == districtId]
+        district_names = {d.get("id"): d.get("name") for d in catalog if d.get("id")}
+        geo = await _geo_lookups()
+        assembly_names = {a.get("id"): a.get("name") for a in (geo.get("assembly_rows") or []) if a.get("id")}
+        recent = recent_collection_rows(stats, persons, accounts, district_names, assembly_names)
         return {
             "totalConstituencies": total_ac,
             "constituenciesEntered": entered,
@@ -261,6 +372,9 @@ def register_pi_routes(api_router) -> None:
             "verificationPercent": round((len(verified) / len(accounts)) * 100, 1) if accounts else None,
             "lastDataCollectionDate": last_dates[-1] if last_dates else None,
             "districts": districts,
+            "recentCollections": recent,
+            "stateId": stateId,
+            "districtId": districtId,
         }
 
     async def _district_progress_rows(caps, state_id=None):

@@ -662,6 +662,20 @@ export interface PiDistrictProgress {
   lastUpdated?: string | null;
 }
 
+export interface PiRecentCollection {
+  id?: string;
+  recordType: "constituency" | "leader" | "social" | string;
+  collectedAt?: string | null;
+  stateId?: string;
+  districtId?: string;
+  districtName?: string;
+  assemblyConstituencyId?: string;
+  assemblyName?: string;
+  summary?: string;
+  enteredByName?: string;
+  verificationStatus?: string;
+}
+
 export interface PiDashboard {
   totalConstituencies: number;
   constituenciesEntered: number;
@@ -673,5 +687,8 @@ export interface PiDashboard {
   verificationPercent: number | null;
   lastDataCollectionDate?: string | null;
   districts: PiDistrictProgress[];
+  recentCollections?: PiRecentCollection[];
+  stateId?: string | null;
+  districtId?: string | null;
 }
 
