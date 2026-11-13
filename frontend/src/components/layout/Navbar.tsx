@@ -22,12 +22,13 @@ import {
   Bell,
   MapPin,
   ClipboardList,
-  Edit3
+  Edit3,
+  BarChart3
 } from "lucide-react";
 
 interface NavbarProps {
-  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets";
-  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets") => void;
+  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel";
+  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel") => void;
   isAuditView?: boolean;
   onResetToSelect?: () => void;
   currentProfile: UserProfile;
@@ -248,6 +249,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Users2 className="w-3.5 h-3.5" />
               <span>Contact Database</span>
+            </button>
+
+            <button
+              onClick={() => {
+                window.location.hash = "#/intel";
+                onProductChange("intel");
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeProduct === "intel"
+                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
+                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>Political Intelligence</span>
             </button>
 
             {isPoliticalAdmin && (
@@ -479,6 +495,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Contact Database
+          </button>
+
+          <button
+            onClick={() => {
+              window.location.hash = "#/intel";
+              onProductChange("intel");
+            }}
+            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+              activeProduct === "intel" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
+            }`}
+          >
+            Political Intelligence
           </button>
 
           {isPoliticalAdmin && (

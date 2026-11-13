@@ -30,6 +30,7 @@ const VolunteerMonitoring = lazy(() => import("./components/volunteers/Volunteer
 const CampaignWebsiteGenerator = lazy(() => import("./components/webbuilder/CampaignWebsiteGenerator").then(m => ({ default: m.CampaignWebsiteGenerator })));
 const RoleManagement = lazy(() => import("./components/governance/RoleManagement").then(m => ({ default: m.RoleManagement })));
 const ContactDatabase = lazy(() => import("./components/contacts/ContactDatabase").then(m => ({ default: m.ContactDatabase })));
+const PoliticalIntelligence = lazy(() => import("./components/intel/PoliticalIntelligence").then(m => ({ default: m.PoliticalIntelligence })));
 const ExportModal = lazy(() => import("./components/audit/ExportModal").then(m => ({ default: m.ExportModal })));
 
 import { OfficerTicketPortal } from "./components/fieldops/OfficerTicketPortal";
@@ -38,7 +39,7 @@ const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
 const PRODUCT_STORAGE_KEY = "leaders_lens_active_product";
 
-type ActiveProductType = "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets";
+type ActiveProductType = "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel";
 
 const PRODUCT_TO_HASH_MAP: Record<ActiveProductType, string> = {
   fieldops: "#/field-ops",
@@ -48,6 +49,7 @@ const PRODUCT_TO_HASH_MAP: Record<ActiveProductType, string> = {
   webbuilder: "#/web-builder",
   governance: "#/user-management",
   contacts: "#/contacts",
+  intel: "#/intel",
   pitch: "#/audit-pitch"
 };
 
@@ -63,6 +65,9 @@ const HASH_TO_PRODUCT_MAP: Record<string, ActiveProductType> = {
   "#/governance": "governance",
   "#/user-management": "governance",
   "#/contacts": "contacts",
+  "#/intel": "intel",
+  "#/political-intelligence": "intel",
+  "#/pi": "intel",
   "#/audit-pitch": "pitch",
   "#/pitch": "pitch"
 };
@@ -186,7 +191,7 @@ function AppInner() {
       const savedProduct = localStorage.getItem(PRODUCT_STORAGE_KEY);
       if (
         savedProduct &&
-        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts", "assigntickets"].includes(savedProduct)
+        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts", "assigntickets", "intel"].includes(savedProduct)
       ) {
         return savedProduct as ActiveProductType;
       }
@@ -275,6 +280,7 @@ function AppInner() {
         webbuilder: "Campaign Web Builder | Leaders Lens",
         governance: "User & Role Governance | Leaders Lens",
         contacts: "Contact Database | Leaders Lens",
+        intel: "Political Intelligence | Leaders Lens",
         pitch: "Audit & Strategy Command | Leaders Lens"
       };
       document.title = titles[activeProduct] || "Leaders Lens";
@@ -309,20 +315,24 @@ function AppInner() {
   // - Manager: Home (fieldops), Assign Tickets, Contact Database (no Squad Volunteer / governance)
   // - Volunteer: Home (fieldops), Contact Database — Add Complaint and status counts on Home, no ticket grid/table
   useEffect(() => {
-    if (isVolunteer && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
+    if (isVolunteer && !["fieldops", "grievances", "contacts", "intel"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-      if (!window.location.hash.toLowerCase().includes("field-ops") && !window.location.hash.toLowerCase().includes("contact")) {
+      if (
+        !window.location.hash.toLowerCase().includes("field-ops") &&
+        !window.location.hash.toLowerCase().includes("contact") &&
+        !window.location.hash.toLowerCase().includes("intel")
+      ) {
         window.location.hash = "#/field-ops";
       }
-    } else if (isPoliticalAdmin && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
+    } else if (isPoliticalAdmin && !["fieldops", "assigntickets", "grievances", "governance", "contacts", "intel"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if (isDirector && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
+    } else if (isDirector && !["fieldops", "assigntickets", "grievances", "contacts", "intel"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -334,16 +344,16 @@ function AppInner() {
     }
   }, [isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
-  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets") => {
+  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel") => {
     let targetProduct = product;
     if (isVolunteer) {
-      targetProduct = ["fieldops", "grievances", "contacts"].includes(product) ? product : "fieldops";
+      targetProduct = ["fieldops", "grievances", "contacts", "intel"].includes(product) ? product : "fieldops";
     } else if (isPoliticalAdmin) {
-      targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts", "intel"].includes(product) ? "fieldops" : product;
     } else if (isDirector) {
-      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts", "intel"].includes(product) ? "fieldops" : product;
     } else if (!isPlatformAdmin) {
-      targetProduct = ["contacts", "fieldops", "assigntickets", "grievances"].includes(product) ? product : "fieldops";
+      targetProduct = ["contacts", "fieldops", "assigntickets", "grievances", "intel"].includes(product) ? product : "fieldops";
     }
     setActiveProduct(targetProduct);
     try {
@@ -385,17 +395,17 @@ function AppInner() {
         : "DIRECTOR"
     );
 
-    if (userRole === "VOLUNTEER" && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
+    if (userRole === "VOLUNTEER" && !["fieldops", "grievances", "contacts", "intel"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if (userRole === "POLITICAL_ADMIN" && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
+    } else if (userRole === "POLITICAL_ADMIN" && !["fieldops", "assigntickets", "grievances", "governance", "contacts", "intel"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if (userRole === "DIRECTOR" && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
+    } else if (userRole === "DIRECTOR" && !["fieldops", "assigntickets", "grievances", "contacts", "intel"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -575,6 +585,10 @@ function AppInner() {
                 {/* Module 7: CONSTITUENCY CONTACT DATABASE & CITIZEN DIRECTORY */}
                 {activeProduct === "contacts" && (
                   <ContactDatabase currentUser={currentProfile} />
+                )}
+
+                {activeProduct === "intel" && (
+                  <PoliticalIntelligence currentUser={currentProfile} />
                 )}
 
                 {/* PDF Export Modal */}

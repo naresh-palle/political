@@ -2132,5 +2132,98 @@ export const politicalApiService = {
       // Fallback
     }
     return [];
+  },
+
+  async piRequest(path: string, userId: string, options: RequestInit = {}, timeoutMs = 12000): Promise<any> {
+    const joiner = path.includes("?") ? "&" : "?";
+    const url = `${RENDER_BACKEND_URL}${path}${joiner}userId=${encodeURIComponent(userId)}`;
+    const res = await fetchWithTimeout(url, {
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      ...options
+    }, timeoutMs);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.detail || data?.message || `Request failed (${res.status})`);
+    }
+    return data;
+  },
+
+  getPiDashboard(userId: string, stateId?: string) {
+    const q = stateId ? `?stateId=${encodeURIComponent(stateId)}` : "";
+    return this.piRequest(`/pi/dashboard${q}`, userId);
+  },
+  getPiDistricts(userId: string, stateId?: string) {
+    const q = stateId ? `?stateId=${encodeURIComponent(stateId)}` : "";
+    return this.piRequest(`/geography/districts${q}`, userId);
+  },
+  getPiDistrictAssemblies(userId: string, districtId: string) {
+    return this.piRequest(`/geography/districts/${encodeURIComponent(districtId)}/assemblies`, userId);
+  },
+  getPiDistrictDetail(userId: string, districtId: string) {
+    return this.piRequest(`/pi/districts/${encodeURIComponent(districtId)}`, userId);
+  },
+  getPiConstituencies(userId: string, params: Record<string, string | number | undefined> = {}) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== "") q.set(k, String(v));
+    });
+    return this.piRequest(`/pi/constituencies?${q.toString()}`, userId);
+  },
+  savePiConstituency(userId: string, payload: any) {
+    return this.piRequest("/pi/constituencies", userId, { method: "POST", body: JSON.stringify(payload) });
+  },
+  getPiLeaders(userId: string, params: Record<string, string | number | undefined> = {}) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== "") q.set(k, String(v));
+    });
+    return this.piRequest(`/pi/leaders?${q.toString()}`, userId);
+  },
+  savePiLeader(userId: string, payload: any) {
+    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) });
+  },
+  getPiAccounts(userId: string, params: Record<string, string | number | undefined> = {}) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== "") q.set(k, String(v));
+    });
+    return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId);
+  },
+  savePiAccount(userId: string, payload: any) {
+    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) });
+  },
+  getPiSnapshots(userId: string, accountId: string) {
+    return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}/snapshots`, userId);
+  },
+  getPiQueue(userId: string, status = "PENDING") {
+    return this.piRequest(`/pi/verification-queue?status=${encodeURIComponent(status)}`, userId);
+  },
+  verifyPiRecord(userId: string, recordType: string, recordId: string, payload: any) {
+    return this.piRequest(`/pi/verification/${encodeURIComponent(recordType)}/${encodeURIComponent(recordId)}`, userId, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  getPiIntelligence(userId: string, params: Record<string, string | undefined> = {}) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v) q.set(k, v);
+    });
+    return this.piRequest(`/pi/intelligence?${q.toString()}`, userId);
+  },
+  previewPiImport(userId: string, csv: string) {
+    return this.piRequest("/pi/import/preview", userId, { method: "POST", body: JSON.stringify({ csv }) });
+  },
+  confirmPiImport(userId: string, csv: string) {
+    return this.piRequest("/pi/import/confirm", userId, { method: "POST", body: JSON.stringify({ csv }) });
+  },
+  getPiImportTemplate(userId: string) {
+    return this.piRequest("/pi/import/template", userId);
+  },
+  getPiContacts(userId: string) {
+    return this.piRequest("/pi/contacts", userId);
+  },
+  seedPiSample(userId: string) {
+    return this.piRequest("/pi/seed-sample?confirm=SAMPLE", userId, { method: "POST" });
   }
 };

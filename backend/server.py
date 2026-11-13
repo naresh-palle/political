@@ -91,6 +91,7 @@ try:
         normalize_phone as normalize_otp_phone,
     )
     from services.officer_otp import IN_MEMORY_OFFICER_OTPS
+    from services.pi_api import register_pi_routes
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
     from backend.services.officer_status_workflow import (
@@ -136,6 +137,7 @@ except ImportError:
         normalize_phone as normalize_otp_phone,
     )
     from backend.services.officer_otp import IN_MEMORY_OFFICER_OTPS
+    from backend.services.pi_api import register_pi_routes
 
 mongo_url = (
     os.environ.get("MONGO_URL")
@@ -2365,6 +2367,13 @@ async def trigger_geography_seed():
         await db.users.create_index("directorId")
         await db.users.create_index("assemblyConstituencyId")
         await db.work_updates.create_index("id", unique=True)
+        await db.constituency_statistics.create_index("assemblyConstituencyId", unique=True)
+        await db.political_persons.create_index([("normalizedName", 1), ("assemblyConstituencyId", 1)])
+        await db.social_media_accounts.create_index("identityKey")
+        await db.social_media_accounts.create_index("normalizedUrl")
+        await db.social_media_snapshots.create_index([("accountId", 1), ("collectionDate", 1)])
+        await db.assembly_district_map.create_index("assemblyConstituencyId")
+        await db.constituency_contacts.create_index("politicalPersonId")
 
         await db.countries.update_one({"id": "IND"}, {"$set": {"id": "IND", "name": "India", "code": "IND"}}, upsert=True)
 
@@ -3316,6 +3325,8 @@ async def create_field_notification(payload: dict):
         IN_MEMORY_NOTIFICATIONS.insert(0, sanitize_doc(doc))
     return sanitize_doc(doc)
 
+register_pi_routes(api_router)
+
 # Include router
 app.include_router(api_router)
 
@@ -3363,6 +3374,19 @@ async def startup_db_seed():
         await apply_demo_display_name_fixes()
         await refresh_live_officer_ticket_seeds()
         await purge_mock_audit_logs()
+        try:
+            existing_pi = await db.constituency_statistics.count_documents({})
+            if existing_pi == 0:
+                from services.pi_api import _persist_sample as persist_pi_sample
+                await persist_pi_sample()
+                logger.info("Political Intelligence SAMPLE records seeded (empty collection).")
+        except ImportError:
+            from backend.services.pi_api import _persist_sample as persist_pi_sample
+            existing_pi = await db.constituency_statistics.count_documents({})
+            if existing_pi == 0:
+                await persist_pi_sample()
+        except Exception as pi_exc:
+            log_mongo_notice("pi sample seed", pi_exc)
     except Exception as e:
         log_mongo_notice("startup seed", e)
 

@@ -639,3 +639,39 @@ export interface NotificationAuditRecord {
   messageContent: string;
 }
 
+export type PiAccountStatus =
+  | "PENDING"
+  | "VERIFIED"
+  | "NEEDS_RECHECK"
+  | "REJECTED"
+  | "NO_ACCOUNT"
+  | "INACTIVE";
+
+export interface PiDistrictProgress {
+  id: string;
+  name: string;
+  stateId?: string;
+  totalConstituencies: number;
+  constituenciesEntered: number;
+  constituenciesPending: number;
+  totalLeaders: number;
+  totalAccounts: number;
+  verifiedAccounts: number;
+  needsRecheck: number;
+  verificationPercent: number | null;
+  lastUpdated?: string | null;
+}
+
+export interface PiDashboard {
+  totalConstituencies: number;
+  constituenciesEntered: number;
+  totalLeaders: number;
+  totalSocialAccounts: number;
+  verifiedAccounts: number;
+  pendingVerification: number;
+  needsRecheck: number;
+  verificationPercent: number | null;
+  lastDataCollectionDate?: string | null;
+  districts: PiDistrictProgress[];
+}
+

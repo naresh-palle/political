@@ -216,6 +216,42 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
   }, []);
 
   useEffect(() => {
+    politicalApiService
+      .getPiContacts(currentUser.id)
+      .then((rows) => {
+        if (!Array.isArray(rows) || rows.length === 0) return;
+        setContacts((prev) => {
+          const byId = new Map(prev.map((c) => [c.id, c]));
+          let changed = false;
+          for (const row of rows) {
+            const id = String(row?.id || "");
+            if (!id || byId.has(id)) continue;
+            byId.set(id, {
+              id,
+              name: row.name || "Political leader",
+              phone: row.phone || "",
+              email: row.email,
+              category: row.category === "PARTY_LEADER" ? "PARTY_LEADER" : "INFLUENCER",
+              designation: row.designation || "Political leader",
+              mandalId: row.mandalId || "",
+              mandalName: row.mandalName || "",
+              villageId: row.villageId || "",
+              villageName: row.villageName || "",
+              gender: row.gender === "Male" || row.gender === "Female" ? row.gender : "Other",
+              politicalAlignment: "NEUTRAL_LEANING",
+              occupation: row.occupation || "Political leader",
+              grievanceCount: 0,
+              notes: row.notes || "Linked from Political Intelligence. Existing contact details were preserved."
+            });
+            changed = true;
+          }
+          return changed ? Array.from(byId.values()) : prev;
+        });
+      })
+      .catch(() => {});
+  }, [currentUser.id]);
+
+  useEffect(() => {
     const acId = currentUser.assemblyConstituencyId || "BNG-AC";
     Promise.all([
       politicalApiService.getMandals(acId, currentUser.stateId || undefined),
