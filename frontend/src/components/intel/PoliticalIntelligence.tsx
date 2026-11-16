@@ -48,6 +48,36 @@ const ROLES = [
 
 const PLATFORMS = ["facebook", "instagram", "x", "youtube"] as const;
 const STATUSES = ["PENDING", "VERIFIED", "NEEDS_RECHECK", "REJECTED", "NO_ACCOUNT", "INACTIVE"];
+const PLATFORM_LABEL: Record<(typeof PLATFORMS)[number], string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  x: "X",
+  youtube: "YouTube"
+};
+
+type PlatformDraft = {
+  hasAccount: "" | "yes" | "no";
+  verified: "" | "yes" | "no";
+  followers: string;
+  profileUrl: string;
+};
+
+function emptyPlatformDrafts(): Record<(typeof PLATFORMS)[number], PlatformDraft> {
+  return {
+    facebook: { hasAccount: "", verified: "", followers: "", profileUrl: "" },
+    instagram: { hasAccount: "", verified: "", followers: "", profileUrl: "" },
+    x: { hasAccount: "", verified: "", followers: "", profileUrl: "" },
+    youtube: { hasAccount: "", verified: "", followers: "", profileUrl: "" }
+  };
+}
+
+function todayIsoDate() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 const CARD = `rounded-xl p-3 border ${UNIQUE_TICKET_SURFACE.kpi}`;
 const INPUT =
@@ -92,10 +122,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [districtId, setDistrictId] = useState("");
   const [pcId, setPcId] = useState("");
   const [acId, setAcId] = useState("");
-  const [constForm, setConstForm] = useState<any>({});
+  const [constForm, setConstForm] = useState<any>({
+    enteredByName: currentUser.name || "",
+    dataCollectionDate: todayIsoDate()
+  });
   const [constRows, setConstRows] = useState<any[]>([]);
   const [leaderForm, setLeaderForm] = useState<any>({ politicalRole: "MLA", currentFormerStatus: "CURRENT", partyId: "TDP" });
   const [leaders, setLeaders] = useState<any[]>([]);
+  const [platformDrafts, setPlatformDrafts] = useState<Record<(typeof PLATFORMS)[number], PlatformDraft>>(emptyPlatformDrafts);
+  const [activePlatform, setActivePlatform] = useState<(typeof PLATFORMS)[number]>("facebook");
   const [socialForm, setSocialForm] = useState<any>({ platform: "facebook", verificationStatus: "PENDING" });
   const [accounts, setAccounts] = useState<any[]>([]);
   const [queue, setQueue] = useState<any[]>([]);
@@ -256,8 +291,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     e.preventDefault();
     e.stopPropagation();
     if (saving) return;
-    if (!acId) {
-      flash("Select an assembly constituency.", true);
+    if (!districtId || !acId) {
+      flash("Select district and constituency.", true);
+      return;
+    }
+    if (!String(constForm.enteredByName || "").trim()) {
+      flash("Enter who collected this constituency.", true);
       return;
     }
     setSaving("constituency");
@@ -275,12 +314,14 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         estimatedFacebookUsers: num(constForm.estimatedFacebookUsers),
         estimatedInstagramUsers: num(constForm.estimatedInstagramUsers),
         estimatedXUsers: num(constForm.estimatedXUsers),
-        estimatedYouTubeUsers: num(constForm.estimatedYouTubeUsers)
+        estimatedYouTubeUsers: num(constForm.estimatedYouTubeUsers),
+        enteredByName: String(constForm.enteredByName || "").trim(),
+        dataCollectionDate: constForm.dataCollectionDate || todayIsoDate()
       });
-      flash("Constituency record saved.");
+      flash("Saved ✓ Enter the next constituency.");
       await loadConstituencies();
       await refreshDashboard();
-      setEntryGroup("leaders");
+      setEntryGroup("constituency");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
@@ -300,18 +341,51 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       flash("Enter the leader name and party.", true);
       return;
     }
+    for (const platform of PLATFORMS) {
+      const draft = platformDrafts[platform];
+      if (draft.hasAccount === "yes" && !String(draft.profileUrl || "").trim()) {
+        flash(`Add a profile link for ${PLATFORM_LABEL[platform]}.`, true);
+        return;
+      }
+    }
     setSaving("leader");
     try {
-      await politicalApiService.savePiLeader(userId, {
+      const saved = await politicalApiService.savePiLeader(userId, {
         ...leaderForm,
         stateId,
         districtId,
         parliamentConstituencyId: pcId,
         assemblyConstituencyId: acId
       });
+      const personId = saved?.id;
+      if (personId) {
+        const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
+        for (const platform of PLATFORMS) {
+          const draft = platformDrafts[platform];
+          if (!draft.hasAccount) continue;
+          const existing = accounts.find(
+            (row) => row.personId === personId && String(row.platform || "").toLowerCase() === platform
+          );
+          await politicalApiService.savePiAccount(userId, {
+            id: existing?.id,
+            personId,
+            platform,
+            partyId: leaderForm.partyId,
+            profileUrl: draft.hasAccount === "yes" ? String(draft.profileUrl || "").trim() : "",
+            followers: draft.hasAccount === "yes" ? num(draft.followers) : undefined,
+            verificationStatus: draft.hasAccount === "no" ? "NO_ACCOUNT" : draft.verified === "yes" ? "VERIFIED" : "PENDING"
+          });
+        }
+      }
       flash("Leader saved.");
       await loadLeaders();
-      setEntryGroup("social");
+      await loadAccounts();
+      if (!leaderForm.id) {
+        setLeaderForm({ politicalRole: "MLA", currentFormerStatus: "CURRENT", partyId: leaderForm.partyId });
+        setPlatformDrafts(emptyPlatformDrafts());
+        setActivePlatform("facebook");
+      }
+      setEntryGroup("leaders");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
@@ -359,6 +433,50 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     }
   };
 
+  const applyLeaderAccounts = (personId: string, accountRows: any[] = accounts) => {
+    const next = emptyPlatformDrafts();
+    accountRows.filter((row) => row.personId === personId).forEach((row) => {
+      const platform = String(row.platform || "").toLowerCase() as (typeof PLATFORMS)[number];
+      if (!PLATFORMS.includes(platform)) return;
+      const noAccount = row.verificationStatus === "NO_ACCOUNT" || row.noAccount;
+      next[platform] = {
+        hasAccount: noAccount ? "no" : "yes",
+        verified: row.verificationStatus === "VERIFIED" ? "yes" : "no",
+        followers: row.followers != null ? String(row.followers) : "",
+        profileUrl: noAccount ? "" : row.profileUrl || ""
+      };
+    });
+    setPlatformDrafts(next);
+  };
+
+  const downloadSavedExcel = () => {
+    const header = ["Constituency", "District", "Voters", "Leaders", "Collected by", "Date", "Status"];
+    const lines = [
+      header.join(","),
+      ...constRows.map((row) =>
+        [
+          row.assemblyName || row.assemblyConstituencyId || "",
+          row.districtName || selectedDistrictName || "",
+          row.totalVoters ?? "",
+          row.leaderCount ?? leaders.filter((l) => l.assemblyConstituencyId === row.assemblyConstituencyId).length,
+          row.enteredByName || "",
+          (row.dataCollectionDate || "").slice(0, 10),
+          row.verificationStatus || ""
+        ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
+      )
+    ];
+    const blob = new Blob([`\uFEFF${lines.join("\n")}`], { type: "application/vnd.ms-excel;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `leaderlens-constituencies-${todayIsoDate()}.xls`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const setPlatformField = (platform: (typeof PLATFORMS)[number], field: keyof PlatformDraft, value: string) => {
+    setPlatformDrafts((prev) => ({ ...prev, [platform]: { ...prev[platform], [field]: value } }));
+  };
+
   const downloadTemplate = () => {
     const csv = `recordType,stateId,districtId,parliamentConstituencyId,assemblyConstituencyId,totalVoters,ruralPercent,estimatedFacebookUsers,estimatedInstagramUsers,estimatedXUsers,estimatedYouTubeUsers,dataCollectionDate,dataSource,remarks,leaderName,partyId,politicalRole,currentFormerStatus,platform,profileUrl,accountIdentifier,followers,postsLast30Days,avgLikesLast10,avgCommentsLast10,avgViewsLast10
 constituency,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,234100,62,48000,22000,9000,15000,2026-11-01,FIELD_SURVEY,Estimates only,,,,,,,,,,
@@ -373,9 +491,14 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4A24C] font-bold">Political Intelligence</p>
-          <h1 className="text-2xl font-display text-[#F5EFE0]">Constituency data collection</h1>
+          <h1 className="text-2xl font-display text-[#F5EFE0]">
+            {tab === "constituencies" ? "Constituency Data Form" : "Constituency data collection"}
+          </h1>
+          {tab === "constituencies" && (
+            <p className="text-sm text-[#B9AF95] mt-1">Fill one constituency at a time. Takes about 10 minutes.</p>
+          )}
         </div>
         {isSuper && (
           <button
@@ -519,20 +642,25 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
       {tab === "constituencies" && (
         <section className="space-y-4">
           <div className={CARD}>
-            <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency</h2>
-            <p className="text-[11px] text-[#B9AF95] mt-1">
-              {selectedAssemblyName
-                ? `${selectedAssemblyName}${selectedDistrictName ? ` · ${selectedDistrictName}` : ""}`
-                : "Select district, parliament, and assembly."}
-            </p>
-            <div className="mt-3">
+            <h2 className="text-sm font-bold text-[#F5EFE0]">1 · Constituency</h2>
+            {selectedAssemblyName ? (
+              <p className="text-[11px] text-[#B9AF95] mt-1">
+                {selectedAssemblyName}{selectedDistrictName ? ` · ${selectedDistrictName}` : ""}
+              </p>
+            ) : null}
+            <div className="mt-3 space-y-2">
               <GeoFilters
                 stateId={stateId} setStateId={setStateId}
                 districtId={districtId} setDistrictId={setDistrictId}
                 pcId={pcId} setPcId={setPcId}
                 acId={acId} setAcId={setAcId}
                 states={states} districts={districts} pcs={filteredPcs} acs={filteredAcs}
+                markRequired
               />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Field label="Collected by *" value={constForm.enteredByName || ""} onChange={(v) => setConstForm({ ...constForm, enteredByName: v })} />
+                <Field label="Date" type="date" value={constForm.dataCollectionDate || ""} onChange={(v) => setConstForm({ ...constForm, dataCollectionDate: v })} />
+              </div>
             </div>
           </div>
 
@@ -565,36 +693,46 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 <Field label="Est. X users" type="number" value={constForm.estimatedXUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedXUsers: v })} />
                 <Field label="Est. YouTube users" type="number" value={constForm.estimatedYouTubeUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedYouTubeUsers: v })} />
               </div>
-              <Field label="Data collection date" type="date" value={constForm.dataCollectionDate || ""} onChange={(v) => setConstForm({ ...constForm, dataCollectionDate: v })} />
               <Field label="Data source" value={constForm.dataSource || ""} onChange={(v) => setConstForm({ ...constForm, dataSource: v })} />
               <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
               <button type="submit" className={BTN} disabled={!!saving || !acId}>{saving === "constituency" ? "Saving…" : "Save constituency"}</button>
+              {ok && !error && ok.startsWith("Saved") && (
+                <p className="text-[11px] text-emerald-300">{ok}</p>
+              )}
             </form>
             <div className={CARD}>
-              <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Entered constituencies</h2>
+              <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Saved constituencies ({constRows.length})</h2>
               {constRows.length === 0 ? <EmptyState text="No constituency statistics for this filter." /> : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs table-fixed">
-                    <thead><tr className="text-[#D4A24C] text-left"><th className="py-1">Constituency</th><th>Voters</th><th>Status</th><th>Collected</th></tr></thead>
-                    <tbody>
-                      {constRows.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="text-[#F5EFE0] border-t border-[#22405E] cursor-pointer hover:bg-[#131E2D]"
-                          onClick={() => {
-                            if (row.districtId) setDistrictId(row.districtId);
-                            if (row.parliamentConstituencyId) setPcId(row.parliamentConstituencyId);
-                            if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
-                          }}
-                        >
-                          <td className="py-1.5 break-words">{row.assemblyName || row.assemblyConstituencyId}</td>
-                          <td>{row.totalVoters ?? "—"}</td>
-                          <td><span className={`px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span></td>
-                          <td className="break-words">{(row.dataCollectionDate || "").slice(0, 10) || "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-2">
+                  {constRows.map((row) => {
+                    const leaderCount = row.leaderCount ?? leaders.filter((l) => l.assemblyConstituencyId === row.assemblyConstituencyId).length;
+                    return (
+                      <button
+                        type="button"
+                        key={row.id}
+                        className="w-full text-left p-2.5 rounded-lg border border-[#22405E] hover:bg-[#131E2D]"
+                        onClick={() => {
+                          if (row.districtId) setDistrictId(row.districtId);
+                          if (row.parliamentConstituencyId) setPcId(row.parliamentConstituencyId);
+                          if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
+                          setConstForm({
+                            ...row,
+                            enteredByName: row.enteredByName || constForm.enteredByName,
+                            dataCollectionDate: (row.dataCollectionDate || "").slice(0, 10)
+                          });
+                        }}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <span className="font-bold text-[#F5EFE0] break-words">{row.assemblyName || row.assemblyConstituencyId}{row.districtName ? ` · ${row.districtName}` : selectedDistrictName ? ` · ${selectedDistrictName}` : ""}</span>
+                          <span className="text-[11px] text-[#B9AF95]">{leaderCount} leaders · {row.enteredByName || "—"}</span>
+                        </div>
+                        <p className="text-[11px] text-[#B9AF95] mt-1">Voters {row.totalVoters ?? "—"} · {(row.dataCollectionDate || "").slice(0, 10) || "—"} · {row.verificationStatus}</p>
+                      </button>
+                    );
+                  })}
+                  <button type="button" className="px-4 py-2 rounded-xl border border-[#22405E] text-[#F5EFE0] text-xs font-bold uppercase tracking-wider" onClick={downloadSavedExcel}>
+                    Download Excel
+                  </button>
                 </div>
               )}
             </div>
@@ -611,14 +749,76 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
 
           {entryGroup === "leaders" && (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <form noValidate onSubmit={saveLeader} className={`${CARD} space-y-3`}>
-                <h2 className="text-sm font-bold text-[#F5EFE0]">Leaders</h2>
-                <Field label="Name" value={leaderForm.name || ""} onChange={(v) => setLeaderForm({ ...leaderForm, name: v })} />
-                <label className={LABEL}>Political party (master)</label>
-                <select className={INPUT} value={leaderForm.partyId || ""} onChange={(e) => setLeaderForm({ ...leaderForm, partyId: e.target.value })}>
-                  <option value="">Select party</option>
-                  {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName || p.name}</option>)}
-                </select>
+              <form noValidate onSubmit={saveLeader} className={`${CARD} space-y-3 min-w-0`}>
+                <h2 className="text-sm font-bold text-[#F5EFE0]">
+                  2 · Leader {leaderForm.id ? Math.max(1, leaders.findIndex((l) => l.id === leaderForm.id) + 1) : leaders.length + 1}
+                  {leaderForm.currentFormerStatus === "CURRENT" && leaderForm.politicalRole === "MLA" ? " (sitting MLA)" : leaderForm.politicalRole ? ` (${String(leaderForm.politicalRole).replace(/_/g, " ").toLowerCase()})` : ""}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Field label="Name *" value={leaderForm.name || ""} placeholder="Full name" onChange={(v) => setLeaderForm({ ...leaderForm, name: v })} />
+                  <div>
+                    <label className={LABEL}>Party</label>
+                    <select className={INPUT} value={leaderForm.partyId || ""} onChange={(e) => setLeaderForm({ ...leaderForm, partyId: e.target.value })}>
+                      <option value="">Select</option>
+                      {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName || p.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {PLATFORMS.map((platform) => {
+                    const answered = platformDrafts[platform].hasAccount === "yes" || platformDrafts[platform].hasAccount === "no";
+                    const active = activePlatform === platform;
+                    return (
+                      <button
+                        type="button"
+                        key={platform}
+                        onClick={() => setActivePlatform(platform)}
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${
+                          active ? "bg-[#D4A24C] text-[#071322]" : "border border-[#22405E] text-[#F5EFE0]"
+                        }`}
+                      >
+                        {PLATFORM_LABEL[platform]}
+                        <span className={`w-1.5 h-1.5 rounded-full ${answered ? "bg-emerald-400" : "bg-[#6B7280]"}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="p-2.5 rounded-lg border border-[#22405E] space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className={LABEL}>{PLATFORM_LABEL[activePlatform]}: has account?</label>
+                      <select
+                        className={INPUT}
+                        value={platformDrafts[activePlatform].hasAccount}
+                        onChange={(e) => setPlatformField(activePlatform, "hasAccount", e.target.value)}
+                      >
+                        <option value="">Select</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    {platformDrafts[activePlatform].hasAccount === "yes" && (
+                      <div>
+                        <label className={LABEL}>Verified (blue tick)?</label>
+                        <select
+                          className={INPUT}
+                          value={platformDrafts[activePlatform].verified}
+                          onChange={(e) => setPlatformField(activePlatform, "verified", e.target.value)}
+                        >
+                          <option value="">Select</option>
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  {platformDrafts[activePlatform].hasAccount === "yes" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Field label="Followers / subscribers" type="number" value={platformDrafts[activePlatform].followers} onChange={(v) => setPlatformField(activePlatform, "followers", v)} />
+                      <Field label="Profile link" value={platformDrafts[activePlatform].profileUrl} onChange={(v) => setPlatformField(activePlatform, "profileUrl", v)} />
+                    </div>
+                  )}
+                </div>
                 <label className={LABEL}>Political role</label>
                 <select className={INPUT} value={leaderForm.politicalRole} onChange={(e) => setLeaderForm({ ...leaderForm, politicalRole: e.target.value })}>
                   {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
@@ -640,14 +840,31 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                     {leaders.map((row) => {
                       const party = partyById[row.partyId];
                       return (
-                        <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
+                        <button
+                          type="button"
+                          key={row.id}
+                          className="w-full text-left p-2.5 rounded-lg border border-[#22405E] hover:bg-[#131E2D]"
+                          onClick={() => {
+                            setLeaderForm({
+                              ...leaderForm,
+                              id: row.id,
+                              name: row.name,
+                              partyId: row.partyId,
+                              politicalRole: (row.roles || [])[0]?.politicalRole || leaderForm.politicalRole,
+                              currentFormerStatus: (row.roles || [])[0]?.status || leaderForm.currentFormerStatus,
+                              electionYear: (row.roles || [])[0]?.electionYear || "",
+                              remarks: row.remarks || ""
+                            });
+                            applyLeaderAccounts(row.id);
+                          }}
+                        >
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-[#F5EFE0]">{row.name}</span>
                             <span className="text-[10px] font-bold" style={{ color: party?.primaryColor || "#D4A24C" }}>{row.partyId}</span>
                           </div>
                           <p className="text-[11px] text-[#B9AF95]">{(row.roles || []).map((r: any) => r.politicalRole).join(" · ") || "—"} · {row.assemblyConstituencyId}</p>
                           <p className="text-[11px] text-[#B9AF95]">Contact {row.contactId || "—"} · {row.verificationStatus}</p>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -897,11 +1114,11 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-function Field({ label, value, onChange, type = "text", required = false }: { label: string; value: any; onChange: (v: string) => void; type?: string; required?: boolean }) {
+function Field({ label, value, onChange, type = "text", required = false, placeholder }: { label: string; value: any; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <label className={LABEL}>{label}{required ? " *" : ""}</label>
-      <input className={INPUT} type={type} value={value} required={required} onChange={(e) => onChange(e.target.value)} />
+      <input className={INPUT} type={type} value={value} required={required} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
@@ -955,23 +1172,24 @@ function GeoFilters(props: {
   pcId: string; setPcId: (v: string) => void;
   acId: string; setAcId: (v: string) => void;
   states: StateInfo[]; districts: any[]; pcs: ParliamentInfo[]; acs: any[];
+  markRequired?: boolean;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      <div>
+      <div className="min-w-0">
         <label className={LABEL}>State</label>
         <select className={INPUT} value={props.stateId} onChange={(e) => { props.setStateId(e.target.value); props.setDistrictId(""); props.setPcId(""); props.setAcId(""); }}>
           {props.states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       </div>
-      <div>
-        <label className={LABEL}>District</label>
+      <div className="min-w-0">
+        <label className={LABEL}>District{props.markRequired ? " *" : ""}</label>
         <select className={INPUT} value={props.districtId} onChange={(e) => { props.setDistrictId(e.target.value); props.setPcId(""); props.setAcId(""); }}>
           <option value="">Select district</option>
           {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={LABEL}>Parliament constituency</label>
         <select
           className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
@@ -983,8 +1201,8 @@ function GeoFilters(props: {
           {props.districtId ? props.pcs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>) : null}
         </select>
       </div>
-      <div>
-        <label className={LABEL}>Assembly constituency</label>
+      <div className="min-w-0">
+        <label className={LABEL}>Constituency{props.markRequired ? " *" : ""}</label>
         <select
           className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
           value={props.districtId ? props.acId : ""}

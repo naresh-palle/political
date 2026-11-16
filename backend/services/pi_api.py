@@ -487,6 +487,18 @@ def register_pi_routes(api_router) -> None:
             rows = [r for r in rows if needle in str(r.get("assemblyName") or "").lower() or needle in str(r.get("assemblyConstituencyId") or "").lower()]
         total = len(rows)
         rows = rows[skip : skip + max(1, min(limit, 200))]
+        persons = await _list("political_persons")
+        dist_by_id: Dict[str, Any] = {}
+        try:
+            catalog, _maps = await _resolved_districts(stateId)
+            dist_by_id = {d.get("id"): d for d in catalog if d.get("id")}
+        except Exception:
+            dist_by_id = {}
+        for row in rows:
+            ac_id = row.get("assemblyConstituencyId")
+            row["leaderCount"] = sum(1 for p in persons if p.get("assemblyConstituencyId") == ac_id)
+            district = dist_by_id.get(row.get("districtId")) or {}
+            row["districtName"] = district.get("name") or row.get("districtId")
         return {"total": total, "items": rows}
 
     @api_router.post("/pi/constituencies")
@@ -528,7 +540,9 @@ def register_pi_routes(api_router) -> None:
                 "remarks": payload.get("remarks") or doc.get("remarks"),
                 "verificationStatus": payload.get("verificationStatus") or doc.get("verificationStatus") or "PENDING",
                 "enteredBy": (existing or {}).get("enteredBy") or caps["actorId"],
-                "enteredByName": (existing or {}).get("enteredByName") or caps["actorName"],
+                "enteredByName": (payload.get("enteredByName") or "").strip()
+                or (existing or {}).get("enteredByName")
+                or caps["actorName"],
                 "updatedBy": caps["actorId"],
                 "updatedAt": now,
                 "isSample": bool(doc.get("isSample")),

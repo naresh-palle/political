@@ -249,10 +249,14 @@ def test_constituency_update_preserves_history_and_links_contact(monkeypatch):
                 "assemblyName": "Banaganapalle",
                 "totalVoters": 1000,
                 "estimatedFacebookUsers": 200,
+                "enteredByName": "Ravi",
+                "dataCollectionDate": "2026-11-15",
             },
             userId=admin["id"],
         )
     )
+    assert first["enteredByName"] == "Ravi"
+    assert str(first["dataCollectionDate"]).startswith("2026-11-15")
     second = _run(
         posts["/pi/constituencies"](
             {
@@ -281,6 +285,22 @@ def test_constituency_update_preserves_history_and_links_contact(monkeypatch):
             userId=admin["id"],
         )
     )
+    none_account = _run(
+        posts["/pi/social-accounts"](
+            {
+                "personId": leader["id"],
+                "platform": "youtube",
+                "verificationStatus": "NO_ACCOUNT",
+            },
+            userId=admin["id"],
+        )
+    )
+    assert none_account["verificationStatus"] == "NO_ACCOUNT"
+    assert none_account.get("noAccount") is True
+    listed = _run(gets["/pi/constituencies"](userId=admin["id"], stateId="AP"))
+    row = next(item for item in listed["items"] if item.get("assemblyConstituencyId") == "AP-AC-139")
+    assert row["enteredByName"] == "Ravi"
+    assert row["leaderCount"] == 1
     contacts = _run(gets["/pi/contacts"](userId=admin["id"]))
     assert any(c.get("id") == leader["contactId"] for c in contacts)
     dash = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="AP", districtId=None))
