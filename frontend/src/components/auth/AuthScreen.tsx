@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { USER_PROFILES } from "../../services/mockData";
+import { isSmAuditUser } from "../../utils/piAccess";
 import { LeadersLogo } from "../common/LeadersLogo";
 import { ArrowRight, Sparkles, ShieldCheck, Mail, KeyRound, Lock, Eye, EyeOff } from "lucide-react";
 
@@ -28,12 +29,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         onAuthenticated(staticMatch);
         return;
       }
+      const seededSmAudit = USER_PROFILES.find((p) => isSmAuditUser(p));
+      if (seededSmAudit && cleanEmail === "sm.audit@leaderslens.ai") {
+        onAuthenticated(seededSmAudit);
+        return;
+      }
 
       // 2. Check if user exists in database / dynamic roster
       const users = await politicalApiService.getUsers();
       const existing = users.find((p) => p.email.toLowerCase() === cleanEmail);
       if (existing) {
-        onAuthenticated(existing);
+        onAuthenticated(isSmAuditUser(existing) && seededSmAudit ? { ...existing, ...seededSmAudit } : existing);
         return;
       }
 

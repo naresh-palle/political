@@ -34,6 +34,7 @@ const PoliticalIntelligence = lazy(() => import("./components/intel/PoliticalInt
 const ExportModal = lazy(() => import("./components/audit/ExportModal").then(m => ({ default: m.ExportModal })));
 
 import { OfficerTicketPortal } from "./components/fieldops/OfficerTicketPortal";
+import { canAccessPoliticalIntelligence, isSmAuditUser } from "./utils/piAccess";
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
@@ -239,6 +240,7 @@ function AppInner() {
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
+  const isSmAudit = isSmAuditUser(currentProfile);
   const primaryRole = currentProfile?.primaryRole || (
     currentProfile?.email === "admin@leaderslens.ai" || currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.isPlatformAdmin
       ? "SUPER_ADMIN"
@@ -246,13 +248,15 @@ function AppInner() {
       ? "POLITICAL_ADMIN"
       : currentProfile?.roleId === "VOLUNTEER" || currentProfile?.role === "volunteer"
       ? "VOLUNTEER"
+      : isSmAudit
+      ? "SM_AUDIT"
       : "DIRECTOR"
   );
 
-  const isPlatformAdmin = currentProfile?.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && currentProfile?.isPlatformAdmin);
-  const isPoliticalAdmin = !isPlatformAdmin && (primaryRole === "POLITICAL_ADMIN" || currentProfile?.isPoliticalAdmin);
-  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && (primaryRole === "DIRECTOR" || currentProfile?.roleId === "CAMPAIGN_MANAGER" || currentProfile?.role === "campaign_manager" || currentProfile?.roleId === "PARTY_ADMIN");
-  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && (primaryRole === "VOLUNTEER" || currentProfile?.roleId === "VOLUNTEER");
+  const isPlatformAdmin = !isSmAudit && (currentProfile?.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && currentProfile?.isPlatformAdmin));
+  const isPoliticalAdmin = !isPlatformAdmin && !isSmAudit && (primaryRole === "POLITICAL_ADMIN" || currentProfile?.isPoliticalAdmin);
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isSmAudit && (primaryRole === "DIRECTOR" || currentProfile?.roleId === "CAMPAIGN_MANAGER" || currentProfile?.role === "campaign_manager" || currentProfile?.roleId === "PARTY_ADMIN");
+  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isSmAudit && (primaryRole === "VOLUNTEER" || currentProfile?.roleId === "VOLUNTEER");
   const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
 
   // URL Hash Synchronization & Browser Title Sync
@@ -310,29 +314,47 @@ function AppInner() {
   }, []);
 
   // Role routing enforcement:
-  // - Platform Super Admin (admin@leaderslens.ai): All tabs (pitch, fieldops, grievances, volunteers, webbuilder, governance, contacts)
+  // - SM Audit: Political Intelligence only
+  // - Platform Super Admin (admin@leaderslens.ai): All tabs except Political Intelligence
   // - Political Admin: Home (fieldops), Assign Tickets, Contact Database, Director User Management
   // - Manager: Home (fieldops), Assign Tickets, Contact Database (no Squad Volunteer / governance)
   // - Volunteer: Home (fieldops), Contact Database — Add Complaint and status counts on Home, no ticket grid/table
   useEffect(() => {
-    if (isVolunteer && !["fieldops", "grievances", "contacts", "intel"].includes(activeProduct)) {
+    if (isSmAudit) {
+      if (activeProduct !== "intel") {
+        setActiveProduct("intel");
+        try {
+          localStorage.setItem(PRODUCT_STORAGE_KEY, "intel");
+        } catch {}
+        window.location.hash = "#/intel";
+      }
+      return;
+    }
+    if (activeProduct === "intel") {
+      setActiveProduct("fieldops");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+      } catch {}
+      window.location.hash = "#/field-ops";
+      return;
+    }
+    if (isVolunteer && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
       if (
         !window.location.hash.toLowerCase().includes("field-ops") &&
-        !window.location.hash.toLowerCase().includes("contact") &&
-        !window.location.hash.toLowerCase().includes("intel")
+        !window.location.hash.toLowerCase().includes("contact")
       ) {
         window.location.hash = "#/field-ops";
       }
-    } else if (isPoliticalAdmin && !["fieldops", "assigntickets", "grievances", "governance", "contacts", "intel"].includes(activeProduct)) {
+    } else if (isPoliticalAdmin && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if (isDirector && !["fieldops", "assigntickets", "grievances", "contacts", "intel"].includes(activeProduct)) {
+    } else if (isDirector && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -342,18 +364,22 @@ function AppInner() {
         window.location.hash = "#/field-ops";
       }
     }
-  }, [isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
+  }, [isSmAudit, isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
   const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel") => {
     let targetProduct = product;
-    if (isVolunteer) {
-      targetProduct = ["fieldops", "grievances", "contacts", "intel"].includes(product) ? product : "fieldops";
+    if (isSmAudit) {
+      targetProduct = "intel";
+    } else if (product === "intel") {
+      targetProduct = "fieldops";
+    } else if (isVolunteer) {
+      targetProduct = ["fieldops", "grievances", "contacts"].includes(product) ? product : "fieldops";
     } else if (isPoliticalAdmin) {
-      targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts", "intel"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(product) ? "fieldops" : product;
     } else if (isDirector) {
-      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts", "intel"].includes(product) ? "fieldops" : product;
+      targetProduct = !["fieldops", "assigntickets", "grievances", "contacts"].includes(product) ? "fieldops" : product;
     } else if (!isPlatformAdmin) {
-      targetProduct = ["contacts", "fieldops", "assigntickets", "grievances", "intel"].includes(product) ? product : "fieldops";
+      targetProduct = ["contacts", "fieldops", "assigntickets", "grievances"].includes(product) ? product : "fieldops";
     }
     setActiveProduct(targetProduct);
     try {
@@ -363,13 +389,13 @@ function AppInner() {
 
   const handleAuthenticated = (user: UserProfile) => {
     setCurrentProfile(user);
-    const defaultProd: ActiveProductType = "fieldops";
+    const defaultProd: ActiveProductType = isSmAuditUser(user) ? "intel" : "fieldops";
     setActiveProduct(defaultProd);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, defaultProd);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     } catch {}
-    window.location.hash = "#/field-ops";
+    window.location.hash = defaultProd === "intel" ? "#/intel" : "#/field-ops";
     setRoute("app");
   };
 
@@ -392,20 +418,33 @@ function AppInner() {
         ? "POLITICAL_ADMIN"
         : profile.roleId === "VOLUNTEER" || profile.role === "volunteer"
         ? "VOLUNTEER"
+        : isSmAuditUser(profile)
+        ? "SM_AUDIT"
         : "DIRECTOR"
     );
 
-    if (userRole === "VOLUNTEER" && !["fieldops", "grievances", "contacts", "intel"].includes(activeProduct)) {
+    if (isSmAuditUser(profile)) {
+      setActiveProduct("intel");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "intel");
+      } catch {}
+      window.location.hash = "#/intel";
+    } else if (activeProduct === "intel" || userRole === "SM_AUDIT") {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if (userRole === "POLITICAL_ADMIN" && !["fieldops", "assigntickets", "grievances", "governance", "contacts", "intel"].includes(activeProduct)) {
+    } else if (userRole === "VOLUNTEER" && !["fieldops", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
       } catch {}
-    } else if (userRole === "DIRECTOR" && !["fieldops", "assigntickets", "grievances", "contacts", "intel"].includes(activeProduct)) {
+    } else if (userRole === "POLITICAL_ADMIN" && !["fieldops", "assigntickets", "grievances", "governance", "contacts"].includes(activeProduct)) {
+      setActiveProduct("fieldops");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+      } catch {}
+    } else if (userRole === "DIRECTOR" && !["fieldops", "assigntickets", "grievances", "contacts"].includes(activeProduct)) {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -587,7 +626,7 @@ function AppInner() {
                   <ContactDatabase currentUser={currentProfile} />
                 )}
 
-                {activeProduct === "intel" && (
+                {activeProduct === "intel" && canAccessPoliticalIntelligence(currentProfile) && (
                   <PoliticalIntelligence currentUser={currentProfile} />
                 )}
 

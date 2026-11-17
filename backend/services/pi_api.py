@@ -629,6 +629,7 @@ def register_pi_routes(api_router) -> None:
                 "dataSource": payload.get("dataSource") or doc.get("dataSource") or "MANUAL",
                 "verificationStatus": payload.get("verificationStatus") or doc.get("verificationStatus") or "PENDING",
                 "remarks": payload.get("remarks") if payload.get("remarks") is not None else doc.get("remarks"),
+                "leaderKind": payload.get("leaderKind") or doc.get("leaderKind") or "SITTING_MLA",
                 "enteredBy": (existing or {}).get("enteredBy") or caps["actorId"],
                 "enteredByName": (existing or {}).get("enteredByName") or caps["actorName"],
                 "updatedAt": now,
@@ -885,7 +886,7 @@ def register_pi_routes(api_router) -> None:
         doc = await _get(collection, record_id)
         if not doc:
             raise HTTPException(status_code=404, detail="Record not found")
-        if doc.get("enteredBy") == caps["actorId"] and not caps.get("isSuper"):
+        if doc.get("enteredBy") == caps["actorId"] and not caps.get("isSuper") and not caps.get("isSmAudit"):
             raise HTTPException(status_code=403, detail="Independent verification required: you cannot verify your own submission")
         previous = doc.get("verificationStatus")
         now = now_iso()
@@ -956,8 +957,6 @@ def register_pi_routes(api_router) -> None:
             persons = [p for p in persons if str(p.get("partyId") or "").upper() == partyId.upper()]
         persons = [p for p in persons if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
         person_ids = {p.get("id") for p in persons}
-        if platform:
-            accounts = [a for a in accounts if a.get("platform") == platform.lower()]
         accounts = [a for a in accounts if a.get("personId") in person_ids]
         audience = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0, "confidence": "Estimated"}
         for stat in stats:
@@ -965,10 +964,22 @@ def register_pi_routes(api_router) -> None:
                 val = stat.get(key)
                 if val is not None:
                     audience[plat] += int(val)
+        assemblies_by_id = geo.get("assemblies") or {}
         leaders = []
         for person in persons:
             party = geo["parties"].get(person.get("partyId")) or {}
-            person_accounts = [a for a in accounts if a.get("personId") == person.get("id") and not a.get("noAccount")]
+            all_accounts = [a for a in accounts if a.get("personId") == person.get("id")]
+            person_accounts = [a for a in all_accounts if not a.get("noAccount") and a.get("verificationStatus") != "NO_ACCOUNT"]
+            platforms = {}
+            for acc in all_accounts:
+                plat = str(acc.get("platform") or "").lower()
+                if plat:
+                    platforms[plat] = {
+                        "followers": acc.get("followers"),
+                        "noAccount": bool(acc.get("noAccount") or acc.get("verificationStatus") == "NO_ACCOUNT"),
+                        "verified": acc.get("verificationStatus") == "VERIFIED",
+                        "profileUrl": acc.get("profileUrl"),
+                    }
             combined = None
             engagements = []
             posts = []
@@ -997,12 +1008,16 @@ def register_pi_routes(api_router) -> None:
                     "assemblyConstituencyId": person.get("assemblyConstituencyId"),
                     "districtId": person.get("districtId"),
                     "parliamentConstituencyId": person.get("parliamentConstituencyId"),
+                    "assemblyName": (assemblies_by_id.get(person.get("assemblyConstituencyId")) or {}).get("name") or person.get("assemblyConstituencyId"),
+                    "leaderKind": person.get("leaderKind") or "SITTING_MLA",
+                    "politicalRole": person.get("politicalRole"),
+                    "platforms": platforms,
                     "stateId": person.get("stateId"),
                     "followers": combined,
                     "engagementPercent": round(sum(engagements) / len(engagements), 4) if engagements else None,
                     "postsLast30Days": sum(posts) if posts else None,
                     "growth30": round(sum(growths) / len(growths), 4) if growths else None,
-                    "accounts": person_accounts,
+                    "accounts": all_accounts,
                     "verificationStatus": person.get("verificationStatus"),
                 }
             )
@@ -1049,8 +1064,51 @@ def register_pi_routes(api_router) -> None:
                 "opponent": leaders[1].get("name"),
                 "followersDelta": leaders[0]["followers"] - leaders[1]["followers"],
             }
+        constituency_cards = []
+        for stat in stats:
+            ac_id = stat.get("assemblyConstituencyId")
+            ac_leaders = [l for l in leaders if l.get("assemblyConstituencyId") == ac_id]
+            sitting = next((l for l in ac_leaders if l.get("leaderKind") != "OPPOSITION"), None) or (ac_leaders[0] if ac_leaders else None)
+            estimates = {
+                "facebook": int(stat.get("estimatedFacebookUsers") or 0),
+                "instagram": int(stat.get("estimatedInstagramUsers") or 0),
+                "x": int(stat.get("estimatedXUsers") or 0),
+                "youtube": int(stat.get("estimatedYouTubeUsers") or 0),
+            }
+            plat_followers = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0}
+            source = sitting or {}
+            for plat, detail in (source.get("platforms") or {}).items():
+                if plat not in plat_followers or (detail or {}).get("noAccount"):
+                    continue
+                if detail.get("followers") is not None:
+                    plat_followers[plat] += int(detail["followers"])
+            wanted = (platform or "").lower()
+            if wanted in plat_followers:
+                total_followers = plat_followers[wanted]
+                total_est = estimates.get(wanted) or 0
+            else:
+                total_followers = sum(plat_followers.values())
+                total_est = sum(estimates.values())
+            reach = round((total_followers / total_est) * 100) if total_est else None
+            constituency_cards.append(
+                {
+                    "assemblyConstituencyId": ac_id,
+                    "assemblyName": stat.get("assemblyName") or (assemblies_by_id.get(ac_id) or {}).get("name") or ac_id,
+                    "districtId": stat.get("districtId"),
+                    "partyId": (sitting or {}).get("partyId"),
+                    "partyColor": (sitting or {}).get("partyColor"),
+                    "mlaName": (sitting or {}).get("name"),
+                    "followers": total_followers or None,
+                    "estimatedUsers": total_est or None,
+                    "reachPercent": reach,
+                    "platformFollowers": plat_followers,
+                    "platformEstimates": estimates,
+                }
+            )
+        constituency_cards.sort(key=lambda c: str(c.get("assemblyName") or ""))
         return {
             "audienceEstimates": audience,
+            "constituencyCards": constituency_cards,
             "leaders": leaders,
             "partyCompare": list(party_compare.values()),
             "platformCompare": list(platform_compare.values()),
@@ -1241,8 +1299,8 @@ def register_pi_routes(api_router) -> None:
     async def seed_sample(userId: Optional[str] = None, confirm: str = ""):
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
-        if not caps.get("isSuper"):
-            raise HTTPException(status_code=403, detail="Sample seed is Super Admin only")
+        if not (caps.get("isSuper") or caps.get("isSmAudit")):
+            raise HTTPException(status_code=403, detail="Sample seed is Super Admin or SM Audit only")
         if confirm != "SAMPLE":
             raise HTTPException(status_code=400, detail="Pass confirm=SAMPLE")
         count = await _persist_sample()

@@ -176,6 +176,39 @@ export const USER_PROFILES: UserProfile[] = [
       canViewConfidentialMetrics: false,
       canManageSystemUsers: false
     }
+  },
+  {
+    id: "usr-sm-audit",
+    name: "SM Audit",
+    email: "sm.audit@leaderslens.ai",
+    phone: "+91 98850 44004",
+    demoPassword: "SmAudit@2026",
+    primaryRole: "SM_AUDIT",
+    isPlatformAdmin: false,
+    isPoliticalAdmin: false,
+    roleId: "SM_AUDIT",
+    role: "sm_audit",
+    roleTitle: "Social Media Audit — Political Intelligence",
+    designation: "Political Intelligence Data Entry",
+    department: "Social Media Audit",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=250&auto=format&fit=crop&q=80",
+    assignedConstituency: "All constituencies — Political Intelligence",
+    clearanceLevel: "LEVEL 2 — PI DATA ENTRY ONLY",
+    status: "ACTIVE",
+    partyId: null,
+    partyColor: "#D4A24C",
+    partyEmoji: "🏛️",
+    stateId: "AP",
+    stateName: "Andhra Pradesh",
+    permissions: {
+      canExportReports: true,
+      canEditStrategy: false,
+      canManageVolunteers: false,
+      canResolveGrievances: false,
+      canPublishLandingPage: false,
+      canViewConfidentialMetrics: true,
+      canManageSystemUsers: false
+    }
   }
 ];
 
@@ -184,7 +217,12 @@ export function hydrateStoredUserProfile(saved: UserProfile): UserProfile {
   const canonical = USER_PROFILES.find(
     (u) => (saved.id && u.id === saved.id) || (!!email && u.email.toLowerCase() === email)
   );
-  return canonical ? { ...saved, ...canonical } : saved;
+  if (canonical) return { ...saved, ...canonical };
+  if (email === "sm.audit@leaderslens.ai") {
+    const seeded = USER_PROFILES.find((u) => u.email.toLowerCase() === "sm.audit@leaderslens.ai");
+    if (seeded) return { ...saved, ...seeded };
+  }
+  return saved;
 }
 
 export const MOCK_POLITICAL_PARTIES: PoliticalParty[] = [

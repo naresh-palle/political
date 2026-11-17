@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Check,
   Database,
   Download,
   Loader2,
@@ -8,10 +9,12 @@ import {
 import { UserProfile, PiDashboard, PiDistrictProgress, PiRecentCollection, StateInfo, PoliticalParty, ParliamentInfo } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
+import { isSmAuditUser } from "../../utils/piAccess";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
-type EntryGroup = "constituency" | "leaders" | "social";
-type SaveKind = "constituency" | "leader" | "social" | null;
+type EntryGroup = "constituency" | "leaders";
+type SaveKind = "constituency" | "leader" | null;
+type LeaderKind = "SITTING_MLA" | "OPPOSITION";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
@@ -23,8 +26,7 @@ const TABS: { id: Tab; label: string }[] = [
 
 const ENTRY_GROUPS: { id: EntryGroup; label: string }[] = [
   { id: "constituency", label: "Constituency" },
-  { id: "leaders", label: "Leaders" },
-  { id: "social", label: "Social media" }
+  { id: "leaders", label: "Leaders" }
 ];
 
 const ROLES = [
@@ -47,7 +49,6 @@ const ROLES = [
 ];
 
 const PLATFORMS = ["facebook", "instagram", "x", "youtube"] as const;
-const STATUSES = ["PENDING", "VERIFIED", "NEEDS_RECHECK", "REJECTED", "NO_ACCOUNT", "INACTIVE"];
 const PLATFORM_LABEL: Record<(typeof PLATFORMS)[number], string> = {
   facebook: "Facebook",
   instagram: "Instagram",
@@ -79,6 +80,20 @@ function todayIsoDate() {
   return `${y}-${m}-${day}`;
 }
 
+function formatCompactCount(value?: number | null) {
+  if (value == null || Number.isNaN(Number(value))) return "—";
+  const n = Number(value);
+  if (n >= 100000) {
+    const lakh = n / 100000;
+    return `${lakh % 1 === 0 ? lakh.toFixed(0) : lakh.toFixed(1)} L`;
+  }
+  if (n >= 1000) {
+    const k = n / 1000;
+    return `${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}k`;
+  }
+  return String(Math.round(n));
+}
+
 const CARD = `rounded-xl p-3 border ${UNIQUE_TICKET_SURFACE.kpi}`;
 const INPUT =
   "w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-sm text-[#F5EFE0] outline-none";
@@ -100,11 +115,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     currentUser.email === "admin@leaderslens.ai" ||
     currentUser.primaryRole === "SUPER_ADMIN" ||
     !!currentUser.isPlatformAdmin;
-  const canVerify =
-    isSuper ||
-    currentUser.primaryRole === "POLITICAL_ADMIN" ||
-    currentUser.primaryRole === "DIRECTOR" ||
-    currentUser.roleId === "CAMPAIGN_MANAGER";
+  const isSmAudit = isSmAuditUser(currentUser);
+  const canVerify = isSuper || currentUser.primaryRole === "SM_AUDIT" || currentUser.roleId === "SM_AUDIT";
 
   const [tab, setTab] = useState<Tab>("dashboard");
   const [entryGroup, setEntryGroup] = useState<EntryGroup>("constituency");
@@ -127,11 +139,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     dataCollectionDate: todayIsoDate()
   });
   const [constRows, setConstRows] = useState<any[]>([]);
-  const [leaderForm, setLeaderForm] = useState<any>({ politicalRole: "MLA", currentFormerStatus: "CURRENT", partyId: "TDP" });
+  const [leaderForm, setLeaderForm] = useState<any>({ politicalRole: "MLA", currentFormerStatus: "CURRENT", partyId: "TDP", leaderKind: "SITTING_MLA" });
   const [leaders, setLeaders] = useState<any[]>([]);
   const [platformDrafts, setPlatformDrafts] = useState<Record<(typeof PLATFORMS)[number], PlatformDraft>>(emptyPlatformDrafts);
   const [activePlatform, setActivePlatform] = useState<(typeof PLATFORMS)[number]>("facebook");
-  const [socialForm, setSocialForm] = useState<any>({ platform: "facebook", verificationStatus: "PENDING" });
   const [accounts, setAccounts] = useState<any[]>([]);
   const [queue, setQueue] = useState<any[]>([]);
   const [queueStatus, setQueueStatus] = useState("PENDING");
@@ -141,9 +152,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [rankBy, setRankBy] = useState("followers");
   const [csvText, setCsvText] = useState("");
   const [preview, setPreview] = useState<any>(null);
-  const [districtDetail, setDistrictDetail] = useState<any>(null);
-  const [snapshots, setSnapshots] = useState<any[]>([]);
-  const [snapshotAccount, setSnapshotAccount] = useState("");
 
   const partyById = useMemo(() => Object.fromEntries(parties.map((p) => [p.id, p])), [parties]);
   const selectedDistrictProgress = useMemo(() => {
@@ -261,7 +269,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       await politicalApiService.getPiIntelligence(userId, {
         stateId,
         districtId: districtId || undefined,
-        parliamentConstituencyId: pcId || undefined,
+        parliamentConstituencyId: acId ? pcId || undefined : undefined,
         assemblyConstituencyId: acId || undefined,
         platform: intelPlatform || undefined,
         partyId: intelParty || undefined,
@@ -276,11 +284,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       loadLeaders().catch((e) => flash(e.message, true));
       loadAccounts().catch((e) => flash(e.message, true));
       refreshDashboard().catch((e) => flash(e.message, true));
-      if (districtId) {
-        politicalApiService.getPiDistrictDetail(userId, districtId).then(setDistrictDetail).catch(() => setDistrictDetail(null));
-      } else {
-        setDistrictDetail(null);
-      }
     }
     if (tab === "verify") loadQueue().catch((e) => flash(e.message, true));
     if (tab === "intelligence") loadIntel().catch((e) => flash(e.message, true));
@@ -316,7 +319,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         estimatedXUsers: num(constForm.estimatedXUsers),
         estimatedYouTubeUsers: num(constForm.estimatedYouTubeUsers),
         enteredByName: String(constForm.enteredByName || "").trim(),
-        dataCollectionDate: constForm.dataCollectionDate || todayIsoDate()
+        dataCollectionDate: todayIsoDate()
       });
       flash("Saved ✓ Enter the next constituency.");
       await loadConstituencies();
@@ -352,6 +355,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     try {
       const saved = await politicalApiService.savePiLeader(userId, {
         ...leaderForm,
+        leaderKind: leaderForm.leaderKind === "OPPOSITION" ? "OPPOSITION" : "SITTING_MLA",
+        currentFormerStatus: "CURRENT",
         stateId,
         districtId,
         parliamentConstituencyId: pcId,
@@ -381,40 +386,17 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       await loadLeaders();
       await loadAccounts();
       if (!leaderForm.id) {
-        setLeaderForm({ politicalRole: "MLA", currentFormerStatus: "CURRENT", partyId: leaderForm.partyId });
+        const nextKind: LeaderKind = leaderForm.leaderKind === "SITTING_MLA" ? "OPPOSITION" : "SITTING_MLA";
+        setLeaderForm({
+          politicalRole: nextKind === "SITTING_MLA" ? "MLA" : "OTHER",
+          currentFormerStatus: "CURRENT",
+          partyId: nextKind === "SITTING_MLA" ? "TDP" : "",
+          leaderKind: nextKind
+        });
         setPlatformDrafts(emptyPlatformDrafts());
         setActivePlatform("facebook");
       }
       setEntryGroup("leaders");
-    } catch (err: any) {
-      flash(err.message, true);
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const saveAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (saving) return;
-    if (!socialForm.personId) {
-      flash("Select a leader for this account.", true);
-      return;
-    }
-    setSaving("social");
-    try {
-      const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
-      await politicalApiService.savePiAccount(userId, {
-        ...socialForm,
-        followers: num(socialForm.followers),
-        postsLast30Days: num(socialForm.postsLast30Days),
-        avgLikesLast10: num(socialForm.avgLikesLast10),
-        avgCommentsLast10: num(socialForm.avgCommentsLast10),
-        avgViewsLast10: num(socialForm.avgViewsLast10)
-      });
-      flash("Social account saved.");
-      await loadAccounts();
-      setTab("verify");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
@@ -494,13 +476,13 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4A24C] font-bold">Political Intelligence</p>
           <h1 className="text-2xl font-display text-[#F5EFE0]">
-            {tab === "constituencies" ? "Constituency Data Form" : "Constituency data collection"}
+            {tab === "constituencies" ? "Constituency Data Form" : tab === "intelligence" ? "Political Intelligence" : "Constituency data collection"}
           </h1>
           {tab === "constituencies" && (
             <p className="text-sm text-[#B9AF95] mt-1">Fill one constituency at a time. Takes about 10 minutes.</p>
           )}
         </div>
-        {isSuper && (
+        {isSmAudit && (
           <button
             type="button"
             className={BTN}
@@ -519,13 +501,13 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         )}
       </header>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="grid grid-cols-5 gap-1.5">
         {TABS.map((item) => (
           <button
             type="button"
             key={item.id}
             onClick={() => setTab(item.id)}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
+            className={`min-h-10 w-full px-1 py-1.5 rounded-lg text-[9px] sm:text-[11px] font-bold uppercase tracking-wider inline-flex items-center justify-center text-center leading-tight ${
               tab === item.id ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
             }`}
           >
@@ -656,21 +638,19 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 acId={acId} setAcId={setAcId}
                 states={states} districts={districts} pcs={filteredPcs} acs={filteredAcs}
                 markRequired
+                showParliament={false}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Field label="Collected by *" value={constForm.enteredByName || ""} onChange={(v) => setConstForm({ ...constForm, enteredByName: v })} />
-                <Field label="Date" type="date" value={constForm.dataCollectionDate || ""} onChange={(v) => setConstForm({ ...constForm, dataCollectionDate: v })} />
-              </div>
+              <Field label="Collected by *" value={constForm.enteredByName || ""} onChange={(v) => setConstForm({ ...constForm, enteredByName: v })} />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
             {ENTRY_GROUPS.map((group) => (
               <button
                 type="button"
                 key={group.id}
                 onClick={() => setEntryGroup(group.id)}
-                className={`px-2 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
+                className={`h-10 w-full px-2 rounded-lg text-[11px] font-bold uppercase tracking-wider inline-flex items-center justify-center ${
                   entryGroup === group.id ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
                 }`}
               >
@@ -685,7 +665,6 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             <form noValidate onSubmit={saveConstituency} className={`${CARD} space-y-3`}>
               <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency entry</h2>
               <Field label="Total voters" type="number" value={constForm.totalVoters || ""} onChange={(v) => setConstForm({ ...constForm, totalVoters: v })} />
-              <Field label="Rural % " type="number" value={constForm.ruralPercent || ""} onChange={(v) => setConstForm({ ...constForm, ruralPercent: v })} />
               <p className="text-[11px] text-[#D4A24C]">Estimated social media users (not observed counts)</p>
               <div className="grid grid-cols-2 gap-2">
                 <Field label="Est. Facebook users" type="number" value={constForm.estimatedFacebookUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedFacebookUsers: v })} />
@@ -693,7 +672,6 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 <Field label="Est. X users" type="number" value={constForm.estimatedXUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedXUsers: v })} />
                 <Field label="Est. YouTube users" type="number" value={constForm.estimatedYouTubeUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedYouTubeUsers: v })} />
               </div>
-              <Field label="Data source" value={constForm.dataSource || ""} onChange={(v) => setConstForm({ ...constForm, dataSource: v })} />
               <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
               <button type="submit" className={BTN} disabled={!!saving || !acId}>{saving === "constituency" ? "Saving…" : "Save constituency"}</button>
               {ok && !error && ok.startsWith("Saved") && (
@@ -751,9 +729,28 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <form noValidate onSubmit={saveLeader} className={`${CARD} space-y-3 min-w-0`}>
                 <h2 className="text-sm font-bold text-[#F5EFE0]">
-                  2 · Leader {leaderForm.id ? Math.max(1, leaders.findIndex((l) => l.id === leaderForm.id) + 1) : leaders.length + 1}
-                  {leaderForm.currentFormerStatus === "CURRENT" && leaderForm.politicalRole === "MLA" ? " (sitting MLA)" : leaderForm.politicalRole ? ` (${String(leaderForm.politicalRole).replace(/_/g, " ").toLowerCase()})` : ""}
+                  2 · Leader {leaderForm.leaderKind === "OPPOSITION" ? "2 (opposition)" : "1 (sitting MLA)"}
                 </h2>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setLeaderForm({ ...leaderForm, leaderKind: "SITTING_MLA", politicalRole: "MLA" })}
+                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
+                      leaderForm.leaderKind !== "OPPOSITION" ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
+                    }`}
+                  >
+                    Leader 1 (sitting MLA)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLeaderForm({ ...leaderForm, leaderKind: "OPPOSITION" })}
+                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
+                      leaderForm.leaderKind === "OPPOSITION" ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
+                    }`}
+                  >
+                    Leader 2 (opposition)
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Field label="Name *" value={leaderForm.name || ""} placeholder="Full name" onChange={(v) => setLeaderForm({ ...leaderForm, name: v })} />
                   <div>
@@ -823,14 +820,6 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 <select className={INPUT} value={leaderForm.politicalRole} onChange={(e) => setLeaderForm({ ...leaderForm, politicalRole: e.target.value })}>
                   {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
                 </select>
-                <label className={LABEL}>Current / former</label>
-                <select className={INPUT} value={leaderForm.currentFormerStatus} onChange={(e) => setLeaderForm({ ...leaderForm, currentFormerStatus: e.target.value })}>
-                  <option value="CURRENT">CURRENT</option>
-                  <option value="FORMER">FORMER</option>
-                </select>
-                <Field label="Election year" type="number" value={leaderForm.electionYear || ""} onChange={(v) => setLeaderForm({ ...leaderForm, electionYear: v })} />
-                <Field label="Data source" value={leaderForm.dataSource || ""} onChange={(v) => setLeaderForm({ ...leaderForm, dataSource: v })} />
-                <Field label="Remarks" value={leaderForm.remarks || ""} onChange={(v) => setLeaderForm({ ...leaderForm, remarks: v })} />
                 <button type="submit" className={BTN} disabled={!!saving || !acId}>{saving === "leader" ? "Saving…" : "Save leader"}</button>
               </form>
               <div className={CARD}>
@@ -851,9 +840,8 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                               name: row.name,
                               partyId: row.partyId,
                               politicalRole: (row.roles || [])[0]?.politicalRole || leaderForm.politicalRole,
-                              currentFormerStatus: (row.roles || [])[0]?.status || leaderForm.currentFormerStatus,
-                              electionYear: (row.roles || [])[0]?.electionYear || "",
-                              remarks: row.remarks || ""
+                              currentFormerStatus: "CURRENT",
+                              leaderKind: row.leaderKind === "OPPOSITION" ? "OPPOSITION" : "SITTING_MLA"
                             });
                             applyLeaderAccounts(row.id);
                           }}
@@ -862,7 +850,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                             <span className="font-bold text-[#F5EFE0]">{row.name}</span>
                             <span className="text-[10px] font-bold" style={{ color: party?.primaryColor || "#D4A24C" }}>{row.partyId}</span>
                           </div>
-                          <p className="text-[11px] text-[#B9AF95]">{(row.roles || []).map((r: any) => r.politicalRole).join(" · ") || "—"} · {row.assemblyConstituencyId}</p>
+                          <p className="text-[11px] text-[#B9AF95]">{row.leaderKind === "OPPOSITION" ? "Opposition" : "Sitting MLA"}{(row.roles || []).length ? ` · ${(row.roles || []).map((r: any) => r.politicalRole).join(" · ")}` : ""}</p>
                           <p className="text-[11px] text-[#B9AF95]">Contact {row.contactId || "—"} · {row.verificationStatus}</p>
                         </button>
                       );
@@ -873,70 +861,6 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             </div>
           )}
 
-          {entryGroup === "social" && (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <form noValidate onSubmit={saveAccount} className={`${CARD} space-y-3`}>
-                <h2 className="text-sm font-bold text-[#F5EFE0]">Social media</h2>
-                <label className={LABEL}>Leader</label>
-                <select className={INPUT} value={socialForm.personId || ""} onChange={(e) => {
-                  const person = leaders.find((l) => l.id === e.target.value);
-                  setSocialForm({ ...socialForm, personId: e.target.value, partyId: person?.partyId });
-                }}>
-                  <option value="">Select leader</option>
-                  {leaders.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.partyId})</option>)}
-                </select>
-                <p className="text-[11px] text-[#B9AF95]">Party is taken from the leader record: {socialForm.partyId || "—"}</p>
-                <label className={LABEL}>Platform</label>
-                <select className={INPUT} value={socialForm.platform} onChange={(e) => setSocialForm({ ...socialForm, platform: e.target.value })}>
-                  {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
-                <Field label="Profile URL" value={socialForm.profileUrl || ""} onChange={(v) => setSocialForm({ ...socialForm, profileUrl: v })} />
-                <Field label="Account identifier" value={socialForm.accountIdentifier || ""} onChange={(v) => setSocialForm({ ...socialForm, accountIdentifier: v })} />
-                <Field label="Followers / subscribers" type="number" value={socialForm.followers || ""} onChange={(v) => setSocialForm({ ...socialForm, followers: v })} />
-                <Field label="Posts last 30 days" type="number" value={socialForm.postsLast30Days || ""} onChange={(v) => setSocialForm({ ...socialForm, postsLast30Days: v })} />
-                <Field label="Avg likes (last 10)" type="number" value={socialForm.avgLikesLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgLikesLast10: v })} />
-                <Field label="Avg comments (last 10)" type="number" value={socialForm.avgCommentsLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgCommentsLast10: v })} />
-                <Field label="Avg views (YouTube)" type="number" value={socialForm.avgViewsLast10 || ""} onChange={(v) => setSocialForm({ ...socialForm, avgViewsLast10: v })} />
-                <label className={LABEL}>Status</label>
-                <select className={INPUT} value={socialForm.verificationStatus} onChange={(e) => setSocialForm({ ...socialForm, verificationStatus: e.target.value })}>
-                  {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <Field label="Date collected" type="date" value={socialForm.dataCollectionDate || ""} onChange={(v) => setSocialForm({ ...socialForm, dataCollectionDate: v })} />
-                <Field label="Data source" value={socialForm.dataSource || ""} onChange={(v) => setSocialForm({ ...socialForm, dataSource: v })} />
-                <Field label="Remarks" value={socialForm.remarks || ""} onChange={(v) => setSocialForm({ ...socialForm, remarks: v })} />
-                <button type="submit" className={BTN} disabled={!!saving}>{saving === "social" ? "Saving…" : "Save account + snapshot"}</button>
-              </form>
-              <div className={CARD}>
-                <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Accounts in this constituency</h2>
-                {accounts.length === 0 ? <EmptyState text="No social accounts yet for this constituency." /> : (
-                  <div className="space-y-2">
-                    {accounts.map((row) => (
-                      <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-bold text-[#F5EFE0]">{row.leaderName} · {row.platform}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
-                        </div>
-                        <p className="text-[11px] text-[#B9AF95] break-all">{row.profileUrl}</p>
-                        <p className="text-[11px] text-[#B9AF95]">
-                          Followers {row.followers ?? "—"} · Engagement {row.engagementPercent == null ? "—" : `${row.engagementPercent}%`} ({row.engagementFormulaVersion})
-                        </p>
-                        <p className="text-[11px] text-[#B9AF95]">Growth 30d {row.growth30 == null ? "—" : `${row.growth30}%`} · 90d {row.growth90 == null ? "—" : `${row.growth90}%`}</p>
-                        <button type="button" className="text-[11px] text-[#D4A24C] underline mt-1" onClick={async () => {
-                          setSnapshotAccount(row.id);
-                          setSnapshots(await politicalApiService.getPiSnapshots(userId, row.id));
-                        }}>History</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {snapshotAccount && (
-                  <div className="mt-3 text-[11px] text-[#B9AF95]">
-                    Snapshots for {snapshotAccount}: {snapshots.length === 0 ? "none" : snapshots.map((s) => `${(s.collectionDate || "").slice(0, 10)} → ${s.followers ?? "—"}`).join(" · ")}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </section>
       )}
 
@@ -1011,89 +935,286 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
       )}
 
       {tab === "intelligence" && (
-        <section className="space-y-4">
-          <GeoFilters stateId={stateId} setStateId={setStateId} districtId={districtId} setDistrictId={setDistrictId} pcId={pcId} setPcId={setPcId} acId={acId} setAcId={setAcId} states={states} districts={districts} pcs={filteredPcs} acs={filteredAcs} />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <select className={INPUT} value={intelPlatform} onChange={(e) => setIntelPlatform(e.target.value)}>
-              <option value="">All platforms</option>
-              {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-            <select className={INPUT} value={intelParty} onChange={(e) => setIntelParty(e.target.value)}>
-              <option value="">All parties</option>
-              {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName}</option>)}
-            </select>
-            <select className={INPUT} value={rankBy} onChange={(e) => setRankBy(e.target.value)}>
-              <option value="followers">Rank by followers</option>
-              <option value="engagement">Rank by engagement</option>
-              <option value="growth">Rank by 30-day growth</option>
-              <option value="socialScore">Rank by social score</option>
-            </select>
+        <section className="flex flex-col lg:flex-row gap-4 items-start">
+          <aside className={`${CARD} w-full lg:w-64 shrink-0 space-y-3 min-w-0`}>
+            <h2 className="text-sm font-bold text-[#F5EFE0]">Filters</h2>
+            <div>
+              <label className={LABEL}>State</label>
+              <select className={INPUT} value={stateId} onChange={(e) => { setStateId(e.target.value); setDistrictId(""); setPcId(""); setAcId(""); }}>
+                {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={LABEL}>District</label>
+              <select className={INPUT} value={districtId} onChange={(e) => { setDistrictId(e.target.value); setPcId(""); setAcId(""); }}>
+                <option value="">Select district</option>
+                {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={LABEL}>Constituency</label>
+              <select
+                className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
+                value={districtId ? acId : ""}
+                disabled={!districtId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setAcId(id);
+                  const ac = filteredAcs.find((a) => a.id === id);
+                  const nextPc = ac?.parliamentConstituencyId || ac?.parliamentId || "";
+                  if (nextPc) setPcId(nextPc);
+                }}
+              >
+                <option value="">{districtId ? "All in district" : "Select district first"}</option>
+                {districtId ? filteredAcs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>) : null}
+              </select>
+            </div>
+            <div>
+              <label className={LABEL}>Platform</label>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIntelPlatform("")}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${!intelPlatform ? "bg-[#3B82F6] text-white" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                >
+                  All
+                </button>
+                {PLATFORMS.map((platform) => (
+                  <button
+                    type="button"
+                    key={platform}
+                    onClick={() => setIntelPlatform(platform)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${intelPlatform === platform ? "bg-[#3B82F6] text-white" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                  >
+                    {PLATFORM_LABEL[platform]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+          <div className="flex-1 min-w-0 space-y-4">
+            {!districtId ? (
+              <EmptyState text="Select a district to see constituency reach." />
+            ) : acId ? (
+              <IntelligenceConstituency
+                intel={intel || { constituencyCards: [], leaders: [], audienceEstimates: {} }}
+                acId={acId}
+                acName={selectedAssemblyName || filteredAcs.find((a) => a.id === acId)?.name || acId}
+                districtName={selectedDistrictName}
+                stateName={states.find((s) => s.id === stateId)?.name || stateId}
+                platform={intelPlatform}
+                partyById={partyById}
+              />
+            ) : (
+              <IntelligenceDistrict
+                intel={intel || { constituencyCards: [] }}
+                districtName={selectedDistrictName || "District"}
+                assemblies={filteredAcs}
+                onOpen={(id) => {
+                  setAcId(id);
+                  const ac = filteredAcs.find((a) => a.id === id);
+                  const nextPc = ac?.parliamentConstituencyId || ac?.parliamentId || "";
+                  if (nextPc) setPcId(nextPc);
+                }}
+                partyById={partyById}
+              />
+            )}
           </div>
-          {!intel ? <EmptyState text="No intelligence rows yet." /> : (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <Kpi label="Est. Facebook" value={intel.audienceEstimates?.facebook ?? "—"} hint="Estimated" />
-                <Kpi label="Est. Instagram" value={intel.audienceEstimates?.instagram ?? "—"} hint="Estimated" />
-                <Kpi label="Est. X" value={intel.audienceEstimates?.x ?? "—"} hint="Estimated" />
-                <Kpi label="Est. YouTube" value={intel.audienceEstimates?.youtube ?? "—"} hint="Estimated" />
-              </div>
-              <p className="text-[11px] text-[#B9AF95]">{intel.socialScoreDisclaimer}</p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs table-fixed">
-                  <thead>
-                    <tr className="text-[#D4A24C] text-left">
-                      <th className="py-1">Leader</th><th>Party</th><th>Followers</th><th>Engagement</th><th>30d</th><th>Score</th><th>AC rank</th><th>District</th><th>PC</th><th>Party rank</th><th>State</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(intel.leaders || []).map((row: any) => (
-                      <tr key={row.id} className="border-t border-[#22405E] text-[#F5EFE0]">
-                        <td className="py-1.5 break-words">{row.name}</td>
-                        <td style={{ color: row.partyColor }}>{row.partyId}</td>
-                        <td>{row.followers ?? "—"}</td>
-                        <td>{row.engagementPercent == null ? "—" : `${row.engagementPercent}%`}</td>
-                        <td>{row.growth30 == null ? "—" : `${row.growth30}%`}</td>
-                        <td>{row.socialScore ?? "—"}</td>
-                        <td>{row.rankInConstituency ?? "—"}</td>
-                        <td>{row.rankInDistrict ?? "—"}</td>
-                        <td>{row.rankInParliament ?? "—"}</td>
-                        <td>{row.rankInParty ?? "—"}</td>
-                        <td>{row.rankInState ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className={CARD}>
-                  <h3 className="text-sm font-bold text-[#F5EFE0] mb-2">Party comparison</h3>
-                  {(intel.partyCompare || []).map((p: any) => (
-                    <div key={p.partyId} className="flex justify-between text-xs text-[#B9AF95] py-1">
-                      <span style={{ color: p.partyColor }}>{p.partyName}</span>
-                      <span>{p.leaders} leaders · {p.followers || "—"} followers</span>
-                    </div>
-                  ))}
-                </div>
-                <div className={CARD}>
-                  <h3 className="text-sm font-bold text-[#F5EFE0] mb-2">Platform comparison</h3>
-                  {(intel.platformCompare || []).map((p: any) => (
-                    <div key={p.platform} className="flex justify-between text-xs text-[#B9AF95] py-1">
-                      <span className="uppercase text-[#D4A24C]">{p.platform}</span>
-                      <span>{p.accounts} accounts · {p.followers || "—"} followers</span>
-                    </div>
-                  ))}
-                  {intel.biggestGap && (
-                    <p className="text-[11px] text-[#D4A24C] mt-2">Largest follower gap: {intel.biggestGap.leader} vs {intel.biggestGap.opponent} ({intel.biggestGap.followersDelta})</p>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
         </section>
       )}
     </div>
   );
 };
+
+function platformDetail(leader: any, platform: string) {
+  const fromMap = leader?.platforms?.[platform];
+  if (fromMap) return fromMap;
+  const acc = (leader?.accounts || []).find((a: any) => String(a.platform || "").toLowerCase() === platform);
+  if (!acc) return null;
+  return {
+    followers: acc.followers,
+    noAccount: Boolean(acc.noAccount || acc.verificationStatus === "NO_ACCOUNT"),
+    verified: acc.verificationStatus === "VERIFIED",
+    profileUrl: acc.profileUrl
+  };
+}
+
+function partyLabel(partyById: Record<string, PoliticalParty>, partyId?: string, fallback?: string) {
+  const party = partyId ? partyById[partyId] : undefined;
+  return party?.shortName || party?.name || fallback || partyId || "";
+}
+
+function IntelligenceDistrict({
+  intel,
+  districtName,
+  assemblies,
+  onOpen,
+  partyById
+}: {
+  intel: any;
+  districtName: string;
+  assemblies: any[];
+  onOpen: (id: string) => void;
+  partyById: Record<string, PoliticalParty>;
+}) {
+  const byId: Record<string, any> = {};
+  for (const card of intel.constituencyCards || []) {
+    if (card?.assemblyConstituencyId) byId[card.assemblyConstituencyId] = card;
+  }
+  const rows = (assemblies.length ? assemblies : intel.constituencyCards || []).map((ac: any) => {
+    const id = ac.id || ac.assemblyConstituencyId;
+    const card = byId[id] || {};
+    return {
+      assemblyConstituencyId: id,
+      assemblyName: ac.name || card.assemblyName || id,
+      partyId: card.partyId,
+      partyColor: card.partyColor,
+      mlaName: card.mlaName,
+      followers: card.followers,
+      estimatedUsers: card.estimatedUsers,
+      reachPercent: card.reachPercent
+    };
+  });
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-display text-[#F5EFE0]">{districtName} District</h2>
+        <p className="text-sm text-[#B9AF95] mt-1">{rows.length} {rows.length === 1 ? "constituency" : "constituencies"} · tap one to open</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {rows.map((row: any) => {
+          const pct = row.reachPercent == null ? 0 : Number(row.reachPercent);
+          return (
+            <button
+              type="button"
+              key={row.assemblyConstituencyId}
+              onClick={() => onOpen(row.assemblyConstituencyId)}
+              className={`${CARD} text-left w-full min-w-0`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="font-bold text-[#F5EFE0] break-words">{row.assemblyName}</span>
+                {row.partyId ? (
+                  <span className="text-[10px] font-bold uppercase shrink-0" style={{ color: row.partyColor || "#D4A24C" }}>
+                    {partyLabel(partyById, row.partyId)}
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-[11px] text-[#B9AF95] mt-1 break-words">MLA: {row.mlaName || "—"}</p>
+              <p className="text-3xl font-display text-[#F5EFE0] mt-3">{row.reachPercent == null ? "—" : `${Math.round(pct)}%`}</p>
+              <p className="text-[11px] text-[#B9AF95]">of all users reached</p>
+              <div className="mt-2 h-1.5 rounded bg-[#142B45]">
+                <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
+              </div>
+              <p className="text-[11px] text-[#B9AF95] mt-2">
+                {formatCompactCount(row.followers)} followers · {formatCompactCount(row.estimatedUsers)} users
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function IntelligenceConstituency({
+  intel,
+  acId,
+  acName,
+  districtName,
+  stateName,
+  platform,
+  partyById
+}: {
+  intel: any;
+  acId: string;
+  acName: string;
+  districtName: string;
+  stateName: string;
+  platform: string;
+  partyById: Record<string, PoliticalParty>;
+}) {
+  const card = (intel.constituencyCards || []).find((c: any) => c.assemblyConstituencyId === acId) || {};
+  const estimates = card.platformEstimates || {
+    facebook: intel.audienceEstimates?.facebook || 0,
+    instagram: intel.audienceEstimates?.instagram || 0,
+    x: intel.audienceEstimates?.x || 0,
+    youtube: intel.audienceEstimates?.youtube || 0
+  };
+  const leaders = (intel.leaders || []).filter((l: any) => l.assemblyConstituencyId === acId);
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-display text-[#F5EFE0]">{acName}</h2>
+        <p className="text-sm text-[#B9AF95] mt-1">
+          {[districtName, stateName].filter(Boolean).join(" · ")}
+          {districtName || stateName ? " · " : ""}
+          estimated platform users in this area
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {PLATFORMS.map((plat) => (
+          <div key={plat} className={`${CARD} text-center`}>
+            <span className="text-[11px] text-[#B9AF95] block">{PLATFORM_LABEL[plat]}</span>
+            <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{formatCompactCount(estimates[plat])}</span>
+            <span className="text-[11px] text-[#B9AF95]">users</span>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {leaders.length ? leaders.map((leader: any) => {
+          const sitting = leader.leaderKind !== "OPPOSITION";
+          return (
+            <div key={leader.id} className={`${CARD} min-w-0 space-y-3`}>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-bold text-[#F5EFE0] break-words">{leader.name}</h3>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {leader.partyId ? (
+                    <span className="text-[10px] font-bold uppercase" style={{ color: leader.partyColor || "#D4A24C" }}>
+                      {partyLabel(partyById, leader.partyId, leader.partyName)}
+                    </span>
+                  ) : null}
+                  {sitting ? <span className="text-[10px] text-[#B9AF95]">Sitting MLA</span> : null}
+                </div>
+              </div>
+              {PLATFORMS.map((plat) => {
+                const detail = platformDetail(leader, plat);
+                const estimate = Number(estimates[plat] || 0);
+                const noAccount = Boolean(detail?.noAccount);
+                const followers = noAccount ? null : detail?.followers;
+                const pct = followers != null && estimate ? Math.round((Number(followers) / estimate) * 100) : 0;
+                const hasAccount = !noAccount && (Boolean(detail?.verified) || followers != null);
+                const emphasize = !platform || platform === plat;
+                return (
+                  <div key={plat} className={`min-w-0 ${emphasize ? "" : "opacity-70"}`}>
+                    <div className="flex items-center justify-between gap-2 text-[12px]">
+                      <span className="text-[#F5EFE0] inline-flex items-center gap-1 min-w-0">
+                        {PLATFORM_LABEL[plat]}
+                        {hasAccount ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : null}
+                      </span>
+                      {noAccount ? (
+                        <span className="text-rose-400 font-bold shrink-0">No account</span>
+                      ) : (
+                        <span className="text-[#B9AF95] text-right">
+                          {formatCompactCount(followers)} of {formatCompactCount(estimate)}
+                          {followers != null && estimate ? <span className="text-[#F5EFE0] font-bold"> = {pct}%</span> : null}
+                        </span>
+                      )}
+                    </div>
+                    {!noAccount ? (
+                      <div className="mt-1 h-1.5 rounded bg-[#142B45]">
+                        <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }) : <EmptyState text="No leaders entered for this constituency." />}
+      </div>
+    </div>
+  );
+}
 
 function Kpi({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
   return (
@@ -1173,7 +1294,9 @@ function GeoFilters(props: {
   acId: string; setAcId: (v: string) => void;
   states: StateInfo[]; districts: any[]; pcs: ParliamentInfo[]; acs: any[];
   markRequired?: boolean;
+  showParliament?: boolean;
 }) {
+  const showParliament = props.showParliament !== false;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       <div className="min-w-0">
@@ -1189,6 +1312,7 @@ function GeoFilters(props: {
           {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
       </div>
+      {showParliament && (
       <div className="min-w-0">
         <label className={LABEL}>Parliament constituency</label>
         <select
@@ -1201,13 +1325,20 @@ function GeoFilters(props: {
           {props.districtId ? props.pcs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>) : null}
         </select>
       </div>
+      )}
       <div className="min-w-0">
         <label className={LABEL}>Constituency{props.markRequired ? " *" : ""}</label>
         <select
           className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
           value={props.districtId ? props.acId : ""}
           disabled={!props.districtId}
-          onChange={(e) => props.setAcId(e.target.value)}
+          onChange={(e) => {
+            const id = e.target.value;
+            props.setAcId(id);
+            const ac = props.acs.find((a) => a.id === id);
+            const nextPc = ac?.parliamentConstituencyId || ac?.parliamentId || "";
+            if (nextPc) props.setPcId(nextPc);
+          }}
         >
           <option value="">{props.districtId ? "Select AC" : "Select district first"}</option>
           {props.districtId ? props.acs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>) : null}

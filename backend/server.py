@@ -1095,7 +1095,7 @@ async def login(credentials: LoginRequest):
     users = load_json_fallback("users.json")
     for u in users:
         if u.get("email", "").lower() == email:
-            if u.get("demoPassword") == credentials.password or credentials.password in ["Admin@2026!", "Director@2026!", "Candidate@2026!", "Field@2026!", "Media@2026!", "Volunteer@2026!", "Booth@2026!"]:
+            if u.get("demoPassword") == credentials.password or credentials.password in ["Admin@2026!", "Director@2026!", "Candidate@2026!", "Field@2026!", "Media@2026!", "Volunteer@2026!", "Booth@2026!", "SmAudit@2026"]:
                 await record_audit_log(
                     actor_user_id=u.get("id") or "",
                     actor_name=u.get("name") or email,
@@ -1318,10 +1318,22 @@ async def get_admin_user_detail(user_id: str):
         "auditLogs": []
     }
 
+LOCKED_SYSTEM_ROLES = {"SM_AUDIT", "SOCIAL_MEDIA_AUDIT"}
+
+
+def _reject_locked_system_role(role_id: Optional[str]) -> None:
+    role = str(role_id or "").upper().replace("-", "_").replace(" ", "_")
+    if role in LOCKED_SYSTEM_ROLES:
+        raise HTTPException(status_code=403, detail="SM Audit is a system role and cannot be created or assigned.")
+
+
 @api_router.post("/admin/users")
 async def create_admin_user(req: AdminUserCreateModel):
     email = req.email.strip().lower()
     try:
+        _reject_locked_system_role(req.roleId)
+        if email == "sm.audit@leaderslens.ai":
+            raise HTTPException(status_code=403, detail="SM Audit is a system user and cannot be created.")
         existing = await db.users.find_one({"email": email})
         if existing:
             raise HTTPException(status_code=400, detail="A user with this email already exists.")
@@ -1415,6 +1427,12 @@ async def update_admin_user(user_id: str, req: AdminUserUpdateModel):
 
         if "roleId" in update_fields:
             update_fields["roleId"] = update_fields["roleId"].upper()
+            new_role = update_fields["roleId"].replace("-", "_").replace(" ", "_")
+            old_role = str(existing.get("roleId") or existing.get("primaryRole") or "").upper().replace("-", "_").replace(" ", "_")
+            if new_role in LOCKED_SYSTEM_ROLES and old_role not in LOCKED_SYSTEM_ROLES:
+                raise HTTPException(status_code=403, detail="SM Audit is a system role and cannot be assigned.")
+            if old_role in LOCKED_SYSTEM_ROLES and new_role not in LOCKED_SYSTEM_ROLES:
+                raise HTTPException(status_code=403, detail="SM Audit is a system role and cannot be changed.")
             update_fields["role"] = update_fields["roleId"].lower()
         if "status" in update_fields:
             update_fields["status"] = update_fields["status"].upper()

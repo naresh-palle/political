@@ -230,6 +230,13 @@ def social_score(row: Dict[str, Any], cohort: List[Dict[str, Any]]) -> Tuple[Opt
     return round(total / used, 2), {"version": SOCIAL_SCORE_VERSION, "weights": weights, "parts": parts, "reweighted": True}
 
 
+def is_sm_audit_actor(actor: Optional[Dict[str, Any]]) -> bool:
+    actor = actor or {}
+    role = str(actor.get("primaryRole") or actor.get("roleId") or actor.get("role") or "").upper().replace("-", "_").replace(" ", "_")
+    email = str(actor.get("email") or "").strip().lower()
+    return role in {"SM_AUDIT", "SOCIAL_MEDIA_AUDIT"} or email == "sm.audit@leaderslens.ai"
+
+
 def actor_capabilities(actor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     actor = actor or {}
     role = str(actor.get("primaryRole") or actor.get("roleId") or actor.get("role") or "").upper()
@@ -238,18 +245,21 @@ def actor_capabilities(actor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     is_pa = bool(actor.get("isPoliticalAdmin")) or role in {"POLITICAL_ADMIN", "ADMIN"}
     is_dir = role in {"DIRECTOR", "CAMPAIGN_MANAGER", "PARTY_ADMIN"}
     is_vol = role in {"VOLUNTEER"}
+    is_sm = is_sm_audit_actor(actor)
     staff = is_super or is_pa or is_dir
+    pi_operator = is_sm or is_super
     return {
-        "view": True,
-        "create": staff or is_vol,
-        "update": staff or is_vol,
-        "submit": staff or is_vol,
-        "verify": staff,
-        "import": staff,
-        "export": staff,
+        "view": pi_operator,
+        "create": pi_operator,
+        "update": pi_operator,
+        "submit": pi_operator,
+        "verify": pi_operator,
+        "import": pi_operator,
+        "export": pi_operator,
         "isSuper": is_super,
-        "scopeStateId": None if is_super else (actor.get("stateId") or "AP"),
-        "scopeAssemblyId": None if (is_super or is_pa) else actor.get("assemblyConstituencyId"),
+        "isSmAudit": is_sm,
+        "scopeStateId": None if (is_super or is_sm) else (actor.get("stateId") or "AP"),
+        "scopeAssemblyId": None if (is_super or is_pa or is_sm) else actor.get("assemblyConstituencyId"),
         "actorId": actor.get("id") or actor.get("email") or "anonymous",
         "actorName": actor.get("name") or "Unknown user",
     }
@@ -476,6 +486,7 @@ def sample_seed_documents() -> Dict[str, List[Dict[str, Any]]]:
             "parliamentConstituencyId": "AP-PC-17",
             "assemblyConstituencyId": "AP-AC-139",
             "contactId": "cnt-pi-sample-rao",
+            "leaderKind": "SITTING_MLA",
             "verificationStatus": "VERIFIED",
             "dataSource": "SAMPLE",
             "remarks": f"{SAMPLE_TAG} fictional sitting MLA for Banaganapalle.",
@@ -493,6 +504,7 @@ def sample_seed_documents() -> Dict[str, List[Dict[str, Any]]]:
             "parliamentConstituencyId": "AP-PC-17",
             "assemblyConstituencyId": "AP-AC-139",
             "contactId": "cnt-pi-sample-naidu",
+            "leaderKind": "OPPOSITION",
             "verificationStatus": "NEEDS_RECHECK",
             "dataSource": "SAMPLE",
             "remarks": f"{SAMPLE_TAG} fictional opposition leader.",
@@ -510,6 +522,7 @@ def sample_seed_documents() -> Dict[str, List[Dict[str, Any]]]:
             "parliamentConstituencyId": "AP-PC-21",
             "assemblyConstituencyId": "AP-AC-132",
             "contactId": "cnt-pi-sample-reddy",
+            "leaderKind": "SITTING_MLA",
             "verificationStatus": "PENDING",
             "dataSource": "SAMPLE",
             "remarks": f"{SAMPLE_TAG} fictional Kadapa leader.",
@@ -527,6 +540,7 @@ def sample_seed_documents() -> Dict[str, List[Dict[str, Any]]]:
             "parliamentConstituencyId": "AP-PC-18",
             "assemblyConstituencyId": "AP-AC-147",
             "contactId": "cnt-pi-sample-patel",
+            "leaderKind": "SITTING_MLA",
             "verificationStatus": "VERIFIED",
             "dataSource": "SAMPLE",
             "remarks": f"{SAMPLE_TAG} fictional Kurnool leader.",
@@ -534,14 +548,73 @@ def sample_seed_documents() -> Dict[str, List[Dict[str, Any]]]:
             "enteredByName": "B. C. Janardhan Reddy (MLA)",
             "isSample": True,
         },
+        {
+            "id": "pp-sample-kadapa-opp",
+            "name": "B. Rao (Sample)",
+            "normalizedName": normalize_name("B. Rao (Sample)"),
+            "partyId": "TDP",
+            "stateId": "AP",
+            "districtId": "AP-DIST-YSR",
+            "parliamentConstituencyId": "AP-PC-21",
+            "assemblyConstituencyId": "AP-AC-132",
+            "contactId": "cnt-pi-sample-kadapa-opp",
+            "leaderKind": "OPPOSITION",
+            "verificationStatus": "PENDING",
+            "dataSource": "SAMPLE",
+            "remarks": f"{SAMPLE_TAG} fictional Kadapa opposition leader.",
+            "enteredBy": "usr-demo-director",
+            "enteredByName": "Manager1",
+            "isSample": True,
+        },
     ]
+    kadapa_mla_names = ["R. Kumar (Sample)", "P. Sharma (Sample)", "V. Rao (Sample)", "S. Devi (Sample)", "N. Reddy (Sample)", "L. Naidu (Sample)"]
+    name_i = 0
+    for ac_id, pc_id, _name in kadapa_acs:
+        if ac_id == "AP-AC-132":
+            continue
+        persons.append(
+            {
+                "id": f"pp-sample-kdp-{ac_id}",
+                "name": kadapa_mla_names[name_i],
+                "normalizedName": normalize_name(kadapa_mla_names[name_i]),
+                "partyId": "TDP",
+                "stateId": "AP",
+                "districtId": "AP-DIST-YSR",
+                "parliamentConstituencyId": pc_id,
+                "assemblyConstituencyId": ac_id,
+                "contactId": f"cnt-pi-sample-kdp-{ac_id}",
+                "leaderKind": "SITTING_MLA",
+                "verificationStatus": "PENDING",
+                "dataSource": "SAMPLE",
+                "remarks": f"{SAMPLE_TAG} fictional sitting MLA for {_name}.",
+                "enteredBy": "usr-demo-director",
+                "enteredByName": "Manager1",
+                "isSample": True,
+            }
+        )
+        name_i += 1
     roles = [
         {"id": "pr-sample-rao-mla", "personId": "pp-sample-rao", "politicalRole": "MLA", "status": "CURRENT", "electionYear": 2024, "partyId": "TDP", "assemblyConstituencyId": "AP-AC-139", "isSample": True},
         {"id": "pr-sample-rao-mos", "personId": "pp-sample-rao", "politicalRole": "MINISTER_OF_STATE", "status": "CURRENT", "electionYear": 2024, "partyId": "TDP", "assemblyConstituencyId": "AP-AC-139", "isSample": True},
         {"id": "pr-sample-naidu", "personId": "pp-sample-naidu", "politicalRole": "FORMER_MLA", "status": "FORMER", "electionYear": 2019, "partyId": "YSRCP", "assemblyConstituencyId": "AP-AC-139", "isSample": True},
         {"id": "pr-sample-reddy", "personId": "pp-sample-reddy", "politicalRole": "PARTY_LEADER", "status": "CURRENT", "electionYear": None, "partyId": "YSRCP", "assemblyConstituencyId": "AP-AC-132", "isSample": True},
         {"id": "pr-sample-patel", "personId": "pp-sample-patel", "politicalRole": "MLA", "status": "CURRENT", "electionYear": 2024, "partyId": "TDP", "assemblyConstituencyId": "AP-AC-147", "isSample": True},
+        {"id": "pr-sample-kadapa-opp", "personId": "pp-sample-kadapa-opp", "politicalRole": "PARTY_LEADER", "status": "CURRENT", "electionYear": None, "partyId": "TDP", "assemblyConstituencyId": "AP-AC-132", "isSample": True},
     ]
+    for person in persons:
+        if person["id"].startswith("pp-sample-kdp-"):
+            roles.append(
+                {
+                    "id": f"pr-{person['id']}",
+                    "personId": person["id"],
+                    "politicalRole": "MLA",
+                    "status": "CURRENT",
+                    "electionYear": 2024,
+                    "partyId": person["partyId"],
+                    "assemblyConstituencyId": person["assemblyConstituencyId"],
+                    "isSample": True,
+                }
+            )
 
     def _account(aid, person, platform, url, ident, followers, posts, likes, comments, views, status):
         eng, formula = calculate_engagement(platform, followers, likes, comments, views)
@@ -577,10 +650,36 @@ def sample_seed_documents() -> Dict[str, List[Dict[str, Any]]]:
         _account("sma-rao-yt", "pp-sample-rao", "youtube", "https://youtube.com/@sample.rao.bng", "sample.rao.bng", 7300, 8, None, None, 2100, "VERIFIED"),
         _account("sma-naidu-fb", "pp-sample-naidu", "facebook", "https://facebook.com/sample.naidu.bng", "sample.naidu.bng", 12100, 9, 140, 22, None, "NEEDS_RECHECK"),
         _account("sma-naidu-ig", "pp-sample-naidu", "instagram", "https://instagram.com/sample.naidu.bng", "sample.naidu.bng", None, None, None, None, None, "NO_ACCOUNT"),
-        _account("sma-reddy-fb", "pp-sample-reddy", "facebook", "https://facebook.com/sample.reddy.kdp", "sample.reddy.kdp", 26000, 14, 510, 80, None, "PENDING"),
+        _account("sma-reddy-fb", "pp-sample-reddy", "facebook", "https://facebook.com/sample.reddy.kdp", "sample.reddy.kdp", 14000, 14, 510, 80, None, "PENDING"),
+        _account("sma-reddy-ig", "pp-sample-reddy", "instagram", "https://instagram.com/sample.reddy.kdp", "sample.reddy.kdp", 5800, 18, 220, 31, None, "VERIFIED"),
+        _account("sma-reddy-x", "pp-sample-reddy", "x", "https://x.com/sample_reddy_kdp", "sample_reddy_kdp", 5600, 40, 55, 12, None, "VERIFIED"),
+        _account("sma-reddy-yt", "pp-sample-reddy", "youtube", "https://youtube.com/@sample.reddy.kdp", "sample.reddy.kdp", 9900, 6, None, None, 1400, "VERIFIED"),
+        _account("sma-kdp-opp-fb", "pp-sample-kadapa-opp", "facebook", "https://facebook.com/sample.brao.kdp", "sample.brao.kdp", 31000, 11, 240, 30, None, "VERIFIED"),
+        _account("sma-kdp-opp-ig", "pp-sample-kadapa-opp", "instagram", "https://instagram.com/sample.brao.kdp", "sample.brao.kdp", None, None, None, None, None, "NO_ACCOUNT"),
+        _account("sma-kdp-opp-x", "pp-sample-kadapa-opp", "x", "https://x.com/sample_brao_kdp", "sample_brao_kdp", 3900, 22, 40, 8, None, "VERIFIED"),
+        _account("sma-kdp-opp-yt", "pp-sample-kadapa-opp", "youtube", "https://youtube.com/@sample.brao.kdp", "sample.brao.kdp", 26000, 5, None, None, 1800, "VERIFIED"),
         _account("sma-patel-fb", "pp-sample-patel", "facebook", "https://facebook.com/sample.patel.knl", "sample.patel.knl", 15200, 16, 190, 27, None, "VERIFIED"),
         _account("sma-patel-yt", "pp-sample-patel", "youtube", "https://youtube.com/@sample.patel.knl", "sample.patel.knl", 5400, 4, None, None, 980, "INACTIVE"),
     ]
+    extra_i = 0
+    for person in persons:
+        if not str(person.get("id") or "").startswith("pp-sample-kdp-"):
+            continue
+        pid = person["id"]
+        slug = str(person.get("assemblyConstituencyId") or extra_i).replace("AP-AC-", "ac")
+        fb = 9000 + extra_i * 800
+        ig = 4500 + extra_i * 400
+        x_followers = 1800 + extra_i * 150
+        yt = 6200 + extra_i * 500
+        accounts.extend(
+            [
+                _account(f"sma-{slug}-fb", pid, "facebook", f"https://facebook.com/sample.{slug}", f"sample.{slug}", fb, 12, 180, 22, None, "VERIFIED"),
+                _account(f"sma-{slug}-ig", pid, "instagram", f"https://instagram.com/sample.{slug}", f"sample.{slug}", ig, 16, 210, 28, None, "VERIFIED"),
+                _account(f"sma-{slug}-x", pid, "x", f"https://x.com/sample_{slug}", f"sample_{slug}", x_followers, 20, 40, 9, None, "VERIFIED"),
+                _account(f"sma-{slug}-yt", pid, "youtube", f"https://youtube.com/@sample.{slug}", f"sample.{slug}", yt, 5, None, None, 1200, "VERIFIED"),
+            ]
+        )
+        extra_i += 1
     snapshots = []
     for acc in accounts:
         if acc.get("noAccount") or acc.get("followers") is None:

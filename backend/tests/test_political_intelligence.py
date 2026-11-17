@@ -47,10 +47,19 @@ def test_snapshot_growth_and_social_score_skip_missing():
 
 def test_volunteer_cannot_verify():
     caps = actor_capabilities({"id": "vol-1", "primaryRole": "VOLUNTEER", "name": "Volunteer1"})
-    assert caps["create"] is True
+    assert caps["view"] is False
+    assert caps["create"] is False
     assert caps["verify"] is False
+    director = actor_capabilities({"id": "usr-demo-director", "primaryRole": "DIRECTOR", "name": "Manager1"})
+    assert director["view"] is False
+    assert director["create"] is False
     admin = actor_capabilities({"id": "adm", "email": "admin@leaderslens.ai", "isPlatformAdmin": True})
     assert admin["verify"] is True
+    sm = actor_capabilities({"id": "usr-sm-audit", "name": "SM Audit", "primaryRole": "SM_AUDIT", "email": "sm.audit@leaderslens.ai"})
+    assert sm["view"] is True
+    assert sm["create"] is True
+    assert sm["verify"] is True
+    assert sm["isSmAudit"] is True
 
 
 def test_sample_seed_is_labeled():
@@ -74,10 +83,15 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
 
     reset_memory()
     director = {"id": "usr-demo-director", "name": "Manager1", "primaryRole": "DIRECTOR", "stateId": "AP", "assemblyConstituencyId": "AP-AC-139"}
+    sm_audit = {"id": "usr-sm-audit", "name": "SM Audit", "email": "sm.audit@leaderslens.ai", "primaryRole": "SM_AUDIT", "roleId": "SM_AUDIT"}
     admin = {"id": "usr-admin", "name": "Naresh Palle", "email": "admin@leaderslens.ai", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
 
     async def fake_actor(user_id):
-        return director if user_id == director["id"] else admin
+        if user_id == director["id"]:
+            return director
+        if user_id == sm_audit["id"]:
+            return sm_audit
+        return admin
 
     monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
     monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
@@ -100,7 +114,7 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "stateId": "AP",
                 "politicalRole": "MLA",
             },
-            userId=director["id"],
+            userId=sm_audit["id"],
         )
     )
     assert leader["id"]
@@ -114,7 +128,7 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "stateId": "AP",
                 "politicalRole": "MLA",
             },
-            userId=director["id"],
+            userId=sm_audit["id"],
         )
     )
     assert again["id"] == leader["id"]
@@ -129,11 +143,26 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "avgLikesLast10": 50,
                 "avgCommentsLast10": 10,
             },
-            userId=director["id"],
+            userId=sm_audit["id"],
         )
     )
     assert first["engagementPercent"] == 6.0
     assert first.get("otp") is None
+    try:
+        _run(
+            posts["/pi/social-accounts"](
+                {
+                    "personId": leader["id"],
+                    "platform": "instagram",
+                    "profileUrl": "https://instagram.com/sample.rao.bng",
+                    "followers": 100,
+                },
+                userId=director["id"],
+            )
+        )
+        raise AssertionError("director should not write PI records")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 403
     _run(
         posts["/pi/social-accounts"](
             {
@@ -145,10 +174,10 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "avgLikesLast10": 50,
                 "avgCommentsLast10": 10,
             },
-            userId=director["id"],
+            userId=sm_audit["id"],
         )
     )
-    snaps = _run(gets["/pi/social-accounts/{account_id}/snapshots"](first["id"], userId=director["id"]))
+    snaps = _run(gets["/pi/social-accounts/{account_id}/snapshots"](first["id"], userId=sm_audit["id"]))
     assert len(snaps) >= 2
     assert {s["followers"] for s in snaps} >= {1000, 1500}
 
@@ -160,20 +189,14 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                     "platform": "instagram",
                     "profileUrl": "https://www.facebook.com/sample.rao.bng/",
                 },
-                userId=director["id"],
+                userId=sm_audit["id"],
             )
         )
         raise AssertionError("duplicate URL should fail")
     except Exception as exc:
         assert getattr(exc, "status_code", None) == 409 or "Duplicate" in str(exc)
 
-    try:
-        _run(posts["/pi/verification/{record_type}/{record_id}"]("social", first["id"], {"status": "VERIFIED"}, userId=director["id"]))
-        raise AssertionError("self verify should fail")
-    except Exception as exc:
-        assert getattr(exc, "status_code", None) == 403
-
-    verified = _run(posts["/pi/verification/{record_type}/{record_id}"]("social", first["id"], {"status": "VERIFIED", "remarks": "ok"}, userId=admin["id"]))
+    verified = _run(posts["/pi/verification/{record_type}/{record_id}"]("social", first["id"], {"status": "VERIFIED", "remarks": "ok"}, userId=sm_audit["id"]))
     assert verified["verificationStatus"] == "VERIFIED"
     history = _run(gets["/pi/verification/{record_id}/history"](first["id"], userId=admin["id"]))
     assert history and history[0]["previousStatus"] != history[0]["newStatus"]
@@ -317,6 +340,14 @@ def test_constituency_update_preserves_history_and_links_contact(monkeypatch):
     intel = _run(gets["/pi/intelligence"](userId=admin["id"], stateId="AP", districtId=None, parliamentConstituencyId=None, assemblyConstituencyId=None, platform=None, partyId=None, rankBy="followers"))
     assert intel["audienceEstimates"]["facebook"] == 250
     assert intel["socialScoreDisclaimer"]
+    assert isinstance(intel.get("constituencyCards"), list)
+    assert intel["constituencyCards"]
+    card = next(c for c in intel["constituencyCards"] if c.get("assemblyConstituencyId") == "AP-AC-139")
+    assert card.get("mlaName")
+    assert "reachPercent" in card
+    leader = next(l for l in intel["leaders"] if l.get("assemblyConstituencyId") == "AP-AC-139")
+    assert leader.get("platforms")
+    assert leader.get("leaderKind")
 
 
 def test_ap_districts_cascade_from_existing_geography():
