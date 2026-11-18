@@ -58,6 +58,7 @@ AP_DISTRICT_BY_NAME = {
     "kakinada city": "Kakinada",
     "anaparthy (east)": "East Godavari",
     "anaparthy": "East Godavari",
+    "jaggampeta": "Kakinada",
     "rajanagaram": "East Godavari",
     "rajahmundry city": "East Godavari",
     "rajahmundry rural": "East Godavari",
@@ -99,6 +100,7 @@ AP_DISTRICT_BY_NAME = {
     "nandigama": "NTR",
     "jaggayyapeta": "NTR",
     "tiruvuru": "NTR",
+    "pedakurapadu": "Palnadu",
     "tadikonda": "Guntur",
     "mangalagiri": "Guntur",
     "ponnuru": "Guntur",
@@ -131,6 +133,7 @@ AP_DISTRICT_BY_NAME = {
     "kandukur": "Prakasam",
     "kavali": "SPSR Nellore",
     "kavali (south)": "SPSR Nellore",
+    "udayagiri": "SPSR Nellore",
     "atmakur": "SPSR Nellore",
     "kovur": "SPSR Nellore",
     "nellore city": "SPSR Nellore",
@@ -142,6 +145,7 @@ AP_DISTRICT_BY_NAME = {
     "chandragiri": "Tirupati",
     "tirupati": "Tirupati",
     "srikalahasti": "Tirupati",
+    "sathyavedu": "Tirupati",
     "badvel": "YSR Kadapa",
     "pulivendla": "YSR Kadapa",
     "kamalapuram": "YSR Kadapa",
@@ -156,7 +160,6 @@ AP_DISTRICT_BY_NAME = {
     "pileru": "Annamayya",
     "madanapalle": "Annamayya",
     "punganur": "Annamayya",
-    "udayagiri": "SPSR Nellore",
     "allagadda": "Nandyal",
     "srisailam": "Nandyal",
     "nandikotkur": "Nandyal",
@@ -308,6 +311,36 @@ def build_district_catalog(
     return rows, maps
 
 
+def prefer_packaged_assemblies(
+    live: Optional[Iterable[Dict[str, Any]]],
+    packaged: Iterable[Dict[str, Any]],
+    state_id: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Use packaged ECI JSON when Mongo collapsed unique AP/TS seats (duplicate ids)."""
+    live_rows = list(live or [])
+    packaged_rows = list(packaged or [])
+    wanted = (state_id or "").upper()
+
+    def unique_ids(rows: Iterable[Dict[str, Any]], state: str) -> set:
+        return {
+            row.get("id")
+            for row in rows
+            if row.get("id") and str(row.get("stateId") or "").upper() == state
+        }
+
+    states = [wanted] if wanted else sorted({str(row.get("stateId") or "").upper() for row in packaged_rows if row.get("stateId")})
+    for state in states:
+        pack_ids = unique_ids(packaged_rows, state)
+        if pack_ids and len(unique_ids(live_rows, state)) < len(pack_ids):
+            if wanted:
+                return [row for row in packaged_rows if str(row.get("stateId") or "").upper() == wanted]
+            return packaged_rows
+    if wanted:
+        scoped = [row for row in live_rows if str(row.get("stateId") or "").upper() == wanted]
+        return scoped or [row for row in packaged_rows if str(row.get("stateId") or "").upper() == wanted]
+    return live_rows or packaged_rows
+
+
 def dump_district_json() -> List[Dict[str, Any]]:
     backend_data = Path(__file__).resolve().parents[1] / "data"
     assemblies: List[Dict[str, Any]] = []
@@ -324,6 +357,7 @@ def dump_district_json() -> List[Dict[str, Any]]:
         backend_data / "districts.json",
         Path(__file__).resolve().parents[2] / "frontend" / "public" / "data" / "geography" / "districts.json",
         Path(__file__).resolve().parents[2] / "data" / "geography" / "districts.json",
+        Path(__file__).resolve().parents[2] / "docs" / "data" / "geography" / "districts.json",
     ]
     for dest in dests:
         dest.parent.mkdir(parents=True, exist_ok=True)

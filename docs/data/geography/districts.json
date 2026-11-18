@@ -128,8 +128,7 @@
       "AP-AC-172",
       "AP-AC-173",
       "AP-AC-174",
-      "AP-AC-175",
-      "AP-AC-176"
+      "AP-AC-175"
     ],
     "parliamentConstituencyIds": [
       "AP-PC-25"
@@ -162,7 +161,6 @@
     "source": "CURRENT_ADMIN_DISTRICT_MASTER",
     "assemblyConstituencyIds": [
       "AP-AC-43",
-      "AP-AC-40",
       "AP-AC-52",
       "AP-AC-54",
       "AP-AC-55",
@@ -225,7 +223,8 @@
       "AP-AC-37",
       "AP-AC-41",
       "AP-AC-42",
-      "AP-AC-44"
+      "AP-AC-44",
+      "AP-AC-40"
     ],
     "parliamentConstituencyIds": [
       "AP-PC-6"
@@ -319,7 +318,8 @@
       "AP-AC-98",
       "AP-AC-99",
       "AP-AC-100",
-      "AP-AC-101"
+      "AP-AC-101",
+      "AP-AC-109"
     ],
     "parliamentConstituencyIds": [
       "AP-PC-14",
@@ -336,7 +336,7 @@
       "AP-AC-10",
       "AP-AC-11",
       "AP-AC-12",
-      "AP-AC-130"
+      "AP-AC-38"
     ],
     "parliamentConstituencyIds": [
       "AP-PC-1"
@@ -357,7 +357,6 @@
       "AP-AC-111",
       "AP-AC-112",
       "AP-AC-113",
-      "AP-AC-109",
       "AP-AC-115"
     ],
     "parliamentConstituencyIds": [
@@ -437,7 +436,8 @@
       "AP-AC-162",
       "AP-AC-166",
       "AP-AC-167",
-      "AP-AC-168"
+      "AP-AC-168",
+      "AP-AC-176"
     ],
     "parliamentConstituencyIds": [
       "AP-PC-23"
@@ -6054,7 +6054,7 @@
     "isActive": true,
     "source": "CURRENT_ADMIN_DISTRICT_MASTER",
     "assemblyConstituencyIds": [
-      "TS-AC-13",
+      "TS-AC-32",
       "TS-AC-14",
       "TS-AC-15",
       "TS-AC-16"

@@ -601,18 +601,17 @@ async def get_parliaments_by_state(state_id: str, q: Optional[str] = None):
 @api_router.get("/geography/states/{state_id}/assembly-constituencies")
 async def get_assemblies_by_state(state_id: str, q: Optional[str] = None):
     try:
+        from backend.services.geo_districts import prefer_packaged_assemblies
+    except ImportError:
+        from services.geo_districts import prefer_packaged_assemblies
+    packaged = load_json_fallback("assemblies.json")
+    live = None
+    try:
         query = {"stateId": state_id.upper()}
-        acs = await db.assembly_constituencies.find(query, {"_id": 0}).sort("number", 1).to_list(5000)
-        if acs:
-            if q:
-                q_lower = q.lower()
-                acs = [a for a in acs if q_lower in str(a.get("name") or "").lower() or q_lower in str(a.get("code") or "").lower()]
-            return acs
+        live = await db.assembly_constituencies.find(query, {"_id": 0}).sort("number", 1).to_list(5000)
     except Exception as e:
         log_mongo_notice("get_assemblies_by_state", e)
-
-    fallback = load_json_fallback("assemblies.json")
-    results = [a for a in fallback if str(a.get("stateId") or "").upper() == state_id.upper()]
+    results = prefer_packaged_assemblies(live, packaged, state_id)
     if q:
         q_lower = q.lower()
         results = [a for a in results if q_lower in str(a.get("name") or "").lower() or q_lower in str(a.get("code") or "").lower()]

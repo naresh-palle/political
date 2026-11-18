@@ -424,3 +424,72 @@ def test_ap_districts_cascade_from_existing_geography():
     ts_missing = [_norm(a["name"]) for a in acs if a.get("stateId") == "TS" and _norm(a.get("name")) not in TS_DISTRICT_BY_NAME]
     assert ts_missing == []
     assert any(m["districtName"] == "Siddipet" for m in ts_maps)
+
+
+def test_ap_and_ts_unique_assembly_ids_match_official_totals():
+    import json
+    from collections import Counter
+    from pathlib import Path
+
+    from backend.services.geo_districts import AP_DISTRICT_BY_NAME, build_district_catalog, _norm
+    from backend.services.district_master import TS_DISTRICT_BY_NAME
+
+    root = Path(__file__).resolve().parents[1]
+    acs = json.loads((root / "data" / "assemblies.json").read_text())
+    pcs = json.loads((root / "data" / "parliaments.json").read_text())
+    states = {s["id"]: s for s in json.loads((root / "data" / "states.json").read_text())}
+
+    ap = [a for a in acs if a.get("stateId") == "AP"]
+    ts = [a for a in acs if a.get("stateId") == "TS"]
+    ap_ids = [a["id"] for a in ap]
+    ts_ids = [a["id"] for a in ts]
+    assert len(ap) == states["AP"]["totalAssemblyConstituencies"] == 175
+    assert len(set(ap_ids)) == 175
+    assert {k: v for k, v in Counter(ap_ids).items() if v > 1} == {}
+    assert len(ts) == states["TS"]["totalAssemblyConstituencies"] == 119
+    assert len(set(ts_ids)) == 119
+    assert {k: v for k, v in Counter(ts_ids).items() if v > 1} == {}
+
+    palakonda = next(a for a in ap if _norm(a.get("name")) == "palakonda")
+    rayachoti = next(a for a in ap if _norm(a.get("name")) == "rayachoti")
+    assert palakonda["id"] != rayachoti["id"]
+    jukkal = next(a for a in ts if _norm(a.get("name")) == "jukkal")
+    armur = next(a for a in ts if _norm(a.get("name")) == "armur")
+    assert jukkal["id"] != armur["id"]
+
+    ap_names = {_norm(a.get("name")) for a in ap}
+    for required in ("palakonda", "jaggampeta", "pedakurapadu", "udayagiri", "sathyavedu"):
+        assert required in ap_names
+    assert "santhipuram" not in ap_names
+    assert AP_DISTRICT_BY_NAME["palakonda"] == "Parvathipuram Manyam"
+    assert AP_DISTRICT_BY_NAME["jaggampeta"] == "Kakinada"
+    assert AP_DISTRICT_BY_NAME["pedakurapadu"] == "Palnadu"
+    assert AP_DISTRICT_BY_NAME["udayagiri"] == "SPSR Nellore"
+    assert AP_DISTRICT_BY_NAME["sathyavedu"] == "Tirupati"
+    assert TS_DISTRICT_BY_NAME["jukkal"] == "Kamareddy"
+
+    ap_docs, ap_maps = build_district_catalog(acs, pcs, "AP")
+    ts_docs, ts_maps = build_district_catalog(acs, pcs, "TS")
+    assert len({m["assemblyConstituencyId"] for m in ap_maps}) == 175
+    assert len({m["assemblyConstituencyId"] for m in ts_maps}) == 119
+    manyam = next(d for d in ap_docs if d["name"] == "Parvathipuram Manyam")
+    assert palakonda["id"] in manyam["assemblyConstituencyIds"]
+    assert rayachoti["id"] not in manyam["assemblyConstituencyIds"]
+
+
+def test_prefer_packaged_assemblies_when_mongo_collapses_ids():
+    import json
+    from pathlib import Path
+
+    from backend.services.geo_districts import prefer_packaged_assemblies
+
+    root = Path(__file__).resolve().parents[1]
+    packaged = json.loads((root / "data" / "assemblies.json").read_text())
+    collapsed = [
+        {**row, "id": "AP-AC-130"} if row.get("stateId") == "AP" and row.get("name") == "Palakonda" else row
+        for row in packaged
+        if row.get("stateId") == "AP"
+    ]
+    restored = prefer_packaged_assemblies(collapsed, packaged, "AP")
+    assert len({row["id"] for row in restored}) == 175
+    assert any(row.get("name") == "Palakonda" and row.get("id") != "AP-AC-130" for row in restored)

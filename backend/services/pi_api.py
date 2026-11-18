@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from fastapi import HTTPException, Query
 from fastapi.responses import PlainTextResponse
 
-from .geo_districts import build_district_catalog
+from .geo_districts import build_district_catalog, prefer_packaged_assemblies
 from .political_intelligence import (
     ACCOUNT_STATUSES,
     MEMORY,
@@ -188,7 +188,9 @@ async def _audit(actor: Dict[str, Any], action: str, target: str, metadata: Opti
 
 async def _geo_lookups() -> Dict[str, Any]:
     srv = _srv()
-    assemblies = await srv.mongo_wait(srv.db.assembly_constituencies.find({}, {"_id": 0}).to_list(5000), timeout=5.0, fallback=None, tag="pi_acs") or srv.load_json_fallback("assemblies.json")
+    packaged_acs = srv.load_json_fallback("assemblies.json")
+    mongo_acs = await srv.mongo_wait(srv.db.assembly_constituencies.find({}, {"_id": 0}).to_list(5000), timeout=5.0, fallback=None, tag="pi_acs")
+    assemblies = prefer_packaged_assemblies(mongo_acs, packaged_acs)
     parliaments = await srv.mongo_wait(srv.db.parliament_constituencies.find({}, {"_id": 0}).to_list(1000), timeout=4.0, fallback=None, tag="pi_pcs") or srv.load_json_fallback("parliaments.json")
     parties = await srv.mongo_wait(srv.db.political_parties.find({}, {"_id": 0}).to_list(100), timeout=3.0, fallback=None, tag="pi_parties") or srv.load_json_fallback("political_parties.json")
     return {
