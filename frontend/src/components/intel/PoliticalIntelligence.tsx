@@ -652,14 +652,14 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-2">
-                <Kpi label="Total constituencies" value={dashboard.totalConstituencies} />
-                <Kpi label="Entered" value={dashboard.constituenciesEntered} />
-                <Kpi label="Leaders" value={dashboard.totalLeaders} />
-                <Kpi label="Social accounts" value={dashboard.totalSocialAccounts} />
-                <Kpi label="Verified" value={dashboard.verifiedAccounts} />
-                <Kpi label="Pending" value={dashboard.pendingVerification} />
-                <Kpi label="Recheck" value={dashboard.needsRecheck} />
-                <Kpi label="Verified %" value={dashboard.verificationPercent == null ? "—" : `${dashboard.verificationPercent}%`} />
+                <Kpi label="Total constituencies" value={dashboard.totalConstituencies} onClick={isSmM ? () => setTab("intelligence") : undefined} />
+                <Kpi label="Entered" value={dashboard.constituenciesEntered} onClick={isSmM ? () => setTab("intelligence") : undefined} />
+                <Kpi label="Leaders" value={dashboard.totalLeaders} onClick={isSmM ? () => setTab("intelligence") : undefined} />
+                <Kpi label="Social accounts" value={dashboard.totalSocialAccounts} onClick={isSmM ? () => setTab("intelligence") : undefined} />
+                <Kpi label="Verified" value={dashboard.verifiedAccounts} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
+                <Kpi label="Pending" value={dashboard.pendingVerification} onClick={isSmM ? () => { setQueueStatus("PENDING"); setTab("verify"); } : undefined} />
+                <Kpi label="Recheck" value={dashboard.needsRecheck} onClick={isSmM ? () => { setQueueStatus("NEEDS_RECHECK"); setTab("verify"); } : undefined} />
+                <Kpi label="Verified %" value={dashboard.verificationPercent == null ? "—" : `${dashboard.verificationPercent}%`} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
               </div>
               <div className={CARD}>
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-2">
@@ -692,7 +692,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                             onClick={() => {
                               if (row.districtId) setDistrictId(row.districtId);
                               if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
-                              setTab("constituencies");
+                              setTab(isSmM ? "intelligence" : "constituencies");
                             }}
                           >
                             <td className="py-1.5 break-words">{(row.collectedAt || "").slice(0, 10) || "—"}</td>
@@ -713,7 +713,12 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
               </div>
               {selectedDistrictProgress && (
                 <button
-                  onClick={() => { setDistrictId(selectedDistrictProgress.id); setTab("constituencies"); }}
+                  onClick={() => {
+                    setDistrictId(selectedDistrictProgress.id);
+                    setPcId("");
+                    setAcId("");
+                    setTab(isSmM ? "intelligence" : "constituencies");
+                  }}
                   className={`text-left ${CARD} w-full`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -1455,14 +1460,22 @@ function IntelligenceConstituency({
   );
 }
 
-function Kpi({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
-  return (
-    <div className={CARD}>
+function Kpi({ label, value, hint, onClick }: { label: string; value: React.ReactNode; hint?: string; onClick?: () => void }) {
+  const body = (
+    <>
       <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">{label}</span>
       <span className="text-2xl font-bold font-display text-[#D4A24C] mt-0.5 block">{value}</span>
       {hint && <span className="text-[10px] text-[#B9AF95]">{hint}</span>}
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${CARD} text-left w-full cursor-pointer hover:border-[#D4A24C]/60`}>
+        {body}
+      </button>
+    );
+  }
+  return <div className={CARD}>{body}</div>;
 }
 
 function EmptyState({ text }: { text: string }) {
