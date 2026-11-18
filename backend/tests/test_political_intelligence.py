@@ -698,3 +698,13 @@ def test_pi_save_error_explains_atlas_ssl_allowlist():
     detail = _save_error_detail(err)
     assert "Network Access" in detail
     assert "0.0.0.0/0" in detail
+
+
+def test_pi_save_error_explains_atlas_bad_auth():
+    from backend.services.pi_api import _save_error_detail
+
+    err = Exception("bad auth : authentication failed, full error: {'ok': 0, 'code': 8000, 'codeName': 'AtlasError'}")
+    detail = _save_error_detail(err)
+    assert "Database Access" in detail
+    assert "password" in detail.lower()
+    assert "MONGO_URL" in detail

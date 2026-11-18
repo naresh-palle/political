@@ -65,6 +65,12 @@ def _srv():
 
 
 def _pi_mongo_db(srv: Any):
+    try:
+        reset = getattr(srv, "maybe_reset_mongo_circuit", None)
+        if callable(reset):
+            reset()
+    except Exception:
+        pass
     live = getattr(srv, "_live_mongo_client", None)
     name = getattr(srv, "db_name", None) or "political_intelligence"
     if live is not None:
@@ -136,6 +142,12 @@ def _save_error_detail(exc: Exception) -> str:
             "Could not save. MongoDB Atlas is reachable but rejecting the SSL handshake. "
             "In Atlas go to Network Access, add 0.0.0.0/0 (allow from anywhere) so Render can connect, "
             "wait a minute, then tap Save again."
+        )
+    if "bad auth" in lowered or "authentication failed" in lowered or "auth failed" in lowered:
+        return (
+            "Could not save. MongoDB Atlas accepted the connection but rejected the database username or password. "
+            "In Atlas open Database Access, reset that user's password, update MONGO_URL on the Render backend service "
+            "(URL-encode any special characters in the password), wait for the deploy, then tap Save again."
         )
     if len(msg) > 180:
         msg = msg[:177] + "..."

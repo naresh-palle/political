@@ -2138,15 +2138,23 @@ export const politicalApiService = {
   async piRequest(path: string, userId: string, options: RequestInit = {}, timeoutMs = 12000): Promise<any> {
     const joiner = path.includes("?") ? "&" : "?";
     const url = `${RENDER_BACKEND_URL}${path}${joiner}userId=${encodeURIComponent(userId)}`;
-    const res = await fetchWithTimeout(url, {
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      ...options
-    }, timeoutMs);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error(data?.detail || data?.message || `Request failed (${res.status})`);
+    try {
+      const res = await fetchWithTimeout(url, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        ...options
+      }, timeoutMs);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.detail || data?.message || `Request failed (${res.status})`);
+      }
+      return data;
+    } catch (error: any) {
+      const msg = String(error?.message || error || "");
+      if (error?.name === "AbortError" || msg.toLowerCase().includes("aborted")) {
+        throw new Error("Save took too long. Keep this page open and tap Save again.");
+      }
+      throw error;
     }
-    return data;
   },
 
   getPiDashboard(userId: string, stateId?: string, districtId?: string) {
@@ -2225,7 +2233,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/leaders?${q.toString()}`, userId, {}, 20000);
   },
   savePiLeader(userId: string, payload: any) {
-    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
+    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 45000);
   },
   deletePiLeader(userId: string, personId: string) {
     return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" });
@@ -2238,7 +2246,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId, {}, 20000);
   },
   savePiAccount(userId: string, payload: any) {
-    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
+    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 45000);
   },
   getPiSnapshots(userId: string, accountId: string) {
     return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}/snapshots`, userId);
@@ -2250,7 +2258,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/verification/${encodeURIComponent(recordType)}/${encodeURIComponent(recordId)}`, userId, {
       method: "POST",
       body: JSON.stringify(payload)
-    }, 20000);
+    }, 45000);
   },
   getPiIntelligence(userId: string, params: Record<string, string | undefined> = {}) {
     const q = new URLSearchParams();

@@ -8,6 +8,7 @@ import os
 import json
 import logging
 import sys
+import time
 import uuid
 import asyncio
 import threading
@@ -200,6 +201,8 @@ def _mongo_url_is_local(url: str) -> bool:
 
 _mongo_circuit_open = _mongo_url_is_local(mongo_url)
 _mongo_offline_logged = False
+_mongo_circuit_opened_at = 0.0
+MONGO_CIRCUIT_RETRY_SECONDS = 30
 _live_mongo_client = None
 
 if _mongo_circuit_open:
@@ -397,6 +400,7 @@ def sanitize_doc(obj):
 
 async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = "mongo"):
     """Never let a Mongo round-trip block alert/ticket APIs for minutes."""
+    maybe_reset_mongo_circuit()
     if _mongo_circuit_open:
         return fallback
     try:
@@ -408,6 +412,7 @@ async def mongo_wait(awaitable, timeout: float = 2.5, fallback=None, tag: str = 
 
 async def mongo_write(awaitable, timeout: float = 8.0, tag: str = "mongo_write"):
     """Persist when Mongo is configured. Fail immediately if the circuit is open."""
+    maybe_reset_mongo_circuit()
     if _mongo_circuit_open:
         raise MongoUnavailable("MongoDB is not configured")
     try:
@@ -432,10 +437,11 @@ def _is_mongo_offline_error(exc: Exception) -> bool:
 
 
 def trip_mongo_circuit(exc: Optional[Exception] = None):
-    global db, _mongo_circuit_open, _mongo_offline_logged
+    global db, _mongo_circuit_open, _mongo_offline_logged, _mongo_circuit_opened_at
     if _mongo_circuit_open:
         return
     _mongo_circuit_open = True
+    _mongo_circuit_opened_at = time.time()
     db = _OfflineDB()
     if not _mongo_offline_logged:
         _mongo_offline_logged = True
@@ -443,6 +449,22 @@ def trip_mongo_circuit(exc: Optional[Exception] = None):
             "MongoDB is not reachable; using in-memory/JSON fallback. "
             "Set MONGO_URL (or MONGODB_URI) on the Render service to persist tickets."
         )
+
+
+def maybe_reset_mongo_circuit() -> bool:
+    """Retry Atlas after a short cooldown so a later allowlist/password fix can take effect."""
+    global db, _mongo_circuit_open, _mongo_offline_logged
+    if not _mongo_circuit_open or _live_mongo_client is None:
+        return False
+    if _mongo_circuit_opened_at and (time.time() - _mongo_circuit_opened_at) < MONGO_CIRCUIT_RETRY_SECONDS:
+        return False
+    try:
+        db = _live_mongo_client[db_name]
+        _mongo_circuit_open = False
+        _mongo_offline_logged = False
+        return True
+    except Exception:
+        return False
 
 
 def log_mongo_notice(tag: str, exc: Exception):
@@ -510,6 +532,7 @@ def resolve_stored_issue(issue_id: str, mongo_doc: Optional[dict] = None) -> Opt
 # Base routes
 @api_router.get("/")
 async def root():
+    maybe_reset_mongo_circuit()
     return {
         "message": "Leader's Lens Intelligence API Active",
         "database": db_name,
