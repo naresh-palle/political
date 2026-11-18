@@ -632,3 +632,47 @@ def test_pi_save_uses_live_client_when_circuit_open(monkeypatch):
     saved = _run(pi_api._save("political_persons", "pp-1", {"id": "pp-1", "name": "Live Save"}))
     assert saved["id"] == "pp-1"
     assert writes, "expected a Mongo upsert through the live client"
+
+
+def test_pi_append_does_not_block_leader_save(monkeypatch):
+    from fastapi import HTTPException
+
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory
+
+    reset_memory()
+
+    class BoomCol:
+        async def insert_one(self, *args, **kwargs):
+            raise RuntimeError("history insert failed")
+
+        async def update_one(self, *args, **kwargs):
+            raise RuntimeError("contact upsert failed")
+
+    class FakeLiveDb:
+        def __getitem__(self, name):
+            return self
+
+        def __getattr__(self, name):
+            return BoomCol()
+
+    class FakeSrv:
+        _mongo_circuit_open = False
+        _live_mongo_client = FakeLiveDb()
+        db_name = "political_intelligence"
+        db = FakeLiveDb()
+
+        def log_mongo_notice(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
+    history = _run(pi_api._append("constituency_contact_history", {"id": "ch-1", "action": "CREATED_FROM_PI"}))
+    assert history["id"] == "ch-1"
+    contact = _run(pi_api._save("constituency_contacts", "cnt-1", {"id": "cnt-1", "name": "Leader"}))
+    assert contact["id"] == "cnt-1"
+    try:
+        _run(pi_api._save("political_persons", "pp-boom", {"id": "pp-boom", "name": "Boom"}))
+        assert False, "critical save should still surface a 503"
+    except HTTPException as exc:
+        assert exc.status_code == 503
+        assert "RuntimeError" in str(exc.detail)

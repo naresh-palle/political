@@ -114,6 +114,19 @@ PI_RUNTIME_PATH = Path(__file__).resolve().parents[1] / "data" / ".runtime_pi_st
 _PI_RUNTIME_LOCK = threading.Lock()
 PI_MONGO_LIST_LIMIT = 20000
 PI_SAVE_UNAVAILABLE = "Could not save. The database is temporarily unavailable. Keep this page open and tap Save again."
+PI_CRITICAL_COLLECTIONS = {
+    "constituency_statistics",
+    "political_persons",
+    "political_person_roles",
+    "social_media_accounts",
+}
+
+
+def _save_error_detail(exc: Exception) -> str:
+    msg = " ".join(str(exc).split())
+    if len(msg) > 180:
+        msg = msg[:177] + "..."
+    return f"{PI_SAVE_UNAVAILABLE} ({type(exc).__name__}: {msg})"
 
 
 def _doc_key(doc: Optional[Dict[str, Any]]) -> Optional[str]:
@@ -258,7 +271,8 @@ async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any
             srv.log_mongo_notice("pi_save", last_error)
         except Exception:
             pass
-        raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from last_error
+        if collection in PI_CRITICAL_COLLECTIONS:
+            raise HTTPException(status_code=503, detail=_save_error_detail(last_error)) from last_error
     return stored
 
 
@@ -312,7 +326,6 @@ async def _append(collection: str, doc: Dict[str, Any]) -> Dict[str, Any]:
             srv.log_mongo_notice("pi_append", last_error)
         except Exception:
             pass
-        raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from last_error
     return stored
 
 
@@ -834,8 +847,11 @@ def register_pi_routes(api_router) -> None:
                 "isSample": bool(doc.get("isSample")),
             }
         )
-        contact = await _upsert_linked_contact(doc, caps)
-        doc["contactId"] = contact.get("id")
+        try:
+            contact = await _upsert_linked_contact(doc, caps)
+            doc["contactId"] = contact.get("id")
+        except Exception:
+            doc["contactId"] = doc.get("contactId")
         saved = await _save("political_persons", person_id, doc)
         roles_in = payload.get("roles") if isinstance(payload.get("roles"), list) else None
         if payload.get("politicalRole"):
