@@ -98,6 +98,61 @@ def normalize_name(name: str) -> str:
     return re.sub(r"\s+", " ", (name or "").strip().lower())
 
 
+PLATFORM_HOSTS = {
+    "facebook": frozenset({"facebook.com", "fb.com", "fb.me"}),
+    "instagram": frozenset({"instagram.com", "instagr.am"}),
+    "x": frozenset({"x.com", "twitter.com", "mobile.twitter.com", "t.co"}),
+    "youtube": frozenset({"youtube.com", "youtu.be", "music.youtube.com"}),
+}
+HOST_TO_PLATFORM = {host: platform for platform, hosts in PLATFORM_HOSTS.items() for host in hosts}
+PLATFORM_LABELS = {
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "x": "X / Twitter",
+    "youtube": "YouTube",
+}
+
+
+def profile_url_host(url: str) -> str:
+    normalized = normalize_profile_url(url)
+    if not normalized:
+        return ""
+    parsed = urlparse(normalized)
+    host = (parsed.netloc or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    return host
+
+
+def detected_profile_platform(url: str) -> Optional[str]:
+    return HOST_TO_PLATFORM.get(profile_url_host(url))
+
+
+def profile_url_platform_error(url: str, platform: str) -> Optional[str]:
+    raw = (url or "").strip()
+    if not raw or "none.invalid" in raw.lower():
+        return None
+    wanted = (platform or "").strip().lower()
+    if wanted not in PLATFORM_HOSTS:
+        return None
+    label = PLATFORM_LABELS.get(wanted, wanted)
+    detected = detected_profile_platform(raw)
+    if detected and detected != wanted:
+        other = PLATFORM_LABELS.get(detected, detected)
+        article = "an" if other[:1].lower() in "aeioux" else "a"
+        return f"This is {article} {other} link. Enter a {label} profile link."
+    host = profile_url_host(raw)
+    if host and "." in host and detected is None:
+        example = {
+            "facebook": "facebook.com",
+            "instagram": "instagram.com",
+            "x": "x.com or twitter.com",
+            "youtube": "youtube.com",
+        }.get(wanted, wanted)
+        return f"Enter a {label} profile link ({example})."
+    return None
+
+
 def normalize_profile_url(url: str, platform: str = "") -> str:
     raw = (url or "").strip()
     if not raw:

@@ -8,6 +8,7 @@ from backend.services.political_intelligence import (
     load_sample_into_memory,
     normalize_profile_url,
     parse_csv,
+    profile_url_platform_error,
     profile_username,
     reset_memory,
     snapshot_growth,
@@ -24,6 +25,22 @@ def test_normalize_profile_url_and_identity():
     assert profile_username("https://x.com/tdp_official", "x") == "tdp_official"
     assert profile_username("https://youtube.com/@kadapa-tv", "youtube") == "kadapa-tv"
     assert profile_username("https://none.invalid/abc/facebook", "facebook") == ""
+
+
+def test_profile_url_must_match_platform():
+    assert profile_url_platform_error("https://twitter.com/sample_rao", "facebook")
+    assert "X / Twitter" in (profile_url_platform_error("https://x.com/sample_rao", "facebook") or "")
+    assert profile_url_platform_error("https://instagram.com/sample_rao", "facebook")
+    assert profile_url_platform_error("https://facebook.com/sample.rao", "instagram")
+    assert profile_url_platform_error("https://youtube.com/@sample", "x")
+    assert profile_url_platform_error("https://x.com/sample_rao", "youtube")
+    assert profile_url_platform_error("https://linkedin.com/in/sample", "facebook")
+    assert not profile_url_platform_error("https://facebook.com/sample.rao", "facebook")
+    assert not profile_url_platform_error("https://fb.com/sample.rao", "facebook")
+    assert not profile_url_platform_error("https://twitter.com/sample_rao", "x")
+    assert not profile_url_platform_error("https://www.instagram.com/sample.rao/", "instagram")
+    assert not profile_url_platform_error("https://youtu.be/abcd123", "youtube")
+    assert not profile_url_platform_error("@nandyal_mla", "facebook")
 
 
 def test_engagement_missing_is_not_zero():
@@ -212,9 +229,25 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 userId=sm_a["id"],
             )
         )
-        raise AssertionError("duplicate URL should fail")
+        raise AssertionError("Facebook URL must not save as Instagram")
     except Exception as exc:
-        assert getattr(exc, "status_code", None) == 409 or "Duplicate" in str(exc)
+        assert getattr(exc, "status_code", None) == 400
+        assert "Facebook" in str(exc)
+    try:
+        _run(
+            posts["/pi/social-accounts"](
+                {
+                    "personId": leader["id"],
+                    "platform": "facebook",
+                    "profileUrl": "https://twitter.com/sample_rao_bng",
+                },
+                userId=sm_a["id"],
+            )
+        )
+        raise AssertionError("Twitter URL must not save as Facebook")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 400
+        assert "Twitter" in str(exc) or "X" in str(exc)
 
     try:
         _run(posts["/pi/verification/{record_type}/{record_id}"]("social", first["id"], {"status": "VERIFIED", "remarks": "ok"}, userId=sm_a["id"]))

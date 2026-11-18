@@ -204,6 +204,52 @@ function profileHref(url?: string) {
   return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
 }
 
+const PLATFORM_HOSTS: Record<(typeof PLATFORMS)[number], string[]> = {
+  facebook: ["facebook.com", "fb.com", "fb.me"],
+  instagram: ["instagram.com", "instagr.am"],
+  x: ["x.com", "twitter.com", "mobile.twitter.com", "t.co"],
+  youtube: ["youtube.com", "youtu.be", "music.youtube.com"]
+};
+
+function profileHost(url?: string) {
+  const href = profileHref(url);
+  if (!href) return "";
+  try {
+    let host = new URL(href).hostname.toLowerCase();
+    if (host.startsWith("www.")) host = host.slice(4);
+    if (host === "mobile.twitter.com") host = "twitter.com";
+    if (["m.facebook.com", "web.facebook.com"].includes(host)) host = "facebook.com";
+    if (host === "m.youtube.com") host = "youtube.com";
+    return host;
+  } catch {
+    return "";
+  }
+}
+
+function detectedProfilePlatform(url?: string): (typeof PLATFORMS)[number] | "" {
+  const host = profileHost(url);
+  const match = (PLATFORMS as readonly string[]).find((platform) => PLATFORM_HOSTS[platform as (typeof PLATFORMS)[number]].includes(host));
+  return (match as (typeof PLATFORMS)[number]) || "";
+}
+
+function profileUrlPlatformError(url: string, platform: (typeof PLATFORMS)[number]) {
+  const raw = String(url || "").trim();
+  if (!raw || raw.includes("none.invalid")) return "";
+  const detected = detectedProfilePlatform(raw);
+  if (detected && detected !== platform) {
+    const otherLabel = detected === "x" ? "X / Twitter" : PLATFORM_LABEL[detected];
+    const article = /^[aeioux]/i.test(otherLabel) ? "an" : "a";
+    return `This is ${article} ${otherLabel} link. Enter a ${platform === "x" ? "X / Twitter" : PLATFORM_LABEL[platform]} profile link.`;
+  }
+  const host = profileHost(raw);
+  if (host && host.includes(".") && !detected) {
+    const example = platform === "x" ? "x.com or twitter.com" : PLATFORM_HOSTS[platform][0];
+    const wanted = platform === "x" ? "X / Twitter" : PLATFORM_LABEL[platform];
+    return `Enter a ${wanted} profile link (${example}).`;
+  }
+  return "";
+}
+
 function socialUsername(row: { accountUsername?: string; accountIdentifier?: string; profileUrl?: string; platform?: string }) {
   const stored = String(row.accountUsername || row.accountIdentifier || "").trim().replace(/^@/, "");
   if (stored) return stored;
@@ -631,9 +677,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     }
   };
 
-  const reportLeaderField = (index: number, field: string, fieldLabel: string, detail: string) => {
+  const reportLeaderField = (index: number, field: string, fieldLabel: string, detail: string, kind: "missing" | "invalid" = "missing") => {
     const leaderLabel = LEADER_SLOTS[index]?.label || `Leader ${index + 1}`;
-    const message = `${leaderLabel}: ${fieldLabel} is missing. ${detail}`;
+    const message = kind === "invalid" ? `${leaderLabel}: ${detail}` : `${leaderLabel}: ${fieldLabel} is missing. ${detail}`;
     const platform = field.startsWith("profileUrl-") ? field.slice("profileUrl-".length) : field.startsWith("hasAccount-") ? field.slice("hasAccount-".length) : "";
     if (platform && (PLATFORMS as readonly string[]).includes(platform)) {
       patchLeaderSlot(index, { activePlatform: platform as (typeof PLATFORMS)[number] });
@@ -680,6 +726,19 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
           `Open ${PLATFORM_LABEL[platform]} on ${LEADER_SLOTS[index].label} and enter the profile link.`
         );
         return;
+      }
+      if (draft.hasAccount === "yes") {
+        const mismatch = profileUrlPlatformError(String(draft.profileUrl || "").trim(), platform);
+        if (mismatch) {
+          reportLeaderField(
+            index,
+            `profileUrl-${platform}`,
+            `${PLATFORM_LABEL[platform]} profile link`,
+            mismatch,
+            "invalid"
+          );
+          return;
+        }
       }
     }
     setSaving("leader");

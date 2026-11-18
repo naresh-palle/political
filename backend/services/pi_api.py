@@ -37,6 +37,7 @@ from .political_intelligence import (
     normalize_name,
     normalize_profile_url,
     now_iso,
+    profile_url_platform_error,
     profile_username,
     parse_csv,
     sample_seed_documents,
@@ -1064,6 +1065,10 @@ def register_pi_routes(api_router) -> None:
             url = url or f"https://none.invalid/{person_id}/{platform}"
         if not url and status != "NO_ACCOUNT":
             raise HTTPException(status_code=400, detail="profileUrl is required")
+        if status != "NO_ACCOUNT":
+            mismatch = profile_url_platform_error(url, platform)
+            if mismatch:
+                raise HTTPException(status_code=400, detail=mismatch)
         ident = profile_username(url, platform, str(payload.get("accountIdentifier") or "").strip())
         identity = account_identity_key(platform, url, ident)
         existing = None
@@ -1456,6 +1461,9 @@ def register_pi_routes(api_router) -> None:
                 if (row.get("platform") or "").lower() not in PLATFORMS:
                     errors.append("Invalid platform")
                 url = normalize_profile_url(row.get("profileUrl") or "", row.get("platform") or "")
+                mismatch = profile_url_platform_error(row.get("profileUrl") or "", row.get("platform") or "")
+                if mismatch:
+                    errors.append(mismatch)
                 if url and url in existing_urls:
                     duplicates.append({"line": idx, "row": row, "reason": "Duplicate profile URL"})
                     continue
