@@ -3560,24 +3560,40 @@ async def apply_plain_username_cutover():
         log_mongo_notice("plain username cutover", e)
 
 
-@app.on_event("startup")
-async def startup_db_seed():
+async def _startup_db_seed_body():
     if _mongo_circuit_open:
         return
     try:
-        count = await db.states.count_documents({})
-        if count == 0:
-            logger.info("MongoDB geography empty, executing auto-seed...")
-            await trigger_geography_seed()
-        await apply_live_cutover()
-        await apply_plain_username_cutover()
-        try:
-            await sync_current_districts()
-        except Exception as dist_exc:
-            log_mongo_notice("current district sync", dist_exc)
-        await purge_mock_audit_logs()
+        await asyncio.wait_for(db.command("ping"), timeout=3.0)
+    except Exception as e:
+        log_mongo_notice("startup ping", e)
+        return
+    count = await db.states.count_documents({})
+    if count == 0:
+        logger.info("MongoDB geography empty, executing auto-seed...")
+        await trigger_geography_seed()
+    await apply_live_cutover()
+    await apply_plain_username_cutover()
+    try:
+        await sync_current_districts()
+    except Exception as dist_exc:
+        log_mongo_notice("current district sync", dist_exc)
+    await purge_mock_audit_logs()
+
+
+async def _startup_db_seed_bg():
+    try:
+        await asyncio.wait_for(_startup_db_seed_body(), timeout=12.0)
     except Exception as e:
         log_mongo_notice("startup seed", e)
+
+
+@app.on_event("startup")
+async def startup_db_seed():
+    """Do not block Uvicorn listen / Render health checks on Atlas."""
+    if _mongo_circuit_open:
+        return
+    asyncio.create_task(_startup_db_seed_bg())
 
 
 async def refresh_live_officer_ticket_seeds():

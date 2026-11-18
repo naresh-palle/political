@@ -763,3 +763,29 @@ def test_pi_save_fails_fast_when_mongo_ping_fails(monkeypatch):
         assert exc.status_code == 503
         assert "did not finish the write" in str(exc.detail)
     assert not writes
+
+
+def test_startup_seed_does_not_block_render_listen(monkeypatch):
+    import time
+    from types import SimpleNamespace
+
+    from backend import server as srv
+
+    async def hang(*args, **kwargs):
+        await asyncio.sleep(30)
+
+    monkeypatch.setattr(srv, "_mongo_circuit_open", False)
+    monkeypatch.setattr(srv, "db", SimpleNamespace(command=hang, states=SimpleNamespace(count_documents=hang)))
+
+    async def run():
+        t0 = time.time()
+        await srv.startup_db_seed()
+        elapsed = time.time() - t0
+        await asyncio.sleep(0)
+        for task in list(asyncio.all_tasks()):
+            if task is not asyncio.current_task() and not task.done():
+                task.cancel()
+        return elapsed
+
+    elapsed = _run(run())
+    assert elapsed < 1.0, f"startup blocked listen for {elapsed:.2f}s"
