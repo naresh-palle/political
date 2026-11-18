@@ -686,3 +686,15 @@ def test_pi_save_error_explains_missing_atlas_hostname():
     assert "MONGO_URL" in detail
     assert "Atlas" in detail
     assert "5fdvfhs" not in detail
+
+
+def test_pi_save_error_explains_atlas_ssl_allowlist():
+    from backend.services.pi_api import _save_error_detail
+
+    err = Exception(
+        "SSL handshake failed: ac-n3rrv9i-shard-00-02.5fdvfhs.mongodb.net:27017: "
+        "[SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error"
+    )
+    detail = _save_error_detail(err)
+    assert "Network Access" in detail
+    assert "0.0.0.0/0" in detail

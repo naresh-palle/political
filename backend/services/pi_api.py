@@ -131,6 +131,12 @@ def _save_error_detail(exc: Exception) -> str:
             "In Atlas open Connect, copy the current mongodb+srv connection string, paste it as MONGO_URL "
             "on the Render backend service, wait for the deploy, then tap Save again."
         )
+    if "ssl handshake failed" in lowered or "tlsv1 alert internal error" in lowered or "tlsv1_alert_internal_error" in lowered:
+        return (
+            "Could not save. MongoDB Atlas is reachable but rejecting the SSL handshake. "
+            "In Atlas go to Network Access, add 0.0.0.0/0 (allow from anywhere) so Render can connect, "
+            "wait a minute, then tap Save again."
+        )
     if len(msg) > 180:
         msg = msg[:177] + "..."
     return f"{PI_SAVE_UNAVAILABLE} ({type(exc).__name__}: {msg})"

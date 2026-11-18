@@ -213,9 +213,11 @@ if _mongo_circuit_open:
 else:
     _live_mongo_client = AsyncIOMotorClient(
         mongo_url,
-        serverSelectionTimeoutMS=2500,
-        connectTimeoutMS=2500,
-        socketTimeoutMS=8000,
+        serverSelectionTimeoutMS=15000,
+        connectTimeoutMS=10000,
+        socketTimeoutMS=20000,
+        tls=True,
+        retryWrites=True,
     )
     client = _live_mongo_client
     db = client[db_name]
