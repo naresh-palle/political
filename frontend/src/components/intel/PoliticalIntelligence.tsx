@@ -43,7 +43,8 @@ function isSittingMlaKind(kind?: string) {
 
 const SMA_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
-  { id: "constituencies", label: "Constituencies" }
+  { id: "constituencies", label: "Constituencies" },
+  { id: "intelligence", label: "Intelligence" }
 ];
 
 const SMM_TABS: { id: Tab; label: string }[] = [
@@ -92,6 +93,19 @@ const PLATFORM_LABEL: Record<(typeof PLATFORMS)[number], string> = {
   x: "X",
   youtube: "YouTube"
 };
+const RANK_BY_OPTIONS = [
+  { id: "followers", label: "Followers" },
+  { id: "engagement", label: "Engagement" },
+  { id: "growth", label: "30-day growth" },
+  { id: "socialScore", label: "Social score" }
+] as const;
+
+function rankMetricKey(rankBy: string) {
+  if (rankBy === "engagement") return "engagementPercent";
+  if (rankBy === "growth") return "growth30";
+  if (rankBy === "socialScore") return "socialScore";
+  return "followers";
+}
 
 type PlatformDraft = {
   hasAccount: "" | "yes" | "no";
@@ -363,11 +377,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     setIntel(
       await politicalApiService.getPiIntelligence(userId, {
         stateId,
-        districtId: districtId || undefined,
-        parliamentConstituencyId: acId ? pcId || undefined : undefined,
-        assemblyConstituencyId: acId || undefined,
         platform: intelPlatform || undefined,
-        partyId: intelParty || undefined,
         rankBy
       })
     );
@@ -601,7 +611,9 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         </div>
       </header>
 
-      <div className={`grid gap-1.5 ${visibleTabs.length <= 2 ? "grid-cols-2" : visibleTabs.length === 4 ? "grid-cols-4" : "grid-cols-5"}`}>
+      <div className={`grid gap-1.5 ${
+        visibleTabs.length <= 2 ? "grid-cols-2" : visibleTabs.length === 3 ? "grid-cols-3" : visibleTabs.length === 4 ? "grid-cols-4" : "grid-cols-5"
+      }`}>
         {visibleTabs.map((item) => (
           <button
             type="button"
@@ -1105,6 +1117,27 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 ))}
               </div>
             </div>
+            {acId ? (
+              <>
+                <div>
+                  <label className={LABEL}>Rank by</label>
+                  <select className={INPUT} value={rankBy} onChange={(e) => setRankBy(e.target.value)}>
+                    {RANK_BY_OPTIONS.map((option) => (
+                      <option key={option.id} value={option.id}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={LABEL}>Party</label>
+                  <select className={INPUT} value={intelParty} onChange={(e) => setIntelParty(e.target.value)}>
+                    <option value="">All parties</option>
+                    {parties.map((party) => (
+                      <option key={party.id} value={party.id}>{party.shortName || party.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            ) : null}
           </aside>
           <div className="flex-1 min-w-0 space-y-4">
             {!districtId ? (
@@ -1117,6 +1150,8 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 districtName={selectedDistrictName}
                 stateName={states.find((s) => s.id === stateId)?.name || stateId}
                 platform={intelPlatform}
+                partyId={intelParty}
+                rankBy={rankBy}
                 partyById={partyById}
               />
             ) : (
@@ -1230,6 +1265,18 @@ function IntelligenceDistrict({
   );
 }
 
+function formatSignedPercent(value?: number | null) {
+  if (value == null || Number.isNaN(Number(value))) return "—";
+  const n = Number(value);
+  const abs = Math.abs(n);
+  const body = abs >= 10 ? abs.toFixed(0) : abs.toFixed(1);
+  return `${n > 0 ? "+" : n < 0 ? "−" : ""}${body}%`;
+}
+
+function poolSize(leaders: any[], pred: (row: any) => boolean) {
+  return leaders.filter(pred).length;
+}
+
 function IntelligenceConstituency({
   intel,
   acId,
@@ -1237,6 +1284,8 @@ function IntelligenceConstituency({
   districtName,
   stateName,
   platform,
+  partyId,
+  rankBy,
   partyById
 }: {
   intel: any;
@@ -1245,6 +1294,8 @@ function IntelligenceConstituency({
   districtName: string;
   stateName: string;
   platform: string;
+  partyId: string;
+  rankBy: string;
   partyById: Record<string, PoliticalParty>;
 }) {
   const card = (intel.constituencyCards || []).find((c: any) => c.assemblyConstituencyId === acId) || {};
@@ -1254,7 +1305,36 @@ function IntelligenceConstituency({
     x: intel.audienceEstimates?.x || 0,
     youtube: intel.audienceEstimates?.youtube || 0
   };
-  const leaders = (intel.leaders || []).filter((l: any) => l.assemblyConstituencyId === acId);
+  const allLeaders = intel.leaders || [];
+  const inConstituency = allLeaders.filter((l: any) => l.assemblyConstituencyId === acId);
+  const leaders = partyId ? inConstituency.filter((l: any) => String(l.partyId || "").toUpperCase() === partyId.toUpperCase()) : inConstituency;
+  const focus = inConstituency.find((l: any) => isSittingMlaKind(l.leaderKind)) || inConstituency[0] || null;
+  const rankLabel = RANK_BY_OPTIONS.find((option) => option.id === rankBy)?.label || "Followers";
+  const platformLabel = platform ? PLATFORM_LABEL[platform as (typeof PLATFORMS)[number]] || platform : "All";
+  const metricKey = rankMetricKey(rankBy);
+  const rankedPool = [...allLeaders].filter((row: any) => row[metricKey] != null).sort((a: any, b: any) => Number(b[metricKey] || 0) - Number(a[metricKey] || 0));
+  const focusRankIndex = focus ? rankedPool.findIndex((row: any) => row.id === focus.id) : -1;
+  const above = focusRankIndex > 0 ? rankedPool[focusRankIndex - 1] : null;
+  const moveUp = above && focus && focus[metricKey] != null ? Number(above[metricKey]) - Number(focus[metricKey]) : null;
+  let worstGap: { platform: string; pct: number } | null = null;
+  if (focus) {
+    for (const plat of PLATFORMS) {
+      const detail = platformDetail(focus, plat);
+      const estimate = Number(estimates[plat] || 0);
+      const noAccount = Boolean(detail?.noAccount);
+      const followers = noAccount ? 0 : Number(detail?.followers || 0);
+      const pct = estimate ? Math.round((followers / estimate) * 100) : 0;
+      if (!worstGap || pct < worstGap.pct) worstGap = { platform: PLATFORM_LABEL[plat], pct };
+    }
+  }
+  const standings = focus ? [
+    { value: focus.rankInConstituency, of: poolSize(allLeaders, (row) => row.assemblyConstituencyId === acId), caption: "Vs opponents here" },
+    { value: focus.rankInDistrict, of: poolSize(allLeaders, (row) => row.districtId && row.districtId === focus.districtId), caption: "In district" },
+    { value: focus.rankInParliament, of: poolSize(allLeaders, (row) => row.parliamentConstituencyId && row.parliamentConstituencyId === focus.parliamentConstituencyId), caption: "In Parliament seat" },
+    { value: focus.rankInParty, of: poolSize(allLeaders, (row) => row.partyId && row.partyId === focus.partyId), caption: `Among ${partyLabel(partyById, focus.partyId, focus.partyName) || "party"} MLAs` },
+    { value: focus.rankInState, of: poolSize(allLeaders, (row) => row.stateId && row.stateId === focus.stateId), caption: `All ${stateName || "state"} constituencies` }
+  ] : [];
+
   return (
     <div className="space-y-4">
       <div>
@@ -1274,7 +1354,51 @@ function IntelligenceConstituency({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-3">
+      {focus ? (
+        <>
+          <div>
+            <h3 className="text-base font-display text-[#F5EFE0]">
+              Where he stands · {platformLabel} · by {rankLabel}
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {standings.map((tile) => (
+              <div key={tile.caption} className={`${CARD} text-center min-w-0`}>
+                <p className="text-2xl font-display font-bold text-[#F5EFE0]">{tile.value != null ? `#${tile.value}` : "—"}</p>
+                <p className="text-[11px] text-[#B9AF95] mt-1">of {tile.of || "—"}</p>
+                <p className="text-[11px] text-[#B9AF95] mt-2 break-words">{tile.caption}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className={`${CARD} min-w-0`}>
+              <p className="text-2xl font-display font-bold text-[#F5EFE0]">{focus.socialScore != null ? `${Math.round(Number(focus.socialScore))}/100` : "—"}</p>
+              <p className="text-[11px] text-[#B9AF95] mt-1">Social score</p>
+              <p className="text-[11px] text-[#B9AF95]">percentile in state</p>
+            </div>
+            <div className={`${CARD} min-w-0`}>
+              <p className="text-2xl font-display font-bold text-[#F5EFE0]">
+                {moveUp == null ? "—" : `${moveUp > 0 ? "+" : ""}${formatCompactCount(Math.abs(moveUp))}`}
+              </p>
+              <p className="text-[11px] text-[#B9AF95] mt-1">To move up one rank</p>
+              <p className="text-[11px] text-[#B9AF95]">{rankLabel}</p>
+            </div>
+            <div className={`${CARD} min-w-0`}>
+              <p className={`text-2xl font-display font-bold ${Number(focus.growth30) > 0 ? "text-emerald-400" : "text-[#F5EFE0]"}`}>
+                {formatSignedPercent(focus.growth30)}
+              </p>
+              <p className="text-[11px] text-[#B9AF95] mt-1">30-day growth</p>
+              <p className="text-[11px] text-[#B9AF95]">followers, all platforms</p>
+            </div>
+            <div className={`${CARD} min-w-0`}>
+              <p className="text-2xl font-display font-bold text-[#F5EFE0]">{worstGap?.platform || "—"}</p>
+              <p className="text-[11px] text-[#B9AF95] mt-1">Biggest gap</p>
+              <p className="text-[11px] text-[#B9AF95]">only {worstGap ? `${worstGap.pct}%` : "—"} of users reached</p>
+            </div>
+          </div>
+        </>
+      ) : null}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {leaders.length ? leaders.map((leader: any) => {
           const sitting = isSittingMlaKind(leader.leaderKind);
           return (
