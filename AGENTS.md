@@ -1,5 +1,11 @@
 # Continuous Deployment & Quality Rules
 
+## 0. Confirm before any new change (required)
+
+Before coding a product, UI, role, routing, or data change, follow `.cursor/skills/confirm-before-change/SKILL.md`.
+
+This applies to **every section** and **every user** (admin, political admin, manager, volunteer, officer, SM A, SM M, public, and any later role). Check previous requirements. Ask which users and which screens if that is not already clear. Do not add extra features. After a change, other roles and other sections must still be correct.
+
 ## 1. Zero Broken Deployments
 - Whenever code changes are made, run `npm run build` in `frontend/` to confirm zero TypeScript and Vite bundle errors before pushing.
 - Always ensure `.nojekyll` and `404.html` exist in `docs/` and root `.` so GitHub Pages routing never shows a 404.

@@ -12,6 +12,8 @@ description: >-
 
 **Required on every UI change.** Run `.cursor/skills/cross-device-ui-parity/SKILL.md`: laptop, desktop, tablet, iPad, and mobile must show the same alignment and the same information. Do not hide fields on smaller screens.
 
+**Required before any new product/UI/role change.** Run `.cursor/skills/confirm-before-change/SKILL.md`: check prior requirements, ask which users and screens if unclear, and keep every section and every user correct. Not limited to SM A or Political Intelligence.
+
 If this protocol itself changes, update this file plus the complete-commit-deploy skill, `AGENTS.md`, and `.agent/rules/deployment-rules.md`.
 
 ## Always ship both production targets

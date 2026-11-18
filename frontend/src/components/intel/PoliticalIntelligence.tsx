@@ -43,8 +43,7 @@ function isSittingMlaKind(kind?: string) {
 
 const SMA_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
-  { id: "constituencies", label: "Constituencies" },
-  { id: "intelligence", label: "Intelligence" }
+  { id: "constituencies", label: "Constituencies" }
 ];
 
 const SMM_TABS: { id: Tab; label: string }[] = [
@@ -736,7 +735,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
       {tab === "constituencies" && (
         <section className="space-y-4">
           <div className={CARD}>
-            <h2 className="text-sm font-bold text-[#F5EFE0]">1 · Constituency</h2>
+            <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency</h2>
             {selectedAssemblyName ? (
               <p className="text-[11px] text-[#B9AF95] mt-1">
                 {selectedAssemblyName}{selectedDistrictName ? ` · ${selectedDistrictName}` : ""}
@@ -851,6 +850,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
 
           {entryGroup === "leaders" && (
             <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {leaderSlots.map((slot, index) => {
                 const activePlatform = slot.activePlatform;
                 const drafts = slot.platformDrafts;
@@ -862,7 +862,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                     className={`${CARD} space-y-3 min-w-0`}
                   >
                     <h2 className="text-sm font-bold text-[#F5EFE0]">
-                      {index + 2} · {LEADER_SLOTS[index].label}
+                      {LEADER_SLOTS[index].label}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <Field label="Name *" value={slot.name || ""} placeholder="Full name" onChange={(v) => patchLeaderSlot(index, { name: v })} />
@@ -951,6 +951,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                   </form>
                 );
               })}
+              </div>
               <div className={CARD}>
                 <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Leaders in this constituency</h2>
                 {leaders.length === 0 ? <EmptyState text="No leaders for this geography." /> : (

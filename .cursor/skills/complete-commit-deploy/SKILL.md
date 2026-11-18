@@ -23,6 +23,8 @@ If this change affects how we ship (git, Pages, Render, quality gates), update:
 
 If this change affects screens, layout, or rendered fields, also follow `.cursor/skills/cross-device-ui-parity/SKILL.md` (and its `.agent/skills/cross-device-ui-parity/` pointer).
 
+Before implementing a **new** product, UI, role, routing, or data change, follow `.cursor/skills/confirm-before-change/SKILL.md` (and its `.agent/skills/confirm-before-change/` pointer). That gate applies to **every section and every user**, not one module.
+
 Keep those files in the same commit as the related code when the workflow itself changed.
 
 ## 1. Quality gates
