@@ -294,7 +294,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 value={email}
                 readOnly={!canEditIdentity}
                 onChange={(e) => canEditIdentity && setEmail(e.target.value)}
-                placeholder="demo.admin@leaderslens.ai"
+                placeholder="admin@leaderslens.ai"
                 className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
                   canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
                 }`}

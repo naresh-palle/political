@@ -1064,7 +1064,11 @@ async def login(credentials: LoginRequest):
         user = await db.users.find_one({"email": {"$regex": f"^{email}$", "$options": "i"}}, {"_id": 0})
         if user:
             # Check password
-            if user.get("demoPassword") == credentials.password or credentials.password == "Admin@2026!" or credentials.password == "Leader@2026":
+            hashed = user.get("passwordHash")
+            password_ok = user.get("demoPassword") == credentials.password or (
+                hashed and verify_password(credentials.password, hashed)
+            )
+            if password_ok:
                 try:
                     await db.users.update_one(
                         {"id": user.get("id")},
@@ -1095,7 +1099,7 @@ async def login(credentials: LoginRequest):
     users = load_json_fallback("users.json")
     for u in users:
         if u.get("email", "").lower() == email:
-            if u.get("demoPassword") == credentials.password or credentials.password in ["Admin@2026!", "Director@2026!", "Candidate@2026!", "Field@2026!", "Media@2026!", "Volunteer@2026!", "Booth@2026!", "SmAudit@2026"]:
+            if u.get("demoPassword") == credentials.password:
                 await record_audit_log(
                     actor_user_id=u.get("id") or "",
                     actor_name=u.get("name") or email,
@@ -1318,13 +1322,14 @@ async def get_admin_user_detail(user_id: str):
         "auditLogs": []
     }
 
-LOCKED_SYSTEM_ROLES = {"SM_AUDIT", "SOCIAL_MEDIA_AUDIT"}
+LOCKED_SYSTEM_ROLES = {"SM_A", "SMA", "SM_M", "SMM", "SM_AUDIT", "SOCIAL_MEDIA_AUDIT"}
+LOCKED_SYSTEM_EMAILS = {"sma@leaderslens.ai", "smm@leaderslens.ai", "sm.audit@leaderslens.ai"}
 
 
 def _reject_locked_system_role(role_id: Optional[str]) -> None:
     role = str(role_id or "").upper().replace("-", "_").replace(" ", "_")
     if role in LOCKED_SYSTEM_ROLES:
-        raise HTTPException(status_code=403, detail="SM Audit is a system role and cannot be created or assigned.")
+        raise HTTPException(status_code=403, detail="SM A and SM M are system roles and cannot be created or assigned.")
 
 
 @api_router.post("/admin/users")
@@ -1332,8 +1337,8 @@ async def create_admin_user(req: AdminUserCreateModel):
     email = req.email.strip().lower()
     try:
         _reject_locked_system_role(req.roleId)
-        if email == "sm.audit@leaderslens.ai":
-            raise HTTPException(status_code=403, detail="SM Audit is a system user and cannot be created.")
+        if email in LOCKED_SYSTEM_EMAILS:
+            raise HTTPException(status_code=403, detail="SM A and SM M are system users and cannot be created.")
         existing = await db.users.find_one({"email": email})
         if existing:
             raise HTTPException(status_code=400, detail="A user with this email already exists.")
@@ -1430,9 +1435,9 @@ async def update_admin_user(user_id: str, req: AdminUserUpdateModel):
             new_role = update_fields["roleId"].replace("-", "_").replace(" ", "_")
             old_role = str(existing.get("roleId") or existing.get("primaryRole") or "").upper().replace("-", "_").replace(" ", "_")
             if new_role in LOCKED_SYSTEM_ROLES and old_role not in LOCKED_SYSTEM_ROLES:
-                raise HTTPException(status_code=403, detail="SM Audit is a system role and cannot be assigned.")
+                raise HTTPException(status_code=403, detail="SM A and SM M are system roles and cannot be assigned.")
             if old_role in LOCKED_SYSTEM_ROLES and new_role not in LOCKED_SYSTEM_ROLES:
-                raise HTTPException(status_code=403, detail="SM Audit is a system role and cannot be changed.")
+                raise HTTPException(status_code=403, detail="SM A and SM M are system roles and cannot be changed.")
             update_fields["role"] = update_fields["roleId"].lower()
         if "status" in update_fields:
             update_fields["status"] = update_fields["status"].upper()
@@ -3437,36 +3442,85 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+LIVE_CUTOVER_ID = "live_cutover_sma_smm_v1"
+PI_OPERATIONAL_COLLECTIONS = (
+    "constituency_statistics",
+    "constituency_statistics_history",
+    "political_persons",
+    "political_person_roles",
+    "social_media_accounts",
+    "social_media_snapshots",
+    "data_verification_history",
+    "data_import_batches",
+    "constituency_contacts",
+    "constituency_contact_history",
+)
+
+
+async def apply_live_cutover():
+    """One-time live reset: five users only, no PI sample or demo tickets."""
+    try:
+        marker = await db.system_settings.find_one({"id": LIVE_CUTOVER_ID})
+        if marker:
+            return
+    except Exception as e:
+        log_mongo_notice("live cutover marker", e)
+    live_users = [u for u in load_json_fallback("users.json") if isinstance(u, dict) and u.get("email")]
+    if len(live_users) < 5:
+        logger.warning("Live cutover skipped: users.json does not have the five live accounts.")
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        await db.users.delete_many({})
+        for user in live_users:
+            doc = dict(user)
+            password = doc.get("demoPassword")
+            if password:
+                doc["passwordHash"] = hash_password(password)
+            doc["updatedAt"] = now
+            await db.users.insert_one(doc)
+        try:
+            from services.political_intelligence import reset_memory
+        except ImportError:
+            from backend.services.political_intelligence import reset_memory
+        reset_memory()
+        for name in PI_OPERATIONAL_COLLECTIONS:
+            try:
+                await getattr(db, name).delete_many({})
+            except Exception as e:
+                log_mongo_notice(f"live cutover wipe {name}", e)
+        try:
+            await db.field_issues.delete_many({})
+            await db.field_notifications.delete_many({})
+        except Exception as e:
+            log_mongo_notice("live cutover wipe tickets", e)
+        IN_MEMORY_FIELD_ISSUES.clear()
+        IN_MEMORY_NOTIFICATIONS.clear()
+        await db.system_settings.replace_one(
+            {"id": LIVE_CUTOVER_ID},
+            {"id": LIVE_CUTOVER_ID, "appliedAt": now, "users": [u.get("email") for u in live_users]},
+            upsert=True,
+        )
+        logger.info("Live roster cutover applied: Admin, Manager, Volunteer, SM A, SM M.")
+    except Exception as e:
+        log_mongo_notice("live cutover", e)
+
+
 @app.on_event("startup")
 async def startup_db_seed():
     if _mongo_circuit_open:
         return
     try:
         count = await db.states.count_documents({})
-        user_count = await db.users.count_documents({})
-        if count == 0 or user_count == 0:
-            logger.info("MongoDB collections empty, executing comprehensive auto-seed...")
+        if count == 0:
+            logger.info("MongoDB geography empty, executing auto-seed...")
             await trigger_geography_seed()
-        await apply_demo_display_name_fixes()
+        await apply_live_cutover()
         try:
             await sync_current_districts()
         except Exception as dist_exc:
             log_mongo_notice("current district sync", dist_exc)
-        await refresh_live_officer_ticket_seeds()
         await purge_mock_audit_logs()
-        try:
-            existing_pi = await db.constituency_statistics.count_documents({})
-            if existing_pi == 0:
-                from services.pi_api import _persist_sample as persist_pi_sample
-                await persist_pi_sample()
-                logger.info("Political Intelligence SAMPLE records seeded (empty collection).")
-        except ImportError:
-            from backend.services.pi_api import _persist_sample as persist_pi_sample
-            existing_pi = await db.constituency_statistics.count_documents({})
-            if existing_pi == 0:
-                await persist_pi_sample()
-        except Exception as pi_exc:
-            log_mongo_notice("pi sample seed", pi_exc)
     except Exception as e:
         log_mongo_notice("startup seed", e)
 

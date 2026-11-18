@@ -55,11 +55,16 @@ def test_volunteer_cannot_verify():
     assert director["create"] is False
     admin = actor_capabilities({"id": "adm", "email": "admin@leaderslens.ai", "isPlatformAdmin": True})
     assert admin["verify"] is True
-    sm = actor_capabilities({"id": "usr-sm-audit", "name": "SM Audit", "primaryRole": "SM_AUDIT", "email": "sm.audit@leaderslens.ai"})
-    assert sm["view"] is True
-    assert sm["create"] is True
-    assert sm["verify"] is True
-    assert sm["isSmAudit"] is True
+    sma = actor_capabilities({"id": "usr-sma", "name": "SM A", "primaryRole": "SM_A", "email": "sma@leaderslens.ai"})
+    assert sma["view"] is True
+    assert sma["create"] is True
+    assert sma["verify"] is False
+    assert sma["isSmA"] is True
+    smm = actor_capabilities({"id": "usr-smm", "name": "SM M", "primaryRole": "SM_M", "email": "smm@leaderslens.ai"})
+    assert smm["view"] is True
+    assert smm["create"] is False
+    assert smm["verify"] is True
+    assert smm["isSmM"] is True
 
 
 def test_sample_seed_is_labeled():
@@ -82,15 +87,18 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
     from backend.services.political_intelligence import reset_memory, memory_list
 
     reset_memory()
-    director = {"id": "usr-demo-director", "name": "Manager1", "primaryRole": "DIRECTOR", "stateId": "AP", "assemblyConstituencyId": "AP-AC-139"}
-    sm_audit = {"id": "usr-sm-audit", "name": "SM Audit", "email": "sm.audit@leaderslens.ai", "primaryRole": "SM_AUDIT", "roleId": "SM_AUDIT"}
-    admin = {"id": "usr-admin", "name": "Naresh Palle", "email": "admin@leaderslens.ai", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
+    director = {"id": "usr-manager", "name": "Manager", "primaryRole": "DIRECTOR", "stateId": "AP", "assemblyConstituencyId": "AP-AC-139"}
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma@leaderslens.ai", "primaryRole": "SM_A", "roleId": "SM_A"}
+    sm_m = {"id": "usr-smm", "name": "SM M", "email": "smm@leaderslens.ai", "primaryRole": "SM_M", "roleId": "SM_M"}
+    admin = {"id": "usr-admin", "name": "Admin", "email": "admin@leaderslens.ai", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
 
     async def fake_actor(user_id):
         if user_id == director["id"]:
             return director
-        if user_id == sm_audit["id"]:
-            return sm_audit
+        if user_id == sm_a["id"]:
+            return sm_a
+        if user_id == sm_m["id"]:
+            return sm_m
         return admin
 
     monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
@@ -114,7 +122,7 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "stateId": "AP",
                 "politicalRole": "MLA",
             },
-            userId=sm_audit["id"],
+            userId=sm_a["id"],
         )
     )
     assert leader["id"]
@@ -128,7 +136,7 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "stateId": "AP",
                 "politicalRole": "MLA",
             },
-            userId=sm_audit["id"],
+            userId=sm_a["id"],
         )
     )
     assert again["id"] == leader["id"]
@@ -143,7 +151,7 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "avgLikesLast10": 50,
                 "avgCommentsLast10": 10,
             },
-            userId=sm_audit["id"],
+            userId=sm_a["id"],
         )
     )
     assert first["engagementPercent"] == 6.0
@@ -174,10 +182,10 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                 "avgLikesLast10": 50,
                 "avgCommentsLast10": 10,
             },
-            userId=sm_audit["id"],
+            userId=sm_a["id"],
         )
     )
-    snaps = _run(gets["/pi/social-accounts/{account_id}/snapshots"](first["id"], userId=sm_audit["id"]))
+    snaps = _run(gets["/pi/social-accounts/{account_id}/snapshots"](first["id"], userId=sm_a["id"]))
     assert len(snaps) >= 2
     assert {s["followers"] for s in snaps} >= {1000, 1500}
 
@@ -189,14 +197,19 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
                     "platform": "instagram",
                     "profileUrl": "https://www.facebook.com/sample.rao.bng/",
                 },
-                userId=sm_audit["id"],
+                userId=sm_a["id"],
             )
         )
         raise AssertionError("duplicate URL should fail")
     except Exception as exc:
         assert getattr(exc, "status_code", None) == 409 or "Duplicate" in str(exc)
 
-    verified = _run(posts["/pi/verification/{record_type}/{record_id}"]("social", first["id"], {"status": "VERIFIED", "remarks": "ok"}, userId=sm_audit["id"]))
+    try:
+        _run(posts["/pi/verification/{record_type}/{record_id}"]("social", first["id"], {"status": "VERIFIED", "remarks": "ok"}, userId=sm_a["id"]))
+        raise AssertionError("SM A should not verify records")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 403
+    verified = _run(posts["/pi/verification/{record_type}/{record_id}"]("social", first["id"], {"status": "VERIFIED", "remarks": "ok"}, userId=sm_m["id"]))
     assert verified["verificationStatus"] == "VERIFIED"
     history = _run(gets["/pi/verification/{record_id}/history"](first["id"], userId=admin["id"]))
     assert history and history[0]["previousStatus"] != history[0]["newStatus"]

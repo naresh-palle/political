@@ -9,16 +9,20 @@ import {
 import { UserProfile, PiDashboard, PiDistrictProgress, PiRecentCollection, StateInfo, PoliticalParty, ParliamentInfo } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
-import { isSmAuditUser } from "../../utils/piAccess";
+import { isSmMUser } from "../../utils/piAccess";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
 type SaveKind = "constituency" | "leader" | null;
 type LeaderKind = "SITTING_MLA" | "OPPOSITION";
 
-const TABS: { id: Tab; label: string }[] = [
+const SMA_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
-  { id: "constituencies", label: "Constituencies" },
+  { id: "constituencies", label: "Constituencies" }
+];
+
+const SMM_TABS: { id: Tab; label: string }[] = [
+  { id: "dashboard", label: "Data Entry Dashboard" },
   { id: "verify", label: "Verification Queue" },
   { id: "import", label: "Import / Export" },
   { id: "intelligence", label: "Intelligence" }
@@ -111,12 +115,9 @@ function statusTone(status?: string) {
 
 export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ currentUser }) => {
   const userId = currentUser.id;
-  const isSuper =
-    currentUser.email === "admin@leaderslens.ai" ||
-    currentUser.primaryRole === "SUPER_ADMIN" ||
-    !!currentUser.isPlatformAdmin;
-  const isSmAudit = isSmAuditUser(currentUser);
-  const canVerify = isSuper || currentUser.primaryRole === "SM_AUDIT" || currentUser.roleId === "SM_AUDIT";
+  const isSmM = isSmMUser(currentUser);
+  const canVerify = isSmM;
+  const visibleTabs = isSmM ? SMM_TABS : SMA_TABS;
 
   const [tab, setTab] = useState<Tab>("dashboard");
   const [entryGroup, setEntryGroup] = useState<EntryGroup>("constituency");
@@ -277,6 +278,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       })
     );
   };
+
+  useEffect(() => {
+    if (!visibleTabs.some((item) => item.id === tab)) setTab("dashboard");
+  }, [isSmM, tab]);
 
   useEffect(() => {
     if (tab === "constituencies") {
@@ -482,27 +487,10 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             <p className="text-sm text-[#B9AF95] mt-1">Fill one constituency at a time. Takes about 10 minutes.</p>
           )}
         </div>
-        {isSmAudit && (
-          <button
-            type="button"
-            className={BTN}
-            onClick={async () => {
-              try {
-                await politicalApiService.seedPiSample(userId);
-                flash("SAMPLE records loaded (fictional names only).");
-                await refreshDashboard();
-              } catch (e: any) {
-                flash(e.message, true);
-              }
-            }}
-          >
-            Load SAMPLE data
-          </button>
-        )}
       </header>
 
-      <div className="grid grid-cols-5 gap-1.5">
-        {TABS.map((item) => (
+      <div className={`grid gap-1.5 ${visibleTabs.length === 2 ? "grid-cols-2" : "grid-cols-4"}`}>
+        {visibleTabs.map((item) => (
           <button
             type="button"
             key={item.id}

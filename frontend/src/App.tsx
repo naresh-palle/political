@@ -34,7 +34,7 @@ const PoliticalIntelligence = lazy(() => import("./components/intel/PoliticalInt
 const ExportModal = lazy(() => import("./components/audit/ExportModal").then(m => ({ default: m.ExportModal })));
 
 import { OfficerTicketPortal } from "./components/fieldops/OfficerTicketPortal";
-import { canAccessPoliticalIntelligence, isSmAuditUser } from "./utils/piAccess";
+import { canAccessPoliticalIntelligence, isPiOperatorUser, isSmAUser, isSmMUser } from "./utils/piAccess";
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
@@ -240,7 +240,7 @@ function AppInner() {
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const isSmAudit = isSmAuditUser(currentProfile);
+  const isPiUser = isPiOperatorUser(currentProfile);
   const primaryRole = currentProfile?.primaryRole || (
     currentProfile?.email === "admin@leaderslens.ai" || currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.isPlatformAdmin
       ? "SUPER_ADMIN"
@@ -248,15 +248,17 @@ function AppInner() {
       ? "POLITICAL_ADMIN"
       : currentProfile?.roleId === "VOLUNTEER" || currentProfile?.role === "volunteer"
       ? "VOLUNTEER"
-      : isSmAudit
-      ? "SM_AUDIT"
+      : isSmAUser(currentProfile)
+      ? "SM_A"
+      : isSmMUser(currentProfile)
+      ? "SM_M"
       : "DIRECTOR"
   );
 
-  const isPlatformAdmin = !isSmAudit && (currentProfile?.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && currentProfile?.isPlatformAdmin));
-  const isPoliticalAdmin = !isPlatformAdmin && !isSmAudit && (primaryRole === "POLITICAL_ADMIN" || currentProfile?.isPoliticalAdmin);
-  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isSmAudit && (primaryRole === "DIRECTOR" || currentProfile?.roleId === "CAMPAIGN_MANAGER" || currentProfile?.role === "campaign_manager" || currentProfile?.roleId === "PARTY_ADMIN");
-  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isSmAudit && (primaryRole === "VOLUNTEER" || currentProfile?.roleId === "VOLUNTEER");
+  const isPlatformAdmin = !isPiUser && (currentProfile?.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && currentProfile?.isPlatformAdmin));
+  const isPoliticalAdmin = !isPlatformAdmin && !isPiUser && (primaryRole === "POLITICAL_ADMIN" || currentProfile?.isPoliticalAdmin);
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isPiUser && (primaryRole === "DIRECTOR" || currentProfile?.roleId === "CAMPAIGN_MANAGER" || currentProfile?.role === "campaign_manager" || currentProfile?.roleId === "PARTY_ADMIN");
+  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isPiUser && (primaryRole === "VOLUNTEER" || currentProfile?.roleId === "VOLUNTEER");
   const isAdmin = isPlatformAdmin || isPoliticalAdmin || isDirector;
 
   // URL Hash Synchronization & Browser Title Sync
@@ -320,7 +322,7 @@ function AppInner() {
   // - Manager: Home (fieldops), Assign Tickets, Contact Database (no Squad Volunteer / governance)
   // - Volunteer: Home (fieldops), Contact Database — Add Complaint and status counts on Home, no ticket grid/table
   useEffect(() => {
-    if (isSmAudit) {
+    if (isPiUser) {
       if (activeProduct !== "intel") {
         setActiveProduct("intel");
         try {
@@ -364,11 +366,11 @@ function AppInner() {
         window.location.hash = "#/field-ops";
       }
     }
-  }, [isSmAudit, isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
+  }, [isPiUser, isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
   const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel") => {
     let targetProduct = product;
-    if (isSmAudit) {
+    if (isPiUser) {
       targetProduct = "intel";
     } else if (product === "intel") {
       targetProduct = "fieldops";
@@ -389,7 +391,7 @@ function AppInner() {
 
   const handleAuthenticated = (user: UserProfile) => {
     setCurrentProfile(user);
-    const defaultProd: ActiveProductType = isSmAuditUser(user) ? "intel" : "fieldops";
+    const defaultProd: ActiveProductType = isPiOperatorUser(user) ? "intel" : "fieldops";
     setActiveProduct(defaultProd);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, defaultProd);
@@ -418,18 +420,20 @@ function AppInner() {
         ? "POLITICAL_ADMIN"
         : profile.roleId === "VOLUNTEER" || profile.role === "volunteer"
         ? "VOLUNTEER"
-        : isSmAuditUser(profile)
-        ? "SM_AUDIT"
+        : isSmAUser(profile)
+        ? "SM_A"
+        : isSmMUser(profile)
+        ? "SM_M"
         : "DIRECTOR"
     );
 
-    if (isSmAuditUser(profile)) {
+    if (isPiOperatorUser(profile)) {
       setActiveProduct("intel");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "intel");
       } catch {}
       window.location.hash = "#/intel";
-    } else if (activeProduct === "intel" || userRole === "SM_AUDIT") {
+    } else if (activeProduct === "intel" || userRole === "SM_A" || userRole === "SM_M") {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");

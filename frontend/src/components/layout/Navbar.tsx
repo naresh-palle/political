@@ -6,7 +6,7 @@ import { NotificationCenter } from "../fieldops/NotificationCenter";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { politicalApiService } from "../../services/api";
 import { setTicketIdInHash } from "../../utils/ticketHash";
-import { isSmAuditUser } from "../../utils/piAccess";
+import { isPiOperatorUser, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import {
   Sparkles,
   Shield,
@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const headerRef = useRef<HTMLElement>(null);
   const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
 
-  const isSmAudit = isSmAuditUser(currentProfile);
+  const isPiUser = isPiOperatorUser(currentProfile);
   const primaryRole = currentProfile.primaryRole || (
     currentProfile.email === "admin@leaderslens.ai" || currentProfile.roleId === "SUPER_ADMIN" || currentProfile.role === "super_admin" || currentProfile.isPlatformAdmin
       ? "SUPER_ADMIN"
@@ -69,15 +69,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       ? "POLITICAL_ADMIN"
       : currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer"
       ? "VOLUNTEER"
-      : isSmAudit
-      ? "SM_AUDIT"
+      : isSmAUser(currentProfile)
+      ? "SM_A"
+      : isSmMUser(currentProfile)
+      ? "SM_M"
       : "DIRECTOR"
   );
 
-  const isPlatformAdmin = !isSmAudit && (currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin));
-  const isPoliticalAdmin = !isPlatformAdmin && !isSmAudit && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
-  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isSmAudit && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
-  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isSmAudit && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer");
+  const isPlatformAdmin = !isPiUser && (currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin));
+  const isPoliticalAdmin = !isPlatformAdmin && !isPiUser && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isPiUser && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
+  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isPiUser && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer");
 
   useEffect(() => {
     setLogoError(false);
@@ -146,7 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               data-testid="brand-home"
               className="flex items-center space-x-3 cursor-pointer group min-w-0"
               onClick={() => {
-                if (isSmAudit) {
+                if (isPiUser) {
                   window.location.hash = "#/intel";
                   onProductChange("intel");
                   return;
@@ -155,7 +157,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onProductChange("fieldops");
                 if (onResetToSelect) onResetToSelect();
               }}
-              title={isSmAudit ? "Political Intelligence" : "Constituency Intelligence Workspace"}
+              title={isPiUser ? "Political Intelligence" : "Constituency Intelligence Workspace"}
             >
               {/* Permanent Leaders Lens official company logo — mark and name same gold */}
               <div className="relative w-9 h-9 flex-shrink-0 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[#D4A24C]/40 shadow-sm">
@@ -191,8 +193,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Center Navigation Products - Top Menu Bar */}
-          <nav data-testid="global-nav" className={`hidden lg:flex items-center gap-1.5 max-w-full min-w-0 ${isSmAudit ? "flex-1 flex-nowrap justify-start" : "flex-wrap justify-center"}`}>
-            {isSmAudit && (
+          <nav data-testid="global-nav" className={`hidden lg:flex items-center gap-1.5 max-w-full min-w-0 ${isPiUser ? "flex-1 flex-nowrap justify-start" : "flex-wrap justify-center"}`}>
+            {isPiUser && (
             <button
               onClick={() => {
                 window.location.hash = "#/intel";
@@ -208,7 +210,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Political Intelligence</span>
             </button>
             )}
-            {!isSmAudit && isPlatformAdmin && (
+            {!isPiUser && isPlatformAdmin && (
             <button
               onClick={() => {
                 window.location.hash = "#/field-ops";
@@ -225,7 +227,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             )}
 
-            {!isSmAudit && isVolunteer && (
+            {!isPiUser && isVolunteer && (
             <button
               onClick={() => {
                 window.location.hash = "#/field-ops";
@@ -243,7 +245,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* Tab 2: Assign Tickets / Complaints — PA and Manager only. Volunteers add complaints on Home. */}
-            {!isSmAudit && !isVolunteer && (
+            {!isPiUser && !isVolunteer && (
             <button
               onClick={() => {
                 window.location.hash = "#/assign-tickets?status=ALL";
@@ -261,7 +263,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* Tab 3: Contact Database */}
-            {!isSmAudit && (
+            {!isPiUser && (
             <button
               onClick={() => {
                 window.location.hash = "#/contacts";
@@ -362,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Meta, Notifications & User Persona */}
           <div className="flex items-center space-x-3 shrink-0 ml-auto lg:ml-0">
-            {!isSmAudit && (
+            {!isPiUser && (
             <button
               onClick={() => setIsNotifOpen(true)}
               className="relative p-2 rounded-lg bg-[#142B45] border border-[#D4A24C]/25 text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
@@ -394,7 +396,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {currentProfile.name.split(" ")[0]}
                   </span>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--party-primary)] mt-0.5">
-                    {primaryRole === "DIRECTOR" ? "MANAGER" : primaryRole === "SM_AUDIT" ? "SM AUDIT" : primaryRole}
+                    {primaryRole === "DIRECTOR" ? "MANAGER" : primaryRole === "SM_A" ? "SM A" : primaryRole === "SM_M" ? "SM M" : primaryRole}
                   </span>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#D4A24C] transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
@@ -463,7 +465,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Horizontal Navigation Tabs */}
         <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
-          {isSmAudit && (
+          {isPiUser && (
           <button
             onClick={() => {
               window.location.hash = "#/intel";
@@ -476,7 +478,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             Political Intelligence
           </button>
           )}
-          {!isSmAudit && isPlatformAdmin && (
+          {!isPiUser && isPlatformAdmin && (
           <button
             onClick={() => onProductChange("fieldops")}
             className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
@@ -487,7 +489,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           )}
 
-          {!isSmAudit && isVolunteer && (
+          {!isPiUser && isVolunteer && (
           <button
             onClick={() => {
               window.location.hash = "#/field-ops";
@@ -501,7 +503,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           )}
 
-          {!isSmAudit && !isVolunteer && (
+          {!isPiUser && !isVolunteer && (
           <button
             onClick={() => {
               window.location.hash = "#/assign-tickets?status=ALL";
@@ -515,7 +517,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
           )}
 
-          {!isSmAudit && (
+          {!isPiUser && (
           <button
             onClick={() => onProductChange("contacts")}
             className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${

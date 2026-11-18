@@ -230,33 +230,47 @@ def social_score(row: Dict[str, Any], cohort: List[Dict[str, Any]]) -> Tuple[Opt
     return round(total / used, 2), {"version": SOCIAL_SCORE_VERSION, "weights": weights, "parts": parts, "reweighted": True}
 
 
-def is_sm_audit_actor(actor: Optional[Dict[str, Any]]) -> bool:
+def _role_key(actor: Optional[Dict[str, Any]]) -> str:
     actor = actor or {}
-    role = str(actor.get("primaryRole") or actor.get("roleId") or actor.get("role") or "").upper().replace("-", "_").replace(" ", "_")
+    return str(actor.get("primaryRole") or actor.get("roleId") or actor.get("role") or "").upper().replace("-", "_").replace(" ", "_")
+
+
+def is_sm_a_actor(actor: Optional[Dict[str, Any]]) -> bool:
+    actor = actor or {}
     email = str(actor.get("email") or "").strip().lower()
-    return role in {"SM_AUDIT", "SOCIAL_MEDIA_AUDIT"} or email == "sm.audit@leaderslens.ai"
+    return _role_key(actor) in {"SM_A", "SMA"} or email == "sma@leaderslens.ai"
+
+
+def is_sm_m_actor(actor: Optional[Dict[str, Any]]) -> bool:
+    actor = actor or {}
+    email = str(actor.get("email") or "").strip().lower()
+    return _role_key(actor) in {"SM_M", "SMM"} or email == "smm@leaderslens.ai"
+
+
+def is_sm_audit_actor(actor: Optional[Dict[str, Any]]) -> bool:
+    return is_sm_a_actor(actor) or is_sm_m_actor(actor)
 
 
 def actor_capabilities(actor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     actor = actor or {}
-    role = str(actor.get("primaryRole") or actor.get("roleId") or actor.get("role") or "").upper()
+    role = _role_key(actor)
     email = str(actor.get("email") or "").lower()
     is_super = bool(actor.get("isPlatformAdmin")) or role == "SUPER_ADMIN" or email == "admin@leaderslens.ai"
     is_pa = bool(actor.get("isPoliticalAdmin")) or role in {"POLITICAL_ADMIN", "ADMIN"}
-    is_dir = role in {"DIRECTOR", "CAMPAIGN_MANAGER", "PARTY_ADMIN"}
-    is_vol = role in {"VOLUNTEER"}
-    is_sm = is_sm_audit_actor(actor)
-    staff = is_super or is_pa or is_dir
-    pi_operator = is_sm or is_super
+    is_sma = is_sm_a_actor(actor)
+    is_smm = is_sm_m_actor(actor)
+    is_sm = is_sma or is_smm
     return {
-        "view": pi_operator,
-        "create": pi_operator,
-        "update": pi_operator,
-        "submit": pi_operator,
-        "verify": pi_operator,
-        "import": pi_operator,
-        "export": pi_operator,
+        "view": is_sm or is_super,
+        "create": is_sma or is_super,
+        "update": is_sma or is_super,
+        "submit": is_sma or is_super,
+        "verify": is_smm or is_super,
+        "import": is_smm or is_super,
+        "export": is_smm or is_super,
         "isSuper": is_super,
+        "isSmA": is_sma,
+        "isSmM": is_smm,
         "isSmAudit": is_sm,
         "scopeStateId": None if (is_super or is_sm) else (actor.get("stateId") or "AP"),
         "scopeAssemblyId": None if (is_super or is_pa or is_sm) else actor.get("assemblyConstituencyId"),

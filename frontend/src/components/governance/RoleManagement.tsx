@@ -3,7 +3,7 @@ import { UserProfile, UserRole, PrimaryRole, PoliticalParty, ElectedRepresentati
 import { USER_PROFILES, MOCK_POLITICAL_PARTIES, MOCK_ELECTED_REPRESENTATIVES } from "../../services/mockData";
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
-import { isSmAuditUser } from "../../utils/piAccess";
+import { isPiOperatorUser } from "../../utils/piAccess";
 import {
   ShieldCheck,
   UserCheck,
@@ -386,7 +386,10 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       setProfiles((prev) => prev.map((u) => u.id === editingUser.id ? updated : u));
     } else {
       const createPrimaryRole = isPoliticalAdmin ? "DIRECTOR" : userFormPrimaryRole;
-      if (createPrimaryRole === "SM_AUDIT" || userFormEmail.trim().toLowerCase() === "sm.audit@leaderslens.ai") {
+      if (
+        ["SM_A", "SM_M", "SM_AUDIT"].includes(String(createPrimaryRole || "").toUpperCase()) ||
+        ["sma@leaderslens.ai", "smm@leaderslens.ai", "sm.audit@leaderslens.ai"].includes(userFormEmail.trim().toLowerCase())
+      ) {
         return;
       }
       const createRole = isPoliticalAdmin ? "campaign_manager" : userFormRole;
@@ -460,7 +463,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   // - Political Admin: sees ONLY Directors belonging to his/her party & constituency
   // - Director: sees ONLY Volunteers belonging to his/her squad & mandals
   const scopedProfiles = useMemo(() => {
-    const visible = profiles.filter((p) => !isSmAuditUser(p));
+    const visible = profiles.filter((p) => !isPiOperatorUser(p));
     if (isSuperAdmin) {
       return visible;
     }

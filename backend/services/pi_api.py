@@ -886,7 +886,7 @@ def register_pi_routes(api_router) -> None:
         doc = await _get(collection, record_id)
         if not doc:
             raise HTTPException(status_code=404, detail="Record not found")
-        if doc.get("enteredBy") == caps["actorId"] and not caps.get("isSuper") and not caps.get("isSmAudit"):
+        if doc.get("enteredBy") == caps["actorId"] and not caps.get("isSuper"):
             raise HTTPException(status_code=403, detail="Independent verification required: you cannot verify your own submission")
         previous = doc.get("verificationStatus")
         now = now_iso()
@@ -1299,8 +1299,8 @@ def register_pi_routes(api_router) -> None:
     async def seed_sample(userId: Optional[str] = None, confirm: str = ""):
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
-        if not (caps.get("isSuper") or caps.get("isSmAudit")):
-            raise HTTPException(status_code=403, detail="Sample seed is Super Admin or SM Audit only")
+        if not caps.get("isSuper"):
+            raise HTTPException(status_code=403, detail="Sample seed is Super Admin only")
         if confirm != "SAMPLE":
             raise HTTPException(status_code=400, detail="Pass confirm=SAMPLE")
         count = await _persist_sample()

@@ -13,7 +13,9 @@ export type AdminUserRole =
   | "VOLUNTEER"
   | "CLIENT"
   | "VIEWER"
-  | "SM_AUDIT";
+  | "SM_AUDIT"
+  | "SM_A"
+  | "SM_M";
 
 export type UserRole = 
   | AdminUserRole
@@ -26,6 +28,8 @@ export type UserRole =
   | "analyst"
   | "volunteer"
   | "sm_audit"
+  | "sm_a"
+  | "sm_m"
   | "client"
   | "viewer"
   | "campaign_director" 
@@ -37,7 +41,7 @@ export type UserRole =
 
 export type UserAccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
 
-export type PrimaryRole = "SUPER_ADMIN" | "POLITICAL_ADMIN" | "DIRECTOR" | "VOLUNTEER" | "SM_AUDIT";
+export type PrimaryRole = "SUPER_ADMIN" | "POLITICAL_ADMIN" | "DIRECTOR" | "VOLUNTEER" | "SM_AUDIT" | "SM_A" | "SM_M";
 
 export interface UserProfile {
   _id?: string;
