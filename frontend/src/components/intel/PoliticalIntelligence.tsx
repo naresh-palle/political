@@ -7,6 +7,7 @@ import {
   Loader2,
   MapPin,
   Trash2,
+  Upload,
   X
 } from "lucide-react";
 import { UserProfile, PiDashboard, PiDistrictProgress, PiRecentCollection, StateInfo, PoliticalParty, ParliamentInfo } from "../../types";
@@ -14,7 +15,7 @@ import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import { cacheHasPiData, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
-import { downloadPiBriefingWorkbook } from "../../utils/piExcelExport";
+import { downloadPiCsvExport } from "../../utils/piExcelExport";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
@@ -351,6 +352,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [csvText, setCsvText] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [exportingAi, setExportingAi] = useState(false);
+  const csvFileRef = useRef<HTMLInputElement>(null);
 
   const partyById = useMemo(() => Object.fromEntries(parties.map((p) => [p.id, p])), [parties]);
   const selectedDistrictProgress = useMemo(() => {
@@ -890,20 +892,20 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     URL.revokeObjectURL(a.href);
   };
 
-  const exportAiCsv = async () => {
+  const exportCsv = async () => {
     if (exportingAi) return;
     setExportingAi(true);
     try {
       const [leaderData, accountData, constData] = await Promise.all([
-        politicalApiService.getPiLeaders(userId, { districtId: districtId || undefined, limit: 200 }),
-        politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 200 }),
-        politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 200 })
+        politicalApiService.getPiLeaders(userId, { districtId: districtId || undefined, limit: 1000 }),
+        politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 1000 }),
+        politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 1000 })
       ]);
       const leaderRows = leaderData.items || leaders;
       const leaderIds = new Set(leaderRows.map((row: any) => row.id));
       const accountRows = (accountData.items || accounts).filter((row: any) => !leaderIds.size || leaderIds.has(row.personId));
       const constItems = constData.items || constRows;
-      downloadPiBriefingWorkbook({
+      downloadPiCsvExport({
         stateName: states.find((s) => s.id === stateId)?.name || stateId,
         districtName: selectedDistrictName || undefined,
         constituencyName: selectedAssemblyName || undefined,
@@ -914,7 +916,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         partyName: (partyId) => (partyId && partyById[partyId]?.abbreviation) || partyId || "",
         assemblyName: (assemblyId) => assemblies.find((row) => row.id === assemblyId)?.name || assemblyId || ""
       });
-      flash("AI CSV exported. Open it in Excel — every field wraps.");
+      flash("CSV exported with every collected field. Use Import CSV to upload that same file — no template.");
     } catch (err: any) {
       flash(err.message || "Could not export.", true);
     } finally {
@@ -922,15 +924,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     }
   };
 
-  const downloadTemplate = () => {
-    const csv = `recordType,stateId,districtId,parliamentConstituencyId,assemblyConstituencyId,totalVoters,ruralPercent,estimatedFacebookUsers,estimatedInstagramUsers,estimatedXUsers,estimatedYouTubeUsers,dataCollectionDate,dataSource,remarks,leaderName,partyId,politicalRole,currentFormerStatus,platform,profileUrl,accountIdentifier,followers,postsLast30Days,avgLikesLast10,avgCommentsLast10,avgViewsLast10
-constituency,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,234100,62,48000,22000,9000,15000,2026-11-01,FIELD_SURVEY,Estimates only,,,,,,,,,,
-social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. Rao (Sample),TDP,MLA,CURRENT,facebook,https://facebook.com/sample.rao.bng,sample.rao.bng,12500,18,210,34,`;
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "leaderlens-pi-template.csv";
-    a.click();
+  const onPickImportCsv = async (file?: File | null) => {
+    if (!file) return;
+    const text = await file.text();
+    setCsvText(text);
+    setPreview(null);
+    flash(`Loaded ${file.name} for Import CSV`);
   };
 
   return (
@@ -1430,28 +1429,32 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
       {tab === "import" && (
         <section className={`${CARD} space-y-3`}>
           <div className="flex flex-wrap gap-2">
-            <button className={BTN} type="button" onClick={exportAiCsv} disabled={exportingAi}>
-              <Download className="w-3.5 h-3.5 inline mr-1" />{exportingAi ? "Exporting…" : "Export AI CSV"}
+            <button className={BTN} type="button" onClick={exportCsv} disabled={exportingAi}>
+              <Download className="w-3.5 h-3.5 inline mr-1" />{exportingAi ? "Exporting…" : "Export CSV"}
             </button>
-            <button className="px-4 py-2 rounded-xl border border-[#22405E] text-[#F5EFE0] text-xs font-bold uppercase tracking-wider" type="button" onClick={downloadTemplate}>
-              CSV template
+            <button
+              className={BTN}
+              type="button"
+              onClick={() => csvFileRef.current?.click()}
+            >
+              <Upload className="w-3.5 h-3.5 inline mr-1" />Import CSV
             </button>
           </div>
           <p className="text-[11px] text-[#B9AF95] leading-relaxed">
-            Export AI CSV opens in Excel with wrapped cells and a plain-language briefing so anyone can read Facebook, Instagram, X / Twitter and YouTube together. CSV template is only for uploading rows.
+            Export CSV downloads the live constituency, leader and social rows with every field, plus the wrapped briefing spreadsheet. Import CSV uploads that same file. There is no separate template.
           </p>
-          <label className={LABEL}>Upload CSV</label>
+          <label className={LABEL}>Import CSV</label>
           <input
+            ref={csvFileRef}
             type="file"
             accept=".csv,text/csv"
             className="block w-full text-xs text-[#B9AF95]"
             onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              setCsvText(await file.text());
+              await onPickImportCsv(e.target.files?.[0]);
+              e.target.value = "";
             }}
           />
-          <textarea className={`${INPUT} min-h-[160px] font-mono text-[11px]`} value={csvText} onChange={(e) => setCsvText(e.target.value)} placeholder="Paste CSV here" />
+          <textarea className={`${INPUT} min-h-[160px] font-mono text-[11px]`} value={csvText} onChange={(e) => setCsvText(e.target.value)} placeholder="Paste CSV or use Import CSV" />
           <div className="flex flex-wrap gap-2">
             <button className={BTN} type="button" onClick={async () => {
               try { setPreview(await politicalApiService.previewPiImport(userId, csvText)); flash("Preview ready"); }

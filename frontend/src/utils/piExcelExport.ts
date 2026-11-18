@@ -72,6 +72,189 @@ function accountCell(account: any) {
   return [handle, url, followers].filter(Boolean).join("\n");
 }
 
+export const PI_CSV_COLUMNS: { key: string; title: string; width: number }[] = [
+  { key: "recordType", title: "recordType", width: 80 },
+  { key: "stateId", title: "stateId", width: 50 },
+  { key: "districtId", title: "districtId", width: 110 },
+  { key: "parliamentConstituencyId", title: "parliamentConstituencyId", width: 120 },
+  { key: "assemblyConstituencyId", title: "assemblyConstituencyId", width: 120 },
+  { key: "totalVoters", title: "totalVoters", width: 80 },
+  { key: "ruralPercent", title: "ruralPercent", width: 70 },
+  { key: "estimatedFacebookUsers", title: "estimatedFacebookUsers", width: 110 },
+  { key: "estimatedInstagramUsers", title: "estimatedInstagramUsers", width: 110 },
+  { key: "estimatedXUsers", title: "estimatedXUsers", width: 100 },
+  { key: "estimatedYouTubeUsers", title: "estimatedYouTubeUsers", width: 110 },
+  { key: "dataCollectionDate", title: "dataCollectionDate", width: 90 },
+  { key: "dataSource", title: "dataSource", width: 90 },
+  { key: "remarks", title: "remarks", width: 140 },
+  { key: "leaderName", title: "leaderName", width: 140 },
+  { key: "partyId", title: "partyId", width: 70 },
+  { key: "politicalRole", title: "politicalRole", width: 90 },
+  { key: "currentFormerStatus", title: "currentFormerStatus", width: 90 },
+  { key: "platform", title: "platform", width: 80 },
+  { key: "profileUrl", title: "profileUrl", width: 220 },
+  { key: "accountIdentifier", title: "accountIdentifier", width: 120 },
+  { key: "followers", title: "followers", width: 80 },
+  { key: "postsLast30Days", title: "postsLast30Days", width: 90 },
+  { key: "avgLikesLast10", title: "avgLikesLast10", width: 90 },
+  { key: "avgCommentsLast10", title: "avgCommentsLast10", width: 100 },
+  { key: "avgViewsLast10", title: "avgViewsLast10", width: 90 },
+  { key: "verificationStatus", title: "verificationStatus", width: 90 },
+  { key: "aiBriefing", title: "aiBriefing", width: 280 }
+];
+
+function csvEscape(value: string | number | undefined | null): string {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function cellText(value: unknown): string {
+  if (value == null || value === "") return "";
+  return String(value);
+}
+
+function dateOnly(value?: string): string {
+  return String(value || "").slice(0, 10);
+}
+
+function profileUrlForCsv(account: any): string {
+  const url = String(account?.profileUrl || "");
+  if (!url || url.includes("none.invalid")) return "";
+  return url;
+}
+
+function leaderForAccount(bundle: PiExportBundle, account: any) {
+  return bundle.leaders.find((row) => row.id === account?.personId) || {};
+}
+
+function constituencyBriefing(bundle: PiExportBundle, row: any): string {
+  const name = row.assemblyName || bundle.assemblyName?.(row.assemblyConstituencyId) || row.assemblyConstituencyId || "";
+  const district = row.districtName || bundle.districtName || row.districtId || "";
+  return [
+    `${name}${district ? ` in ${district}` : ""}.`,
+    row.totalVoters != null ? `${Number(row.totalVoters).toLocaleString("en-IN")} voters.` : "",
+    row.ruralPercent != null ? `About ${row.ruralPercent}% rural.` : "",
+    row.estimatedFacebookUsers != null ? `Estimated Facebook users: ${Number(row.estimatedFacebookUsers).toLocaleString("en-IN")}.` : "",
+    row.estimatedInstagramUsers != null ? `Estimated Instagram users: ${Number(row.estimatedInstagramUsers).toLocaleString("en-IN")}.` : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function emptyCsvRow(): Record<string, string> {
+  return Object.fromEntries(PI_CSV_COLUMNS.map((col) => [col.key, ""]));
+}
+
+export function buildPiCsvDetailRows(bundle: PiExportBundle): Record<string, string>[] {
+  const rows: Record<string, string>[] = [];
+
+  for (const row of bundle.constituencies || []) {
+    rows.push({
+      ...emptyCsvRow(),
+      recordType: "constituency",
+      stateId: cellText(row.stateId),
+      districtId: cellText(row.districtId),
+      parliamentConstituencyId: cellText(row.parliamentConstituencyId),
+      assemblyConstituencyId: cellText(row.assemblyConstituencyId),
+      totalVoters: cellText(row.totalVoters),
+      ruralPercent: cellText(row.ruralPercent),
+      estimatedFacebookUsers: cellText(row.estimatedFacebookUsers),
+      estimatedInstagramUsers: cellText(row.estimatedInstagramUsers),
+      estimatedXUsers: cellText(row.estimatedXUsers),
+      estimatedYouTubeUsers: cellText(row.estimatedYouTubeUsers),
+      dataCollectionDate: dateOnly(row.dataCollectionDate || row.updatedAt || row.createdAt),
+      dataSource: cellText(row.dataSource),
+      remarks: cellText(row.remarks),
+      verificationStatus: cellText(row.verificationStatus),
+      aiBriefing: constituencyBriefing(bundle, row)
+    });
+  }
+
+  for (const leader of bundle.leaders || []) {
+    const related = (bundle.accounts || []).filter((row) => row?.personId === leader?.id);
+    rows.push({
+      ...emptyCsvRow(),
+      recordType: "leader",
+      stateId: cellText(leader.stateId),
+      districtId: cellText(leader.districtId),
+      parliamentConstituencyId: cellText(leader.parliamentConstituencyId),
+      assemblyConstituencyId: cellText(leader.assemblyConstituencyId),
+      dataCollectionDate: dateOnly(leader.dataCollectionDate || leader.updatedAt || leader.createdAt),
+      dataSource: cellText(leader.dataSource),
+      remarks: cellText(leader.remarks),
+      leaderName: cellText(leader.name),
+      partyId: cellText(leader.partyId),
+      politicalRole: cellText(leader.politicalRole),
+      currentFormerStatus: cellText(leader.currentFormerStatus),
+      verificationStatus: cellText(leader.verificationStatus),
+      aiBriefing: leaderBriefing(
+        {
+          ...leader,
+          assemblyName: leader.assemblyName || bundle.assemblyName?.(leader.assemblyConstituencyId)
+        },
+        related
+      )
+    });
+  }
+
+  for (const account of bundle.accounts || []) {
+    const leader = leaderForAccount(bundle, account);
+    rows.push({
+      ...emptyCsvRow(),
+      recordType: "social",
+      stateId: cellText(account.stateId || leader.stateId),
+      districtId: cellText(account.districtId || leader.districtId),
+      parliamentConstituencyId: cellText(account.parliamentConstituencyId || leader.parliamentConstituencyId),
+      assemblyConstituencyId: cellText(account.assemblyConstituencyId || leader.assemblyConstituencyId),
+      dataCollectionDate: dateOnly(account.dataCollectionDate || account.updatedAt || account.createdAt),
+      dataSource: cellText(account.dataSource),
+      remarks: cellText(account.remarks),
+      leaderName: cellText(leader.name || account.leaderName),
+      partyId: cellText(leader.partyId || account.partyId),
+      politicalRole: cellText(leader.politicalRole),
+      currentFormerStatus: cellText(leader.currentFormerStatus),
+      platform: cellText(account.platform).toLowerCase(),
+      profileUrl: profileUrlForCsv(account),
+      accountIdentifier: String(account.accountIdentifier || "").replace(/^@/, ""),
+      followers: cellText(account.followers),
+      postsLast30Days: cellText(account.postsLast30Days),
+      avgLikesLast10: cellText(account.avgLikesLast10),
+      avgCommentsLast10: cellText(account.avgCommentsLast10),
+      avgViewsLast10: cellText(account.avgViewsLast10),
+      verificationStatus: cellText(account.verificationStatus),
+      aiBriefing: accountBriefing(account, leader.name || account.leaderName)
+    });
+  }
+
+  return rows;
+}
+
+export function buildPiDetailCsv(bundle: PiExportBundle): string {
+  const rows = buildPiCsvDetailRows(bundle);
+  const headers = PI_CSV_COLUMNS.map((col) => col.key);
+  const lines = [
+    headers.join(","),
+    ...rows.map((row) => headers.map((key) => csvEscape(row[key])).join(","))
+  ];
+  return `\uFEFF${lines.join("\n")}`;
+}
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function exportStamp(bundle: PiExportBundle) {
+  const stamp = (bundle.generatedOn ?? new Date()).toISOString().split("T")[0];
+  const place = (bundle.districtName || bundle.stateName || "PI").replace(/\s+/g, "_");
+  return { stamp, place };
+}
+
 export function buildPiBriefingWorkbookXml(bundle: PiExportBundle): string {
   const generatedOn = bundle.generatedOn ?? new Date();
   const dateLabel = generatedOn.toLocaleDateString("en-IN", {
@@ -212,6 +395,17 @@ export function buildPiBriefingWorkbookXml(bundle: PiExportBundle): string {
     })
     .join("");
 
+  const csvDetailRows = buildPiCsvDetailRows(bundle);
+  const csvDetailRowsXml = csvDetailRows
+    .map((row, index) => {
+      const style = index % 2 === 0 ? "sOdd" : "sEven";
+      const height = rowHeightFor(row.aiBriefing || row.remarks || row.leaderName, 42);
+      return `<Row ss:AutoFitHeight="1" ss:Height="${height}">
+        ${PI_CSV_COLUMNS.map((col) => cell(style, row[col.key] || "")).join("")}
+      </Row>`;
+    })
+    .join("");
+
   const briefingHeight = rowHeightFor(overview, 90);
   const titleRow = (cols: number, title: string) => `<Row ss:Height="28">
       <Cell ss:StyleID="sTitle" ss:MergeAcross="${Math.max(cols - 1, 0)}"><Data ss:Type="String">${xmlEscape(title)}</Data></Cell>
@@ -277,6 +471,18 @@ export function buildPiBriefingWorkbookXml(bundle: PiExportBundle): string {
       <Row ss:AutoFitHeight="1" ss:Height="${briefingHeight}"><Cell ss:StyleID="sBrief"><Data ss:Type="String">${xmlEscape(overview)}</Data></Cell></Row>
     </Table>
   </Worksheet>
+  <Worksheet ss:Name="CSV details">
+    <Table ss:ExpandedColumnCount="${PI_CSV_COLUMNS.length}" ss:ExpandedRowCount="${csvDetailRows.length + 3}" x:FullColumns="1" x:FullRows="1">
+      ${colXml(PI_CSV_COLUMNS)}
+      ${titleRow(PI_CSV_COLUMNS.length, "CSV details")}
+      ${subRow(PI_CSV_COLUMNS.length, "Every collected field. Same columns as Import CSV — not a blank template. Cells wrap.")}
+      ${headerXml(PI_CSV_COLUMNS)}
+      ${csvDetailRowsXml}
+    </Table>
+    <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+      <FreezePanes/><FrozenNoSplit/><SplitHorizontal>3</SplitHorizontal><TopRowBottomPane>3</TopRowBottomPane><ActivePane>2</ActivePane>
+    </WorksheetOptions>
+  </Worksheet>
   <Worksheet ss:Name="Leaders">
     <Table ss:ExpandedColumnCount="${leaderCols.length}" ss:ExpandedRowCount="${bundle.leaders.length + 3}" x:FullColumns="1" x:FullRows="1">
       ${colXml(leaderCols)}
@@ -317,16 +523,18 @@ export function buildPiBriefingWorkbookXml(bundle: PiExportBundle): string {
 }
 
 export function downloadPiBriefingWorkbook(bundle: PiExportBundle): void {
-  const xml = buildPiBriefingWorkbookXml(bundle);
-  const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  const stamp = new Date().toISOString().split("T")[0];
-  const place = (bundle.districtName || bundle.stateName || "PI").replace(/\s+/g, "_");
-  link.href = url;
-  link.download = `LeaderLens_PI_AI_${place}_${stamp}.xls`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  const { stamp, place } = exportStamp(bundle);
+  triggerDownload(
+    new Blob([buildPiBriefingWorkbookXml(bundle)], { type: "application/vnd.ms-excel;charset=utf-8;" }),
+    `LeaderLens_PI_export_${place}_${stamp}.xls`
+  );
+}
+
+export function downloadPiCsvExport(bundle: PiExportBundle): void {
+  const { stamp, place } = exportStamp(bundle);
+  triggerDownload(
+    new Blob([buildPiDetailCsv(bundle)], { type: "text/csv;charset=utf-8;" }),
+    `LeaderLens_PI_export_${place}_${stamp}.csv`
+  );
+  window.setTimeout(() => downloadPiBriefingWorkbook(bundle), 300);
 }

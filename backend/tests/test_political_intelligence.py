@@ -287,6 +287,21 @@ def _async_ok():
     return _inner()
 
 
+def test_parse_csv_strips_bom_and_aliases_headers():
+    text = (
+        "\ufeffRecord type,State Id,assemblyConstituencyId,Leader Name,platform,Profile URL,followers\n"
+        "social,AP,AP-AC-139,A. Rao,facebook,https://facebook.com/sample.rao.bng,12500\n"
+        ",,,,,,\n"
+    )
+    rows = parse_csv(text)
+    assert len(rows) == 1
+    assert rows[0]["recordType"] == "social"
+    assert rows[0]["stateId"] == "AP"
+    assert rows[0]["leaderName"] == "A. Rao"
+    assert rows[0]["profileUrl"] == "https://facebook.com/sample.rao.bng"
+    assert rows[0]["followers"] == "12500"
+
+
 def test_import_rejects_invalid_rows(monkeypatch):
     from backend.services import pi_api
     from backend.services.political_intelligence import reset_memory

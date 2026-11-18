@@ -416,40 +416,81 @@ def memory_list(collection: str) -> List[Dict[str, Any]]:
     return [deepcopy(v) for v in bucket]
 
 
+CSV_FIELD_KEYS = [
+    "recordType",
+    "stateId",
+    "districtId",
+    "parliamentConstituencyId",
+    "assemblyConstituencyId",
+    "totalVoters",
+    "ruralPercent",
+    "estimatedFacebookUsers",
+    "estimatedInstagramUsers",
+    "estimatedXUsers",
+    "estimatedYouTubeUsers",
+    "dataCollectionDate",
+    "dataSource",
+    "remarks",
+    "leaderName",
+    "partyId",
+    "politicalRole",
+    "currentFormerStatus",
+    "platform",
+    "profileUrl",
+    "accountIdentifier",
+    "followers",
+    "postsLast30Days",
+    "avgLikesLast10",
+    "avgCommentsLast10",
+    "avgViewsLast10",
+]
+
+
+def _header_variants(name: str) -> List[str]:
+    spaced = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", name or "")
+    spaced = spaced.replace("_", " ").replace("-", " ")
+    compact = " ".join(spaced.lower().split())
+    alnum = re.sub(r"[^a-z0-9]", "", compact)
+    return [compact, alnum, (name or "").strip().lower()]
+
+
+_CSV_HEADER_ALIASES: Dict[str, str] = {}
+for _key in CSV_FIELD_KEYS + ["verificationStatus", "aiBriefing"]:
+    for _variant in _header_variants(_key):
+        if _variant:
+            _CSV_HEADER_ALIASES[_variant] = _key
+
+
+def _canonical_csv_header(name: str) -> str:
+    raw = (name or "").strip().lstrip("\ufeff")
+    if not raw:
+        return ""
+    if raw in CSV_FIELD_KEYS or raw in ("verificationStatus", "aiBriefing"):
+        return raw
+    for variant in _header_variants(raw):
+        mapped = _CSV_HEADER_ALIASES.get(variant)
+        if mapped:
+            return mapped
+    return raw
+
+
 def parse_csv(text: str) -> List[Dict[str, str]]:
-    reader = csv.DictReader(io.StringIO(text or ""))
-    return [{k.strip(): (v or "").strip() for k, v in row.items() if k} for row in reader]
+    cleaned = (text or "").lstrip("\ufeff")
+    reader = csv.DictReader(io.StringIO(cleaned))
+    rows: List[Dict[str, str]] = []
+    for row in reader:
+        out: Dict[str, str] = {}
+        for key, value in row.items():
+            if not key:
+                continue
+            out[_canonical_csv_header(key)] = (value or "").strip()
+        if any(out.values()):
+            rows.append(out)
+    return rows
 
 
 def csv_template() -> str:
-    headers = [
-        "recordType",
-        "stateId",
-        "districtId",
-        "parliamentConstituencyId",
-        "assemblyConstituencyId",
-        "totalVoters",
-        "ruralPercent",
-        "estimatedFacebookUsers",
-        "estimatedInstagramUsers",
-        "estimatedXUsers",
-        "estimatedYouTubeUsers",
-        "dataCollectionDate",
-        "dataSource",
-        "remarks",
-        "leaderName",
-        "partyId",
-        "politicalRole",
-        "currentFormerStatus",
-        "platform",
-        "profileUrl",
-        "accountIdentifier",
-        "followers",
-        "postsLast30Days",
-        "avgLikesLast10",
-        "avgCommentsLast10",
-        "avgViewsLast10",
-    ]
+    headers = list(CSV_FIELD_KEYS)
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(headers)
