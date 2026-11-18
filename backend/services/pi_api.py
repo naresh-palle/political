@@ -124,6 +124,13 @@ PI_CRITICAL_COLLECTIONS = {
 
 def _save_error_detail(exc: Exception) -> str:
     msg = " ".join(str(exc).split())
+    lowered = msg.lower()
+    if "dns query name does not exist" in lowered or ("mongodb.net" in lowered and "does not exist" in lowered):
+        return (
+            "Could not save. Render MONGO_URL points at a MongoDB Atlas hostname that DNS cannot find. "
+            "In Atlas open Connect, copy the current mongodb+srv connection string, paste it as MONGO_URL "
+            "on the Render backend service, wait for the deploy, then tap Save again."
+        )
     if len(msg) > 180:
         msg = msg[:177] + "..."
     return f"{PI_SAVE_UNAVAILABLE} ({type(exc).__name__}: {msg})"

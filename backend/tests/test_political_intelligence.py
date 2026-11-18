@@ -676,3 +676,13 @@ def test_pi_append_does_not_block_leader_save(monkeypatch):
     except HTTPException as exc:
         assert exc.status_code == 503
         assert "RuntimeError" in str(exc.detail)
+
+
+def test_pi_save_error_explains_missing_atlas_hostname():
+    from backend.services.pi_api import _save_error_detail
+
+    err = Exception("The DNS query name does not exist: _mongodb._tcp.cluster0.5fdvfhs.mongodb.net.")
+    detail = _save_error_detail(err)
+    assert "MONGO_URL" in detail
+    assert "Atlas" in detail
+    assert "5fdvfhs" not in detail
