@@ -317,7 +317,7 @@ function AppInner() {
 
   // Role routing enforcement:
   // - SM A / SM M: Political Intelligence only
-  // - Platform Super Admin: all modules including Political Intelligence (SM A + SM M)
+  // - Platform Super Admin: field ops and admin modules, not Political Intelligence
   // - Political Admin: Home (fieldops), Assign Tickets, Contact Database, Director User Management
   // - Manager: Home (fieldops), Assign Tickets, Contact Database (no Squad Volunteer / governance)
   // - Volunteer: Home (fieldops), Contact Database — Add Complaint and status counts on Home, no ticket grid/table
@@ -333,7 +333,6 @@ function AppInner() {
       return;
     }
     if (activeProduct === "intel") {
-      if (isPlatformAdmin) return;
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -374,7 +373,7 @@ function AppInner() {
     if (isPiUser) {
       targetProduct = "intel";
     } else if (product === "intel") {
-      targetProduct = isPlatformAdmin ? "intel" : "fieldops";
+      targetProduct = "fieldops";
     } else if (isVolunteer) {
       targetProduct = ["fieldops", "grievances", "contacts"].includes(product) ? product : "fieldops";
     } else if (isPoliticalAdmin) {
@@ -434,7 +433,7 @@ function AppInner() {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "intel");
       } catch {}
       window.location.hash = "#/intel";
-    } else if ((activeProduct === "intel" && userRole !== "SUPER_ADMIN") || userRole === "SM_A" || userRole === "SM_M") {
+    } else if (activeProduct === "intel" || userRole === "SM_A" || userRole === "SM_M") {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");

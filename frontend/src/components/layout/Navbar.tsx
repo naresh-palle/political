@@ -6,22 +6,15 @@ import { NotificationCenter } from "../fieldops/NotificationCenter";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { politicalApiService } from "../../services/api";
 import { setTicketIdInHash } from "../../utils/ticketHash";
-import { canAccessPoliticalIntelligence, isPiOperatorUser, isSmAUser, isSmMUser } from "../../utils/piAccess";
+import { isPiOperatorUser, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import {
-  Sparkles,
   Shield,
-  User,
-  SlidersHorizontal,
   ArrowLeft,
-  Globe,
-  MessageSquare,
   Users2,
-  Lock,
   ChevronDown,
   LogOut,
   UserCheck,
   Bell,
-  MapPin,
   ClipboardList,
   Edit3,
   BarChart3
@@ -40,16 +33,20 @@ interface NavbarProps {
   onSignOut?: () => void;
 }
 
+const navBtn = (active: boolean) =>
+  `whitespace-nowrap shrink-0 inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wide transition-all cursor-pointer ${
+    active
+      ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
+      : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
+  }`;
+
 export const Navbar: React.FC<NavbarProps> = ({
   activeProduct = "fieldops",
   onProductChange,
   isAuditView = false,
   onResetToSelect,
   currentProfile,
-  onSwitchProfile,
   onUpdateProfile,
-  onOpenRoleModal,
-  onGoHome,
   onSignOut
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -133,6 +130,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, [isNotifOpen]);
 
+  const brandSubtitle = isPiUser ? "Political Intelligence" : "Command Portal";
+
   return (
     <>
     <header
@@ -140,13 +139,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       data-testid="global-navbar"
       className="sticky top-0 z-40 w-full bg-[#0B1A2C]/95 backdrop-blur-xl border-b border-[#D4A24C]/20 transition-all no-print overflow-visible"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 min-h-[64px] py-2">
+      <div className="w-full px-3 sm:px-4 lg:px-5">
+        <div className="flex flex-nowrap items-center gap-2 h-16 min-h-[64px] max-h-16">
           {/* Left Brand */}
-          <div className="flex items-center space-x-5 min-w-0">
+          <div className="flex items-center gap-3 shrink-0">
             <div
               data-testid="brand-home"
-              className="flex items-center space-x-3 cursor-pointer group min-w-0"
+              className="flex items-center space-x-3 cursor-pointer group shrink-0"
               onClick={() => {
                 if (isPiUser) {
                   window.location.hash = "#/intel";
@@ -159,32 +158,30 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               title={isPiUser ? "Political Intelligence" : "Constituency Intelligence Workspace"}
             >
-              {/* Permanent Leaders Lens official company logo — mark and name same gold */}
               <div className="relative w-9 h-9 flex-shrink-0 rounded-[6px] overflow-hidden group-hover:brightness-110 transition-all flex items-center justify-center bg-[#071322] border border-[#D4A24C]/40 shadow-sm">
                 <LeadersLogo size={36} />
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-display text-[18px] sm:text-[22px] tracking-[-0.01em] text-[#D4A24C] leading-none truncate">
+              <div className="flex flex-col shrink-0">
+                <span className="font-display text-[18px] sm:text-[22px] tracking-[-0.01em] text-[#D4A24C] leading-none whitespace-nowrap">
                   Leaders Lens
                 </span>
-                <span className="text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[var(--party-primary)] mt-1 flex items-center gap-1.5 truncate">
+                <span className="text-[9px] sm:text-[9.5px] font-semibold uppercase tracking-[0.18em] text-[var(--party-primary)] mt-1 flex items-center gap-1.5 whitespace-nowrap">
                   {isPartyThemeActive && partyName ? (
                     <>
                       <span>{partySymbolEmoji || "🏛️"} {partyName}</span>
-                      <span className="text-[#8A8E9B] hidden sm:inline">· Command Portal</span>
+                      <span className="text-[#8A8E9B]">· {brandSubtitle}</span>
                     </>
                   ) : (
-                    "Political Intelligence"
+                    brandSubtitle
                   )}
                 </span>
               </div>
             </div>
 
-            {/* Back button if in audit */}
             {isAuditView && onResetToSelect && activeProduct === "pitch" && (
               <button
                 onClick={onResetToSelect}
-                className="hidden sm:inline-flex items-center text-xs font-medium text-[#D4A24C] hover:text-[#F5EFE0] py-1 px-2.5 rounded bg-[#0F2338] border border-[#D4A24C]/30 hover:border-[#D4A24C]/80 transition-colors flex-shrink-0"
+                className="inline-flex items-center text-xs font-medium text-[#D4A24C] hover:text-[#F5EFE0] py-1 px-2.5 rounded bg-[#0F2338] border border-[#D4A24C]/30 hover:border-[#D4A24C]/80 transition-colors shrink-0 whitespace-nowrap"
               >
                 <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
                 Change Constituency
@@ -192,21 +189,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* Center Navigation Products - Top Menu Bar */}
-          <nav data-testid="global-nav" className={`hidden lg:flex items-center gap-1.5 max-w-full min-w-0 ${isPiUser ? "flex-1 flex-nowrap justify-start" : "flex-wrap justify-center"}`}>
-            {canAccessPoliticalIntelligence(currentProfile) && (
+          <nav data-testid="global-nav" className="flex flex-1 flex-nowrap items-center gap-1 min-w-0 overflow-x-auto no-scrollbar">
+            {isPiUser && (
             <button
               onClick={() => {
                 window.location.hash = "#/intel";
                 onProductChange("intel");
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeProduct === "intel"
-                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-              }`}
+              className={navBtn(activeProduct === "intel")}
             >
-              <BarChart3 className="w-3.5 h-3.5" />
+              <BarChart3 className="w-3.5 h-3.5 shrink-0" />
               <span>Political Intelligence</span>
             </button>
             )}
@@ -216,13 +208,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 window.location.hash = "#/field-ops";
                 onProductChange("fieldops");
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeProduct === "fieldops"
-                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-              }`}
+              className={navBtn(activeProduct === "fieldops")}
             >
-              <ClipboardList className="w-3.5 h-3.5" />
+              <ClipboardList className="w-3.5 h-3.5 shrink-0" />
               <span>Ground Intake & Issues</span>
             </button>
             )}
@@ -233,49 +221,35 @@ export const Navbar: React.FC<NavbarProps> = ({
                 window.location.hash = "#/field-ops";
                 onProductChange("fieldops");
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeProduct === "fieldops"
-                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-              }`}
+              className={navBtn(activeProduct === "fieldops")}
             >
-              <ClipboardList className="w-3.5 h-3.5" />
+              <ClipboardList className="w-3.5 h-3.5 shrink-0" />
               <span>Home</span>
             </button>
             )}
 
-            {/* Tab 2: Assign Tickets / Complaints — PA and Manager only. Volunteers add complaints on Home. */}
             {!isPiUser && !isVolunteer && (
             <button
               onClick={() => {
                 window.location.hash = "#/assign-tickets?status=ALL";
                 onProductChange("assigntickets");
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeProduct === "assigntickets"
-                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-              }`}
+              className={navBtn(activeProduct === "assigntickets")}
             >
-              <Shield className="w-3.5 h-3.5" />
+              <Shield className="w-3.5 h-3.5 shrink-0" />
               <span>Assign Tickets / Complaints</span>
             </button>
             )}
 
-            {/* Tab 3: Contact Database */}
             {!isPiUser && (
             <button
               onClick={() => {
                 window.location.hash = "#/contacts";
                 onProductChange("contacts");
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeProduct === "contacts"
-                  ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-              }`}
+              className={navBtn(activeProduct === "contacts")}
             >
-              <Users2 className="w-3.5 h-3.5" />
+              <Users2 className="w-3.5 h-3.5 shrink-0" />
               <span>Contact Database</span>
             </button>
             )}
@@ -286,13 +260,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   window.location.hash = "#/user-management";
                   onProductChange("governance");
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 ${
-                  activeProduct === "governance"
-                    ? "bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] shadow-md font-bold"
-                    : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-                }`}
+                className={navBtn(activeProduct === "governance")}
               >
-                <UserCheck className="w-3.5 h-3.5" />
+                <UserCheck className="w-3.5 h-3.5 shrink-0" />
                 <span>Director User Management</span>
               </button>
             )}
@@ -300,11 +270,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("pitch")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                  activeProduct === "pitch"
-                    ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
-                    : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-                }`}
+                className={navBtn(activeProduct === "pitch")}
               >
                 Pitch / Audit
               </button>
@@ -313,11 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("grievances")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                  activeProduct === "grievances"
-                    ? "bg-[#D4A24C] text-[#0B131E] shadow-sm font-bold"
-                    : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#131E2D]"
-                }`}
+                className={navBtn(activeProduct === "grievances")}
               >
                 Grievances
               </button>
@@ -327,21 +289,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <>
                 <button
                   onClick={() => onProductChange("volunteers")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                    activeProduct === "volunteers"
-                      ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                      : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-                  }`}
+                  className={navBtn(activeProduct === "volunteers")}
                 >
                   Volunteers
                 </button>
                 <button
                   onClick={() => onProductChange("webbuilder")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                    activeProduct === "webbuilder"
-                      ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                      : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-                  }`}
+                  className={navBtn(activeProduct === "webbuilder")}
                 >
                   Web Studio
                 </button>
@@ -351,23 +305,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isPlatformAdmin && (
               <button
                 onClick={() => onProductChange("governance")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-                  activeProduct === "governance"
-                    ? "bg-[var(--party-primary)] text-[#0B1A2C] shadow-sm font-bold"
-                    : "text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45]"
-                }`}
+                className={navBtn(activeProduct === "governance")}
               >
                 Admin & Users
               </button>
             )}
           </nav>
 
-          {/* Right Meta, Notifications & User Persona */}
-          <div className="flex items-center space-x-3 shrink-0 ml-auto lg:ml-0">
+          <div className="flex flex-nowrap items-center gap-2 shrink-0">
             {!isPiUser && (
             <button
               onClick={() => setIsNotifOpen(true)}
-              className="relative p-2 rounded-lg bg-[#142B45] border border-[#D4A24C]/25 text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors cursor-pointer"
+              className="relative p-2 rounded-lg bg-[#142B45] border border-[#D4A24C]/25 text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors cursor-pointer shrink-0"
               title="Operational Alerts"
             >
               <Bell className="w-4 h-4" />
@@ -379,27 +328,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             )}
 
-            <div className="relative" ref={userMenuRef}>
+            <div className="relative shrink-0" ref={userMenuRef}>
               <div
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-xl bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer shadow-sm"
+                className="flex flex-nowrap items-center space-x-2 px-2.5 py-1.5 rounded-xl bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all cursor-pointer shadow-sm whitespace-nowrap"
               >
                 {(isPlatformAdmin || isPoliticalAdmin) && currentProfile.avatar && (
                   <img
                     src={currentProfile.avatar}
                     alt={currentProfile.name}
-                    className="w-7 h-7 rounded-lg object-cover border border-[#D4A24C]/50"
+                    className="w-7 h-7 rounded-lg object-cover border border-[#D4A24C]/50 shrink-0"
                   />
                 )}
-                <div className="hidden sm:flex flex-col text-left">
-                  <span className="text-xs font-bold text-[#F5EFE0] leading-none">
+                <div className="flex flex-col text-left shrink-0">
+                  <span className="text-xs font-bold text-[#F5EFE0] leading-none whitespace-nowrap">
                     {currentProfile.name.split(" ")[0]}
                   </span>
-                  <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--party-primary)] mt-0.5">
+                  <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--party-primary)] mt-0.5 whitespace-nowrap">
                     {primaryRole === "DIRECTOR" ? "MANAGER" : primaryRole === "SM_A" ? "SM A" : primaryRole === "SM_M" ? "SM M" : primaryRole}
                   </span>
                 </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-[#D4A24C] transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-[#D4A24C] shrink-0 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
               </div>
 
               {isUserMenuOpen && (
@@ -460,141 +409,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               )}
             </div>
+
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap shrink-0 text-rose-300 border border-rose-400/30 hover:text-rose-100 hover:bg-rose-950/40 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5 shrink-0" />
+                Sign Out
+              </button>
+            )}
           </div>
-        </div>
-
-        {/* Mobile Horizontal Navigation Tabs */}
-        <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
-          {canAccessPoliticalIntelligence(currentProfile) && (
-          <button
-            onClick={() => {
-              window.location.hash = "#/intel";
-              onProductChange("intel");
-            }}
-            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-              activeProduct === "intel" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            Political Intelligence
-          </button>
-          )}
-          {!isPiUser && isPlatformAdmin && (
-          <button
-            onClick={() => onProductChange("fieldops")}
-            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            Field Ops
-          </button>
-          )}
-
-          {!isPiUser && isVolunteer && (
-          <button
-            onClick={() => {
-              window.location.hash = "#/field-ops";
-              onProductChange("fieldops");
-            }}
-            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-              activeProduct === "fieldops" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            Home
-          </button>
-          )}
-
-          {!isPiUser && !isVolunteer && (
-          <button
-            onClick={() => {
-              window.location.hash = "#/assign-tickets?status=ALL";
-              onProductChange("assigntickets");
-            }}
-            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-              activeProduct === "assigntickets" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            Assign Tickets
-          </button>
-          )}
-
-          {!isPiUser && (
-          <button
-            onClick={() => onProductChange("contacts")}
-            className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-              activeProduct === "contacts" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-            }`}
-          >
-            Contact Database
-          </button>
-          )}
-
-          {isPoliticalAdmin && (
-            <button
-              onClick={() => {
-                window.location.hash = "#/user-management";
-                onProductChange("governance");
-              }}
-              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-              }`}
-            >
-              Director User Management
-            </button>
-          )}
-
-          {isPlatformAdmin && (
-            <button
-              onClick={() => onProductChange("pitch")}
-              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                activeProduct === "pitch" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-              }`}
-            >
-              Audit
-            </button>
-          )}
-
-          {isPlatformAdmin && (
-            <button
-              onClick={() => onProductChange("grievances")}
-              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                activeProduct === "grievances" ? "bg-[#D4A24C] text-[#0B131E]" : "text-[#B9AF95] hover:text-white"
-              }`}
-            >
-              Grievances
-            </button>
-          )}
-
-          {isPlatformAdmin && (
-            <>
-              <button
-                onClick={() => onProductChange("volunteers")}
-                className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                  activeProduct === "volunteers" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
-                }`}
-              >
-                Volunteers
-              </button>
-              <button
-                onClick={() => onProductChange("webbuilder")}
-                className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                  activeProduct === "webbuilder" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
-                }`}
-              >
-                Web Studio
-              </button>
-            </>
-          )}
-
-          {isPlatformAdmin && (
-            <button
-              onClick={() => onProductChange("governance")}
-              className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold transition-colors ${
-                activeProduct === "governance" ? "bg-[#D4A24C] text-[#0B1A2C]" : "text-[#B9AF95] hover:text-white"
-              }`}
-            >
-              Admin & Users
-            </button>
-          )}
         </div>
       </div>
 

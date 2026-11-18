@@ -44,7 +44,7 @@ export function isSmAuditUser(user?: Pick<UserProfile, "email" | "primaryRole" |
 export function canAccessPoliticalIntelligence(
   user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "isPlatformAdmin"> | null
 ): boolean {
-  return isPiOperatorUser(user) || isPlatformAdminUser(user);
+  return isPiOperatorUser(user);
 }
 
 export function canManagePoliticalIntelligence(
