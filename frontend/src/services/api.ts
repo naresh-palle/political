@@ -2154,7 +2154,7 @@ export const politicalApiService = {
     if (stateId) q.set("stateId", stateId);
     if (districtId) q.set("districtId", districtId);
     const suffix = q.toString() ? `?${q.toString()}` : "";
-    return this.piRequest(`/pi/dashboard${suffix}`, userId);
+    return this.piRequest(`/pi/dashboard${suffix}`, userId, {}, 30000);
   },
   getPiDistricts(userId: string, stateId?: string) {
     return this.getDistrictsByState(stateId, userId);
@@ -2209,10 +2209,10 @@ export const politicalApiService = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== "") q.set(k, String(v));
     });
-    return this.piRequest(`/pi/constituencies?${q.toString()}`, userId);
+    return this.piRequest(`/pi/constituencies?${q.toString()}`, userId, {}, 20000);
   },
   savePiConstituency(userId: string, payload: any) {
-    return this.piRequest("/pi/constituencies", userId, { method: "POST", body: JSON.stringify(payload) });
+    return this.piRequest("/pi/constituencies", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
   },
   deletePiConstituency(userId: string, recordId: string) {
     return this.piRequest(`/pi/constituencies/${encodeURIComponent(recordId)}`, userId, { method: "DELETE" });
@@ -2222,10 +2222,10 @@ export const politicalApiService = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== "") q.set(k, String(v));
     });
-    return this.piRequest(`/pi/leaders?${q.toString()}`, userId);
+    return this.piRequest(`/pi/leaders?${q.toString()}`, userId, {}, 20000);
   },
   savePiLeader(userId: string, payload: any) {
-    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) });
+    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
   },
   deletePiLeader(userId: string, personId: string) {
     return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" });
@@ -2235,22 +2235,22 @@ export const politicalApiService = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== "") q.set(k, String(v));
     });
-    return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId);
+    return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId, {}, 20000);
   },
   savePiAccount(userId: string, payload: any) {
-    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) });
+    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
   },
   getPiSnapshots(userId: string, accountId: string) {
     return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}/snapshots`, userId);
   },
   getPiQueue(userId: string, status = "PENDING") {
-    return this.piRequest(`/pi/verification-queue?status=${encodeURIComponent(status)}`, userId);
+    return this.piRequest(`/pi/verification-queue?status=${encodeURIComponent(status)}`, userId, {}, 20000);
   },
   verifyPiRecord(userId: string, recordType: string, recordId: string, payload: any) {
     return this.piRequest(`/pi/verification/${encodeURIComponent(recordType)}/${encodeURIComponent(recordId)}`, userId, {
       method: "POST",
       body: JSON.stringify(payload)
-    });
+    }, 20000);
   },
   getPiIntelligence(userId: string, params: Record<string, string | undefined> = {}) {
     const q = new URLSearchParams();

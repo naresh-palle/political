@@ -3458,19 +3458,33 @@ PI_OPERATIONAL_COLLECTIONS = (
 
 
 async def apply_live_cutover():
-    """One-time live reset: five users only, no PI sample or demo tickets."""
+    """One-time live roster. Never wipe SMA/SMM political-intelligence records again."""
     try:
         marker = await db.system_settings.find_one({"id": LIVE_CUTOVER_ID})
-        if marker:
-            return
     except Exception as e:
         log_mongo_notice("live cutover marker", e)
+        return
+    if marker:
+        return
     live_users = [u for u in load_json_fallback("users.json") if isinstance(u, dict) and u.get("email")]
     if len(live_users) < 5:
         logger.warning("Live cutover skipped: users.json does not have the five live accounts.")
         return
     now = datetime.now(timezone.utc).isoformat()
     try:
+        try:
+            existing_pi = await db.political_persons.count_documents({})
+        except Exception as e:
+            log_mongo_notice("live cutover pi count", e)
+            return
+        if existing_pi:
+            await db.system_settings.replace_one(
+                {"id": LIVE_CUTOVER_ID},
+                {"id": LIVE_CUTOVER_ID, "appliedAt": now, "users": [u.get("email") for u in live_users], "skippedWipe": True},
+                upsert=True,
+            )
+            logger.info("Live cutover marker set without wiping existing PI data.")
+            return
         await db.users.delete_many({})
         for user in live_users:
             doc = dict(user)
@@ -3479,29 +3493,12 @@ async def apply_live_cutover():
                 doc["passwordHash"] = hash_password(password)
             doc["updatedAt"] = now
             await db.users.insert_one(doc)
-        try:
-            from services.political_intelligence import reset_memory
-        except ImportError:
-            from backend.services.political_intelligence import reset_memory
-        reset_memory()
-        for name in PI_OPERATIONAL_COLLECTIONS:
-            try:
-                await getattr(db, name).delete_many({})
-            except Exception as e:
-                log_mongo_notice(f"live cutover wipe {name}", e)
-        try:
-            await db.field_issues.delete_many({})
-            await db.field_notifications.delete_many({})
-        except Exception as e:
-            log_mongo_notice("live cutover wipe tickets", e)
-        IN_MEMORY_FIELD_ISSUES.clear()
-        IN_MEMORY_NOTIFICATIONS.clear()
         await db.system_settings.replace_one(
             {"id": LIVE_CUTOVER_ID},
             {"id": LIVE_CUTOVER_ID, "appliedAt": now, "users": [u.get("email") for u in live_users]},
             upsert=True,
         )
-        logger.info("Live roster cutover applied: Admin, Manager, Volunteer, SM A, SM M.")
+        logger.info("Live roster cutover applied: Admin, Manager, Volunteer, SM A, SM M. PI collections were not deleted.")
     except Exception as e:
         log_mongo_notice("live cutover", e)
 

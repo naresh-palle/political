@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import csv
 import io
+import json
+import threading
 from copy import deepcopy
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException, Query
@@ -63,62 +66,166 @@ COLLECTIONS = {
     "constituency_contact_history": "constituency_contact_history",
 }
 
+PI_RUNTIME_PATH = Path(__file__).resolve().parents[1] / "data" / ".runtime_pi_store.json"
+_PI_RUNTIME_LOCK = threading.Lock()
+_MISSING = object()
+PI_MONGO_LIST_LIMIT = 20000
+PI_SAVE_UNAVAILABLE = "Could not save. The database is temporarily unavailable. Keep this page open and tap Save again."
+
+
+def _doc_key(doc: Optional[Dict[str, Any]]) -> Optional[str]:
+    if not isinstance(doc, dict):
+        return None
+    return doc.get("id") or doc.get("key")
+
+
+def _merge_docs(*groups: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    by_id: Dict[str, Dict[str, Any]] = {}
+    extras: List[Dict[str, Any]] = []
+    for group in groups:
+        for item in group or []:
+            key = _doc_key(item)
+            if key:
+                by_id[str(key)] = deepcopy(item)
+            elif isinstance(item, dict):
+                extras.append(deepcopy(item))
+    return list(by_id.values()) + extras
+
+
+def _read_pi_runtime() -> Dict[str, List[Dict[str, Any]]]:
+    path = PI_RUNTIME_PATH
+    if not path.exists():
+        return {}
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        if not isinstance(data, dict):
+            return {}
+        out: Dict[str, List[Dict[str, Any]]] = {}
+        for collection, rows in data.items():
+            if isinstance(rows, list):
+                out[collection] = [row for row in rows if isinstance(row, dict)]
+        return out
+    except Exception:
+        return {}
+
+
+def _runtime_list(collection: str) -> List[Dict[str, Any]]:
+    return _read_pi_runtime().get(collection) or []
+
+
+def _persist_pi_runtime() -> None:
+    payload = {collection: memory_list(collection) for collection in COLLECTIONS}
+    path = PI_RUNTIME_PATH
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = path.with_suffix(".tmp")
+        with _PI_RUNTIME_LOCK:
+            with tmp_path.open("w", encoding="utf-8") as handle:
+                json.dump(payload, handle, indent=2, ensure_ascii=False, default=str)
+            tmp_path.replace(path)
+    except Exception:
+        pass
+
+
+def _hydrate_memory_from_runtime() -> None:
+    stored = _read_pi_runtime()
+    if not stored:
+        return
+    for collection, rows in stored.items():
+        if collection not in MEMORY:
+            continue
+        for row in rows:
+            key = _doc_key(row)
+            if key:
+                memory_upsert(collection, key, row)
+            elif collection in MEMORY and isinstance(MEMORY[collection], list):
+                MEMORY[collection].insert(0, deepcopy(row))
+
+
+def _mongo_was_configured(srv: Any) -> bool:
+    return bool(getattr(srv, "_live_mongo_client", None))
+
+
+def _raise_if_live_mongo_down(srv: Any) -> None:
+    if getattr(srv, "_mongo_circuit_open", True) and _mongo_was_configured(srv):
+        raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE)
+
 
 async def _list(collection: str) -> List[Dict[str, Any]]:
     srv = _srv()
     mem = memory_list(collection)
+    disk = _runtime_list(collection)
+    merged = _merge_docs(disk, mem)
     if getattr(srv, "_mongo_circuit_open", True):
-        return mem
+        return merged or mem
     try:
         col = getattr(srv.db, COLLECTIONS[collection], None)
         if col is None:
-            return mem
-        docs = await srv.mongo_wait(col.find({}, {"_id": 0}).to_list(2000), timeout=3.0, fallback=None, tag=f"pi_{collection}")
-        if not docs:
-            return mem
-        by_id = {d.get("id") or d.get("key"): d for d in docs if d.get("id") or d.get("key")}
-        for item in mem:
-            by_id.setdefault(item.get("id") or item.get("key"), item)
-        return list(by_id.values())
+            return merged or mem
+        docs = await srv.mongo_wait(
+            col.find({}, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT),
+            timeout=8.0,
+            fallback=_MISSING,
+            tag=f"pi_{collection}",
+        )
+        if docs is _MISSING or docs is None:
+            return merged or mem
+        return _merge_docs(list(docs), disk, mem)
     except Exception:
-        return mem
+        return merged or mem
 
 
 async def _get(collection: str, key: str) -> Optional[Dict[str, Any]]:
     mem = memory_get(collection, key)
+    if mem:
+        return mem
+    for row in _runtime_list(collection):
+        if _doc_key(row) == key:
+            memory_upsert(collection, key, row)
+            return deepcopy(row)
     srv = _srv()
     if getattr(srv, "_mongo_circuit_open", True):
-        return mem
+        return None
     try:
         col = getattr(srv.db, COLLECTIONS[collection], None)
         if col is None:
-            return mem
-        doc = await srv.mongo_wait(col.find_one({"id": key}, {"_id": 0}), timeout=2.0, fallback=None, tag="pi_get")
-        return doc or mem
+            return None
+        doc = await srv.mongo_wait(col.find_one({"id": key}, {"_id": 0}), timeout=4.0, fallback=None, tag="pi_get")
+        if doc:
+            memory_upsert(collection, key, doc)
+        return doc
     except Exception:
-        return mem
+        return None
 
 
 async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any]:
     stored = memory_upsert(collection, key, doc)
+    _persist_pi_runtime()
     srv = _srv()
+    _raise_if_live_mongo_down(srv)
     if getattr(srv, "_mongo_circuit_open", True):
         return stored
     try:
         col = getattr(srv.db, COLLECTIONS[collection], None)
         if col is None:
             return stored
-        await srv.mongo_write(col.update_one({"id": key}, {"$set": stored}, upsert=True), timeout=4.0, tag="pi_save")
+        await srv.mongo_write(col.update_one({"id": key}, {"$set": stored}, upsert=True), timeout=8.0, tag="pi_save")
+    except HTTPException:
+        raise
     except Exception as e:
         try:
             srv.log_mongo_notice("pi_save", e)
         except Exception:
             pass
+        if _mongo_was_configured(srv):
+            raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from e
     return stored
 
 
 async def _delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
     removed = memory_delete(collection, key)
+    _persist_pi_runtime()
     srv = _srv()
     if getattr(srv, "_mongo_circuit_open", True):
         return removed
@@ -138,19 +245,25 @@ async def _delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
 async def _append(collection: str, doc: Dict[str, Any]) -> Dict[str, Any]:
     stored = deepcopy(doc)
     MEMORY[collection].insert(0, deepcopy(stored))
+    _persist_pi_runtime()
     srv = _srv()
+    _raise_if_live_mongo_down(srv)
     if getattr(srv, "_mongo_circuit_open", True):
         return stored
     try:
         col = getattr(srv.db, COLLECTIONS[collection], None)
         if col is None:
             return stored
-        await srv.mongo_write(col.insert_one(dict(stored)), timeout=4.0, tag="pi_append")
+        await srv.mongo_write(col.insert_one(dict(stored)), timeout=8.0, tag="pi_append")
+    except HTTPException:
+        raise
     except Exception as e:
         try:
             srv.log_mongo_notice("pi_append", e)
         except Exception:
             pass
+        if _mongo_was_configured(srv):
+            raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from e
     return stored
 
 
@@ -296,6 +409,8 @@ def recent_collection_rows(
 
 
 def register_pi_routes(api_router) -> None:
+    _hydrate_memory_from_runtime()
+
     @api_router.get("/geography/districts")
     async def get_districts(stateId: Optional[str] = None, userId: Optional[str] = None):
         rows, _maps = await _resolved_districts(stateId)

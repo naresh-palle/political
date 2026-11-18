@@ -493,3 +493,95 @@ def test_prefer_packaged_assemblies_when_mongo_collapses_ids():
     restored = prefer_packaged_assemblies(collapsed, packaged, "AP")
     assert len({row["id"] for row in restored}) == 175
     assert any(row.get("name") == "Palakonda" and row.get("id") != "AP-AC-130" for row in restored)
+
+
+def test_live_cutover_does_not_wipe_pi_when_marker_read_fails(monkeypatch):
+    import backend.server as srv
+
+    class BoomSettings:
+        async def find_one(self, *args, **kwargs):
+            raise TimeoutError("mongo timeout")
+
+        async def replace_one(self, *args, **kwargs):
+            raise AssertionError("must not write cutover marker after a failed read")
+
+    class BoomPersons:
+        async def count_documents(self, *args, **kwargs):
+            raise AssertionError("must not inspect PI after a failed marker read")
+
+        async def delete_many(self, *args, **kwargs):
+            raise AssertionError("must not wipe political_persons")
+
+    class BoomDb:
+        system_settings = BoomSettings()
+        political_persons = BoomPersons()
+        users = BoomPersons()
+
+    monkeypatch.setattr(srv, "db", BoomDb())
+    _run(srv.apply_live_cutover())
+
+
+def test_live_cutover_does_not_wipe_existing_pi(monkeypatch):
+    import backend.server as srv
+
+    replaced = {}
+
+    class Settings:
+        async def find_one(self, *args, **kwargs):
+            return None
+
+        async def replace_one(self, query, doc, upsert=False):
+            replaced["doc"] = doc
+            return None
+
+    class Persons:
+        async def count_documents(self, *args, **kwargs):
+            return 12
+
+        async def delete_many(self, *args, **kwargs):
+            raise AssertionError("must not wipe existing PI leaders")
+
+    class Users:
+        async def delete_many(self, *args, **kwargs):
+            raise AssertionError("must not reset users when PI data exists")
+
+        async def insert_one(self, *args, **kwargs):
+            raise AssertionError("must not insert users when PI data exists")
+
+    class Db:
+        system_settings = Settings()
+        political_persons = Persons()
+        users = Users()
+
+    monkeypatch.setattr(srv, "db", Db())
+    _run(srv.apply_live_cutover())
+    assert replaced["doc"]["skippedWipe"] is True
+
+
+def test_pi_list_keeps_memory_when_mongo_times_out(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import memory_upsert, reset_memory
+
+    reset_memory()
+    memory_upsert("political_persons", "pp-keep", {"id": "pp-keep", "name": "Kept Leader", "assemblyConstituencyId": "AP-AC-1"})
+
+    class FakeCol:
+        def find(self, *args, **kwargs):
+            return self
+
+        def to_list(self, *args, **kwargs):
+            return self
+
+    class FakeDb:
+        political_persons = FakeCol()
+
+    class FakeSrv:
+        _mongo_circuit_open = False
+        db = FakeDb()
+
+        async def mongo_wait(self, awaitable, timeout=2.5, fallback=None, tag="mongo"):
+            return fallback
+
+    monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
+    rows = _run(pi_api._list("political_persons"))
+    assert any(row.get("id") == "pp-keep" for row in rows)

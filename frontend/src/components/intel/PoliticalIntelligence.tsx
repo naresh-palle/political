@@ -1,16 +1,19 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Check,
   Database,
   Download,
   Loader2,
   MapPin,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
 import { UserProfile, PiDashboard, PiDistrictProgress, PiRecentCollection, StateInfo, PoliticalParty, ParliamentInfo } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../utils/piAccess";
+import { cacheHasPiData, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
@@ -35,6 +38,34 @@ function slotIndexForKind(kind?: string): number {
 function leaderKindLabel(kind?: string) {
   const index = slotIndexForKind(kind);
   return index >= 0 ? LEADER_SLOTS[index].label : "Leader";
+}
+
+type LeaderFieldAlert = {
+  index: number;
+  field: string;
+  leaderLabel: string;
+  fieldLabel: string;
+  message: string;
+};
+
+function leaderFieldDomId(index: number, field: string) {
+  if (field === "ac") return "pi-geo-ac";
+  return `pi-leader-${index}-${field}`;
+}
+
+function focusLeaderField(fieldId: string) {
+  const el = document.getElementById(fieldId);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => {
+    if (typeof (el as HTMLElement).focus === "function") {
+      (el as HTMLElement).focus({ preventScroll: true });
+    }
+  }, 280);
+}
+
+function inputClass(invalid?: boolean) {
+  return `${INPUT}${invalid ? " border-rose-400 ring-2 ring-rose-400/80" : ""}`;
 }
 
 function isSittingMlaKind(kind?: string) {
@@ -231,33 +262,40 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const canEdit = isSmA || isAdminEditor;
   const canDelete = isAdminEditor;
   const visibleTabs = isAdminEditor ? ADMIN_TABS : isSmM ? SMM_TABS : SMA_TABS;
+  const initialCache = readPiOperatorCache(userId);
+  const replayedRef = useRef(false);
 
-  const [tab, setTab] = useState<Tab>("dashboard");
-  const [entryGroup, setEntryGroup] = useState<EntryGroup>("constituency");
+  const [tab, setTab] = useState<Tab>(() => {
+    const cachedTab = initialCache?.tab as Tab | undefined;
+    if (cachedTab && visibleTabs.some((item) => item.id === cachedTab)) return cachedTab;
+    return "dashboard";
+  });
+  const [entryGroup, setEntryGroup] = useState<EntryGroup>((initialCache?.entryGroup as EntryGroup) || "constituency");
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState<SaveKind>(null);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
-  const [dashboard, setDashboard] = useState<PiDashboard | null>(null);
+  const [dashboard, setDashboard] = useState<PiDashboard | null>(initialCache?.dashboard || null);
   const [states, setStates] = useState<StateInfo[]>([]);
   const [parties, setParties] = useState<PoliticalParty[]>([]);
   const [parliaments, setParliaments] = useState<ParliamentInfo[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
   const [assemblies, setAssemblies] = useState<any[]>([]);
-  const [stateId, setStateId] = useState((currentUser.stateId && currentUser.stateId.length <= 5) ? currentUser.stateId : "AP");
-  const [districtId, setDistrictId] = useState("");
-  const [pcId, setPcId] = useState("");
-  const [acId, setAcId] = useState("");
+  const [stateId, setStateId] = useState(initialCache?.stateId || ((currentUser.stateId && currentUser.stateId.length <= 5) ? currentUser.stateId : "AP"));
+  const [districtId, setDistrictId] = useState(initialCache?.districtId || "");
+  const [pcId, setPcId] = useState(initialCache?.pcId || "");
+  const [acId, setAcId] = useState(initialCache?.acId || "");
   const [constForm, setConstForm] = useState<any>({
     enteredByName: currentUser.name || "",
     dataCollectionDate: todayIsoDate()
   });
-  const [constRows, setConstRows] = useState<any[]>([]);
+  const [constRows, setConstRows] = useState<any[]>(initialCache?.constRows || []);
   const [leaderSlots, setLeaderSlots] = useState<LeaderSlotState[]>(() => LEADER_SLOTS.map(emptyLeaderSlot));
   const [savingSlot, setSavingSlot] = useState<number | null>(null);
-  const [leaders, setLeaders] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [queue, setQueue] = useState<any[]>([]);
+  const [leaderAlert, setLeaderAlert] = useState<LeaderFieldAlert | null>(null);
+  const [leaders, setLeaders] = useState<any[]>(initialCache?.leaders || []);
+  const [accounts, setAccounts] = useState<any[]>(initialCache?.accounts || []);
+  const [queue, setQueue] = useState<any[]>(initialCache?.queue || []);
   const [queueStatus, setQueueStatus] = useState("PENDING");
   const [intel, setIntel] = useState<any>(null);
   const [intelPlatform, setIntelPlatform] = useState("");
@@ -278,6 +316,52 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     setError(isError ? msg : "");
   };
 
+  const emptyDashboard = (data: PiDashboard | null | undefined) =>
+    !data || ((data.constituenciesEntered || 0) === 0 && (data.totalLeaders || 0) === 0 && (data.totalSocialAccounts || 0) === 0);
+
+  const persistOperatorCache = (patch: Partial<{ dashboard: PiDashboard | null; constRows: any[]; leaders: any[]; accounts: any[]; queue: any[]; tab: Tab; entryGroup: EntryGroup }>) => {
+    writePiOperatorCache(userId, {
+      stateId,
+      districtId,
+      pcId,
+      acId,
+      tab,
+      entryGroup,
+      ...patch
+    });
+  };
+
+  const replayCachedPi = async () => {
+    if (!canEdit || replayedRef.current) return;
+    const cache = readPiOperatorCache(userId);
+    if (!cacheHasPiData(cache) || !cache) return;
+    replayedRef.current = true;
+    const idMap = new Map<string, string>();
+    for (const row of cache.constRows || []) {
+      try {
+        await politicalApiService.savePiConstituency(userId, row);
+      } catch {
+        // Keep going so remaining cached rows still reach the server.
+      }
+    }
+    for (const leader of cache.leaders || []) {
+      try {
+        const saved = await politicalApiService.savePiLeader(userId, leader);
+        if (leader?.id && saved?.id) idMap.set(leader.id, saved.id);
+      } catch {
+        // Leader replay is best-effort; accounts still try the original personId.
+      }
+    }
+    for (const account of cache.accounts || []) {
+      try {
+        const personId = (account.personId && idMap.get(account.personId)) || account.personId;
+        await politicalApiService.savePiAccount(userId, { ...account, personId });
+      } catch {
+        // Skip one account without aborting the rest.
+      }
+    }
+  };
+
   const loadMasters = async () => {
     const [st, pt] = await Promise.all([
       politicalApiService.getStates(),
@@ -291,8 +375,29 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     setPageLoading(true);
     try {
       const data = await politicalApiService.getPiDashboard(userId, stateId, districtId || undefined);
+      const cache = readPiOperatorCache(userId);
+      if (emptyDashboard(data)) {
+        if (canEdit && cacheHasPiData(cache)) {
+          await replayCachedPi();
+          const again = await politicalApiService.getPiDashboard(userId, stateId, districtId || undefined).catch(() => data);
+          if (!emptyDashboard(again)) {
+            setDashboard(again);
+            persistOperatorCache({ dashboard: again });
+            return;
+          }
+        }
+        setDashboard((prev) => {
+          if (!emptyDashboard(prev)) return prev;
+          if (cache?.dashboard && !emptyDashboard(cache.dashboard)) return cache.dashboard;
+          return data;
+        });
+        return;
+      }
       setDashboard(data);
+      persistOperatorCache({ dashboard: data });
     } catch (e: any) {
+      const cache = readPiOperatorCache(userId);
+      setDashboard((prev) => prev || cache?.dashboard || null);
       flash(e.message || "Could not load dashboard", true);
     } finally {
       setPageLoading(false);
@@ -363,18 +468,54 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const selectedDistrictName = districts.find((d) => d.id === districtId)?.name || "";
 
   const loadConstituencies = async () => {
-    const data = await politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 100 });
-    setConstRows(data.items || []);
+    const data = await politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 200 });
+    const items = data.items || [];
+    if (items.length) {
+      setConstRows(items);
+      persistOperatorCache({ constRows: items });
+      return items;
+    }
+    const cache = readPiOperatorCache(userId);
+    const cached = (cache?.constRows || []).filter((row) => !districtId || row.districtId === districtId || row.assemblyConstituencyId);
+    if (cached.length) {
+      setConstRows(cached);
+      return cached;
+    }
+    setConstRows([]);
+    return [];
   };
   const loadLeaders = async () => {
-    const data = await politicalApiService.getPiLeaders(userId, { assemblyConstituencyId: acId || undefined, districtId, limit: 100 });
-    setLeaders(data.items || []);
-    return data.items || [];
+    const data = await politicalApiService.getPiLeaders(userId, { assemblyConstituencyId: acId || undefined, districtId, limit: 200 });
+    const items = data.items || [];
+    if (items.length) {
+      setLeaders(items);
+      persistOperatorCache({ leaders: items });
+      return items;
+    }
+    const cache = readPiOperatorCache(userId);
+    const cached = (cache?.leaders || []).filter((row) => !acId || row.assemblyConstituencyId === acId);
+    if (cached.length) {
+      setLeaders(cached);
+      return cached;
+    }
+    setLeaders([]);
+    return [];
   };
   const loadAccounts = async () => {
-    const data = await politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 100 });
-    setAccounts(data.items || []);
-    return data.items || [];
+    const data = await politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 200 });
+    const items = data.items || [];
+    if (items.length) {
+      setAccounts(items);
+      persistOperatorCache({ accounts: items });
+      return items;
+    }
+    const cache = readPiOperatorCache(userId);
+    if (cache?.accounts?.length) {
+      setAccounts(cache.accounts);
+      return cache.accounts;
+    }
+    setAccounts([]);
+    return [];
   };
 
   const hydrateLeaderSlots = (leaderRows: any[], accountRows: any[]) => {
@@ -396,7 +537,18 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     setLeaderSlots(next);
   };
   const loadQueue = async () => {
-    setQueue(await politicalApiService.getPiQueue(userId, queueStatus));
+    const rows = await politicalApiService.getPiQueue(userId, queueStatus);
+    if (Array.isArray(rows) && rows.length) {
+      setQueue(rows);
+      persistOperatorCache({ queue: rows });
+      return;
+    }
+    const cache = readPiOperatorCache(userId);
+    if (cache?.queue?.length && queueStatus === "PENDING") {
+      setQueue(cache.queue);
+      return;
+    }
+    setQueue(Array.isArray(rows) ? rows : []);
   };
   const loadIntel = async () => {
     setIntel(
@@ -413,17 +565,29 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   }, [isSmM, isAdminEditor, tab]);
 
   useEffect(() => {
+    writePiOperatorCache(userId, { stateId, districtId, pcId, acId, tab, entryGroup });
+  }, [userId, stateId, districtId, pcId, acId, tab, entryGroup]);
+
+  useEffect(() => {
+    if (tab === "dashboard") refreshDashboard().catch((e) => flash(e.message, true));
+  }, [tab, stateId, districtId, userId]);
+
+  useEffect(() => {
     if (tab === "constituencies") {
       loadConstituencies().catch((e) => flash(e.message, true));
       Promise.all([loadLeaders(), loadAccounts()])
         .then(([leaderRows, accountRows]) => hydrateLeaderSlots(leaderRows, accountRows))
         .catch((e) => flash(e.message, true));
-      refreshDashboard().catch((e) => flash(e.message, true));
     }
+  }, [tab, stateId, districtId, acId, userId]);
+
+  useEffect(() => {
     if (tab === "verify") loadQueue().catch((e) => flash(e.message, true));
+  }, [tab, queueStatus, userId]);
+
+  useEffect(() => {
     if (tab === "intelligence") loadIntel().catch((e) => flash(e.message, true));
-    if (tab === "dashboard") refreshDashboard().catch((e) => flash(e.message, true));
-  }, [tab, queueStatus, intelPlatform, intelParty, rankBy, stateId, districtId, pcId, acId]);
+  }, [tab, intelPlatform, intelParty, rankBy, stateId, districtId, pcId, acId, userId]);
 
   const saveConstituency = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -467,6 +631,27 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     }
   };
 
+  const reportLeaderField = (index: number, field: string, fieldLabel: string, detail: string) => {
+    const leaderLabel = LEADER_SLOTS[index]?.label || `Leader ${index + 1}`;
+    const message = `${leaderLabel}: ${fieldLabel} is missing. ${detail}`;
+    const platform = field.startsWith("profileUrl-") ? field.slice("profileUrl-".length) : field.startsWith("hasAccount-") ? field.slice("hasAccount-".length) : "";
+    if (platform && (PLATFORMS as readonly string[]).includes(platform)) {
+      patchLeaderSlot(index, { activePlatform: platform as (typeof PLATFORMS)[number] });
+    }
+    flash(message, true);
+    setLeaderAlert({ index, field, leaderLabel, fieldLabel, message });
+    window.setTimeout(() => {
+      document.getElementById(leaderFieldDomId(index, field))?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, platform ? 120 : 0);
+  };
+
+  const dismissLeaderAlert = () => {
+    if (leaderAlert) {
+      focusLeaderField(leaderFieldDomId(leaderAlert.index, leaderAlert.field));
+    }
+    setLeaderAlert(null);
+  };
+
   const saveLeader = async (e: React.FormEvent, index: number) => {
     e.preventDefault();
     e.stopPropagation();
@@ -474,17 +659,26 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     const slot = leaderSlots[index];
     if (!slot) return;
     if (!acId) {
-      flash("Select an assembly constituency.", true);
+      reportLeaderField(index, "ac", "Constituency", "Select the assembly constituency at the top of this form, then save again.");
       return;
     }
-    if (!String(slot.name || "").trim() || !slot.partyId) {
-      flash("Enter the leader name and party.", true);
+    if (!String(slot.name || "").trim()) {
+      reportLeaderField(index, "name", "Name", `Type the full name on ${LEADER_SLOTS[index].label}.`);
+      return;
+    }
+    if (!slot.partyId) {
+      reportLeaderField(index, "party", "Party", `Select a party on ${LEADER_SLOTS[index].label}.`);
       return;
     }
     for (const platform of PLATFORMS) {
       const draft = slot.platformDrafts[platform];
       if (draft.hasAccount === "yes" && !String(draft.profileUrl || "").trim()) {
-        flash(`Add a profile link for ${PLATFORM_LABEL[platform]}.`, true);
+        reportLeaderField(
+          index,
+          `profileUrl-${platform}`,
+          `${PLATFORM_LABEL[platform]} profile link`,
+          `Open ${PLATFORM_LABEL[platform]} on ${LEADER_SLOTS[index].label} and enter the profile link.`
+        );
         return;
       }
     }
@@ -526,12 +720,21 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
           });
         }
       }
+      setLeaderAlert(null);
       flash(`${LEADER_SLOTS[index].label} saved.`);
       const [leaderRows, accountRows] = await Promise.all([loadLeaders(), loadAccounts()]);
       hydrateLeaderSlots(leaderRows, accountRows);
       setEntryGroup("leaders");
     } catch (err: any) {
-      flash(err.message, true);
+      const leaderLabel = LEADER_SLOTS[index].label;
+      flash(`${leaderLabel}: ${err.message || "Could not save."}`, true);
+      setLeaderAlert({
+        index,
+        field: "save",
+        leaderLabel,
+        fieldLabel: "Could not save",
+        message: `${leaderLabel}: ${err.message || "Could not save this leader. Check the highlighted card and try again."}`
+      });
     } finally {
       setSaving(null);
       setSavingSlot(null);
@@ -578,6 +781,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
 
   const patchLeaderSlot = (index: number, patch: Partial<LeaderSlotState>) => {
     setLeaderSlots((prev) => prev.map((slot, i) => (i === index ? { ...slot, ...patch } : slot)));
+    setLeaderAlert((prev) => {
+      if (!prev || prev.index !== index) return prev;
+      if (patch.name !== undefined && prev.field === "name") return null;
+      if (patch.partyId !== undefined && prev.field === "party") return null;
+      return prev;
+    });
   };
 
   const setSlotPlatformField = (index: number, platform: (typeof PLATFORMS)[number], field: keyof PlatformDraft, value: string) => {
@@ -588,6 +797,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
           : slot
       )
     );
+    setLeaderAlert((prev) => {
+      if (!prev || prev.index !== index) return prev;
+      if (field === "profileUrl" && prev.field === `profileUrl-${platform}`) return null;
+      if (field === "hasAccount" && prev.field === `hasAccount-${platform}`) return null;
+      return prev;
+    });
   };
 
   const downloadSavedExcel = () => {
@@ -780,10 +995,17 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 stateId={stateId} setStateId={setStateId}
                 districtId={districtId} setDistrictId={setDistrictId}
                 pcId={pcId} setPcId={setPcId}
-                acId={acId} setAcId={setAcId}
+                acId={acId}
+                setAcId={(v) => {
+                  if (leaderAlert?.field === "ac") setLeaderAlert(null);
+                  setAcId(v);
+                }}
                 states={states} districts={districts} pcs={filteredPcs} acs={filteredAcs}
                 markRequired
                 showParliament={false}
+                acSelectId="pi-geo-ac"
+                acInvalid={leaderAlert?.field === "ac"}
+                acHint={leaderAlert?.field === "ac" ? leaderAlert.message : undefined}
               />
               <Field label="Collected by *" value={constForm.enteredByName || ""} onChange={(v) => setConstForm({ ...constForm, enteredByName: v })} />
             </div>
@@ -889,37 +1111,66 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 const activePlatform = slot.activePlatform;
                 const drafts = slot.platformDrafts;
                 const slotBusy = saving === "leader" && savingSlot === index;
+                const slotAlert = leaderAlert?.index === index ? leaderAlert : null;
+                const nameInvalid = slotAlert?.field === "name";
+                const partyInvalid = slotAlert?.field === "party";
+                const hasAccountInvalid = slotAlert?.field === `hasAccount-${activePlatform}`;
+                const profileInvalid = slotAlert?.field === `profileUrl-${activePlatform}`;
                 return (
                   <form
                     noValidate
                     key={slot.leaderKind}
                     onSubmit={(e) => saveLeader(e, index)}
-                    className={`${CARD} min-w-0 h-full flex flex-col gap-3`}
+                    className={`${CARD} min-w-0 h-full flex flex-col gap-3 ${slotAlert ? "border-rose-400 ring-2 ring-rose-400/70" : ""}`}
                   >
                     <h2 className="text-sm font-bold text-[#F5EFE0]">
                       {LEADER_SLOTS[index].label}
                     </h2>
+                    {slotAlert ? (
+                      <p className="text-[11px] text-rose-300">{slotAlert.message}</p>
+                    ) : null}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Field label="Name *" value={slot.name || ""} placeholder="Full name" autoComplete="off" onChange={(v) => patchLeaderSlot(index, { name: v })} />
+                      <Field
+                        id={leaderFieldDomId(index, "name")}
+                        label="Name *"
+                        value={slot.name || ""}
+                        placeholder="Full name"
+                        autoComplete="off"
+                        invalid={nameInvalid}
+                        hint={nameInvalid ? slotAlert?.message : undefined}
+                        onChange={(v) => patchLeaderSlot(index, { name: v })}
+                      />
                       <div>
-                        <label className={LABEL}>Party</label>
-                        <select className={INPUT} value={slot.partyId || ""} onChange={(e) => patchLeaderSlot(index, { partyId: e.target.value })}>
+                        <label className={LABEL} htmlFor={leaderFieldDomId(index, "party")}>Party</label>
+                        <select
+                          id={leaderFieldDomId(index, "party")}
+                          className={inputClass(partyInvalid)}
+                          aria-invalid={partyInvalid || undefined}
+                          value={slot.partyId || ""}
+                          onChange={(e) => patchLeaderSlot(index, { partyId: e.target.value })}
+                        >
                           <option value="">Select</option>
                           {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName || p.name}</option>)}
                         </select>
+                        {partyInvalid ? <p className="mt-1 text-[11px] text-rose-300">{slotAlert?.message}</p> : null}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {PLATFORMS.map((platform) => {
                         const answered = drafts[platform].hasAccount === "yes" || drafts[platform].hasAccount === "no";
                         const active = activePlatform === platform;
+                        const platformAlert = slotAlert?.field === `profileUrl-${platform}` || slotAlert?.field === `hasAccount-${platform}`;
                         return (
                           <button
                             type="button"
                             key={platform}
                             onClick={() => patchLeaderSlot(index, { activePlatform: platform })}
                             className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${
-                              active ? "bg-[#D4A24C] text-[#071322]" : "border border-[#22405E] text-[#F5EFE0]"
+                              platformAlert
+                                ? "border border-rose-400 text-rose-200 ring-2 ring-rose-400/70"
+                                : active
+                                  ? "bg-[#D4A24C] text-[#071322]"
+                                  : "border border-[#22405E] text-[#F5EFE0]"
                             }`}
                           >
                             {PLATFORM_LABEL[platform]}
@@ -928,12 +1179,14 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                         );
                       })}
                     </div>
-                    <div className="p-2.5 rounded-lg border border-[#22405E] space-y-2">
+                    <div className={`p-2.5 rounded-lg border space-y-2 ${profileInvalid || hasAccountInvalid ? "border-rose-400" : "border-[#22405E]"}`}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                          <label className={LABEL}>{PLATFORM_LABEL[activePlatform]}: has account?</label>
+                          <label className={LABEL} htmlFor={leaderFieldDomId(index, `hasAccount-${activePlatform}`)}>{PLATFORM_LABEL[activePlatform]}: has account?</label>
                           <select
-                            className={INPUT}
+                            id={leaderFieldDomId(index, `hasAccount-${activePlatform}`)}
+                            className={inputClass(hasAccountInvalid)}
+                            aria-invalid={hasAccountInvalid || undefined}
                             value={drafts[activePlatform].hasAccount}
                             onChange={(e) => setSlotPlatformField(index, activePlatform, "hasAccount", e.target.value)}
                           >
@@ -941,6 +1194,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                             <option value="yes">Yes</option>
                             <option value="no">No</option>
                           </select>
+                          {hasAccountInvalid ? <p className="mt-1 text-[11px] text-rose-300">{slotAlert?.message}</p> : null}
                         </div>
                         {drafts[activePlatform].hasAccount === "yes" && (
                           <div>
@@ -960,7 +1214,14 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                       {drafts[activePlatform].hasAccount === "yes" && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <Field label="Followers / subscribers" type="number" value={drafts[activePlatform].followers} onChange={(v) => setSlotPlatformField(index, activePlatform, "followers", v)} />
-                          <Field label="Profile link" value={drafts[activePlatform].profileUrl} onChange={(v) => setSlotPlatformField(index, activePlatform, "profileUrl", v)} />
+                          <Field
+                            id={leaderFieldDomId(index, `profileUrl-${activePlatform}`)}
+                            label="Profile link"
+                            value={drafts[activePlatform].profileUrl}
+                            invalid={profileInvalid}
+                            hint={profileInvalid ? slotAlert?.message : undefined}
+                            onChange={(v) => setSlotPlatformField(index, activePlatform, "profileUrl", v)}
+                          />
                         </div>
                       )}
                     </div>
@@ -971,7 +1232,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                       </select>
                     </div>
                     <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                      <button type="submit" className={BTN} disabled={!canEdit || slotBusy}>
+                      <button type="submit" id={leaderFieldDomId(index, "save")} className={BTN} disabled={!canEdit || slotBusy}>
                         {slotBusy ? "Saving…" : slot.id ? `Save changes · ${LEADER_SLOTS[index].label}` : `Save ${LEADER_SLOTS[index].label}`}
                       </button>
                       {canDelete && slot.id && (
@@ -1222,6 +1483,10 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
             )}
           </div>
         </section>
+      )}
+
+      {leaderAlert && (
+        <LeaderFieldPopup alert={leaderAlert} onClose={dismissLeaderAlert} />
       )}
     </div>
   );
@@ -1533,11 +1798,77 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-function Field({ label, value, onChange, type = "text", required = false, placeholder, autoComplete }: { label: string; value: any; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string; autoComplete?: string }) {
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+  placeholder,
+  autoComplete,
+  id,
+  invalid,
+  hint
+}: {
+  label: string;
+  value: any;
+  onChange: (v: string) => void;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  autoComplete?: string;
+  id?: string;
+  invalid?: boolean;
+  hint?: string;
+}) {
   return (
     <div className="min-w-0">
-      <label className={LABEL}>{label}{required ? " *" : ""}</label>
-      <input className={INPUT} type={type} value={value} required={required} placeholder={placeholder} autoComplete={autoComplete || "off"} onChange={(e) => onChange(e.target.value)} />
+      <label className={LABEL} htmlFor={id}>{label}{required ? " *" : ""}</label>
+      <input
+        id={id}
+        className={inputClass(invalid)}
+        aria-invalid={invalid || undefined}
+        type={type}
+        value={value}
+        required={required}
+        placeholder={placeholder}
+        autoComplete={autoComplete || "off"}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {hint ? <p className="mt-1 text-[11px] text-rose-300">{hint}</p> : null}
+    </div>
+  );
+}
+
+function LeaderFieldPopup({ alert, onClose }: { alert: LeaderFieldAlert; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/70"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="pi-leader-error-title"
+      onClick={onClose}
+    >
+      <div className="w-full max-w-md rounded-2xl border border-rose-400/50 bg-[#071322] p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2 min-w-0">
+            <AlertTriangle className="w-5 h-5 text-rose-300 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider font-bold text-rose-300">{alert.leaderLabel}</p>
+              <h2 id="pi-leader-error-title" className="text-lg font-bold text-[#F5EFE0] mt-1">
+                {alert.field === "save" ? alert.fieldLabel : `Missing: ${alert.fieldLabel}`}
+              </h2>
+            </div>
+          </div>
+          <button type="button" className="p-1 rounded-lg text-[#B9AF95] hover:text-[#F5EFE0]" onClick={onClose} aria-label="Close error">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <p className="text-sm text-[#EADBBF] mt-3">{alert.message}</p>
+        <button type="button" className={`${BTN} mt-4 w-full`} onClick={onClose}>
+          Go to {alert.leaderLabel} · {alert.fieldLabel}
+        </button>
+      </div>
     </div>
   );
 }
@@ -1593,6 +1924,9 @@ function GeoFilters(props: {
   states: StateInfo[]; districts: any[]; pcs: ParliamentInfo[]; acs: any[];
   markRequired?: boolean;
   showParliament?: boolean;
+  acSelectId?: string;
+  acInvalid?: boolean;
+  acHint?: string;
 }) {
   const showParliament = props.showParliament !== false;
   return (
@@ -1625,9 +1959,11 @@ function GeoFilters(props: {
       </div>
       )}
       <div className="min-w-0">
-        <label className={LABEL}>Constituency{props.markRequired ? " *" : ""}</label>
+        <label className={LABEL} htmlFor={props.acSelectId}>Constituency{props.markRequired ? " *" : ""}</label>
         <select
-          className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
+          id={props.acSelectId}
+          className={`${inputClass(props.acInvalid)} disabled:opacity-60 disabled:cursor-not-allowed`}
+          aria-invalid={props.acInvalid || undefined}
           value={props.districtId ? props.acId : ""}
           disabled={!props.districtId}
           onChange={(e) => {
@@ -1641,6 +1977,7 @@ function GeoFilters(props: {
           <option value="">{props.districtId ? "Select AC" : "Select district first"}</option>
           {props.districtId ? props.acs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>) : null}
         </select>
+        {props.acHint ? <p className="mt-1 text-[11px] text-rose-300">{props.acHint}</p> : null}
       </div>
     </div>
   );
