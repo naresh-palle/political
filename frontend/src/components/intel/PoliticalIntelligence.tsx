@@ -167,6 +167,32 @@ function todayIsoDate() {
   return `${y}-${m}-${day}`;
 }
 
+function profileHref(url?: string) {
+  const raw = String(url || "").trim();
+  if (!raw || raw.includes("none.invalid")) return "";
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+}
+
+function socialUsername(row: { accountUsername?: string; accountIdentifier?: string; profileUrl?: string; platform?: string }) {
+  const stored = String(row.accountUsername || row.accountIdentifier || "").trim().replace(/^@/, "");
+  if (stored) return stored;
+  const href = profileHref(row.profileUrl);
+  if (!href) return "";
+  try {
+    const parsed = new URL(href);
+    const id = parsed.searchParams.get("id") || parsed.searchParams.get("v");
+    if (id) return id;
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    if (!parts.length) return "";
+    if (["c", "channel", "user", "watch", "playlist"].includes(parts[0].toLowerCase()) && parts[1]) {
+      return decodeURIComponent(parts[1]).replace(/^@/, "");
+    }
+    return decodeURIComponent(parts[0]).replace(/^@/, "");
+  } catch {
+    return "";
+  }
+}
+
 function formatCompactCount(value?: number | null) {
   if (value == null || Number.isNaN(Number(value))) return "—";
   const n = Number(value);
@@ -492,6 +518,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
             platform,
             partyId: slot.partyId,
             profileUrl: draft.hasAccount === "yes" ? String(draft.profileUrl || "").trim() : "",
+            accountIdentifier: draft.hasAccount === "yes"
+              ? socialUsername({ profileUrl: String(draft.profileUrl || "").trim(), platform })
+              : "",
             followers: draft.hasAccount === "yes" ? num(draft.followers) : undefined,
             verificationStatus: draft.hasAccount === "no" ? "NO_ACCOUNT" : draft.verified === "yes" ? "VERIFIED" : "PENDING"
           });
@@ -1011,7 +1040,21 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                     <span className="font-bold text-[#F5EFE0]">{row.leaderName} · {row.platform}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
                   </div>
-                  <a className="text-[11px] text-[#D4A24C] break-all underline" href={row.profileUrl} target="_blank" rel="noreferrer">{row.profileUrl}</a>
+                  {(() => {
+                    const handle = socialUsername(row);
+                    const href = profileHref(row.profileUrl);
+                    if (!handle || !href) return null;
+                    return (
+                      <a
+                        className="text-[11px] text-[#D4A24C] underline break-all"
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {handle}
+                      </a>
+                    );
+                  })()}
                   <p className="text-[11px] text-[#B9AF95]">Followers {row.followers ?? "—"} · Entered by {row.enteredByName || row.enteredBy}</p>
                   {canVerify && (
                     <div className="flex flex-wrap gap-2 mt-2">

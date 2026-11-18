@@ -7,6 +7,7 @@ from backend.services.political_intelligence import (
     load_sample_into_memory,
     normalize_profile_url,
     parse_csv,
+    profile_username,
     reset_memory,
     snapshot_growth,
     social_score,
@@ -17,6 +18,11 @@ def test_normalize_profile_url_and_identity():
     assert normalize_profile_url("WWW.Facebook.com/Sample.Rao.BNG/", "facebook") == "https://facebook.com/sample.rao.bng"
     assert normalize_profile_url("https://twitter.com/sample_rao_bng", "x") == "https://x.com/sample_rao_bng"
     assert account_identity_key("facebook", "https://facebook.com/a", "Handle") == account_identity_key("facebook", "https://www.facebook.com/a/", "handle")
+    assert profile_username("https://facebook.com/Sample.Rao.BNG/", "facebook") == "sample.rao.bng"
+    assert profile_username("https://www.instagram.com/kadapa.leader/", "instagram") == "kadapa.leader"
+    assert profile_username("https://x.com/tdp_official", "x") == "tdp_official"
+    assert profile_username("https://youtube.com/@kadapa-tv", "youtube") == "kadapa-tv"
+    assert profile_username("https://none.invalid/abc/facebook", "facebook") == ""
 
 
 def test_engagement_missing_is_not_zero():

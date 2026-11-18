@@ -129,6 +129,30 @@ def normalize_profile_url(url: str, platform: str = "") -> str:
     return cleaned.lower()
 
 
+def profile_username(url: str, platform: str = "", identifier: str = "") -> str:
+    ident = (identifier or "").strip().lstrip("@")
+    if ident:
+        return ident
+    normalized = normalize_profile_url(url, platform)
+    if not normalized:
+        return ""
+    parsed = urlparse(normalized)
+    host = (parsed.netloc or "").lower()
+    if host in {"none.invalid", "invalid"}:
+        return ""
+    query = parse_qs(parsed.query or "")
+    if query.get("id"):
+        return query["id"][0]
+    if query.get("v"):
+        return query["v"][0]
+    parts = [p for p in (parsed.path or "").split("/") if p]
+    if not parts:
+        return ""
+    if parts[0] in {"c", "channel", "user", "watch", "playlist"} and len(parts) > 1:
+        return parts[1].lstrip("@")
+    return parts[0].lstrip("@")
+
+
 def account_identity_key(platform: str, url: str, identifier: str = "") -> str:
     ident = (identifier or "").strip().lower().lstrip("@")
     normalized = normalize_profile_url(url, platform)

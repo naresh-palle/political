@@ -31,6 +31,7 @@ from .political_intelligence import (
     normalize_name,
     normalize_profile_url,
     now_iso,
+    profile_username,
     parse_csv,
     sample_seed_documents,
     snapshot_growth,
@@ -814,7 +815,7 @@ def register_pi_routes(api_router) -> None:
             url = url or f"https://none.invalid/{person_id}/{platform}"
         if not url and status != "NO_ACCOUNT":
             raise HTTPException(status_code=400, detail="profileUrl is required")
-        ident = str(payload.get("accountIdentifier") or "").strip()
+        ident = profile_username(url, platform, str(payload.get("accountIdentifier") or "").strip())
         identity = account_identity_key(platform, url, ident)
         existing = None
         if payload.get("id"):
@@ -920,7 +921,13 @@ def register_pi_routes(api_router) -> None:
             person = persons.get(acc.get("personId")) or {}
             if not in_scope(caps, person.get("stateId"), person.get("assemblyConstituencyId")):
                 continue
-            rows.append({**acc, "leaderName": person.get("name"), "partyId": person.get("partyId"), "assemblyConstituencyId": person.get("assemblyConstituencyId")})
+            rows.append({
+                **acc,
+                "leaderName": person.get("name"),
+                "partyId": person.get("partyId"),
+                "assemblyConstituencyId": person.get("assemblyConstituencyId"),
+                "accountUsername": profile_username(acc.get("profileUrl") or "", acc.get("platform") or "", acc.get("accountIdentifier") or ""),
+            })
         return rows
 
     @api_router.post("/pi/verification/{record_type}/{record_id}")
