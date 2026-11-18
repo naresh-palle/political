@@ -60,6 +60,20 @@
     color: #F5EFE0;
   }
 
+  /* Chrome/Safari autofill otherwise paints the name field white on dark forms. */
+  .ll-dark-input {
+    color-scheme: dark;
+  }
+  .ll-dark-input:-webkit-autofill,
+  .ll-dark-input:-webkit-autofill:hover,
+  .ll-dark-input:-webkit-autofill:focus,
+  .ll-dark-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #F5EFE0 !important;
+    caret-color: #F5EFE0;
+    box-shadow: 0 0 0 1000px #071322 inset !important;
+    transition: background-color 99999s ease-out 0s;
+  }
+
   body {
     font-family: var(--font-sans);
     background-color: var(--party-light-bg, var(--ll-ivory));

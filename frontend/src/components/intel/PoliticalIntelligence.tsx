@@ -209,10 +209,10 @@ function formatCompactCount(value?: number | null) {
 
 const CARD = `rounded-xl p-3 border ${UNIQUE_TICKET_SURFACE.kpi}`;
 const INPUT =
-  "w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3 py-2 text-sm text-[#F5EFE0] outline-none";
+  "ll-dark-input w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] focus:bg-[#071322] rounded-xl px-3 py-2 text-sm text-[#F5EFE0] outline-none";
 const LABEL = "block text-[10px] uppercase tracking-wider font-bold text-[#D4A24C] mb-1";
 const BTN =
-  "px-4 py-2 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-xs font-bold uppercase tracking-wider disabled:opacity-50";
+  "relative z-10 px-4 py-2 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-xs font-bold uppercase tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
 
 function statusTone(status?: string) {
   if (status === "VERIFIED") return "text-emerald-300 border-emerald-500/40 bg-emerald-950/40";
@@ -884,22 +884,23 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
 
           {entryGroup === "leaders" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
               {leaderSlots.map((slot, index) => {
                 const activePlatform = slot.activePlatform;
                 const drafts = slot.platformDrafts;
+                const slotBusy = saving === "leader" && savingSlot === index;
                 return (
                   <form
                     noValidate
                     key={slot.leaderKind}
                     onSubmit={(e) => saveLeader(e, index)}
-                    className={`${CARD} space-y-3 min-w-0`}
+                    className={`${CARD} min-w-0 h-full flex flex-col gap-3`}
                   >
                     <h2 className="text-sm font-bold text-[#F5EFE0]">
                       {LEADER_SLOTS[index].label}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Field label="Name *" value={slot.name || ""} placeholder="Full name" onChange={(v) => patchLeaderSlot(index, { name: v })} />
+                      <Field label="Name *" value={slot.name || ""} placeholder="Full name" autoComplete="off" onChange={(v) => patchLeaderSlot(index, { name: v })} />
                       <div>
                         <label className={LABEL}>Party</label>
                         <select className={INPUT} value={slot.partyId || ""} onChange={(e) => patchLeaderSlot(index, { partyId: e.target.value })}>
@@ -963,13 +964,15 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                         </div>
                       )}
                     </div>
-                    <label className={LABEL}>Political role</label>
-                    <select className={INPUT} value={slot.politicalRole} onChange={(e) => patchLeaderSlot(index, { politicalRole: e.target.value })}>
-                      {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
-                    </select>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="submit" className={BTN} disabled={!!saving || !acId || !canEdit}>
-                        {saving === "leader" && savingSlot === index ? "Saving…" : slot.id ? `Save changes · ${LEADER_SLOTS[index].label}` : `Save ${LEADER_SLOTS[index].label}`}
+                    <div>
+                      <label className={LABEL}>Political role</label>
+                      <select className={INPUT} value={slot.politicalRole} onChange={(e) => patchLeaderSlot(index, { politicalRole: e.target.value })}>
+                        {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+                      </select>
+                    </div>
+                    <div className="mt-auto flex flex-wrap gap-2 pt-1">
+                      <button type="submit" className={BTN} disabled={!canEdit || slotBusy}>
+                        {slotBusy ? "Saving…" : slot.id ? `Save changes · ${LEADER_SLOTS[index].label}` : `Save ${LEADER_SLOTS[index].label}`}
                       </button>
                       {canDelete && slot.id && (
                         <button
@@ -1530,11 +1533,11 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
-function Field({ label, value, onChange, type = "text", required = false, placeholder }: { label: string; value: any; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string }) {
+function Field({ label, value, onChange, type = "text", required = false, placeholder, autoComplete }: { label: string; value: any; onChange: (v: string) => void; type?: string; required?: boolean; placeholder?: string; autoComplete?: string }) {
   return (
     <div className="min-w-0">
       <label className={LABEL}>{label}{required ? " *" : ""}</label>
-      <input className={INPUT} type={type} value={value} required={required} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+      <input className={INPUT} type={type} value={value} required={required} placeholder={placeholder} autoComplete={autoComplete || "off"} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
