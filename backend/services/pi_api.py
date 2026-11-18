@@ -1068,7 +1068,10 @@ def register_pi_routes(api_router) -> None:
         for stat in stats:
             ac_id = stat.get("assemblyConstituencyId")
             ac_leaders = [l for l in leaders if l.get("assemblyConstituencyId") == ac_id]
-            sitting = next((l for l in ac_leaders if l.get("leaderKind") != "OPPOSITION"), None) or (ac_leaders[0] if ac_leaders else None)
+            sitting = next(
+                (l for l in ac_leaders if (l.get("leaderKind") or "SITTING_MLA") in {"SITTING_MLA", "LEADER_1"}),
+                None,
+            ) or (ac_leaders[0] if ac_leaders else None)
             estimates = {
                 "facebook": int(stat.get("estimatedFacebookUsers") or 0),
                 "instagram": int(stat.get("estimatedInstagramUsers") or 0),

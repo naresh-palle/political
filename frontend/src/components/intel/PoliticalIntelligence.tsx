@@ -14,7 +14,31 @@ import { isSmMUser } from "../../utils/piAccess";
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
 type SaveKind = "constituency" | "leader" | null;
-type LeaderKind = "SITTING_MLA" | "OPPOSITION";
+type LeaderKind = "LEADER_1" | "LEADER_2" | "LEADER_3" | "LEADER_4";
+
+const LEADER_SLOTS: { kind: LeaderKind; label: string; defaultRole: string; defaultParty: string }[] = [
+  { kind: "LEADER_1", label: "Leader 1", defaultRole: "MLA", defaultParty: "TDP" },
+  { kind: "LEADER_2", label: "Leader 2", defaultRole: "OTHER", defaultParty: "" },
+  { kind: "LEADER_3", label: "Leader 3", defaultRole: "OTHER", defaultParty: "" },
+  { kind: "LEADER_4", label: "Leader 4", defaultRole: "OTHER", defaultParty: "" }
+];
+
+function slotIndexForKind(kind?: string): number {
+  if (kind === "LEADER_1" || kind === "SITTING_MLA") return 0;
+  if (kind === "LEADER_2" || kind === "OPPOSITION") return 1;
+  if (kind === "LEADER_3") return 2;
+  if (kind === "LEADER_4") return 3;
+  return -1;
+}
+
+function leaderKindLabel(kind?: string) {
+  const index = slotIndexForKind(kind);
+  return index >= 0 ? LEADER_SLOTS[index].label : "Leader";
+}
+
+function isSittingMlaKind(kind?: string) {
+  return !kind || kind === "SITTING_MLA" || kind === "LEADER_1";
+}
 
 const SMA_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
@@ -74,6 +98,43 @@ function emptyPlatformDrafts(): Record<(typeof PLATFORMS)[number], PlatformDraft
     x: { hasAccount: "", verified: "", followers: "", profileUrl: "" },
     youtube: { hasAccount: "", verified: "", followers: "", profileUrl: "" }
   };
+}
+
+type LeaderSlotState = {
+  id?: string;
+  name: string;
+  partyId: string;
+  politicalRole: string;
+  leaderKind: LeaderKind;
+  platformDrafts: Record<(typeof PLATFORMS)[number], PlatformDraft>;
+  activePlatform: (typeof PLATFORMS)[number];
+};
+
+function emptyLeaderSlot(slot: (typeof LEADER_SLOTS)[number]): LeaderSlotState {
+  return {
+    name: "",
+    partyId: slot.defaultParty,
+    politicalRole: slot.defaultRole,
+    leaderKind: slot.kind,
+    platformDrafts: emptyPlatformDrafts(),
+    activePlatform: "facebook"
+  };
+}
+
+function draftsFromAccounts(personId: string, accountRows: any[]): Record<(typeof PLATFORMS)[number], PlatformDraft> {
+  const next = emptyPlatformDrafts();
+  accountRows.filter((row) => row.personId === personId).forEach((row) => {
+    const platform = String(row.platform || "").toLowerCase() as (typeof PLATFORMS)[number];
+    if (!PLATFORMS.includes(platform)) return;
+    const noAccount = row.verificationStatus === "NO_ACCOUNT" || row.noAccount;
+    next[platform] = {
+      hasAccount: noAccount ? "no" : "yes",
+      verified: row.verificationStatus === "VERIFIED" ? "yes" : "no",
+      followers: row.followers != null ? String(row.followers) : "",
+      profileUrl: noAccount ? "" : row.profileUrl || ""
+    };
+  });
+  return next;
 }
 
 function todayIsoDate() {
@@ -140,10 +201,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     dataCollectionDate: todayIsoDate()
   });
   const [constRows, setConstRows] = useState<any[]>([]);
-  const [leaderForm, setLeaderForm] = useState<any>({ politicalRole: "MLA", currentFormerStatus: "CURRENT", partyId: "TDP", leaderKind: "SITTING_MLA" });
+  const [leaderSlots, setLeaderSlots] = useState<LeaderSlotState[]>(() => LEADER_SLOTS.map(emptyLeaderSlot));
+  const [savingSlot, setSavingSlot] = useState<number | null>(null);
   const [leaders, setLeaders] = useState<any[]>([]);
-  const [platformDrafts, setPlatformDrafts] = useState<Record<(typeof PLATFORMS)[number], PlatformDraft>>(emptyPlatformDrafts);
-  const [activePlatform, setActivePlatform] = useState<(typeof PLATFORMS)[number]>("facebook");
   const [accounts, setAccounts] = useState<any[]>([]);
   const [queue, setQueue] = useState<any[]>([]);
   const [queueStatus, setQueueStatus] = useState("PENDING");
@@ -257,10 +317,31 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const loadLeaders = async () => {
     const data = await politicalApiService.getPiLeaders(userId, { assemblyConstituencyId: acId || undefined, districtId, limit: 100 });
     setLeaders(data.items || []);
+    return data.items || [];
   };
   const loadAccounts = async () => {
     const data = await politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 100 });
     setAccounts(data.items || []);
+    return data.items || [];
+  };
+
+  const hydrateLeaderSlots = (leaderRows: any[], accountRows: any[]) => {
+    const next = LEADER_SLOTS.map(emptyLeaderSlot);
+    const scoped = acId ? leaderRows.filter((row) => row.assemblyConstituencyId === acId) : [];
+    for (const row of scoped) {
+      const index = slotIndexForKind(row.leaderKind);
+      if (index < 0 || next[index].id) continue;
+      next[index] = {
+        id: row.id,
+        name: row.name || "",
+        partyId: row.partyId || "",
+        politicalRole: (row.roles || [])[0]?.politicalRole || next[index].politicalRole,
+        leaderKind: LEADER_SLOTS[index].kind,
+        platformDrafts: draftsFromAccounts(row.id, accountRows),
+        activePlatform: "facebook"
+      };
+    }
+    setLeaderSlots(next);
   };
   const loadQueue = async () => {
     setQueue(await politicalApiService.getPiQueue(userId, queueStatus));
@@ -286,8 +367,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   useEffect(() => {
     if (tab === "constituencies") {
       loadConstituencies().catch((e) => flash(e.message, true));
-      loadLeaders().catch((e) => flash(e.message, true));
-      loadAccounts().catch((e) => flash(e.message, true));
+      Promise.all([loadLeaders(), loadAccounts()])
+        .then(([leaderRows, accountRows]) => hydrateLeaderSlots(leaderRows, accountRows))
+        .catch((e) => flash(e.message, true));
       refreshDashboard().catch((e) => flash(e.message, true));
     }
     if (tab === "verify") loadQueue().catch((e) => flash(e.message, true));
@@ -337,30 +419,36 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     }
   };
 
-  const saveLeader = async (e: React.FormEvent) => {
+  const saveLeader = async (e: React.FormEvent, index: number) => {
     e.preventDefault();
     e.stopPropagation();
     if (saving) return;
+    const slot = leaderSlots[index];
+    if (!slot) return;
     if (!acId) {
       flash("Select an assembly constituency.", true);
       return;
     }
-    if (!String(leaderForm.name || "").trim() || !leaderForm.partyId) {
+    if (!String(slot.name || "").trim() || !slot.partyId) {
       flash("Enter the leader name and party.", true);
       return;
     }
     for (const platform of PLATFORMS) {
-      const draft = platformDrafts[platform];
+      const draft = slot.platformDrafts[platform];
       if (draft.hasAccount === "yes" && !String(draft.profileUrl || "").trim()) {
         flash(`Add a profile link for ${PLATFORM_LABEL[platform]}.`, true);
         return;
       }
     }
     setSaving("leader");
+    setSavingSlot(index);
     try {
       const saved = await politicalApiService.savePiLeader(userId, {
-        ...leaderForm,
-        leaderKind: leaderForm.leaderKind === "OPPOSITION" ? "OPPOSITION" : "SITTING_MLA",
+        id: slot.id,
+        name: slot.name,
+        partyId: slot.partyId,
+        politicalRole: slot.politicalRole,
+        leaderKind: slot.leaderKind,
         currentFormerStatus: "CURRENT",
         stateId,
         districtId,
@@ -371,7 +459,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       if (personId) {
         const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
         for (const platform of PLATFORMS) {
-          const draft = platformDrafts[platform];
+          const draft = slot.platformDrafts[platform];
           if (!draft.hasAccount) continue;
           const existing = accounts.find(
             (row) => row.personId === personId && String(row.platform || "").toLowerCase() === platform
@@ -380,32 +468,22 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
             id: existing?.id,
             personId,
             platform,
-            partyId: leaderForm.partyId,
+            partyId: slot.partyId,
             profileUrl: draft.hasAccount === "yes" ? String(draft.profileUrl || "").trim() : "",
             followers: draft.hasAccount === "yes" ? num(draft.followers) : undefined,
             verificationStatus: draft.hasAccount === "no" ? "NO_ACCOUNT" : draft.verified === "yes" ? "VERIFIED" : "PENDING"
           });
         }
       }
-      flash("Leader saved.");
-      await loadLeaders();
-      await loadAccounts();
-      if (!leaderForm.id) {
-        const nextKind: LeaderKind = leaderForm.leaderKind === "SITTING_MLA" ? "OPPOSITION" : "SITTING_MLA";
-        setLeaderForm({
-          politicalRole: nextKind === "SITTING_MLA" ? "MLA" : "OTHER",
-          currentFormerStatus: "CURRENT",
-          partyId: nextKind === "SITTING_MLA" ? "TDP" : "",
-          leaderKind: nextKind
-        });
-        setPlatformDrafts(emptyPlatformDrafts());
-        setActivePlatform("facebook");
-      }
+      flash(`${LEADER_SLOTS[index].label} saved.`);
+      const [leaderRows, accountRows] = await Promise.all([loadLeaders(), loadAccounts()]);
+      hydrateLeaderSlots(leaderRows, accountRows);
       setEntryGroup("leaders");
     } catch (err: any) {
       flash(err.message, true);
     } finally {
       setSaving(null);
+      setSavingSlot(null);
     }
   };
 
@@ -420,20 +498,18 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     }
   };
 
-  const applyLeaderAccounts = (personId: string, accountRows: any[] = accounts) => {
-    const next = emptyPlatformDrafts();
-    accountRows.filter((row) => row.personId === personId).forEach((row) => {
-      const platform = String(row.platform || "").toLowerCase() as (typeof PLATFORMS)[number];
-      if (!PLATFORMS.includes(platform)) return;
-      const noAccount = row.verificationStatus === "NO_ACCOUNT" || row.noAccount;
-      next[platform] = {
-        hasAccount: noAccount ? "no" : "yes",
-        verified: row.verificationStatus === "VERIFIED" ? "yes" : "no",
-        followers: row.followers != null ? String(row.followers) : "",
-        profileUrl: noAccount ? "" : row.profileUrl || ""
-      };
-    });
-    setPlatformDrafts(next);
+  const patchLeaderSlot = (index: number, patch: Partial<LeaderSlotState>) => {
+    setLeaderSlots((prev) => prev.map((slot, i) => (i === index ? { ...slot, ...patch } : slot)));
+  };
+
+  const setSlotPlatformField = (index: number, platform: (typeof PLATFORMS)[number], field: keyof PlatformDraft, value: string) => {
+    setLeaderSlots((prev) =>
+      prev.map((slot, i) =>
+        i === index
+          ? { ...slot, platformDrafts: { ...slot.platformDrafts, [platform]: { ...slot.platformDrafts[platform], [field]: value } } }
+          : slot
+      )
+    );
   };
 
   const downloadSavedExcel = () => {
@@ -458,10 +534,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     a.download = `leaderlens-constituencies-${todayIsoDate()}.xls`;
     a.click();
     URL.revokeObjectURL(a.href);
-  };
-
-  const setPlatformField = (platform: (typeof PLATFORMS)[number], field: keyof PlatformDraft, value: string) => {
-    setPlatformDrafts((prev) => ({ ...prev, [platform]: { ...prev[platform], [field]: value } }));
   };
 
   const downloadTemplate = () => {
@@ -714,102 +786,95 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
           )}
 
           {entryGroup === "leaders" && (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <form noValidate onSubmit={saveLeader} className={`${CARD} space-y-3 min-w-0`}>
-                <h2 className="text-sm font-bold text-[#F5EFE0]">
-                  2 · Leader {leaderForm.leaderKind === "OPPOSITION" ? "2 (opposition)" : "1 (sitting MLA)"}
-                </h2>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setLeaderForm({ ...leaderForm, leaderKind: "SITTING_MLA", politicalRole: "MLA" })}
-                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
-                      leaderForm.leaderKind !== "OPPOSITION" ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
-                    }`}
+            <div className="space-y-4">
+              {leaderSlots.map((slot, index) => {
+                const activePlatform = slot.activePlatform;
+                const drafts = slot.platformDrafts;
+                return (
+                  <form
+                    noValidate
+                    key={slot.leaderKind}
+                    onSubmit={(e) => saveLeader(e, index)}
+                    className={`${CARD} space-y-3 min-w-0`}
                   >
-                    Leader 1 (sitting MLA)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLeaderForm({ ...leaderForm, leaderKind: "OPPOSITION" })}
-                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider ${
-                      leaderForm.leaderKind === "OPPOSITION" ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
-                    }`}
-                  >
-                    Leader 2 (opposition)
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Field label="Name *" value={leaderForm.name || ""} placeholder="Full name" onChange={(v) => setLeaderForm({ ...leaderForm, name: v })} />
-                  <div>
-                    <label className={LABEL}>Party</label>
-                    <select className={INPUT} value={leaderForm.partyId || ""} onChange={(e) => setLeaderForm({ ...leaderForm, partyId: e.target.value })}>
-                      <option value="">Select</option>
-                      {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName || p.name}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {PLATFORMS.map((platform) => {
-                    const answered = platformDrafts[platform].hasAccount === "yes" || platformDrafts[platform].hasAccount === "no";
-                    const active = activePlatform === platform;
-                    return (
-                      <button
-                        type="button"
-                        key={platform}
-                        onClick={() => setActivePlatform(platform)}
-                        className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${
-                          active ? "bg-[#D4A24C] text-[#071322]" : "border border-[#22405E] text-[#F5EFE0]"
-                        }`}
-                      >
-                        {PLATFORM_LABEL[platform]}
-                        <span className={`w-1.5 h-1.5 rounded-full ${answered ? "bg-emerald-400" : "bg-[#6B7280]"}`} />
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="p-2.5 rounded-lg border border-[#22405E] space-y-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                      <label className={LABEL}>{PLATFORM_LABEL[activePlatform]}: has account?</label>
-                      <select
-                        className={INPUT}
-                        value={platformDrafts[activePlatform].hasAccount}
-                        onChange={(e) => setPlatformField(activePlatform, "hasAccount", e.target.value)}
-                      >
-                        <option value="">Select</option>
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
-                      </select>
-                    </div>
-                    {platformDrafts[activePlatform].hasAccount === "yes" && (
+                    <h2 className="text-sm font-bold text-[#F5EFE0]">
+                      {index + 2} · {LEADER_SLOTS[index].label}
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Field label="Name *" value={slot.name || ""} placeholder="Full name" onChange={(v) => patchLeaderSlot(index, { name: v })} />
                       <div>
-                        <label className={LABEL}>Verified (blue tick)?</label>
-                        <select
-                          className={INPUT}
-                          value={platformDrafts[activePlatform].verified}
-                          onChange={(e) => setPlatformField(activePlatform, "verified", e.target.value)}
-                        >
+                        <label className={LABEL}>Party</label>
+                        <select className={INPUT} value={slot.partyId || ""} onChange={(e) => patchLeaderSlot(index, { partyId: e.target.value })}>
                           <option value="">Select</option>
-                          <option value="yes">Yes</option>
-                          <option value="no">No</option>
+                          {parties.map((p) => <option key={p.id} value={p.id}>{p.shortName || p.name}</option>)}
                         </select>
                       </div>
-                    )}
-                  </div>
-                  {platformDrafts[activePlatform].hasAccount === "yes" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Field label="Followers / subscribers" type="number" value={platformDrafts[activePlatform].followers} onChange={(v) => setPlatformField(activePlatform, "followers", v)} />
-                      <Field label="Profile link" value={platformDrafts[activePlatform].profileUrl} onChange={(v) => setPlatformField(activePlatform, "profileUrl", v)} />
                     </div>
-                  )}
-                </div>
-                <label className={LABEL}>Political role</label>
-                <select className={INPUT} value={leaderForm.politicalRole} onChange={(e) => setLeaderForm({ ...leaderForm, politicalRole: e.target.value })}>
-                  {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
-                </select>
-                <button type="submit" className={BTN} disabled={!!saving || !acId}>{saving === "leader" ? "Saving…" : "Save leader"}</button>
-              </form>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PLATFORMS.map((platform) => {
+                        const answered = drafts[platform].hasAccount === "yes" || drafts[platform].hasAccount === "no";
+                        const active = activePlatform === platform;
+                        return (
+                          <button
+                            type="button"
+                            key={platform}
+                            onClick={() => patchLeaderSlot(index, { activePlatform: platform })}
+                            className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${
+                              active ? "bg-[#D4A24C] text-[#071322]" : "border border-[#22405E] text-[#F5EFE0]"
+                            }`}
+                          >
+                            {PLATFORM_LABEL[platform]}
+                            <span className={`w-1.5 h-1.5 rounded-full ${answered ? "bg-emerald-400" : "bg-[#6B7280]"}`} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="p-2.5 rounded-lg border border-[#22405E] space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className={LABEL}>{PLATFORM_LABEL[activePlatform]}: has account?</label>
+                          <select
+                            className={INPUT}
+                            value={drafts[activePlatform].hasAccount}
+                            onChange={(e) => setSlotPlatformField(index, activePlatform, "hasAccount", e.target.value)}
+                          >
+                            <option value="">Select</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                          </select>
+                        </div>
+                        {drafts[activePlatform].hasAccount === "yes" && (
+                          <div>
+                            <label className={LABEL}>Verified (blue tick)?</label>
+                            <select
+                              className={INPUT}
+                              value={drafts[activePlatform].verified}
+                              onChange={(e) => setSlotPlatformField(index, activePlatform, "verified", e.target.value)}
+                            >
+                              <option value="">Select</option>
+                              <option value="yes">Yes</option>
+                              <option value="no">No</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                      {drafts[activePlatform].hasAccount === "yes" && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <Field label="Followers / subscribers" type="number" value={drafts[activePlatform].followers} onChange={(v) => setSlotPlatformField(index, activePlatform, "followers", v)} />
+                          <Field label="Profile link" value={drafts[activePlatform].profileUrl} onChange={(v) => setSlotPlatformField(index, activePlatform, "profileUrl", v)} />
+                        </div>
+                      )}
+                    </div>
+                    <label className={LABEL}>Political role</label>
+                    <select className={INPUT} value={slot.politicalRole} onChange={(e) => patchLeaderSlot(index, { politicalRole: e.target.value })}>
+                      {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+                    </select>
+                    <button type="submit" className={BTN} disabled={!!saving || !acId}>
+                      {saving === "leader" && savingSlot === index ? "Saving…" : `Save ${LEADER_SLOTS[index].label}`}
+                    </button>
+                  </form>
+                );
+              })}
               <div className={CARD}>
                 <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Leaders in this constituency</h2>
                 {leaders.length === 0 ? <EmptyState text="No leaders for this geography." /> : (
@@ -817,30 +882,17 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                     {leaders.map((row) => {
                       const party = partyById[row.partyId];
                       return (
-                        <button
-                          type="button"
+                        <div
                           key={row.id}
-                          className="w-full text-left p-2.5 rounded-lg border border-[#22405E] hover:bg-[#131E2D]"
-                          onClick={() => {
-                            setLeaderForm({
-                              ...leaderForm,
-                              id: row.id,
-                              name: row.name,
-                              partyId: row.partyId,
-                              politicalRole: (row.roles || [])[0]?.politicalRole || leaderForm.politicalRole,
-                              currentFormerStatus: "CURRENT",
-                              leaderKind: row.leaderKind === "OPPOSITION" ? "OPPOSITION" : "SITTING_MLA"
-                            });
-                            applyLeaderAccounts(row.id);
-                          }}
+                          className="w-full text-left p-2.5 rounded-lg border border-[#22405E]"
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-[#F5EFE0]">{row.name}</span>
                             <span className="text-[10px] font-bold" style={{ color: party?.primaryColor || "#D4A24C" }}>{row.partyId}</span>
                           </div>
-                          <p className="text-[11px] text-[#B9AF95]">{row.leaderKind === "OPPOSITION" ? "Opposition" : "Sitting MLA"}{(row.roles || []).length ? ` · ${(row.roles || []).map((r: any) => r.politicalRole).join(" · ")}` : ""}</p>
+                          <p className="text-[11px] text-[#B9AF95]">{leaderKindLabel(row.leaderKind)}{(row.roles || []).length ? ` · ${(row.roles || []).map((r: any) => r.politicalRole).join(" · ")}` : ""}</p>
                           <p className="text-[11px] text-[#B9AF95]">Contact {row.contactId || "—"} · {row.verificationStatus}</p>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -1148,9 +1200,9 @@ function IntelligenceConstituency({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         {leaders.length ? leaders.map((leader: any) => {
-          const sitting = leader.leaderKind !== "OPPOSITION";
+          const sitting = isSittingMlaKind(leader.leaderKind);
           return (
             <div key={leader.id} className={`${CARD} min-w-0 space-y-3`}>
               <div className="flex items-start justify-between gap-2">
