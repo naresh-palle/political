@@ -14,6 +14,7 @@ import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import { cacheHasPiData, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
+import { downloadPiBriefingWorkbook } from "../../utils/piExcelExport";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
@@ -349,6 +350,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [rankBy, setRankBy] = useState("followers");
   const [csvText, setCsvText] = useState("");
   const [preview, setPreview] = useState<any>(null);
+  const [exportingAi, setExportingAi] = useState(false);
 
   const partyById = useMemo(() => Object.fromEntries(parties.map((p) => [p.id, p])), [parties]);
   const selectedDistrictProgress = useMemo(() => {
@@ -888,6 +890,38 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     URL.revokeObjectURL(a.href);
   };
 
+  const exportAiCsv = async () => {
+    if (exportingAi) return;
+    setExportingAi(true);
+    try {
+      const [leaderData, accountData, constData] = await Promise.all([
+        politicalApiService.getPiLeaders(userId, { districtId: districtId || undefined, limit: 200 }),
+        politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 200 }),
+        politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 200 })
+      ]);
+      const leaderRows = leaderData.items || leaders;
+      const leaderIds = new Set(leaderRows.map((row: any) => row.id));
+      const accountRows = (accountData.items || accounts).filter((row: any) => !leaderIds.size || leaderIds.has(row.personId));
+      const constItems = constData.items || constRows;
+      downloadPiBriefingWorkbook({
+        stateName: states.find((s) => s.id === stateId)?.name || stateId,
+        districtName: selectedDistrictName || undefined,
+        constituencyName: selectedAssemblyName || undefined,
+        dashboard: dashboard || undefined,
+        leaders: leaderRows,
+        accounts: accountRows,
+        constituencies: constItems,
+        partyName: (partyId) => (partyId && partyById[partyId]?.abbreviation) || partyId || "",
+        assemblyName: (assemblyId) => assemblies.find((row) => row.id === assemblyId)?.name || assemblyId || ""
+      });
+      flash("AI CSV exported. Open it in Excel — every field wraps.");
+    } catch (err: any) {
+      flash(err.message || "Could not export.", true);
+    } finally {
+      setExportingAi(false);
+    }
+  };
+
   const downloadTemplate = () => {
     const csv = `recordType,stateId,districtId,parliamentConstituencyId,assemblyConstituencyId,totalVoters,ruralPercent,estimatedFacebookUsers,estimatedInstagramUsers,estimatedXUsers,estimatedYouTubeUsers,dataCollectionDate,dataSource,remarks,leaderName,partyId,politicalRole,currentFormerStatus,platform,profileUrl,accountIdentifier,followers,postsLast30Days,avgLikesLast10,avgCommentsLast10,avgViewsLast10
 constituency,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,234100,62,48000,22000,9000,15000,2026-11-01,FIELD_SURVEY,Estimates only,,,,,,,,,,
@@ -1396,8 +1430,16 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
       {tab === "import" && (
         <section className={`${CARD} space-y-3`}>
           <div className="flex flex-wrap gap-2">
-            <button className={BTN} type="button" onClick={downloadTemplate}><Download className="w-3.5 h-3.5 inline mr-1" />CSV template</button>
+            <button className={BTN} type="button" onClick={exportAiCsv} disabled={exportingAi}>
+              <Download className="w-3.5 h-3.5 inline mr-1" />{exportingAi ? "Exporting…" : "Export AI CSV"}
+            </button>
+            <button className="px-4 py-2 rounded-xl border border-[#22405E] text-[#F5EFE0] text-xs font-bold uppercase tracking-wider" type="button" onClick={downloadTemplate}>
+              CSV template
+            </button>
           </div>
+          <p className="text-[11px] text-[#B9AF95] leading-relaxed">
+            Export AI CSV opens in Excel with wrapped cells and a plain-language briefing so anyone can read Facebook, Instagram, X / Twitter and YouTube together. CSV template is only for uploading rows.
+          </p>
           <label className={LABEL}>Upload CSV</label>
           <input
             type="file"
