@@ -27,7 +27,6 @@ import { PartyThemeProvider, usePartyTheme } from "./context/PartyThemeContext";
 // Lazy-loaded heavy route chunks for instant initial render
 const GrievanceManagement = lazy(() => import("./components/grievances/GrievanceManagement").then(m => ({ default: m.GrievanceManagement })));
 const VolunteerMonitoring = lazy(() => import("./components/volunteers/VolunteerMonitoring").then(m => ({ default: m.VolunteerMonitoring })));
-const CampaignWebsiteGenerator = lazy(() => import("./components/webbuilder/CampaignWebsiteGenerator").then(m => ({ default: m.CampaignWebsiteGenerator })));
 const RoleManagement = lazy(() => import("./components/governance/RoleManagement").then(m => ({ default: m.RoleManagement })));
 const ContactDatabase = lazy(() => import("./components/contacts/ContactDatabase").then(m => ({ default: m.ContactDatabase })));
 const PoliticalIntelligence = lazy(() => import("./components/intel/PoliticalIntelligence").then(m => ({ default: m.PoliticalIntelligence })));
@@ -332,7 +331,7 @@ function AppInner() {
       }
       return;
     }
-    if (activeProduct === "intel") {
+    if (activeProduct === "intel" || activeProduct === "webbuilder") {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -372,7 +371,7 @@ function AppInner() {
     let targetProduct = product;
     if (isPiUser) {
       targetProduct = "intel";
-    } else if (product === "intel") {
+    } else if (product === "intel" || product === "webbuilder") {
       targetProduct = "fieldops";
     } else if (isVolunteer) {
       targetProduct = ["fieldops", "grievances", "contacts"].includes(product) ? product : "fieldops";
@@ -614,9 +613,6 @@ function AppInner() {
 
                 {/* Module 4: SOCIAL MEDIA VOLUNTEER MONITORING (ADMIN ONLY) */}
                 {activeProduct === "volunteers" && isAdmin && <VolunteerMonitoring />}
-
-                {/* Module 5: CAMPAIGN WEBSITE GENERATOR (ADMIN ONLY) */}
-                {activeProduct === "webbuilder" && isAdmin && <CampaignWebsiteGenerator />}
 
                 {/* Module 6: ROLE-BASED ACCESS & GOVERNANCE (ADMIN ONLY) */}
                 {activeProduct === "governance" && (isPlatformAdmin || isPoliticalAdmin) && (

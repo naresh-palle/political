@@ -286,20 +286,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {isPlatformAdmin && (
-              <>
-                <button
-                  onClick={() => onProductChange("volunteers")}
-                  className={navBtn(activeProduct === "volunteers")}
-                >
-                  Volunteers
-                </button>
-                <button
-                  onClick={() => onProductChange("webbuilder")}
-                  className={navBtn(activeProduct === "webbuilder")}
-                >
-                  Web Studio
-                </button>
-              </>
+              <button
+                onClick={() => onProductChange("volunteers")}
+                className={navBtn(activeProduct === "volunteers")}
+              >
+                Volunteers
+              </button>
             )}
 
             {isPlatformAdmin && (
