@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 from backend.services.political_intelligence import (
     account_identity_key,
@@ -585,3 +586,49 @@ def test_pi_list_keeps_memory_when_mongo_times_out(monkeypatch):
     monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
     rows = _run(pi_api._list("political_persons"))
     assert any(row.get("id") == "pp-keep" for row in rows)
+
+
+def test_srv_prefers_live_mongo_module(monkeypatch):
+    from types import SimpleNamespace
+
+    from backend.services import pi_api
+
+    dead = SimpleNamespace(_mongo_circuit_open=True, _live_mongo_client="dead-client", db="dead-db", mongo_write=True)
+    live = SimpleNamespace(_mongo_circuit_open=False, _live_mongo_client="live-client", db="live-db", mongo_write=True)
+    monkeypatch.setitem(sys.modules, "server", live)
+    monkeypatch.setitem(sys.modules, "backend.server", dead)
+    assert pi_api._srv() is live
+
+
+def test_pi_save_uses_live_client_when_circuit_open(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory
+
+    reset_memory()
+    writes = []
+
+    class FakeCol:
+        async def update_one(self, *args, **kwargs):
+            writes.append(args)
+            return None
+
+    class FakeLiveDb(dict):
+        def __getitem__(self, name):
+            return self
+
+        def __getattr__(self, name):
+            return FakeCol()
+
+    class FakeSrv:
+        _mongo_circuit_open = True
+        _live_mongo_client = FakeLiveDb()
+        db_name = "political_intelligence"
+        db = object()
+
+        def log_mongo_notice(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
+    saved = _run(pi_api._save("political_persons", "pp-1", {"id": "pp-1", "name": "Live Save"}))
+    assert saved["id"] == "pp-1"
+    assert writes, "expected a Mongo upsert through the live client"

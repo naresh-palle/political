@@ -1,9 +1,11 @@
 """Political Intelligence HTTP routes. Registered onto the existing FastAPI api_router."""
 from __future__ import annotations
 
+import asyncio
 import csv
 import io
 import json
+import sys
 import threading
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -43,12 +45,54 @@ from .political_intelligence import (
 
 
 def _srv():
+    """Use the running uvicorn module, not a second import of backend.server."""
+    candidates = [sys.modules.get("server"), sys.modules.get("backend.server")]
+    live = [mod for mod in candidates if mod is not None and getattr(mod, "db", None) is not None]
+    for mod in live:
+        if not getattr(mod, "_mongo_circuit_open", True) and getattr(mod, "_live_mongo_client", None):
+            return mod
+    for mod in live:
+        if getattr(mod, "_live_mongo_client", None):
+            return mod
+    if live:
+        return live[0]
     try:
         from backend import server as srv
         return srv
     except Exception:
         import server as srv  # type: ignore
         return srv
+
+
+def _pi_mongo_db(srv: Any):
+    live = getattr(srv, "_live_mongo_client", None)
+    name = getattr(srv, "db_name", None) or "political_intelligence"
+    if live is not None:
+        try:
+            return live[name]
+        except Exception:
+            return None
+    if getattr(srv, "_mongo_circuit_open", True):
+        return None
+    return getattr(srv, "db", None)
+
+
+def _restore_live_mongo(srv: Any) -> None:
+    live = getattr(srv, "_live_mongo_client", None)
+    if live is None:
+        return
+    name = getattr(srv, "db_name", None) or "political_intelligence"
+    try:
+        srv.db = live[name]
+        srv._mongo_circuit_open = False
+    except Exception:
+        pass
+
+
+def _is_duplicate_key(exc: Exception) -> bool:
+    name = type(exc).__name__
+    text = str(exc)
+    return "DuplicateKey" in name or "E11000" in text or "duplicate key" in text.lower()
 
 
 COLLECTIONS = {
@@ -68,7 +112,6 @@ COLLECTIONS = {
 
 PI_RUNTIME_PATH = Path(__file__).resolve().parents[1] / "data" / ".runtime_pi_store.json"
 _PI_RUNTIME_LOCK = threading.Lock()
-_MISSING = object()
 PI_MONGO_LIST_LIMIT = 20000
 PI_SAVE_UNAVAILABLE = "Could not save. The database is temporarily unavailable. Keep this page open and tap Save again."
 
@@ -143,33 +186,20 @@ def _hydrate_memory_from_runtime() -> None:
                 MEMORY[collection].insert(0, deepcopy(row))
 
 
-def _mongo_was_configured(srv: Any) -> bool:
-    return bool(getattr(srv, "_live_mongo_client", None))
-
-
-def _raise_if_live_mongo_down(srv: Any) -> None:
-    if getattr(srv, "_mongo_circuit_open", True) and _mongo_was_configured(srv):
-        raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE)
-
-
 async def _list(collection: str) -> List[Dict[str, Any]]:
     srv = _srv()
     mem = memory_list(collection)
     disk = _runtime_list(collection)
     merged = _merge_docs(disk, mem)
-    if getattr(srv, "_mongo_circuit_open", True):
+    db = _pi_mongo_db(srv)
+    if db is None:
         return merged or mem
     try:
-        col = getattr(srv.db, COLLECTIONS[collection], None)
+        col = getattr(db, COLLECTIONS[collection], None)
         if col is None:
             return merged or mem
-        docs = await srv.mongo_wait(
-            col.find({}, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT),
-            timeout=8.0,
-            fallback=_MISSING,
-            tag=f"pi_{collection}",
-        )
-        if docs is _MISSING or docs is None:
+        docs = await asyncio.wait_for(col.find({}, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT), timeout=8.0)
+        if not docs:
             return merged or mem
         return _merge_docs(list(docs), disk, mem)
     except Exception:
@@ -185,13 +215,14 @@ async def _get(collection: str, key: str) -> Optional[Dict[str, Any]]:
             memory_upsert(collection, key, row)
             return deepcopy(row)
     srv = _srv()
-    if getattr(srv, "_mongo_circuit_open", True):
+    db = _pi_mongo_db(srv)
+    if db is None:
         return None
     try:
-        col = getattr(srv.db, COLLECTIONS[collection], None)
+        col = getattr(db, COLLECTIONS[collection], None)
         if col is None:
             return None
-        doc = await srv.mongo_wait(col.find_one({"id": key}, {"_id": 0}), timeout=4.0, fallback=None, tag="pi_get")
+        doc = await asyncio.wait_for(col.find_one({"id": key}, {"_id": 0}), timeout=4.0)
         if doc:
             memory_upsert(collection, key, doc)
         return doc
@@ -203,23 +234,31 @@ async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any
     stored = memory_upsert(collection, key, doc)
     _persist_pi_runtime()
     srv = _srv()
-    _raise_if_live_mongo_down(srv)
-    if getattr(srv, "_mongo_circuit_open", True):
+    db = _pi_mongo_db(srv)
+    if db is None:
         return stored
-    try:
-        col = getattr(srv.db, COLLECTIONS[collection], None)
-        if col is None:
-            return stored
-        await srv.mongo_write(col.update_one({"id": key}, {"$set": stored}, upsert=True), timeout=8.0, tag="pi_save")
-    except HTTPException:
-        raise
-    except Exception as e:
+    last_error: Optional[Exception] = None
+    for _attempt in range(2):
         try:
-            srv.log_mongo_notice("pi_save", e)
+            col = getattr(db, COLLECTIONS[collection], None)
+            if col is None:
+                return stored
+            payload = dict(stored)
+            payload.pop("_id", None)
+            await asyncio.wait_for(col.update_one({"id": key}, {"$set": payload}, upsert=True), timeout=12.0)
+            _restore_live_mongo(srv)
+            return stored
+        except Exception as e:
+            last_error = e
+            if _is_duplicate_key(e):
+                return stored
+            db = _pi_mongo_db(srv)
+    if last_error is not None:
+        try:
+            srv.log_mongo_notice("pi_save", last_error)
         except Exception:
             pass
-        if _mongo_was_configured(srv):
-            raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from e
+        raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from last_error
     return stored
 
 
@@ -227,13 +266,15 @@ async def _delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
     removed = memory_delete(collection, key)
     _persist_pi_runtime()
     srv = _srv()
-    if getattr(srv, "_mongo_circuit_open", True):
+    db = _pi_mongo_db(srv)
+    if db is None:
         return removed
     try:
-        col = getattr(srv.db, COLLECTIONS[collection], None)
+        col = getattr(db, COLLECTIONS[collection], None)
         if col is None:
             return removed
-        await srv.mongo_write(col.delete_one({"id": key}), timeout=4.0, tag="pi_delete")
+        await asyncio.wait_for(col.delete_one({"id": key}), timeout=8.0)
+        _restore_live_mongo(srv)
     except Exception as e:
         try:
             srv.log_mongo_notice("pi_delete", e)
@@ -247,23 +288,31 @@ async def _append(collection: str, doc: Dict[str, Any]) -> Dict[str, Any]:
     MEMORY[collection].insert(0, deepcopy(stored))
     _persist_pi_runtime()
     srv = _srv()
-    _raise_if_live_mongo_down(srv)
-    if getattr(srv, "_mongo_circuit_open", True):
+    db = _pi_mongo_db(srv)
+    if db is None:
         return stored
-    try:
-        col = getattr(srv.db, COLLECTIONS[collection], None)
-        if col is None:
-            return stored
-        await srv.mongo_write(col.insert_one(dict(stored)), timeout=8.0, tag="pi_append")
-    except HTTPException:
-        raise
-    except Exception as e:
+    last_error: Optional[Exception] = None
+    for _attempt in range(2):
         try:
-            srv.log_mongo_notice("pi_append", e)
+            col = getattr(db, COLLECTIONS[collection], None)
+            if col is None:
+                return stored
+            payload = dict(stored)
+            payload.pop("_id", None)
+            await asyncio.wait_for(col.insert_one(payload), timeout=12.0)
+            _restore_live_mongo(srv)
+            return stored
+        except Exception as e:
+            last_error = e
+            if _is_duplicate_key(e):
+                return stored
+            db = _pi_mongo_db(srv)
+    if last_error is not None:
+        try:
+            srv.log_mongo_notice("pi_append", last_error)
         except Exception:
             pass
-        if _mongo_was_configured(srv):
-            raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from e
+        raise HTTPException(status_code=503, detail=PI_SAVE_UNAVAILABLE) from last_error
     return stored
 
 
