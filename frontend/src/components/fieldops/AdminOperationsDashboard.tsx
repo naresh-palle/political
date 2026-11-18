@@ -107,6 +107,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const isPlatformSuperAdmin =
+    currentUser.email === "admin" ||
     currentUser.email === "admin@leaderslens.ai" ||
     currentUser.email === "support@leaderslens.ai" ||
     (currentUser.primaryRole === "SUPER_ADMIN" && !!currentUser.isPlatformAdmin && !currentUser.partyId);

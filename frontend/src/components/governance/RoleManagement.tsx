@@ -180,6 +180,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
   // Determine Current User Clearance Level
   const isSuperAdmin =
+    currentProfile.email === "admin" ||
     currentProfile.email === "admin@leaderslens.ai" ||
     currentProfile.email === "support@leaderslens.ai" ||
     (currentProfile.primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin && !currentProfile.partyId);
@@ -388,7 +389,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       const createPrimaryRole = isPoliticalAdmin ? "DIRECTOR" : userFormPrimaryRole;
       if (
         ["SM_A", "SM_M", "SM_AUDIT"].includes(String(createPrimaryRole || "").toUpperCase()) ||
-        ["sma@leaderslens.ai", "smm@leaderslens.ai", "sm.audit@leaderslens.ai"].includes(userFormEmail.trim().toLowerCase())
+        ["sma", "smm", "sma@leaderslens.ai", "smm@leaderslens.ai", "sm.audit@leaderslens.ai"].includes(userFormEmail.trim().toLowerCase())
       ) {
         return;
       }
@@ -1066,14 +1067,14 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Work Email</label>
+                      <label className="block text-xs font-semibold text-[#D8CFB8] mb-1">Username</label>
                       <input
-                        type="email"
+                        type="text"
                         required
                         value={userFormEmail}
                         readOnly={!!editingUser && !isSuperAdmin}
                         onChange={(e) => setUserFormEmail(e.target.value)}
-                        placeholder="e.g. ramesh.vol@leaderslens.ai"
+                        placeholder="e.g. ramesh"
                         className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
                           editingUser && !isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""
                         }`}

@@ -3,7 +3,7 @@ import { UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { USER_PROFILES } from "../../services/mockData";
 import { LeadersLogo } from "../common/LeadersLogo";
-import { ArrowRight, Sparkles, ShieldCheck, Mail, KeyRound, Lock, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Sparkles, User, KeyRound, Eye, EyeOff } from "lucide-react";
 
 interface AuthScreenProps {
   onAuthenticated: (profile: UserProfile) => void;
@@ -26,7 +26,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
       const staticMatch = USER_PROFILES.find((p) => p.email.toLowerCase() === cleanEmail);
       if (staticMatch) {
         if (staticMatch.demoPassword && password !== staticMatch.demoPassword) {
-          setAuthError("Invalid email or password.");
+          setAuthError("Invalid username or password.");
           return;
         }
         onAuthenticated(staticMatch);
@@ -37,16 +37,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
       const existing = users.find((p) => p.email.toLowerCase() === cleanEmail);
       if (existing) {
         if (existing.demoPassword && password !== existing.demoPassword) {
-          setAuthError("Invalid email or password.");
+          setAuthError("Invalid username or password.");
           return;
         }
         onAuthenticated(existing);
         return;
       }
 
-      setAuthError("Invalid email or password.");
+      setAuthError("Invalid username or password.");
     } catch {
-      setAuthError("Invalid email or password.");
+      setAuthError("Invalid username or password.");
     } finally {
       setIsLoading(false);
     }
@@ -103,15 +103,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Field label="Work email" icon={<Mail className="w-3.5 h-3.5" />}>
+            <Field label="Username" icon={<User className="w-3.5 h-3.5" />}>
               <input
                 data-testid="email-input"
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={darkInput}
-                autoComplete="email"
+                autoComplete="username"
+                placeholder="admin"
               />
             </Field>
 

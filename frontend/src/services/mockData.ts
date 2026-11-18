@@ -31,7 +31,7 @@ export const USER_PROFILES: UserProfile[] = [
   {
     id: "usr-admin",
     name: "Admin",
-    email: "admin@leaderslens.ai",
+    email: "admin",
     phone: "",
     demoPassword: "Admin@2026",
     primaryRole: "SUPER_ADMIN",
@@ -62,7 +62,7 @@ export const USER_PROFILES: UserProfile[] = [
   {
     id: "usr-manager",
     name: "Manager",
-    email: "manager@leaderslens.ai",
+    email: "manager",
     phone: "",
     demoPassword: "Manager@2026",
     primaryRole: "DIRECTOR",
@@ -95,7 +95,7 @@ export const USER_PROFILES: UserProfile[] = [
   {
     id: "usr-volunteer",
     name: "Volunteer",
-    email: "volunteer@leaderslens.ai",
+    email: "volunteer",
     phone: "",
     demoPassword: "Volunteer@2026",
     primaryRole: "VOLUNTEER",
@@ -130,7 +130,7 @@ export const USER_PROFILES: UserProfile[] = [
   {
     id: "usr-sma",
     name: "SM A",
-    email: "sma@leaderslens.ai",
+    email: "sma",
     phone: "",
     demoPassword: "SmA@2026",
     primaryRole: "SM_A",
@@ -163,7 +163,7 @@ export const USER_PROFILES: UserProfile[] = [
   {
     id: "usr-smm",
     name: "SM M",
-    email: "smm@leaderslens.ai",
+    email: "smm",
     phone: "",
     demoPassword: "SmM@2026",
     primaryRole: "SM_M",

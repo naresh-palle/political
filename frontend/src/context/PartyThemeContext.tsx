@@ -112,6 +112,7 @@ export const PartyThemeProvider: React.FC<PartyThemeProviderProps> = ({
     // Platform Super Admins always use Neutral dark theme
     const isPlatformOwner =
       !authenticatedUser ||
+      authenticatedUser.email === "admin" ||
       authenticatedUser.email === "admin@leaderslens.ai" ||
       authenticatedUser.primaryRole === "SUPER_ADMIN" ||
       (authenticatedUser.isPlatformAdmin && !authenticatedUser.isPoliticalAdmin);

@@ -129,7 +129,7 @@ const ROLE_TOKEN = (user: UserProfile) =>
 /** PA, Manager, and Super Admin can view / edit / delete every contact. */
 function canUserManageContacts(user: UserProfile): boolean {
   if (user.isPlatformAdmin || user.isPoliticalAdmin) return true;
-  if (user.email === "admin@leaderslens.ai") return true;
+  if (user.email === "admin" || user.email === "admin@leaderslens.ai") return true;
   const role = ROLE_TOKEN(user);
   return (
     role === "SUPER_ADMIN" ||

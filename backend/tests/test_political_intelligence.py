@@ -53,14 +53,14 @@ def test_volunteer_cannot_verify():
     director = actor_capabilities({"id": "usr-demo-director", "primaryRole": "DIRECTOR", "name": "Manager1"})
     assert director["view"] is False
     assert director["create"] is False
-    admin = actor_capabilities({"id": "adm", "email": "admin@leaderslens.ai", "isPlatformAdmin": True})
+    admin = actor_capabilities({"id": "adm", "email": "admin", "isPlatformAdmin": True})
     assert admin["verify"] is True
-    sma = actor_capabilities({"id": "usr-sma", "name": "SM A", "primaryRole": "SM_A", "email": "sma@leaderslens.ai"})
+    sma = actor_capabilities({"id": "usr-sma", "name": "SM A", "primaryRole": "SM_A", "email": "sma"})
     assert sma["view"] is True
     assert sma["create"] is True
     assert sma["verify"] is False
     assert sma["isSmA"] is True
-    smm = actor_capabilities({"id": "usr-smm", "name": "SM M", "primaryRole": "SM_M", "email": "smm@leaderslens.ai"})
+    smm = actor_capabilities({"id": "usr-smm", "name": "SM M", "primaryRole": "SM_M", "email": "smm"})
     assert smm["view"] is True
     assert smm["create"] is False
     assert smm["verify"] is True
@@ -88,9 +88,9 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
 
     reset_memory()
     director = {"id": "usr-manager", "name": "Manager", "primaryRole": "DIRECTOR", "stateId": "AP", "assemblyConstituencyId": "AP-AC-139"}
-    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma@leaderslens.ai", "primaryRole": "SM_A", "roleId": "SM_A"}
-    sm_m = {"id": "usr-smm", "name": "SM M", "email": "smm@leaderslens.ai", "primaryRole": "SM_M", "roleId": "SM_M"}
-    admin = {"id": "usr-admin", "name": "Admin", "email": "admin@leaderslens.ai", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+    sm_m = {"id": "usr-smm", "name": "SM M", "email": "smm", "primaryRole": "SM_M", "roleId": "SM_M"}
+    admin = {"id": "usr-admin", "name": "Admin", "email": "admin", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
 
     async def fake_actor(user_id):
         if user_id == director["id"]:
@@ -236,7 +236,7 @@ def test_import_rejects_invalid_rows(monkeypatch):
     from backend.services.political_intelligence import reset_memory
 
     reset_memory()
-    admin = {"id": "usr-admin", "name": "Naresh", "email": "admin@leaderslens.ai", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
+    admin = {"id": "usr-admin", "name": "Naresh", "email": "admin", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
 
     async def fake_actor(user_id):
         return admin
@@ -259,7 +259,7 @@ def test_constituency_update_preserves_history_and_links_contact(monkeypatch):
     from backend.services.political_intelligence import reset_memory, memory_list
 
     reset_memory()
-    admin = {"id": "usr-admin", "name": "Naresh", "email": "admin@leaderslens.ai", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
+    admin = {"id": "usr-admin", "name": "Naresh", "email": "admin", "isPlatformAdmin": True, "primaryRole": "SUPER_ADMIN"}
 
     async def fake_actor(user_id):
         return admin

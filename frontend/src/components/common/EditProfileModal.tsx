@@ -6,7 +6,6 @@ import {
   Camera,
   Upload,
   User,
-  Mail,
   Phone,
   Building2,
   MapPin,
@@ -74,6 +73,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [previewError, setPreviewError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canEditIdentity =
+    currentUser.email === "admin" ||
     currentUser.email === "admin@leaderslens.ai" ||
     currentUser.email === "support@leaderslens.ai" ||
     (currentUser.primaryRole === "SUPER_ADMIN" && !!currentUser.isPlatformAdmin);
@@ -282,19 +282,18 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               />
             </div>
 
-            {/* Email Address */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#B9AF95]">
-                <Mail className="w-3.5 h-3.5 text-[#D4A24C]" />
-                Official Work Email
+                <User className="w-3.5 h-3.5 text-[#D4A24C]" />
+                Username
               </label>
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 readOnly={!canEditIdentity}
                 onChange={(e) => canEditIdentity && setEmail(e.target.value)}
-                placeholder="admin@leaderslens.ai"
+                placeholder="admin"
                 className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
                   canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
                 }`}

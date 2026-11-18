@@ -1,7 +1,7 @@
 import { UserProfile } from "../types";
 
-const SMA_EMAILS = new Set(["sma@leaderslens.ai"]);
-const SMM_EMAILS = new Set(["smm@leaderslens.ai"]);
+const SMA_EMAILS = new Set(["sma", "sma@leaderslens.ai"]);
+const SMM_EMAILS = new Set(["smm", "smm@leaderslens.ai"]);
 
 function roleKey(user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role"> | null): string {
   return String(user?.primaryRole || user?.roleId || user?.role || "").toUpperCase().replace(/[\s-]+/g, "_");

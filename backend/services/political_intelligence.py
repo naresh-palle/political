@@ -238,13 +238,13 @@ def _role_key(actor: Optional[Dict[str, Any]]) -> str:
 def is_sm_a_actor(actor: Optional[Dict[str, Any]]) -> bool:
     actor = actor or {}
     email = str(actor.get("email") or "").strip().lower()
-    return _role_key(actor) in {"SM_A", "SMA"} or email == "sma@leaderslens.ai"
+    return _role_key(actor) in {"SM_A", "SMA"} or email in {"sma", "sma@leaderslens.ai"}
 
 
 def is_sm_m_actor(actor: Optional[Dict[str, Any]]) -> bool:
     actor = actor or {}
     email = str(actor.get("email") or "").strip().lower()
-    return _role_key(actor) in {"SM_M", "SMM"} or email == "smm@leaderslens.ai"
+    return _role_key(actor) in {"SM_M", "SMM"} or email in {"smm", "smm@leaderslens.ai"}
 
 
 def is_sm_audit_actor(actor: Optional[Dict[str, Any]]) -> bool:
@@ -255,7 +255,7 @@ def actor_capabilities(actor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     actor = actor or {}
     role = _role_key(actor)
     email = str(actor.get("email") or "").lower()
-    is_super = bool(actor.get("isPlatformAdmin")) or role == "SUPER_ADMIN" or email == "admin@leaderslens.ai"
+    is_super = bool(actor.get("isPlatformAdmin")) or role == "SUPER_ADMIN" or email in {"admin", "admin@leaderslens.ai"}
     is_pa = bool(actor.get("isPoliticalAdmin")) or role in {"POLITICAL_ADMIN", "ADMIN"}
     is_sma = is_sm_a_actor(actor)
     is_smm = is_sm_m_actor(actor)

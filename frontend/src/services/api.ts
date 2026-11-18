@@ -1089,7 +1089,7 @@ export const politicalApiService = {
         token: `bearer_${user.id}_local`
       };
     }
-    throw new Error("Invalid email or password. Please verify credentials.");
+    throw new Error("Invalid username or password. Please verify credentials.");
   },
 
   async getSystemUsers(): Promise<any[]> {

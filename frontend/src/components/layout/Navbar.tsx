@@ -63,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const isPiUser = isPiOperatorUser(currentProfile);
   const primaryRole = currentProfile.primaryRole || (
-    currentProfile.email === "admin@leaderslens.ai" || currentProfile.roleId === "SUPER_ADMIN" || currentProfile.role === "super_admin" || currentProfile.isPlatformAdmin
+    currentProfile.email === "admin" || currentProfile.email === "admin@leaderslens.ai" || currentProfile.roleId === "SUPER_ADMIN" || currentProfile.role === "super_admin" || currentProfile.isPlatformAdmin
       ? "SUPER_ADMIN"
       : currentProfile.roleId === "ADMIN" || currentProfile.role === "admin" || currentProfile.isPoliticalAdmin
       ? "POLITICAL_ADMIN"
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       : "DIRECTOR"
   );
 
-  const isPlatformAdmin = !isPiUser && (currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin));
+  const isPlatformAdmin = !isPiUser && (currentProfile.email === "admin" || currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin));
   const isPoliticalAdmin = !isPlatformAdmin && !isPiUser && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
   const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isPiUser && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
   const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isPiUser && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer");

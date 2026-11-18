@@ -1113,7 +1113,7 @@ async def login(credentials: LoginRequest):
                     "user": sanitize_user(u) if isinstance(u, dict) else u,
                     "token": f"bearer_{u.get('id')}"
                 }
-    raise HTTPException(status_code=401, detail="Invalid email or password.")
+    raise HTTPException(status_code=401, detail="Invalid username or password.")
 
 import hashlib
 import secrets
@@ -1323,7 +1323,7 @@ async def get_admin_user_detail(user_id: str):
     }
 
 LOCKED_SYSTEM_ROLES = {"SM_A", "SMA", "SM_M", "SMM", "SM_AUDIT", "SOCIAL_MEDIA_AUDIT"}
-LOCKED_SYSTEM_EMAILS = {"sma@leaderslens.ai", "smm@leaderslens.ai", "sm.audit@leaderslens.ai"}
+LOCKED_SYSTEM_EMAILS = {"sma", "smm", "sma@leaderslens.ai", "smm@leaderslens.ai", "sm.audit@leaderslens.ai"}
 
 
 def _reject_locked_system_role(role_id: Optional[str]) -> None:
@@ -3443,6 +3443,7 @@ app.add_middleware(
 )
 
 LIVE_CUTOVER_ID = "live_cutover_sma_smm_v1"
+PLAIN_USERNAME_CUTOVER_ID = "live_cutover_plain_usernames_v1"
 PI_OPERATIONAL_COLLECTIONS = (
     "constituency_statistics",
     "constituency_statistics_history",
@@ -3506,6 +3507,38 @@ async def apply_live_cutover():
         log_mongo_notice("live cutover", e)
 
 
+async def apply_plain_username_cutover():
+    """Replace @leaderslens.ai logins with plain usernames. Does not wipe tickets or PI."""
+    try:
+        marker = await db.system_settings.find_one({"id": PLAIN_USERNAME_CUTOVER_ID})
+        if marker:
+            return
+    except Exception as e:
+        log_mongo_notice("plain username cutover marker", e)
+    live_users = [u for u in load_json_fallback("users.json") if isinstance(u, dict) and u.get("email")]
+    if len(live_users) < 5:
+        logger.warning("Plain username cutover skipped: users.json is incomplete.")
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        await db.users.delete_many({})
+        for user in live_users:
+            doc = dict(user)
+            password = doc.get("demoPassword")
+            if password:
+                doc["passwordHash"] = hash_password(password)
+            doc["updatedAt"] = now
+            await db.users.insert_one(doc)
+        await db.system_settings.replace_one(
+            {"id": PLAIN_USERNAME_CUTOVER_ID},
+            {"id": PLAIN_USERNAME_CUTOVER_ID, "appliedAt": now, "users": [u.get("email") for u in live_users]},
+            upsert=True,
+        )
+        logger.info("Plain usernames applied: admin, manager, volunteer, sma, smm.")
+    except Exception as e:
+        log_mongo_notice("plain username cutover", e)
+
+
 @app.on_event("startup")
 async def startup_db_seed():
     if _mongo_circuit_open:
@@ -3516,6 +3549,7 @@ async def startup_db_seed():
             logger.info("MongoDB geography empty, executing auto-seed...")
             await trigger_geography_seed()
         await apply_live_cutover()
+        await apply_plain_username_cutover()
         try:
             await sync_current_districts()
         except Exception as dist_exc:

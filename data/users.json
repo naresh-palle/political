@@ -2,7 +2,7 @@
   {
     "id": "usr-admin",
     "name": "Admin",
-    "email": "admin@leaderslens.ai",
+    "email": "admin",
     "phone": "",
     "primaryRole": "SUPER_ADMIN",
     "isPlatformAdmin": true,
@@ -33,7 +33,7 @@
   {
     "id": "usr-manager",
     "name": "Manager",
-    "email": "manager@leaderslens.ai",
+    "email": "manager",
     "phone": "",
     "primaryRole": "DIRECTOR",
     "isPlatformAdmin": false,
@@ -66,7 +66,7 @@
   {
     "id": "usr-volunteer",
     "name": "Volunteer",
-    "email": "volunteer@leaderslens.ai",
+    "email": "volunteer",
     "phone": "",
     "primaryRole": "VOLUNTEER",
     "isPlatformAdmin": false,
@@ -101,7 +101,7 @@
   {
     "id": "usr-sma",
     "name": "SM A",
-    "email": "sma@leaderslens.ai",
+    "email": "sma",
     "phone": "",
     "primaryRole": "SM_A",
     "isPlatformAdmin": false,
@@ -134,7 +134,7 @@
   {
     "id": "usr-smm",
     "name": "SM M",
-    "email": "smm@leaderslens.ai",
+    "email": "smm",
     "phone": "",
     "primaryRole": "SM_M",
     "isPlatformAdmin": false,
