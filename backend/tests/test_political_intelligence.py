@@ -54,10 +54,15 @@ def test_volunteer_cannot_verify():
     assert director["view"] is False
     assert director["create"] is False
     admin = actor_capabilities({"id": "adm", "email": "admin", "isPlatformAdmin": True})
+    assert admin["view"] is True
+    assert admin["create"] is True
+    assert admin["update"] is True
+    assert admin["delete"] is True
     assert admin["verify"] is True
     sma = actor_capabilities({"id": "usr-sma", "name": "SM A", "primaryRole": "SM_A", "email": "sma"})
     assert sma["view"] is True
     assert sma["create"] is True
+    assert sma["delete"] is False
     assert sma["verify"] is False
     assert sma["isSmA"] is True
     smm = actor_capabilities({"id": "usr-smm", "name": "SM M", "primaryRole": "SM_M", "email": "smm"})
@@ -213,6 +218,17 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
     assert verified["verificationStatus"] == "VERIFIED"
     history = _run(gets["/pi/verification/{record_id}/history"](first["id"], userId=admin["id"]))
     assert history and history[0]["previousStatus"] != history[0]["newStatus"]
+
+    deletes = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "DELETE" in route.methods}
+    try:
+        _run(deletes["/pi/leaders/{person_id}"](leader["id"], userId=sm_a["id"]))
+        raise AssertionError("SM A should not delete leaders")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 403
+    removed = _run(deletes["/pi/leaders/{person_id}"](leader["id"], userId=admin["id"]))
+    assert removed["success"] is True
+    leftover = [row for row in memory_list("political_persons") if row.get("id") == leader["id"]]
+    assert leftover == []
 
 
 def _async_geo():

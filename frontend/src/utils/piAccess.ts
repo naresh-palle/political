@@ -27,11 +27,28 @@ export function isPiOperatorUser(user?: Pick<UserProfile, "email" | "primaryRole
   return isSmAUser(user) || isSmMUser(user);
 }
 
+export function isPlatformAdminUser(
+  user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "isPlatformAdmin"> | null
+): boolean {
+  if (!user) return false;
+  const email = emailKey(user);
+  const role = roleKey(user);
+  return email === "admin" || email === "admin@leaderslens.ai" || role === "SUPER_ADMIN" || !!user.isPlatformAdmin;
+}
+
 /** @deprecated use isPiOperatorUser */
 export function isSmAuditUser(user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role"> | null): boolean {
   return isPiOperatorUser(user);
 }
 
-export function canAccessPoliticalIntelligence(user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role"> | null): boolean {
-  return isPiOperatorUser(user);
+export function canAccessPoliticalIntelligence(
+  user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "isPlatformAdmin"> | null
+): boolean {
+  return isPiOperatorUser(user) || isPlatformAdminUser(user);
+}
+
+export function canManagePoliticalIntelligence(
+  user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "isPlatformAdmin"> | null
+): boolean {
+  return isPlatformAdminUser(user);
 }

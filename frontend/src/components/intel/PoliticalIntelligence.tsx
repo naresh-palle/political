@@ -4,12 +4,13 @@ import {
   Database,
   Download,
   Loader2,
-  MapPin
+  MapPin,
+  Trash2
 } from "lucide-react";
 import { UserProfile, PiDashboard, PiDistrictProgress, PiRecentCollection, StateInfo, PoliticalParty, ParliamentInfo } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
-import { isSmMUser } from "../../utils/piAccess";
+import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../utils/piAccess";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
@@ -47,6 +48,14 @@ const SMA_TABS: { id: Tab; label: string }[] = [
 
 const SMM_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Data Entry Dashboard" },
+  { id: "verify", label: "Verification Queue" },
+  { id: "import", label: "Import / Export" },
+  { id: "intelligence", label: "Intelligence" }
+];
+
+const ADMIN_TABS: { id: Tab; label: string }[] = [
+  { id: "dashboard", label: "Data Entry Dashboard" },
+  { id: "constituencies", label: "Constituencies" },
   { id: "verify", label: "Verification Queue" },
   { id: "import", label: "Import / Export" },
   { id: "intelligence", label: "Intelligence" }
@@ -176,9 +185,13 @@ function statusTone(status?: string) {
 
 export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ currentUser }) => {
   const userId = currentUser.id;
+  const isSmA = isSmAUser(currentUser);
   const isSmM = isSmMUser(currentUser);
-  const canVerify = isSmM;
-  const visibleTabs = isSmM ? SMM_TABS : SMA_TABS;
+  const isAdminEditor = canManagePoliticalIntelligence(currentUser);
+  const canVerify = isSmM || isAdminEditor;
+  const canEdit = isSmA || isAdminEditor;
+  const canDelete = isAdminEditor;
+  const visibleTabs = isAdminEditor ? ADMIN_TABS : isSmM ? SMM_TABS : SMA_TABS;
 
   const [tab, setTab] = useState<Tab>("dashboard");
   const [entryGroup, setEntryGroup] = useState<EntryGroup>("constituency");
@@ -362,7 +375,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
 
   useEffect(() => {
     if (!visibleTabs.some((item) => item.id === tab)) setTab("dashboard");
-  }, [isSmM, tab]);
+  }, [isSmM, isAdminEditor, tab]);
 
   useEffect(() => {
     if (tab === "constituencies") {
@@ -487,6 +500,33 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     }
   };
 
+  const deleteConstituency = async (row: any) => {
+    if (!canDelete || !row?.id) return;
+    if (!window.confirm(`Delete constituency ${row.assemblyName || row.assemblyConstituencyId}?`)) return;
+    try {
+      await politicalApiService.deletePiConstituency(userId, row.id);
+      flash("Constituency deleted.");
+      await loadConstituencies();
+      await refreshDashboard();
+    } catch (err: any) {
+      flash(err.message, true);
+    }
+  };
+
+  const deleteLeaderRecord = async (row: any) => {
+    if (!canDelete || !row?.id) return;
+    if (!window.confirm(`Delete ${leaderKindLabel(row.leaderKind)} ${row.name || ""}?`)) return;
+    try {
+      await politicalApiService.deletePiLeader(userId, row.id);
+      flash("Leader deleted.");
+      const [leaderRows, accountRows] = await Promise.all([loadLeaders(), loadAccounts()]);
+      hydrateLeaderSlots(leaderRows, accountRows);
+      await refreshDashboard();
+    } catch (err: any) {
+      flash(err.message, true);
+    }
+  };
+
   const verify = async (recordType: string, id: string, status: string) => {
     const remarks = window.prompt("Review remarks") || "";
     try {
@@ -561,7 +601,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
         </div>
       </header>
 
-      <div className={`grid gap-1.5 ${visibleTabs.length === 2 ? "grid-cols-2" : "grid-cols-4"}`}>
+      <div className={`grid gap-1.5 ${visibleTabs.length <= 2 ? "grid-cols-2" : visibleTabs.length === 4 ? "grid-cols-4" : "grid-cols-5"}`}>
         {visibleTabs.map((item) => (
           <button
             type="button"
@@ -733,7 +773,7 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                 <Field label="Est. YouTube users" type="number" value={constForm.estimatedYouTubeUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedYouTubeUsers: v })} />
               </div>
               <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
-              <button type="submit" className={BTN} disabled={!!saving || !acId}>{saving === "constituency" ? "Saving…" : "Save constituency"}</button>
+              <button type="submit" className={BTN} disabled={!!saving || !acId || !canEdit}>{saving === "constituency" ? "Saving…" : constForm.id ? "Save changes" : "Save constituency"}</button>
               {ok && !error && ok.startsWith("Saved") && (
                 <p className="text-[11px] text-emerald-300">{ok}</p>
               )}
@@ -745,27 +785,39 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                   {constRows.map((row) => {
                     const leaderCount = row.leaderCount ?? leaders.filter((l) => l.assemblyConstituencyId === row.assemblyConstituencyId).length;
                     return (
-                      <button
-                        type="button"
-                        key={row.id}
-                        className="w-full text-left p-2.5 rounded-lg border border-[#22405E] hover:bg-[#131E2D]"
-                        onClick={() => {
-                          if (row.districtId) setDistrictId(row.districtId);
-                          if (row.parliamentConstituencyId) setPcId(row.parliamentConstituencyId);
-                          if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
-                          setConstForm({
-                            ...row,
-                            enteredByName: row.enteredByName || constForm.enteredByName,
-                            dataCollectionDate: (row.dataCollectionDate || "").slice(0, 10)
-                          });
-                        }}
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <span className="font-bold text-[#F5EFE0] break-words">{row.assemblyName || row.assemblyConstituencyId}{row.districtName ? ` · ${row.districtName}` : selectedDistrictName ? ` · ${selectedDistrictName}` : ""}</span>
-                          <span className="text-[11px] text-[#B9AF95]">{leaderCount} leaders · {row.enteredByName || "—"}</span>
-                        </div>
-                        <p className="text-[11px] text-[#B9AF95] mt-1">Voters {row.totalVoters ?? "—"} · {(row.dataCollectionDate || "").slice(0, 10) || "—"} · {row.verificationStatus}</p>
-                      </button>
+                      <div key={row.id} className="w-full text-left p-2.5 rounded-lg border border-[#22405E]">
+                        <button
+                          type="button"
+                          className="w-full text-left hover:bg-[#131E2D] rounded-lg"
+                          onClick={() => {
+                            if (row.districtId) setDistrictId(row.districtId);
+                            if (row.parliamentConstituencyId) setPcId(row.parliamentConstituencyId);
+                            if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
+                            setConstForm({
+                              ...row,
+                              enteredByName: row.enteredByName || constForm.enteredByName,
+                              dataCollectionDate: (row.dataCollectionDate || "").slice(0, 10)
+                            });
+                          }}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <span className="font-bold text-[#F5EFE0] break-words">{row.assemblyName || row.assemblyConstituencyId}{row.districtName ? ` · ${row.districtName}` : selectedDistrictName ? ` · ${selectedDistrictName}` : ""}</span>
+                            <span className="text-[11px] text-[#B9AF95]">{leaderCount} leaders · {row.enteredByName || "—"}</span>
+                          </div>
+                          <p className="text-[11px] text-[#B9AF95] mt-1">Voters {row.totalVoters ?? "—"} · {(row.dataCollectionDate || "").slice(0, 10) || "—"} · {row.verificationStatus}</p>
+                          {canEdit ? <p className="text-[11px] text-[#D4A24C] mt-1 font-semibold uppercase tracking-wider">Edit / modify</p> : null}
+                        </button>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-200 text-[11px] font-bold uppercase tracking-wider"
+                            onClick={() => deleteConstituency(row)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                   <button type="button" className="px-4 py-2 rounded-xl border border-[#22405E] text-[#F5EFE0] text-xs font-bold uppercase tracking-wider" onClick={downloadSavedExcel}>
@@ -869,9 +921,21 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                     <select className={INPUT} value={slot.politicalRole} onChange={(e) => patchLeaderSlot(index, { politicalRole: e.target.value })}>
                       {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
                     </select>
-                    <button type="submit" className={BTN} disabled={!!saving || !acId}>
-                      {saving === "leader" && savingSlot === index ? "Saving…" : `Save ${LEADER_SLOTS[index].label}`}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="submit" className={BTN} disabled={!!saving || !acId || !canEdit}>
+                        {saving === "leader" && savingSlot === index ? "Saving…" : slot.id ? `Save changes · ${LEADER_SLOTS[index].label}` : `Save ${LEADER_SLOTS[index].label}`}
+                      </button>
+                      {canDelete && slot.id && (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs font-bold uppercase tracking-wider"
+                          onClick={() => deleteLeaderRecord({ id: slot.id, name: slot.name, leaderKind: slot.leaderKind })}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </form>
                 );
               })}
@@ -892,6 +956,16 @@ social,AP,AP-DIST-NANDYAL,AP-PC-17,AP-AC-139,,,,,,,2026-11-01,MANUAL,Sample,A. R
                           </div>
                           <p className="text-[11px] text-[#B9AF95]">{leaderKindLabel(row.leaderKind)}{(row.roles || []).length ? ` · ${(row.roles || []).map((r: any) => r.politicalRole).join(" · ")}` : ""}</p>
                           <p className="text-[11px] text-[#B9AF95]">Contact {row.contactId || "—"} · {row.verificationStatus}</p>
+                          {canDelete && (
+                            <button
+                              type="button"
+                              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-200 text-[11px] font-bold uppercase tracking-wider"
+                              onClick={() => deleteLeaderRecord(row)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
+                            </button>
+                          )}
                         </div>
                       );
                     })}

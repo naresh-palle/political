@@ -6,7 +6,7 @@ import { NotificationCenter } from "../fieldops/NotificationCenter";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { politicalApiService } from "../../services/api";
 import { setTicketIdInHash } from "../../utils/ticketHash";
-import { isPiOperatorUser, isSmAUser, isSmMUser } from "../../utils/piAccess";
+import { canAccessPoliticalIntelligence, isPiOperatorUser, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import {
   Sparkles,
   Shield,
@@ -194,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Products - Top Menu Bar */}
           <nav data-testid="global-nav" className={`hidden lg:flex items-center gap-1.5 max-w-full min-w-0 ${isPiUser ? "flex-1 flex-nowrap justify-start" : "flex-wrap justify-center"}`}>
-            {isPiUser && (
+            {canAccessPoliticalIntelligence(currentProfile) && (
             <button
               onClick={() => {
                 window.location.hash = "#/intel";
@@ -465,7 +465,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Horizontal Navigation Tabs */}
         <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto py-2 border-t border-[#22405E] no-scrollbar text-xs -mx-4 px-4 sm:-mx-6 sm:px-6">
-          {isPiUser && (
+          {canAccessPoliticalIntelligence(currentProfile) && (
           <button
             onClick={() => {
               window.location.hash = "#/intel";

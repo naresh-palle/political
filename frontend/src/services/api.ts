@@ -2214,6 +2214,9 @@ export const politicalApiService = {
   savePiConstituency(userId: string, payload: any) {
     return this.piRequest("/pi/constituencies", userId, { method: "POST", body: JSON.stringify(payload) });
   },
+  deletePiConstituency(userId: string, recordId: string) {
+    return this.piRequest(`/pi/constituencies/${encodeURIComponent(recordId)}`, userId, { method: "DELETE" });
+  },
   getPiLeaders(userId: string, params: Record<string, string | number | undefined> = {}) {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
@@ -2223,6 +2226,9 @@ export const politicalApiService = {
   },
   savePiLeader(userId: string, payload: any) {
     return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) });
+  },
+  deletePiLeader(userId: string, personId: string) {
+    return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" });
   },
   getPiAccounts(userId: string, params: Record<string, string | number | undefined> = {}) {
     const q = new URLSearchParams();

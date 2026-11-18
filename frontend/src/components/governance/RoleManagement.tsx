@@ -3,7 +3,6 @@ import { UserProfile, UserRole, PrimaryRole, PoliticalParty, ElectedRepresentati
 import { USER_PROFILES, MOCK_POLITICAL_PARTIES, MOCK_ELECTED_REPRESENTATIVES } from "../../services/mockData";
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
-import { isPiOperatorUser } from "../../utils/piAccess";
 import {
   ShieldCheck,
   UserCheck,
@@ -363,6 +362,20 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         primaryRole: nextPrimaryRole,
         isPlatformAdmin: nextPrimaryRole === "SUPER_ADMIN",
         isPoliticalAdmin: nextPrimaryRole === "POLITICAL_ADMIN",
+        roleId:
+          nextPrimaryRole === "SUPER_ADMIN"
+            ? "SUPER_ADMIN"
+            : nextPrimaryRole === "POLITICAL_ADMIN"
+            ? "ADMIN"
+            : nextPrimaryRole === "DIRECTOR"
+            ? "CAMPAIGN_MANAGER"
+            : nextPrimaryRole === "SM_A"
+            ? "SM_A"
+            : nextPrimaryRole === "SM_M"
+            ? "SM_M"
+            : nextPrimaryRole === "VOLUNTEER"
+            ? "VOLUNTEER"
+            : editingUser.roleId,
         role: nextRole,
         roleTitle: isSuperAdmin ? userFormRoleTitle : editingUser.roleTitle,
         department: userFormDepartment,
@@ -401,6 +414,10 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           ? "ADMIN"
           : createPrimaryRole === "DIRECTOR"
           ? "CAMPAIGN_MANAGER"
+          : createPrimaryRole === "SM_A"
+          ? "SM_A"
+          : createPrimaryRole === "SM_M"
+          ? "SM_M"
           : "VOLUNTEER";
       // Create new user
       const newUser: UserProfile = {
@@ -464,7 +481,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
   // - Political Admin: sees ONLY Directors belonging to his/her party & constituency
   // - Director: sees ONLY Volunteers belonging to his/her squad & mandals
   const scopedProfiles = useMemo(() => {
-    const visible = profiles.filter((p) => !isPiOperatorUser(p));
+    const visible = profiles;
     if (isSuperAdmin) {
       return visible;
     }
@@ -764,6 +781,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                   <option value="POLITICAL_ADMIN">Level 2: Political Admin (MLA)</option>
                   <option value="DIRECTOR">Level 3: Director</option>
                   <option value="VOLUNTEER">Level 4: Field Volunteer</option>
+                  <option value="SM_A">Political Intelligence: SM A</option>
+                  <option value="SM_M">Political Intelligence: SM M</option>
                 </select>
               )}
 
@@ -834,7 +853,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                       user.primaryRole === "POLITICAL_ADMIN" ||
                       user.isPoliticalAdmin;
                     const isUserDirector = user.primaryRole === "DIRECTOR";
-                    const isUserVolunteer = user.primaryRole === "VOLUNTEER";
+                    const isUserSmA = user.primaryRole === "SM_A" || user.roleId === "SM_A";
+                    const isUserSmM = user.primaryRole === "SM_M" || user.roleId === "SM_M";
 
                     const canEdit = canEditUser(user);
                     const canDelete = canDeleteUser(user);
@@ -882,6 +902,10 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                               </span>
                             ) : isUserDirector ? (
                               <span className={GOLD_PILL}>Level 3: Director</span>
+                            ) : isUserSmA ? (
+                              <span className={GOLD_PILL}>Political Intelligence: SM A</span>
+                            ) : isUserSmM ? (
+                              <span className={GOLD_PILL}>Political Intelligence: SM M</span>
                             ) : (
                               <span className={GOLD_PILL}>Level 4: Volunteer</span>
                             )}
@@ -927,41 +951,44 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                           </div>
                         </td>
 
-                        <td className="py-2.5 px-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* Edit Button */}
-                            {canEdit && (
+                        <td className="py-2.5 px-3 text-right align-middle">
+                          <div className="grid grid-cols-[7.25rem_2rem_2rem] items-center justify-items-center gap-1.5 w-[11.75rem] ml-auto">
+                            {canEdit ? (
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditUser(user)}
-                                className="px-2.5 py-1 text-xs font-semibold text-[#F5EFE0] bg-[#071322] hover:bg-[#142B45] border border-[#22405E] hover:border-[#D4A24C] rounded-lg transition-colors cursor-pointer"
+                                className="h-8 w-full px-2.5 text-xs font-semibold whitespace-nowrap text-[#F5EFE0] bg-[#071322] hover:bg-[#142B45] border border-[#22405E] hover:border-[#D4A24C] rounded-lg transition-colors cursor-pointer"
                               >
                                 Edit Role
                               </button>
+                            ) : (
+                              <span className="h-8 w-full" aria-hidden />
                             )}
 
-                            {/* Audit Log Inspection Button */}
-                            {(isSuperAdmin || isPoliticalAdmin) && (
+                            {isSuperAdmin || isPoliticalAdmin ? (
                               <button
                                 type="button"
                                 onClick={() => setSelectedUserAudit(user)}
-                                className="p-1.5 text-[#8E9CAE] hover:text-[#D4A24C] hover:bg-[#071322] border border-transparent hover:border-[#22405E] rounded-lg transition-colors cursor-pointer"
+                                className="h-8 w-8 inline-flex items-center justify-center text-[#8E9CAE] hover:text-[#D4A24C] hover:bg-[#071322] border border-transparent hover:border-[#22405E] rounded-lg transition-colors cursor-pointer"
                                 title="View User Activity & Audit Trail"
                               >
                                 <History className="w-4 h-4" />
                               </button>
+                            ) : (
+                              <span className="h-8 w-8" aria-hidden />
                             )}
 
-                            {/* Delete Button (Protected: Super Admin cannot be deleted) */}
-                            {canDelete && (
+                            {canDelete ? (
                               <button
                                 type="button"
                                 onClick={() => setDeletingUser(user)}
-                                className="p-1.5 text-rose-400 hover:text-rose-200 hover:bg-rose-950/50 border border-transparent hover:border-rose-500/30 rounded-lg transition-colors cursor-pointer"
+                                className="h-8 w-8 inline-flex items-center justify-center text-rose-400 hover:text-rose-200 hover:bg-rose-950/50 border border-transparent hover:border-rose-500/30 rounded-lg transition-colors cursor-pointer"
                                 title="Delete User"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
+                            ) : (
+                              <span className="h-8 w-8" aria-hidden />
                             )}
                           </div>
                         </td>
@@ -1024,6 +1051,18 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                           setUserFormClearance("LEVEL 3 — STRATEGY & DIRECTORS");
                           setUserFormDepartment("Ground Field Operations");
                           setUserFormPartyId("TDP");
+                        } else if (pr === "SM_A") {
+                          setUserFormRole("sm_a");
+                          setUserFormRoleTitle("SM A");
+                          setUserFormClearance("SM A");
+                          setUserFormDepartment("Political Intelligence");
+                          setUserFormPartyId(null);
+                        } else if (pr === "SM_M") {
+                          setUserFormRole("sm_m");
+                          setUserFormRoleTitle("SM M");
+                          setUserFormClearance("SM M");
+                          setUserFormDepartment("Political Intelligence");
+                          setUserFormPartyId(null);
                         } else {
                           setUserFormRole("volunteer");
                           setUserFormRoleTitle("Booth & Village Field Volunteer");
@@ -1043,6 +1082,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                           <option value="POLITICAL_ADMIN">Level 2: Political Admin (MLA / PA)</option>
                           <option value="DIRECTOR">Level 3: Director (Volunteer Manager)</option>
                           <option value="VOLUNTEER">Level 4: Field Volunteer</option>
+                          <option value="SM_A">Political Intelligence: SM A</option>
+                          <option value="SM_M">Political Intelligence: SM M</option>
                         </>
                       )}
                       {isPoliticalAdmin && (

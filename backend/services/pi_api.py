@@ -23,6 +23,7 @@ from .political_intelligence import (
     csv_template,
     in_scope,
     load_sample_into_memory,
+    memory_delete,
     memory_get,
     memory_list,
     memory_upsert,
@@ -113,6 +114,24 @@ async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any
         except Exception:
             pass
     return stored
+
+
+async def _delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
+    removed = memory_delete(collection, key)
+    srv = _srv()
+    if getattr(srv, "_mongo_circuit_open", True):
+        return removed
+    try:
+        col = getattr(srv.db, COLLECTIONS[collection], None)
+        if col is None:
+            return removed
+        await srv.mongo_write(col.delete_one({"id": key}), timeout=4.0, tag="pi_delete")
+    except Exception as e:
+        try:
+            srv.log_mongo_notice("pi_delete", e)
+        except Exception:
+            pass
+    return removed
 
 
 async def _append(collection: str, doc: Dict[str, Any]) -> Dict[str, Any]:
@@ -557,6 +576,18 @@ def register_pi_routes(api_router) -> None:
         await _audit(actor, "PI_CONSTITUENCY_UPSERT", ac_id, {"id": doc["id"]})
         return saved
 
+    @api_router.delete("/pi/constituencies/{record_id}")
+    async def delete_constituency(record_id: str, userId: Optional[str] = None):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "delete")
+        existing = await _get("constituency_statistics", record_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Constituency record not found")
+        await _delete("constituency_statistics", record_id)
+        await _audit(actor, "PI_CONSTITUENCY_DELETE", record_id, {"assemblyConstituencyId": existing.get("assemblyConstituencyId")})
+        return {"success": True, "id": record_id}
+
     @api_router.get("/pi/leaders")
     async def list_leaders(
         userId: Optional[str] = None,
@@ -663,6 +694,27 @@ def register_pi_routes(api_router) -> None:
         saved["roles"] = [r for r in await _list("political_person_roles") if r.get("personId") == person_id]
         await _audit(actor, "PI_LEADER_UPSERT", person_id, {"name": name, "partyId": party_id})
         return saved
+
+    @api_router.delete("/pi/leaders/{person_id}")
+    async def delete_leader(person_id: str, userId: Optional[str] = None):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "delete")
+        existing = await _get("political_persons", person_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Leader not found")
+        for role in await _list("political_person_roles"):
+            if role.get("personId") == person_id and role.get("id"):
+                await _delete("political_person_roles", role["id"])
+        for account in await _list("social_media_accounts"):
+            if account.get("personId") == person_id and account.get("id"):
+                for snap in await _list("social_media_snapshots"):
+                    if snap.get("accountId") == account["id"] and snap.get("id"):
+                        await _delete("social_media_snapshots", snap["id"])
+                await _delete("social_media_accounts", account["id"])
+        await _delete("political_persons", person_id)
+        await _audit(actor, "PI_LEADER_DELETE", person_id, {"name": existing.get("name")})
+        return {"success": True, "id": person_id}
 
     async def _upsert_linked_contact(person: Dict[str, Any], caps: Dict[str, Any]) -> Dict[str, Any]:
         existing = None

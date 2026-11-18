@@ -265,6 +265,7 @@ def actor_capabilities(actor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         "create": is_sma or is_super,
         "update": is_sma or is_super,
         "submit": is_sma or is_super,
+        "delete": is_super,
         "verify": is_smm or is_super,
         "import": is_smm or is_super,
         "export": is_smm or is_super,
@@ -289,6 +290,22 @@ def in_scope(caps: Dict[str, Any], state_id: Optional[str] = None, assembly_id: 
     if caps.get("scopeStateId") and state_id and str(state_id).upper() != str(caps["scopeStateId"]).upper():
         return False
     return True
+
+
+def memory_delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
+    bucket = MEMORY[collection]
+    if isinstance(bucket, dict):
+        removed = bucket.pop(key, None)
+        return deepcopy(removed) if removed else None
+    kept = []
+    removed = None
+    for item in bucket:
+        if item.get("id") == key or item.get("key") == key:
+            removed = item
+            continue
+        kept.append(item)
+    MEMORY[collection] = kept
+    return deepcopy(removed) if removed else None
 
 
 def memory_upsert(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any]:
