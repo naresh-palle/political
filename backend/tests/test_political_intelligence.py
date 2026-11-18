@@ -584,6 +584,7 @@ def test_pi_list_keeps_memory_when_mongo_times_out(monkeypatch):
             return fallback
 
     monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
+    pi_api._PI_MONGO_PING.update(ok=None, at=0.0, error=None)
     rows = _run(pi_api._list("political_persons"))
     assert any(row.get("id") == "pp-keep" for row in rows)
 
@@ -629,6 +630,7 @@ def test_pi_save_uses_live_client_when_circuit_open(monkeypatch):
             return None
 
     monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
+    pi_api._PI_MONGO_PING.update(ok=None, at=0.0, error=None)
     saved = _run(pi_api._save("political_persons", "pp-1", {"id": "pp-1", "name": "Live Save"}))
     assert saved["id"] == "pp-1"
     assert writes, "expected a Mongo upsert through the live client"
@@ -666,6 +668,7 @@ def test_pi_append_does_not_block_leader_save(monkeypatch):
             return None
 
     monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
+    pi_api._PI_MONGO_PING.update(ok=None, at=0.0, error=None)
     history = _run(pi_api._append("constituency_contact_history", {"id": "ch-1", "action": "CREATED_FROM_PI"}))
     assert history["id"] == "ch-1"
     contact = _run(pi_api._save("constituency_contacts", "cnt-1", {"id": "cnt-1", "name": "Leader"}))
@@ -708,3 +711,55 @@ def test_pi_save_error_explains_atlas_bad_auth():
     assert "Database Access" in detail
     assert "password" in detail.lower()
     assert "MONGO_URL" in detail
+
+
+def test_pi_save_error_explains_atlas_write_timeout():
+    from backend.services.pi_api import _save_error_detail
+
+    detail = _save_error_detail(TimeoutError())
+    assert "did not finish the write" in detail
+    assert "Database Access" in detail
+
+
+def test_pi_save_fails_fast_when_mongo_ping_fails(monkeypatch):
+    from fastapi import HTTPException
+
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory
+
+    reset_memory()
+    writes = []
+
+    class FakeCol:
+        async def update_one(self, *args, **kwargs):
+            writes.append(args)
+            return None
+
+    class FakeLiveDb:
+        def __getitem__(self, name):
+            return self
+
+        def __getattr__(self, name):
+            return FakeCol()
+
+        async def command(self, *args, **kwargs):
+            raise TimeoutError()
+
+    class FakeSrv:
+        _mongo_circuit_open = False
+        _live_mongo_client = FakeLiveDb()
+        db_name = "political_intelligence"
+        db = FakeLiveDb()
+
+        def log_mongo_notice(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr(pi_api, "_srv", lambda: FakeSrv())
+    pi_api._PI_MONGO_PING.update(ok=None, at=0.0, error=None)
+    try:
+        _run(pi_api._save("political_persons", "pp-ping", {"id": "pp-ping", "name": "Ping Fail"}))
+        assert False, "critical save should 503 when ping fails"
+    except HTTPException as exc:
+        assert exc.status_code == 503
+        assert "did not finish the write" in str(exc.detail)
+    assert not writes

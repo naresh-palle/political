@@ -7,6 +7,7 @@ import io
 import json
 import sys
 import threading
+import time
 from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
@@ -95,6 +96,35 @@ def _restore_live_mongo(srv: Any) -> None:
         pass
 
 
+_PI_MONGO_PING: Dict[str, Any] = {"ok": None, "at": 0.0, "error": None}
+_PI_MONGO_PING_FAIL_TTL = 15.0
+_PI_MONGO_PING_OK_TTL = 5.0
+
+
+async def _mongo_is_ready(srv: Any) -> Tuple[bool, Optional[Exception]]:
+    db = _pi_mongo_db(srv)
+    if db is None:
+        return True, None
+    now = time.time()
+    cached_ok = _PI_MONGO_PING.get("ok")
+    cached_at = float(_PI_MONGO_PING.get("at") or 0)
+    if cached_ok is False and now - cached_at < _PI_MONGO_PING_FAIL_TTL:
+        return False, _PI_MONGO_PING.get("error") or Exception("Mongo ping failed")
+    if cached_ok is True and now - cached_at < _PI_MONGO_PING_OK_TTL:
+        return True, None
+    ping = getattr(db, "command", None)
+    if not callable(ping):
+        _PI_MONGO_PING.update(ok=True, at=now, error=None)
+        return True, None
+    try:
+        await asyncio.wait_for(ping("ping"), timeout=3.0)
+        _PI_MONGO_PING.update(ok=True, at=now, error=None)
+        return True, None
+    except Exception as exc:
+        _PI_MONGO_PING.update(ok=False, at=now, error=exc)
+        return False, exc
+
+
 def _is_duplicate_key(exc: Exception) -> bool:
     name = type(exc).__name__
     text = str(exc)
@@ -148,6 +178,12 @@ def _save_error_detail(exc: Exception) -> str:
             "Could not save. MongoDB Atlas accepted the connection but rejected the database username or password. "
             "In Atlas open Database Access, reset that user's password, update MONGO_URL on the Render backend service "
             "(URL-encode any special characters in the password), wait for the deploy, then tap Save again."
+        )
+    if type(exc).__name__ == "TimeoutError" or "timed out" in lowered or "timeout" in lowered:
+        return (
+            "Could not save. MongoDB Atlas did not finish the write in time. "
+            "In Atlas confirm Database Access matches Render MONGO_URL and Network Access still allows 0.0.0.0/0, "
+            "wait for Render to finish deploying, then tap Save again."
         )
     if len(msg) > 180:
         msg = msg[:177] + "..."
@@ -229,6 +265,9 @@ async def _list(collection: str) -> List[Dict[str, Any]]:
     mem = memory_list(collection)
     disk = _runtime_list(collection)
     merged = _merge_docs(disk, mem)
+    ready, _err = await _mongo_is_ready(srv)
+    if not ready:
+        return merged or mem
     db = _pi_mongo_db(srv)
     if db is None:
         return merged or mem
@@ -236,7 +275,7 @@ async def _list(collection: str) -> List[Dict[str, Any]]:
         col = getattr(db, COLLECTIONS[collection], None)
         if col is None:
             return merged or mem
-        docs = await asyncio.wait_for(col.find({}, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT), timeout=8.0)
+        docs = await asyncio.wait_for(col.find({}, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT), timeout=4.0)
         if not docs:
             return merged or mem
         return _merge_docs(list(docs), disk, mem)
@@ -272,25 +311,28 @@ async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any
     stored = memory_upsert(collection, key, doc)
     _persist_pi_runtime()
     srv = _srv()
+    ready, ping_error = await _mongo_is_ready(srv)
+    if not ready:
+        if collection in PI_CRITICAL_COLLECTIONS:
+            raise HTTPException(status_code=503, detail=_save_error_detail(ping_error or Exception("Mongo ping failed")))
+        return stored
     db = _pi_mongo_db(srv)
     if db is None:
         return stored
     last_error: Optional[Exception] = None
-    for _attempt in range(2):
-        try:
-            col = getattr(db, COLLECTIONS[collection], None)
-            if col is None:
-                return stored
-            payload = dict(stored)
-            payload.pop("_id", None)
-            await asyncio.wait_for(col.update_one({"id": key}, {"$set": payload}, upsert=True), timeout=12.0)
-            _restore_live_mongo(srv)
+    try:
+        col = getattr(db, COLLECTIONS[collection], None)
+        if col is None:
             return stored
-        except Exception as e:
-            last_error = e
-            if _is_duplicate_key(e):
-                return stored
-            db = _pi_mongo_db(srv)
+        payload = dict(stored)
+        payload.pop("_id", None)
+        await asyncio.wait_for(col.update_one({"id": key}, {"$set": payload}, upsert=True), timeout=8.0)
+        _restore_live_mongo(srv)
+        return stored
+    except Exception as e:
+        last_error = e
+        if _is_duplicate_key(e):
+            return stored
     if last_error is not None:
         try:
             srv.log_mongo_notice("pi_save", last_error)
