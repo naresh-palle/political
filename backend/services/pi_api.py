@@ -1341,6 +1341,19 @@ def register_pi_routes(api_router) -> None:
         caps = actor_capabilities(actor)
         _require(caps, "view")
         persons = {p.get("id"): p for p in await _list("political_persons")}
+        catalog, catalog_maps = await _resolved_districts()
+        mongo_maps = await _list("assembly_district_map")
+        maps = catalog_maps or mongo_maps
+        ac_to_district = {
+            str(m.get("assemblyConstituencyId")): str(m.get("districtId"))
+            for m in maps
+            if m.get("assemblyConstituencyId") and m.get("districtId")
+        }
+        district_names = {d.get("id"): d.get("name") for d in catalog if d.get("id")}
+        geo = await _geo_lookups()
+        assembly_names = {a.get("id"): a.get("name") for a in (geo.get("assembly_rows") or []) if a.get("id")}
+        if not assembly_names:
+            assembly_names = {a.get("id"): a.get("name") for a in (geo.get("assemblies") or {}).values() if a.get("id")}
         rows = []
         wanted = (status or "PENDING").upper()
         for acc in await _list("social_media_accounts"):
@@ -1349,11 +1362,16 @@ def register_pi_routes(api_router) -> None:
             person = persons.get(acc.get("personId")) or {}
             if not in_scope(caps, person.get("stateId"), person.get("assemblyConstituencyId")):
                 continue
+            ac_id = str(person.get("assemblyConstituencyId") or acc.get("assemblyConstituencyId") or "")
+            district_id = str(person.get("districtId") or acc.get("districtId") or ac_to_district.get(ac_id) or "")
             rows.append({
                 **acc,
                 "leaderName": person.get("name"),
                 "partyId": person.get("partyId"),
-                "assemblyConstituencyId": person.get("assemblyConstituencyId"),
+                "districtId": district_id,
+                "districtName": district_names.get(district_id) or district_id or "—",
+                "assemblyConstituencyId": ac_id,
+                "assemblyName": assembly_names.get(ac_id) or ac_id or "—",
                 "accountUsername": profile_username(acc.get("profileUrl") or "", acc.get("platform") or "", acc.get("accountIdentifier") or ""),
             })
         return rows

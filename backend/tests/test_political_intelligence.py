@@ -469,6 +469,9 @@ def test_verified_and_rejected_queue_is_final(monkeypatch):
 
     pending = _run(gets["/pi/verification-queue"](userId=sm_m["id"], status="PENDING"))
     assert {row["id"] for row in pending} >= {keep["id"], drop["id"]}
+    geo_rows = [row for row in pending if row["id"] in {keep["id"], drop["id"]}]
+    assert geo_rows
+    assert all(row.get("districtName") and row.get("assemblyName") and row.get("platform") for row in geo_rows)
 
     verified = _run(posts["/pi/verification/{record_type}/{record_id}"]("social", keep["id"], {"status": "VERIFIED"}, userId=sm_m["id"]))
     assert verified["verificationStatus"] == "VERIFIED"

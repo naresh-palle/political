@@ -137,6 +137,52 @@ const RANK_BY_OPTIONS = [
   { id: "socialScore", label: "Social score" }
 ] as const;
 const COLLECTION_PAGE_SIZES = [10, 25, 50, 100] as const;
+const RECORD_TYPE_LABEL: Record<string, string> = {
+  constituency: "Constituency",
+  leader: "Leader",
+  social: "Social"
+};
+
+function uniqueSorted(values: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>();
+  for (const raw of values) {
+    const value = String(raw || "").trim();
+    if (value) seen.add(value);
+  }
+  return Array.from(seen).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+
+type CollectionFilters = {
+  type: string;
+  district: string;
+  assembly: string;
+  summary: string;
+  enteredBy: string;
+  status: string;
+};
+
+function collectionRowMatches(row: PiRecentCollection, filters: CollectionFilters, skip?: keyof CollectionFilters) {
+  if (skip !== "type" && filters.type && String(row.recordType || "") !== filters.type) return false;
+  if (skip !== "district" && filters.district && String(row.districtName || "") !== filters.district) return false;
+  if (skip !== "assembly" && filters.assembly && String(row.assemblyName || "") !== filters.assembly) return false;
+  if (skip !== "summary" && filters.summary && String(row.summary || "") !== filters.summary) return false;
+  if (skip !== "enteredBy" && filters.enteredBy && String(row.enteredByName || "") !== filters.enteredBy) return false;
+  if (skip !== "status" && filters.status && String(row.verificationStatus || "") !== filters.status) return false;
+  return true;
+}
+
+type QueueFilters = {
+  district: string;
+  assembly: string;
+  platform: string;
+};
+
+function queueRowMatches(row: any, filters: QueueFilters, skip?: keyof QueueFilters) {
+  if (skip !== "district" && filters.district && String(row.districtName || "") !== filters.district) return false;
+  if (skip !== "assembly" && filters.assembly && String(row.assemblyName || "") !== filters.assembly) return false;
+  if (skip !== "platform" && filters.platform && String(row.platform || "").toLowerCase() !== filters.platform) return false;
+  return true;
+}
 
 function rankMetricKey(rankBy: string) {
   if (rankBy === "engagement") return "engagementPercent";
@@ -426,9 +472,20 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const [accounts, setAccounts] = useState<any[]>(initialCache?.accounts || []);
   const [queue, setQueue] = useState<any[]>([]);
   const [queueStatus, setQueueStatus] = useState("PENDING");
+  const [queueDistrict, setQueueDistrict] = useState("");
+  const [queueAssembly, setQueueAssembly] = useState("");
+  const [queuePlatform, setQueuePlatform] = useState("");
+  const [queuePageSize, setQueuePageSize] = useState<(typeof COLLECTION_PAGE_SIZES)[number]>(10);
+  const [queuePage, setQueuePage] = useState(1);
   const [actingId, setActingId] = useState("");
   const [collectionPageSize, setCollectionPageSize] = useState<(typeof COLLECTION_PAGE_SIZES)[number]>(10);
   const [collectionPage, setCollectionPage] = useState(1);
+  const [collectionType, setCollectionType] = useState("");
+  const [collectionDistrict, setCollectionDistrict] = useState("");
+  const [collectionAssembly, setCollectionAssembly] = useState("");
+  const [collectionSummary, setCollectionSummary] = useState("");
+  const [collectionEnteredBy, setCollectionEnteredBy] = useState("");
+  const [collectionStatus, setCollectionStatus] = useState("");
   const [intel, setIntel] = useState<any>(null);
   const [intelPlatform, setIntelPlatform] = useState("");
   const [intelParty, setIntelParty] = useState("");
@@ -474,9 +531,80 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       return Boolean(row.assemblyConstituencyId && acIds.has(row.assemblyConstituencyId));
     });
   }, [dashboard, districtId, selectedDistrict]);
-  const collectionTotalPages = Math.max(1, Math.ceil(dashboardRecent.length / collectionPageSize));
+  const collectionFilters = useMemo<CollectionFilters>(() => ({
+    type: collectionType,
+    district: collectionDistrict,
+    assembly: collectionAssembly,
+    summary: collectionSummary,
+    enteredBy: collectionEnteredBy,
+    status: collectionStatus
+  }), [collectionType, collectionDistrict, collectionAssembly, collectionSummary, collectionEnteredBy, collectionStatus]);
+  const collectionFilterOptions = useMemo(() => {
+    const facet = (skip: keyof CollectionFilters, pick: (row: PiRecentCollection) => string | null | undefined) =>
+      uniqueSorted(dashboardRecent.filter((row) => collectionRowMatches(row, collectionFilters, skip)).map(pick));
+    return {
+      types: facet("type", (row) => row.recordType).map((value) => ({
+        value,
+        label: RECORD_TYPE_LABEL[value] || value
+      })),
+      districts: facet("district", (row) => row.districtName),
+      assemblies: facet("assembly", (row) => row.assemblyName),
+      summaries: facet("summary", (row) => row.summary),
+      enteredBy: facet("enteredBy", (row) => row.enteredByName),
+      statuses: facet("status", (row) => row.verificationStatus)
+    };
+  }, [dashboardRecent, collectionFilters]);
+  const filteredRecent = useMemo(
+    () => dashboardRecent.filter((row) => collectionRowMatches(row, collectionFilters)),
+    [dashboardRecent, collectionFilters]
+  );
+  const collectionFiltersActive = Boolean(
+    collectionType || collectionDistrict || collectionAssembly || collectionSummary || collectionEnteredBy || collectionStatus
+  );
+  const clearCollectionFilters = () => {
+    setCollectionType("");
+    setCollectionDistrict("");
+    setCollectionAssembly("");
+    setCollectionSummary("");
+    setCollectionEnteredBy("");
+    setCollectionStatus("");
+    setCollectionPage(1);
+  };
+  const collectionTotalPages = Math.max(1, Math.ceil(filteredRecent.length / collectionPageSize));
   const collectionPageSafe = Math.min(collectionPage, collectionTotalPages);
-  const pagedRecent = dashboardRecent.slice((collectionPageSafe - 1) * collectionPageSize, collectionPageSafe * collectionPageSize);
+  const pagedRecent = filteredRecent.slice((collectionPageSafe - 1) * collectionPageSize, collectionPageSafe * collectionPageSize);
+
+  const queueFilters = useMemo<QueueFilters>(() => ({
+    district: queueDistrict,
+    assembly: queueAssembly,
+    platform: queuePlatform
+  }), [queueDistrict, queueAssembly, queuePlatform]);
+  const queueFilterOptions = useMemo(() => {
+    const facet = (skip: keyof QueueFilters, pick: (row: any) => string | null | undefined) =>
+      uniqueSorted(queue.filter((row) => queueRowMatches(row, queueFilters, skip)).map(pick));
+    return {
+      districts: facet("district", (row) => row.districtName),
+      assemblies: facet("assembly", (row) => row.assemblyName),
+      platforms: facet("platform", (row) => String(row.platform || "").toLowerCase()).map((value) => ({
+        value,
+        label: PLATFORM_LABEL[value as keyof typeof PLATFORM_LABEL] || value
+      }))
+    };
+  }, [queue, queueFilters]);
+  const filteredQueue = useMemo(
+    () => queue.filter((row) => queueRowMatches(row, queueFilters)),
+    [queue, queueFilters]
+  );
+  const queueFiltersActive = Boolean(queueDistrict || queueAssembly || queuePlatform);
+  const clearQueueFilters = () => {
+    setQueueDistrict("");
+    setQueueAssembly("");
+    setQueuePlatform("");
+    setQueuePage(1);
+  };
+  const queueTotalPages = Math.max(1, Math.ceil(filteredQueue.length / queuePageSize));
+  const queuePageSafe = Math.min(queuePage, queueTotalPages);
+  const pagedQueue = filteredQueue.slice((queuePageSafe - 1) * queuePageSize, queuePageSafe * queuePageSize);
 
   const flash = (msg: string, isError = false) => {
     setOk(isError ? "" : msg);
@@ -742,8 +870,29 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   }, [tab, stateId, districtId, userId]);
 
   useEffect(() => {
+    setCollectionType("");
+    setCollectionDistrict("");
+    setCollectionAssembly("");
+    setCollectionSummary("");
+    setCollectionEnteredBy("");
+    setCollectionStatus("");
     setCollectionPage(1);
-  }, [districtId, stateId, collectionPageSize, dashboardRecent.length]);
+  }, [districtId, stateId]);
+
+  useEffect(() => {
+    setCollectionPage(1);
+  }, [collectionPageSize, filteredRecent.length, collectionType, collectionDistrict, collectionAssembly, collectionSummary, collectionEnteredBy, collectionStatus]);
+
+  useEffect(() => {
+    setQueueDistrict("");
+    setQueueAssembly("");
+    setQueuePlatform("");
+    setQueuePage(1);
+  }, [queueStatus]);
+
+  useEffect(() => {
+    setQueuePage(1);
+  }, [queuePageSize, filteredQueue.length, queueDistrict, queueAssembly, queuePlatform]);
 
   useEffect(() => {
     if (tab === "constituencies") {
@@ -1223,8 +1372,66 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     </label>
                   ) : null}
                 </div>
+                {dashboardRecent.length > 0 ? (
+                  <div className="mb-3 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-[11px] text-[#B9AF95]">Filter by type, district, assembly, summary, entered by, or status</p>
+                      {collectionFiltersActive ? (
+                        <button type="button" className="text-[11px] font-semibold text-[#D4A24C]" onClick={clearCollectionFilters}>
+                          Clear filters
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      <CollectionFilterSelect
+                        label="Type"
+                        value={collectionType}
+                        onChange={setCollectionType}
+                        allLabel="All types"
+                        options={collectionFilterOptions.types}
+                      />
+                      <CollectionFilterSelect
+                        label="District"
+                        value={collectionDistrict}
+                        onChange={setCollectionDistrict}
+                        allLabel="All districts"
+                        options={collectionFilterOptions.districts.map((value) => ({ value, label: value }))}
+                      />
+                      <CollectionFilterSelect
+                        label="Assembly"
+                        value={collectionAssembly}
+                        onChange={setCollectionAssembly}
+                        allLabel="All assemblies"
+                        options={collectionFilterOptions.assemblies.map((value) => ({ value, label: value }))}
+                      />
+                      <CollectionFilterSelect
+                        label="Summary"
+                        value={collectionSummary}
+                        onChange={setCollectionSummary}
+                        allLabel="All summaries"
+                        options={collectionFilterOptions.summaries.map((value) => ({ value, label: value }))}
+                      />
+                      <CollectionFilterSelect
+                        label="Entered by"
+                        value={collectionEnteredBy}
+                        onChange={setCollectionEnteredBy}
+                        allLabel="All entered by"
+                        options={collectionFilterOptions.enteredBy.map((value) => ({ value, label: value }))}
+                      />
+                      <CollectionFilterSelect
+                        label="Status"
+                        value={collectionStatus}
+                        onChange={setCollectionStatus}
+                        allLabel="All statuses"
+                        options={collectionFilterOptions.statuses.map((value) => ({ value, label: value }))}
+                      />
+                    </div>
+                  </div>
+                ) : null}
                 {dashboardRecent.length === 0 ? (
                   <EmptyState text={districtId ? `No collections yet for ${selectedDistrictName || "this district"}. Save a constituency, leader, or social account to see it here.` : "No collections yet for this state and district. Save a constituency, leader, or social account to see it here."} />
+                ) : filteredRecent.length === 0 ? (
+                  <EmptyState text="No collections match these filters. Clear filters to see every record again." />
                 ) : (
                   <>
                   <div className="overflow-x-auto">
@@ -1268,7 +1475,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-3 text-[11px] text-[#B9AF95]">
                     <p>
-                      Showing {(collectionPageSafe - 1) * collectionPageSize + 1}–{Math.min(collectionPageSafe * collectionPageSize, dashboardRecent.length)} of {dashboardRecent.length}
+                      Showing {(collectionPageSafe - 1) * collectionPageSize + 1}–{Math.min(collectionPageSafe * collectionPageSize, filteredRecent.length)} of {filteredRecent.length}
                     </p>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe <= 1} onClick={() => setCollectionPage(1)} aria-label="First page">
@@ -1630,6 +1837,55 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           <p className="text-[11px] text-[#B9AF95] mb-3 leading-relaxed">
             Pending accounts can be verified, sent for recheck, or rejected. Recheck items can be verified or rejected. Verified and rejected records stay on those tabs with no further options.
           </p>
+          {queue.length > 0 ? (
+            <div className="mb-3 space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <p className="text-[11px] text-[#B9AF95]">Filter by district, assembly, or platform</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {queueFiltersActive ? (
+                    <button type="button" className="text-[11px] font-semibold text-[#D4A24C]" onClick={clearQueueFilters}>
+                      Clear filters
+                    </button>
+                  ) : null}
+                  <label className="inline-flex flex-wrap items-center gap-1.5 text-[11px] text-[#B9AF95]">
+                    Records per page
+                    <select
+                      className={`${INPUT} w-auto min-w-[7.5rem] py-1`}
+                      value={queuePageSize}
+                      onChange={(e) => setQueuePageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
+                    >
+                      {COLLECTION_PAGE_SIZES.map((size) => (
+                        <option key={size} value={size}>{size} / page</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                <CollectionFilterSelect
+                  label="District"
+                  value={queueDistrict}
+                  onChange={setQueueDistrict}
+                  allLabel="All districts"
+                  options={queueFilterOptions.districts.map((value) => ({ value, label: value }))}
+                />
+                <CollectionFilterSelect
+                  label="Assembly"
+                  value={queueAssembly}
+                  onChange={setQueueAssembly}
+                  allLabel="All assemblies"
+                  options={queueFilterOptions.assemblies.map((value) => ({ value, label: value }))}
+                />
+                <CollectionFilterSelect
+                  label="Platform"
+                  value={queuePlatform}
+                  onChange={setQueuePlatform}
+                  allLabel="All platforms"
+                  options={queueFilterOptions.platforms}
+                />
+              </div>
+            </div>
+          ) : null}
           {queue.length === 0 ? (
             <EmptyState
               text={
@@ -1642,14 +1898,18 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       : "No rejected accounts."
               }
             />
+          ) : filteredQueue.length === 0 ? (
+            <EmptyState text="No accounts match these filters. Clear filters to see every record again." />
           ) : (
+            <>
             <div className="space-y-2">
-              {queue.map((row) => (
+              {pagedQueue.map((row) => (
                 <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold text-[#F5EFE0]">{row.leaderName} · {row.platform}</span>
+                    <span className="font-bold text-[#F5EFE0]">{row.leaderName} · {PLATFORM_LABEL[String(row.platform || "").toLowerCase() as keyof typeof PLATFORM_LABEL] || row.platform}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
                   </div>
+                  <p className="text-[11px] text-[#B9AF95]">{row.districtName || "—"} · {row.assemblyName || "—"}</p>
                   {(() => {
                     const handle = socialUsername(row);
                     const href = profileHref(row.profileUrl);
@@ -1688,6 +1948,27 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 </div>
               ))}
             </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-3 text-[11px] text-[#B9AF95]">
+              <p>
+                Showing {(queuePageSafe - 1) * queuePageSize + 1}–{Math.min(queuePageSafe * queuePageSize, filteredQueue.length)} of {filteredQueue.length}
+              </p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage(1)} aria-label="First page">
+                  <ChevronsLeft className="w-3.5 h-3.5 inline" /> First
+                </button>
+                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                  <ChevronLeft className="w-3.5 h-3.5 inline" /> Previous
+                </button>
+                <span className="px-2 text-[#F5EFE0] font-semibold">Page {queuePageSafe} of {queueTotalPages}</span>
+                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage((p) => Math.min(queueTotalPages, p + 1))} aria-label="Next page">
+                  Next <ChevronRight className="w-3.5 h-3.5 inline" />
+                </button>
+                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage(queueTotalPages)} aria-label="Last page">
+                  Last <ChevronsRight className="w-3.5 h-3.5 inline" />
+                </button>
+              </div>
+            </div>
+            </>
           )}
         </section>
       )}
@@ -2138,6 +2419,40 @@ function IntelligenceConstituency({
         }) : <EmptyState text="No leaders entered for this constituency." />}
       </div>
     </div>
+  );
+}
+
+function CollectionFilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+  allLabel
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  allLabel: string;
+}) {
+  const optionsWithValue = value && !options.some((opt) => opt.value === value)
+    ? [{ value, label: RECORD_TYPE_LABEL[value] || value }, ...options]
+    : options;
+  return (
+    <label className="min-w-0">
+      <span className={LABEL}>{label}</span>
+      <select
+        className={`${INPUT} py-1.5`}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+      >
+        <option value="">{allLabel}</option>
+        {optionsWithValue.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+    </label>
   );
 }
 
