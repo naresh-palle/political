@@ -1398,6 +1398,9 @@ def register_pi_routes(api_router) -> None:
         person = person or {}
         if not in_scope(caps, person.get("stateId") or existing.get("stateId"), person.get("assemblyConstituencyId") or existing.get("assemblyConstituencyId")):
             raise HTTPException(status_code=403, detail="Forbidden: this account is outside your scope.")
+        status = str(existing.get("verificationStatus") or "").upper()
+        if status not in {"PENDING", "NO_ACCOUNT"}:
+            raise HTTPException(status_code=409, detail="Only pending or no-account records can be deleted.")
         for snap in await _list("social_media_snapshots"):
             if snap.get("accountId") == account_id and snap.get("id"):
                 await _delete("social_media_snapshots", snap["id"])

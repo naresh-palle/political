@@ -431,6 +431,18 @@ function queueCanAct(status?: string) {
   return current === "PENDING" || current === "NEEDS_RECHECK";
 }
 
+function canDeleteCollectedAccount(status?: string) {
+  const current = String(status || "").toUpperCase();
+  return current === "PENDING" || current === "NO_ACCOUNT";
+}
+
+const QUEUE_STATUS_TABS = [
+  { id: "PENDING", label: "Pending" },
+  { id: "NEEDS_RECHECK", label: "Recheck" },
+  { id: "VERIFIED", label: "Verified" },
+  { id: "REJECTED", label: "Rejected" }
+] as const;
+
 export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDataEntryTick?: number }> = ({ currentUser, openDataEntryTick = 0 }) => {
   const userId = currentUser.id;
   const isSmA = isSmAUser(currentUser);
@@ -1136,7 +1148,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   };
 
   const deleteSocialAccount = async (row: any) => {
-    if (!canDelete || !row?.id) return;
+    if (!canDelete || !row?.id || !canDeleteCollectedAccount(row.verificationStatus)) return;
     const label = row.leaderName || row.summary || row.profileUrl || row.platform || row.id;
     if (!window.confirm(`Delete this ${row.platform || "social"} account${label ? `: ${label}` : ""}?`)) return;
     try {
@@ -1483,17 +1495,19 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                             </td>
                             {canDelete ? (
                               <td>
-                                <button
-                                  type="button"
-                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-rose-500/40 text-rose-200 text-[11px] font-bold uppercase tracking-wider"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteCollectedRow(row);
-                                  }}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  Delete
-                                </button>
+                                {row.recordType === "social" && canDeleteCollectedAccount(row.verificationStatus) ? (
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-rose-500/40 text-rose-200 text-[10px] font-bold uppercase tracking-wider"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteCollectedRow(row);
+                                    }}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    Delete
+                                  </button>
+                                ) : null}
                               </td>
                             ) : null}
                           </tr>
@@ -1856,24 +1870,24 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       )}
 
       {tab === "verify" && (
-        <section className={CARD}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-            <div className="flex flex-wrap gap-2">
-              {["PENDING", "NEEDS_RECHECK", "VERIFIED", "REJECTED"].map((s) => (
-                <button type="button" key={s} onClick={() => setQueueStatus(s)} className={`px-2 py-1 rounded text-[10px] font-bold border ${queueStatus === s ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s}</button>
+        <section className={`rounded-lg p-2 border ${UNIQUE_TICKET_SURFACE.kpi}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-2">
+            <div className="flex flex-wrap gap-1">
+              {QUEUE_STATUS_TABS.map((s) => (
+                <button type="button" key={s.id} onClick={() => setQueueStatus(s.id)} className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${queueStatus === s.id ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s.label}</button>
               ))}
             </div>
             {queue.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {queueFiltersActive ? (
-                  <button type="button" className="text-[11px] font-semibold text-[#D4A24C]" onClick={clearQueueFilters}>
+                  <button type="button" className="text-[10px] font-semibold text-[#D4A24C]" onClick={clearQueueFilters}>
                     Clear filters
                   </button>
                 ) : null}
-                <label className="inline-flex flex-wrap items-center gap-1.5 text-[11px] text-[#B9AF95]">
+                <label className="inline-flex flex-wrap items-center gap-1 text-[10px] text-[#B9AF95]">
                   Records per page
                   <select
-                    className={`${INPUT} w-auto min-w-[7.5rem] py-1`}
+                    className={`${INPUT} w-auto min-w-[6.5rem] py-0.5 text-xs`}
                     value={queuePageSize}
                     onChange={(e) => setQueuePageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
                   >
@@ -1886,8 +1900,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             ) : null}
           </div>
           {queue.length > 0 ? (
-            <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="mb-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
                 <CollectionFilterSelect
+                  compact
                   label="District"
                   value={queueDistrict}
                   onChange={setQueueDistrict}
@@ -1895,6 +1910,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   options={queueFilterOptions.districts.map((value) => ({ value, label: value }))}
                 />
                 <CollectionFilterSelect
+                  compact
                   label="Assembly"
                   value={queueAssembly}
                   onChange={setQueueAssembly}
@@ -1902,6 +1918,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   options={queueFilterOptions.assemblies.map((value) => ({ value, label: value }))}
                 />
                 <CollectionFilterSelect
+                  compact
                   label="Platform"
                   value={queuePlatform}
                   onChange={setQueuePlatform}
@@ -1912,97 +1929,88 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           ) : null}
           {queue.length === 0 ? (
             <EmptyState
+              compact
               text={
                 queueStatus === "PENDING"
-                  ? "No pending accounts to review."
+                  ? "No pending accounts."
                   : queueStatus === "NEEDS_RECHECK"
-                    ? "No accounts waiting for recheck."
+                    ? "No recheck accounts."
                     : queueStatus === "VERIFIED"
-                      ? "No verified accounts yet."
+                      ? "No verified accounts."
                       : "No rejected accounts."
               }
             />
           ) : filteredQueue.length === 0 ? (
-            <EmptyState text="No accounts match these filters." />
+            <EmptyState compact text="No accounts match these filters." />
           ) : (
             <>
-            <div className="space-y-2">
-              {pagedQueue.map((row) => (
-                <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold text-[#F5EFE0]">{row.leaderName} · {PLATFORM_LABEL[String(row.platform || "").toLowerCase() as keyof typeof PLATFORM_LABEL] || row.platform}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
+            <div className="space-y-1">
+              {pagedQueue.map((row) => {
+                const handle = socialUsername(row);
+                const href = profileHref(row.profileUrl);
+                const showDelete = canDelete && canDeleteCollectedAccount(row.verificationStatus);
+                return (
+                <div key={row.id} className="px-2 py-1.5 rounded-md border border-[#22405E]">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+                    <span className="text-xs font-bold text-[#F5EFE0]">{row.leaderName} · {PLATFORM_LABEL[String(row.platform || "").toLowerCase() as keyof typeof PLATFORM_LABEL] || row.platform}</span>
+                    <span className={`text-[9px] px-1 py-0 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
                   </div>
-                  <p className="text-[11px] text-[#B9AF95]">{row.districtName || "—"} · {row.assemblyName || "—"}</p>
-                  {(() => {
-                    const handle = socialUsername(row);
-                    const href = profileHref(row.profileUrl);
-                    if (!handle || !href) return null;
-                    return (
-                      <a
-                        className="text-[11px] text-[#D4A24C] underline break-all"
-                        href={href}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {handle}
-                      </a>
-                    );
-                  })()}
-                  <p className="text-[11px] text-[#B9AF95]">Followers {row.followers ?? "—"} · Entered by {row.enteredByName || row.enteredBy}</p>
-                  {queueStatusOf(row) === "VERIFIED" && (
-                    <p className="text-[11px] text-emerald-300 mt-2">
-                      Verified{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{(row.verifiedAt || "").slice(0, 10) ? ` · ${(row.verifiedAt || "").slice(0, 10)}` : ""}
-                    </p>
-                  )}
-                  {queueStatusOf(row) === "REJECTED" && (
-                    <p className="text-[11px] text-rose-300 mt-2">
-                      Rejected{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{row.reviewRemarks ? ` · ${row.reviewRemarks}` : ""}
-                    </p>
-                  )}
-                  {(canVerify && queueCanAct(row.verificationStatus)) || canDelete ? (
-                    <div className="flex flex-wrap gap-2 mt-2">
+                  <p className="text-[10px] text-[#B9AF95] leading-snug">
+                    {row.districtName || "—"} · {row.assemblyName || "—"}
+                    {handle && href ? (
+                      <>
+                        {" · "}
+                        <a className="text-[#D4A24C] underline break-all" href={href} target="_blank" rel="noreferrer">{handle}</a>
+                      </>
+                    ) : null}
+                    {" · "}Followers {row.followers ?? "—"} · Entered by {row.enteredByName || row.enteredBy}
+                    {queueStatusOf(row) === "VERIFIED" ? ` · Verified${row.verifiedByName ? ` by ${row.verifiedByName}` : ""}${(row.verifiedAt || "").slice(0, 10) ? ` ${(row.verifiedAt || "").slice(0, 10)}` : ""}` : ""}
+                    {queueStatusOf(row) === "REJECTED" ? ` · Rejected${row.verifiedByName ? ` by ${row.verifiedByName}` : ""}${row.reviewRemarks ? ` ${row.reviewRemarks}` : ""}` : ""}
+                  </p>
+                  {(canVerify && queueCanAct(row.verificationStatus)) || showDelete ? (
+                    <div className="flex flex-wrap gap-1 mt-1">
                       {canVerify && queueCanAct(row.verificationStatus) && (
                         <>
-                          <button className={BTN} type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
+                          <button className="px-2 py-0.5 rounded-md bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-[10px] font-bold uppercase tracking-wider" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
                           {queueStatusOf(row) === "PENDING" && (
-                            <button className="px-3 py-2 rounded-xl border border-amber-500/40 text-amber-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "NEEDS_RECHECK")}>Recheck</button>
+                            <button className="px-2 py-0.5 rounded-md border border-amber-500/40 text-amber-200 text-[10px]" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "NEEDS_RECHECK")}>Recheck</button>
                           )}
-                          <button className="px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "REJECTED")}>Reject</button>
+                          <button className="px-2 py-0.5 rounded-md border border-rose-500/40 text-rose-200 text-[10px]" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "REJECTED")}>Reject</button>
                         </>
                       )}
-                      {canDelete ? (
+                      {showDelete ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs font-bold uppercase tracking-wider"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-rose-500/40 text-rose-200 text-[10px] font-bold uppercase tracking-wider"
                           onClick={() => deleteSocialAccount(row)}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3 h-3" />
                           Delete
                         </button>
                       ) : null}
                     </div>
                   ) : null}
                 </div>
-              ))}
+                );
+              })}
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-3 text-[11px] text-[#B9AF95]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 pt-2 text-[10px] text-[#B9AF95]">
               <p>
                 Showing {(queuePageSafe - 1) * queuePageSize + 1}–{Math.min(queuePageSafe * queuePageSize, filteredQueue.length)} of {filteredQueue.length}
               </p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage(1)} aria-label="First page">
-                  <ChevronsLeft className="w-3.5 h-3.5 inline" /> First
+              <div className="flex flex-wrap items-center gap-1">
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage(1)} aria-label="First page">
+                  <ChevronsLeft className="w-3 h-3 inline" /> First
                 </button>
-                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage((p) => Math.max(1, p - 1))} aria-label="Previous page">
-                  <ChevronLeft className="w-3.5 h-3.5 inline" /> Previous
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                  <ChevronLeft className="w-3 h-3 inline" /> Previous
                 </button>
-                <span className="px-2 text-[#F5EFE0] font-semibold">Page {queuePageSafe} of {queueTotalPages}</span>
-                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage((p) => Math.min(queueTotalPages, p + 1))} aria-label="Next page">
-                  Next <ChevronRight className="w-3.5 h-3.5 inline" />
+                <span className="px-1.5 text-[#F5EFE0] font-semibold">Page {queuePageSafe} of {queueTotalPages}</span>
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage((p) => Math.min(queueTotalPages, p + 1))} aria-label="Next page">
+                  Next <ChevronRight className="w-3 h-3 inline" />
                 </button>
-                <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage(queueTotalPages)} aria-label="Last page">
-                  Last <ChevronsRight className="w-3.5 h-3.5 inline" />
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage(queueTotalPages)} aria-label="Last page">
+                  Last <ChevronsRight className="w-3 h-3 inline" />
                 </button>
               </div>
             </div>
@@ -2465,22 +2473,24 @@ function CollectionFilterSelect({
   value,
   onChange,
   options,
-  allLabel
+  allLabel,
+  compact
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
   allLabel: string;
+  compact?: boolean;
 }) {
   const optionsWithValue = value && !options.some((opt) => opt.value === value)
     ? [{ value, label: RECORD_TYPE_LABEL[value] || value }, ...options]
     : options;
   return (
     <label className="min-w-0">
-      <span className={LABEL}>{label}</span>
+      <span className={compact ? "block text-[9px] uppercase tracking-wider font-bold text-[#D4A24C] mb-0.5" : LABEL}>{label}</span>
       <select
-        className={`${INPUT} py-1.5`}
+        className={`${INPUT} ${compact ? "py-1 text-xs rounded-lg" : "py-1.5"}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
@@ -2512,10 +2522,10 @@ function Kpi({ label, value, hint, onClick }: { label: string; value: React.Reac
   return <div className={CARD}>{body}</div>;
 }
 
-function EmptyState({ text }: { text: string }) {
+function EmptyState({ text, compact }: { text: string; compact?: boolean }) {
   return (
-    <div className="p-6 text-center text-xs text-[#B9AF95] border border-dashed border-[#22405E] rounded-xl">
-      <Database className="w-4 h-4 mx-auto mb-1 text-[#D4A24C]" />
+    <div className={`${compact ? "px-2 py-2" : "p-6"} text-center text-xs text-[#B9AF95] border border-dashed border-[#22405E] ${compact ? "rounded-md" : "rounded-xl"}`}>
+      <Database className={`${compact ? "w-3.5 h-3.5" : "w-4 h-4"} mx-auto mb-1 text-[#D4A24C]`} />
       {text}
     </div>
   );
