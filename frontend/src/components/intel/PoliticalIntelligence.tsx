@@ -1350,39 +1350,32 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 </button>
               )}
               <div className={CARD}>
-                <div className="flex flex-col gap-2 mb-2">
-                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-                    <h2 className="text-sm font-bold text-[#F5EFE0]">Last collection</h2>
-                    <p className="text-[11px] text-[#B9AF95]">
-                      Latest in {selectedDistrictName || (districtId ? "this district" : "this state")}: {(dashboard.lastDataCollectionDate || dashboardRecent[0]?.collectedAt || "").toString().slice(0, 10) || "—"}
-                    </p>
-                  </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                  <h2 className="text-sm font-bold text-[#F5EFE0]">Last collection</h2>
                   {dashboardRecent.length > 0 ? (
-                    <label className="inline-flex flex-wrap items-center gap-1.5 text-[11px] text-[#B9AF95]">
-                      Records per page
-                      <select
-                        className={`${INPUT} w-auto min-w-[7.5rem] py-1`}
-                        value={collectionPageSize}
-                        onChange={(e) => setCollectionPageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
-                      >
-                        {COLLECTION_PAGE_SIZES.map((size) => (
-                          <option key={size} value={size}>{size} / page</option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : null}
-                </div>
-                {dashboardRecent.length > 0 ? (
-                  <div className="mb-3 space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-[11px] text-[#B9AF95]">Filter by type, district, assembly, summary, entered by, or status</p>
+                    <div className="flex flex-wrap items-center gap-2">
                       {collectionFiltersActive ? (
                         <button type="button" className="text-[11px] font-semibold text-[#D4A24C]" onClick={clearCollectionFilters}>
                           Clear filters
                         </button>
                       ) : null}
+                      <label className="inline-flex flex-wrap items-center gap-1.5 text-[11px] text-[#B9AF95]">
+                        Records per page
+                        <select
+                          className={`${INPUT} w-auto min-w-[7.5rem] py-1`}
+                          value={collectionPageSize}
+                          onChange={(e) => setCollectionPageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
+                        >
+                          {COLLECTION_PAGE_SIZES.map((size) => (
+                            <option key={size} value={size}>{size} / page</option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  ) : null}
+                </div>
+                {dashboardRecent.length > 0 ? (
+                  <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       <CollectionFilterSelect
                         label="Type"
                         value={collectionType}
@@ -1425,13 +1418,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         allLabel="All statuses"
                         options={collectionFilterOptions.statuses.map((value) => ({ value, label: value }))}
                       />
-                    </div>
                   </div>
                 ) : null}
                 {dashboardRecent.length === 0 ? (
-                  <EmptyState text={districtId ? `No collections yet for ${selectedDistrictName || "this district"}. Save a constituency, leader, or social account to see it here.` : "No collections yet for this state and district. Save a constituency, leader, or social account to see it here."} />
+                  <EmptyState text={districtId ? `No collections yet for ${selectedDistrictName || "this district"}.` : "No collections yet for this state and district."} />
                 ) : filteredRecent.length === 0 ? (
-                  <EmptyState text="No collections match these filters. Clear filters to see every record again." />
+                  <EmptyState text="No collections match these filters." />
                 ) : (
                   <>
                   <div className="overflow-x-auto">
@@ -1829,39 +1821,36 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
       {tab === "verify" && (
         <section className={CARD}>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {["PENDING", "NEEDS_RECHECK", "VERIFIED", "REJECTED"].map((s) => (
-              <button type="button" key={s} onClick={() => setQueueStatus(s)} className={`px-2 py-1 rounded text-[10px] font-bold border ${queueStatus === s ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s}</button>
-            ))}
-          </div>
-          <p className="text-[11px] text-[#B9AF95] mb-3 leading-relaxed">
-            Pending accounts can be verified, sent for recheck, or rejected. Recheck items can be verified or rejected. Verified and rejected records stay on those tabs with no further options.
-          </p>
-          {queue.length > 0 ? (
-            <div className="mb-3 space-y-2">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <p className="text-[11px] text-[#B9AF95]">Filter by district, assembly, or platform</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  {queueFiltersActive ? (
-                    <button type="button" className="text-[11px] font-semibold text-[#D4A24C]" onClick={clearQueueFilters}>
-                      Clear filters
-                    </button>
-                  ) : null}
-                  <label className="inline-flex flex-wrap items-center gap-1.5 text-[11px] text-[#B9AF95]">
-                    Records per page
-                    <select
-                      className={`${INPUT} w-auto min-w-[7.5rem] py-1`}
-                      value={queuePageSize}
-                      onChange={(e) => setQueuePageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
-                    >
-                      {COLLECTION_PAGE_SIZES.map((size) => (
-                        <option key={size} value={size}>{size} / page</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+            <div className="flex flex-wrap gap-2">
+              {["PENDING", "NEEDS_RECHECK", "VERIFIED", "REJECTED"].map((s) => (
+                <button type="button" key={s} onClick={() => setQueueStatus(s)} className={`px-2 py-1 rounded text-[10px] font-bold border ${queueStatus === s ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s}</button>
+              ))}
+            </div>
+            {queue.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {queueFiltersActive ? (
+                  <button type="button" className="text-[11px] font-semibold text-[#D4A24C]" onClick={clearQueueFilters}>
+                    Clear filters
+                  </button>
+                ) : null}
+                <label className="inline-flex flex-wrap items-center gap-1.5 text-[11px] text-[#B9AF95]">
+                  Records per page
+                  <select
+                    className={`${INPUT} w-auto min-w-[7.5rem] py-1`}
+                    value={queuePageSize}
+                    onChange={(e) => setQueuePageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
+                  >
+                    {COLLECTION_PAGE_SIZES.map((size) => (
+                      <option key={size} value={size}>{size} / page</option>
+                    ))}
+                  </select>
+                </label>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            ) : null}
+          </div>
+          {queue.length > 0 ? (
+            <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 <CollectionFilterSelect
                   label="District"
                   value={queueDistrict}
@@ -1883,7 +1872,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   allLabel="All platforms"
                   options={queueFilterOptions.platforms}
                 />
-              </div>
             </div>
           ) : null}
           {queue.length === 0 ? (
@@ -1899,7 +1887,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               }
             />
           ) : filteredQueue.length === 0 ? (
-            <EmptyState text="No accounts match these filters. Clear filters to see every record again." />
+            <EmptyState text="No accounts match these filters." />
           ) : (
             <>
             <div className="space-y-2">
@@ -1928,12 +1916,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   <p className="text-[11px] text-[#B9AF95]">Followers {row.followers ?? "—"} · Entered by {row.enteredByName || row.enteredBy}</p>
                   {queueStatusOf(row) === "VERIFIED" && (
                     <p className="text-[11px] text-emerald-300 mt-2">
-                      Verified{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{(row.verifiedAt || "").slice(0, 10) ? ` · ${(row.verifiedAt || "").slice(0, 10)}` : ""}. No further action.
+                      Verified{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{(row.verifiedAt || "").slice(0, 10) ? ` · ${(row.verifiedAt || "").slice(0, 10)}` : ""}
                     </p>
                   )}
                   {queueStatusOf(row) === "REJECTED" && (
                     <p className="text-[11px] text-rose-300 mt-2">
-                      Rejected{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{row.reviewRemarks ? ` · ${row.reviewRemarks}` : ""}. No further action.
+                      Rejected{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{row.reviewRemarks ? ` · ${row.reviewRemarks}` : ""}
                     </p>
                   )}
                   {canVerify && queueCanAct(row.verificationStatus) && (
