@@ -1949,27 +1949,27 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 const handle = socialUsername(row);
                 const href = profileHref(row.profileUrl);
                 const showDelete = canDelete && canDeleteCollectedAccount(row.verificationStatus);
+                const showActions = (canVerify && queueCanAct(row.verificationStatus)) || showDelete;
                 return (
-                <div key={row.id} className="px-2 py-1.5 rounded-md border border-[#22405E]">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
-                    <span className="text-xs font-bold text-[#F5EFE0]">{row.leaderName} · {PLATFORM_LABEL[String(row.platform || "").toLowerCase() as keyof typeof PLATFORM_LABEL] || row.platform}</span>
-                    <span className={`text-[9px] px-1 py-0 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
-                  </div>
-                  <p className="text-[10px] text-[#B9AF95] leading-snug">
-                    {row.districtName || "—"} · {row.assemblyName || "—"}
-                    {handle && href ? (
-                      <>
-                        {" · "}
-                        <a className="text-[#D4A24C] underline break-all" href={href} target="_blank" rel="noreferrer">{handle}</a>
-                      </>
-                    ) : null}
-                    {" · "}Followers {row.followers ?? "—"} · Entered by {row.enteredByName || row.enteredBy}
-                    {queueStatusOf(row) === "VERIFIED" ? ` · Verified${row.verifiedByName ? ` by ${row.verifiedByName}` : ""}${(row.verifiedAt || "").slice(0, 10) ? ` ${(row.verifiedAt || "").slice(0, 10)}` : ""}` : ""}
-                    {queueStatusOf(row) === "REJECTED" ? ` · Rejected${row.verifiedByName ? ` by ${row.verifiedByName}` : ""}${row.reviewRemarks ? ` ${row.reviewRemarks}` : ""}` : ""}
-                  </p>
-                  {(canVerify && queueCanAct(row.verificationStatus)) || showDelete ? (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {canVerify && queueCanAct(row.verificationStatus) && (
+                <div key={row.id} className="px-2 py-1 rounded-md border border-[#22405E]">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs font-bold text-[#F5EFE0]">{row.leaderName} · {PLATFORM_LABEL[String(row.platform || "").toLowerCase() as keyof typeof PLATFORM_LABEL] || row.platform}</span>
+                      <p className="text-[10px] text-[#B9AF95] leading-snug">
+                        {row.districtName || "—"} · {row.assemblyName || "—"}
+                        {handle && href ? (
+                          <>
+                            {" · "}
+                            <a className="text-[#D4A24C] underline break-all" href={href} target="_blank" rel="noreferrer">{handle}</a>
+                          </>
+                        ) : null}
+                        {" · "}Followers {row.followers ?? "—"} · Entered by {row.enteredByName || row.enteredBy}
+                        {queueStatusOf(row) === "VERIFIED" ? ` · Verified${row.verifiedByName ? ` by ${row.verifiedByName}` : ""}${(row.verifiedAt || "").slice(0, 10) ? ` ${(row.verifiedAt || "").slice(0, 10)}` : ""}` : ""}
+                        {queueStatusOf(row) === "REJECTED" ? ` · Rejected${row.verifiedByName ? ` by ${row.verifiedByName}` : ""}${row.reviewRemarks ? ` ${row.reviewRemarks}` : ""}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1 shrink-0">
+                      {showActions && canVerify && queueCanAct(row.verificationStatus) ? (
                         <>
                           <button className="px-2 py-0.5 rounded-md bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-[10px] font-bold uppercase tracking-wider" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
                           {queueStatusOf(row) === "PENDING" && (
@@ -1977,7 +1977,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           )}
                           <button className="px-2 py-0.5 rounded-md border border-rose-500/40 text-rose-200 text-[10px]" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "REJECTED")}>Reject</button>
                         </>
-                      )}
+                      ) : null}
                       {showDelete ? (
                         <button
                           type="button"
@@ -1988,8 +1988,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           Delete
                         </button>
                       ) : null}
+                      <span className={`text-[9px] px-1 py-0 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus}</span>
                     </div>
-                  ) : null}
+                  </div>
                 </div>
                 );
               })}
