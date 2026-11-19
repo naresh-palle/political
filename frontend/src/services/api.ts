@@ -288,9 +288,29 @@ function mergeFieldIssueLists(seedList: any[], remoteList: any[]): any[] {
   return Array.from(byId.values());
 }
 
+function isAbortLike(error: any): boolean {
+  const msg = String(error?.message || error?.cause || error || "").toLowerCase();
+  return (
+    error?.name === "AbortError" ||
+    error?.name === "TimeoutError" ||
+    msg.includes("aborted") ||
+    msg.includes("abort") ||
+    msg.includes("timed out")
+  );
+}
+
 async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 3000): Promise<Response> {
+  if (!timeoutMs || timeoutMs <= 0) {
+    return fetch(url, options);
+  }
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
+  const id = setTimeout(() => {
+    try {
+      controller.abort("timeout");
+    } catch {
+      controller.abort();
+    }
+  }, timeoutMs);
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(id);
@@ -1478,7 +1498,7 @@ export const politicalApiService = {
       return data;
     } catch (error: any) {
       const msg = String(error?.message || error || "");
-      if (error?.name === "AbortError" || msg.toLowerCase().includes("aborted")) {
+      if (isAbortLike(error) || msg.toLowerCase().includes("aborted")) {
         throw new Error("The request timed out. Please try again — the ticket may still have been updated.");
       }
       throw error;
@@ -2150,8 +2170,8 @@ export const politicalApiService = {
       return data;
     } catch (error: any) {
       const msg = String(error?.message || error || "");
-      if (error?.name === "AbortError" || msg.toLowerCase().includes("aborted")) {
-        throw new Error("Save took too long. Keep this page open and tap Save again.");
+      if (isAbortLike(error)) {
+        throw new Error("The request timed out. Keep this page open and try again.");
       }
       throw error;
     }
@@ -2220,10 +2240,10 @@ export const politicalApiService = {
     return this.piRequest(`/pi/constituencies?${q.toString()}`, userId, {}, 20000);
   },
   savePiConstituency(userId: string, payload: any) {
-    return this.piRequest("/pi/constituencies", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
+    return this.piRequest("/pi/constituencies", userId, { method: "POST", body: JSON.stringify(payload) }, 0);
   },
   deletePiConstituency(userId: string, recordId: string) {
-    return this.piRequest(`/pi/constituencies/${encodeURIComponent(recordId)}`, userId, { method: "DELETE" });
+    return this.piRequest(`/pi/constituencies/${encodeURIComponent(recordId)}`, userId, { method: "DELETE" }, 0);
   },
   getPiLeaders(userId: string, params: Record<string, string | number | undefined> = {}) {
     const q = new URLSearchParams();
@@ -2233,10 +2253,10 @@ export const politicalApiService = {
     return this.piRequest(`/pi/leaders?${q.toString()}`, userId, {}, 20000);
   },
   savePiLeader(userId: string, payload: any) {
-    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
+    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 0);
   },
   deletePiLeader(userId: string, personId: string) {
-    return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" });
+    return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" }, 0);
   },
   getPiAccounts(userId: string, params: Record<string, string | number | undefined> = {}) {
     const q = new URLSearchParams();
@@ -2246,10 +2266,10 @@ export const politicalApiService = {
     return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId, {}, 20000);
   },
   savePiAccount(userId: string, payload: any) {
-    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
+    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 0);
   },
   deletePiAccount(userId: string, accountId: string) {
-    return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}`, userId, { method: "DELETE" });
+    return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}`, userId, { method: "DELETE" }, 0);
   },
   getPiSnapshots(userId: string, accountId: string) {
     return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}/snapshots`, userId);
@@ -2261,7 +2281,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/verification/${encodeURIComponent(recordType)}/${encodeURIComponent(recordId)}`, userId, {
       method: "POST",
       body: JSON.stringify(payload)
-    }, 45000);
+    }, 0);
   },
   getPiIntelligence(userId: string, params: Record<string, string | undefined> = {}) {
     const q = new URLSearchParams();
@@ -2271,10 +2291,10 @@ export const politicalApiService = {
     return this.piRequest(`/pi/intelligence?${q.toString()}`, userId);
   },
   previewPiImport(userId: string, csv: string) {
-    return this.piRequest("/pi/import/preview", userId, { method: "POST", body: JSON.stringify({ csv }) });
+    return this.piRequest("/pi/import/preview", userId, { method: "POST", body: JSON.stringify({ csv }) }, 0);
   },
   confirmPiImport(userId: string, csv: string) {
-    return this.piRequest("/pi/import/confirm", userId, { method: "POST", body: JSON.stringify({ csv }) });
+    return this.piRequest("/pi/import/confirm", userId, { method: "POST", body: JSON.stringify({ csv }) }, 0);
   },
   getPiImportTemplate(userId: string) {
     return this.piRequest("/pi/import/template", userId);
