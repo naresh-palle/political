@@ -1168,6 +1168,24 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 <Kpi label="Recheck" value={dashboard.needsRecheck} onClick={isSmM ? () => { setQueueStatus("NEEDS_RECHECK"); setTab("verify"); } : undefined} />
                 <Kpi label="Verified %" value={dashboard.verificationPercent == null ? "—" : `${dashboard.verificationPercent}%`} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
               </div>
+              {selectedDistrictProgress && (
+                <button
+                  onClick={() => {
+                    goToDataEntry({ districtId: selectedDistrictProgress.id });
+                  }}
+                  className={`text-left ${CARD} w-full`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</span>
+                    <MapPin className="w-4 h-4 text-[#D4A24C]" />
+                  </div>
+                  <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} constituencies entered</p>
+                  <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.verificationPercent == null ? "No accounts yet" : `${selectedDistrictProgress.verificationPercent}% verified`} · {selectedDistrictProgress.needsRecheck} recheck</p>
+                  <div className="mt-2 h-1.5 rounded bg-[#142B45]">
+                    <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${selectedDistrictProgress.totalConstituencies ? (selectedDistrictProgress.constituenciesEntered / selectedDistrictProgress.totalConstituencies) * 100 : 0}%` }} />
+                  </div>
+                </button>
+              )}
               <div className={CARD}>
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-2">
                   <h2 className="text-sm font-bold text-[#F5EFE0]">Last collection</h2>
@@ -1219,24 +1237,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   </div>
                 )}
               </div>
-              {selectedDistrictProgress && (
-                <button
-                  onClick={() => {
-                    goToDataEntry({ districtId: selectedDistrictProgress.id });
-                  }}
-                  className={`text-left ${CARD} w-full`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</span>
-                    <MapPin className="w-4 h-4 text-[#D4A24C]" />
-                  </div>
-                  <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} constituencies entered</p>
-                  <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.verificationPercent == null ? "No accounts yet" : `${selectedDistrictProgress.verificationPercent}% verified`} · {selectedDistrictProgress.needsRecheck} recheck</p>
-                  <div className="mt-2 h-1.5 rounded bg-[#142B45]">
-                    <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${selectedDistrictProgress.totalConstituencies ? (selectedDistrictProgress.constituenciesEntered / selectedDistrictProgress.totalConstituencies) * 100 : 0}%` }} />
-                  </div>
-                </button>
-              )}
             </>
           )}
         </section>
