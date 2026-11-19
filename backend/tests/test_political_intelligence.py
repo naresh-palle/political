@@ -634,6 +634,68 @@ def test_verified_social_account_cannot_be_deleted(monkeypatch):
     assert any(row["id"] == account["id"] for row in memory_list("social_media_accounts"))
 
 
+def test_pending_leader_can_be_deleted_verified_cannot(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory, memory_list
+
+    reset_memory()
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+    sm_m = {"id": "usr-smm", "name": "SM M", "email": "smm", "primaryRole": "SM_M", "roleId": "SM_M"}
+
+    async def fake_actor(user_id):
+        return sm_a if user_id == sm_a["id"] else sm_m
+
+    monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
+    monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
+    monkeypatch.setattr(pi_api, "_audit", lambda *a, **k: _async_ok())
+
+    from backend.services.pi_api import register_pi_routes
+    from fastapi import APIRouter
+
+    router = APIRouter()
+    register_pi_routes(router)
+    posts = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "POST" in route.methods}
+    deletes = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "DELETE" in route.methods}
+
+    pending = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Pending Delete Rao",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+            },
+            userId=sm_a["id"],
+        )
+    )
+    locked = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Verified Delete Rao",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+            },
+            userId=sm_a["id"],
+        )
+    )
+    verified = _run(posts["/pi/verification/{record_type}/{record_id}"]("leader", locked["id"], {"status": "VERIFIED"}, userId=sm_m["id"]))
+    assert verified["verificationStatus"] == "VERIFIED"
+
+    removed = _run(deletes["/pi/leaders/{person_id}"](pending["id"], userId=sm_m["id"]))
+    assert removed["success"] is True
+    assert pending["id"] not in {row["id"] for row in memory_list("political_persons")}
+
+    try:
+        _run(deletes["/pi/leaders/{person_id}"](locked["id"], userId=sm_m["id"]))
+        raise AssertionError("verified leaders must not be deleted")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 409
+    assert any(row["id"] == locked["id"] for row in memory_list("political_persons"))
+
+
 def test_intelligence_ranks_follow_selected_platform(monkeypatch):
     from backend.services import pi_api
     from backend.services.political_intelligence import reset_memory

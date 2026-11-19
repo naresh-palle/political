@@ -680,6 +680,7 @@ export interface PiRecentCollection {
   summary?: string;
   enteredByName?: string;
   verificationStatus?: string;
+  noAccount?: boolean;
 }
 
 export interface PiDashboard {

@@ -597,7 +597,7 @@ def recent_collection_rows(
                 "assemblyName": assembly_name,
                 "summary": assembly_name,
                 "enteredByName": stat.get("enteredByName") or "—",
-                "verificationStatus": stat.get("verificationStatus") or "—",
+                "verificationStatus": stat.get("verificationStatus") or "PENDING",
             }
         )
     for person in persons:
@@ -614,13 +614,14 @@ def recent_collection_rows(
                 "assemblyName": assembly_name,
                 "summary": person.get("name") or "Leader",
                 "enteredByName": person.get("enteredByName") or "—",
-                "verificationStatus": person.get("verificationStatus") or "—",
+                "verificationStatus": person.get("verificationStatus") or "PENDING",
             }
         )
     for account in accounts:
         person = person_by_id.get(account.get("personId")) or {}
         state_id, district_id, district_name, assembly_name = _geo(account, person)
         platform = str(account.get("platform") or "social")
+        no_account = bool(account.get("noAccount") or str(account.get("verificationStatus") or "").upper() == "NO_ACCOUNT")
         rows.append(
             {
                 "id": account.get("id"),
@@ -633,7 +634,8 @@ def recent_collection_rows(
                 "assemblyName": assembly_name,
                 "summary": f"{person.get('name') or 'Account'} · {platform}",
                 "enteredByName": account.get("enteredByName") or person.get("enteredByName") or "—",
-                "verificationStatus": account.get("verificationStatus") or "—",
+                "verificationStatus": "NO_ACCOUNT" if no_account else (account.get("verificationStatus") or "PENDING"),
+                "noAccount": no_account,
             }
         )
     rows.sort(key=lambda row: row.get("collectedAt") or "", reverse=True)
@@ -1257,6 +1259,11 @@ def register_pi_routes(api_router) -> None:
         existing = await _get("political_persons", person_id)
         if not existing:
             raise HTTPException(status_code=404, detail="Leader not found")
+        status = str(existing.get("verificationStatus") or "PENDING").upper().replace(" ", "_")
+        if existing.get("noAccount"):
+            status = "NO_ACCOUNT"
+        if status not in {"PENDING", "NO_ACCOUNT"}:
+            raise HTTPException(status_code=409, detail="Only pending or no-account records can be deleted.")
         for role in await _list("political_person_roles"):
             if role.get("personId") == person_id and role.get("id"):
                 await _delete("political_person_roles", role["id"])

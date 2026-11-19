@@ -438,9 +438,19 @@ function queueCanAct(status?: string) {
   return current === "PENDING" || current === "NEEDS_RECHECK";
 }
 
-function canDeleteCollectedAccount(status?: string) {
-  const current = String(status || "").toUpperCase();
-  return current === "PENDING" || current === "NO_ACCOUNT";
+function collectedStatusKey(row?: { verificationStatus?: string; noAccount?: boolean } | string) {
+  if (row && typeof row === "object") {
+    if (row.noAccount) return "NO_ACCOUNT";
+    const key = String(row.verificationStatus || "").toUpperCase().replace(/[\s-]+/g, "_");
+    return !key || key === "—" ? "PENDING" : key;
+  }
+  const key = String(row || "").toUpperCase().replace(/[\s-]+/g, "_");
+  return !key || key === "—" ? "PENDING" : key;
+}
+
+function canDeleteCollectedRow(row?: { recordType?: string; verificationStatus?: string; noAccount?: boolean }) {
+  const status = collectedStatusKey(row);
+  return status === "PENDING" || status === "NO_ACCOUNT";
 }
 
 const QUEUE_STATUS_TABS = [
@@ -1154,7 +1164,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   };
 
   const deleteSocialAccount = async (row: any) => {
-    if (!canDelete || !row?.id || !canDeleteCollectedAccount(row.verificationStatus)) return;
+    if (!canDelete || !row?.id || !canDeleteCollectedRow(row)) return;
     const label = row.leaderName || row.summary || row.profileUrl || row.platform || row.id;
     if (!window.confirm(`Delete this ${row.platform || "social"} account${label ? `: ${label}` : ""}?`)) return;
     try {
@@ -1167,7 +1177,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   };
 
   const deleteCollectedRow = async (row: PiRecentCollection) => {
-    if (!canDelete || !row?.id) return;
+    if (!canDelete || !row?.id || !canDeleteCollectedRow(row)) return;
     if (row.recordType === "leader") return deleteLeaderRecord({ ...row, name: row.summary || (row as any).name });
     if (row.recordType === "social") return deleteSocialAccount(row);
     return deleteConstituency(row);
@@ -1453,7 +1463,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 ) : (
                   <>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs table-fixed">
+                    <table className="w-full min-w-[52rem] text-xs">
                       <thead>
                         <tr className="text-[#D4A24C] text-left">
                           <th className="py-1">Collected</th>
@@ -1463,7 +1473,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           <th>Summary</th>
                           <th>Entered by</th>
                           <th>Status</th>
-                          {canDelete ? <th>Delete</th> : null}
+                          {canDelete ? <th className="whitespace-nowrap">Delete</th> : null}
                         </tr>
                       </thead>
                       <tbody>
@@ -1488,8 +1498,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                               <span className={`px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus || "—"}</span>
                             </td>
                             {canDelete ? (
-                              <td>
-                                {row.recordType === "social" && canDeleteCollectedAccount(row.verificationStatus) ? (
+                              <td className="whitespace-nowrap">
+                                {canDeleteCollectedRow(row) ? (
                                   <button
                                     type="button"
                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-rose-500/40 text-rose-200 text-[10px] font-bold uppercase tracking-wider"
@@ -1809,7 +1819,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       <button type="submit" id={leaderFieldDomId(index, "save")} className={BTN} disabled={!canEdit || slotBusy}>
                         {slotBusy ? "Saving…" : slot.id ? `Save changes · ${LEADER_SLOTS[index].label}` : `Save ${LEADER_SLOTS[index].label}`}
                       </button>
-                      {canDelete && slot.id && (
+                      {canDelete && slot.id && canDeleteCollectedRow(leaders.find((row) => row.id === slot.id) || { verificationStatus: "PENDING" }) && (
                         <button
                           type="button"
                           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs font-bold uppercase tracking-wider"
@@ -1841,7 +1851,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           </div>
                           <p className="text-[11px] text-[#B9AF95]">{leaderKindLabel(row.leaderKind)}{(row.roles || []).length ? ` · ${(row.roles || []).map((r: any) => r.politicalRole).join(" · ")}` : ""}</p>
                           <p className="text-[11px] text-[#B9AF95]">Contact {row.contactId || "—"} · {row.verificationStatus}</p>
-                          {canDelete && (
+                          {canDelete && canDeleteCollectedRow(row) && (
                             <button
                               type="button"
                               className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-200 text-[11px] font-bold uppercase tracking-wider"
@@ -1953,7 +1963,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               {pagedQueue.map((row) => {
                 const handle = socialUsername(row);
                 const href = profileHref(row.profileUrl);
-                const showDelete = canDelete && canDeleteCollectedAccount(row.verificationStatus);
+                const showDelete = canDelete && canDeleteCollectedRow(row);
                 const showActions = (canVerify && queueCanAct(row.verificationStatus)) || showDelete;
                 return (
                 <div key={row.id} className="px-2 py-1 rounded-md border border-[#22405E]">
