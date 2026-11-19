@@ -232,6 +232,18 @@ def _runtime_list(collection: str) -> List[Dict[str, Any]]:
     return _read_pi_runtime().get(collection) or []
 
 
+def _list_local(collection: str) -> List[Dict[str, Any]]:
+    """Memory + disk only. Save paths must not wait on a full Mongo collection scan."""
+    return _merge_docs(_runtime_list(collection), memory_list(collection))
+
+
+def _schedule_coro(coro) -> None:
+    try:
+        asyncio.get_running_loop().create_task(coro)
+    except RuntimeError:
+        pass
+
+
 def _persist_pi_runtime() -> None:
     payload = {collection: memory_list(collection) for collection in COLLECTIONS}
     path = PI_RUNTIME_PATH
@@ -327,7 +339,8 @@ async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any
             return stored
         payload = dict(stored)
         payload.pop("_id", None)
-        await asyncio.wait_for(col.update_one({"id": key}, {"$set": payload}, upsert=True), timeout=8.0)
+        write_timeout = 8.0 if collection in PI_CRITICAL_COLLECTIONS else 2.0
+        await asyncio.wait_for(col.update_one({"id": key}, {"$set": payload}, upsert=True), timeout=write_timeout)
         _restore_live_mongo(srv)
         return stored
     except Exception as e:
@@ -365,35 +378,36 @@ async def _delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
     return removed
 
 
-async def _append(collection: str, doc: Dict[str, Any]) -> Dict[str, Any]:
-    stored = deepcopy(doc)
-    MEMORY[collection].insert(0, deepcopy(stored))
-    _persist_pi_runtime()
+async def _flush_append_mongo(collection: str, stored: Dict[str, Any]) -> None:
     srv = _srv()
     db = _pi_mongo_db(srv)
     if db is None:
-        return stored
-    last_error: Optional[Exception] = None
-    for _attempt in range(2):
+        return
+    try:
+        col = getattr(db, COLLECTIONS[collection], None)
+        if col is None:
+            return
+        payload = dict(stored)
+        payload.pop("_id", None)
+        await asyncio.wait_for(col.insert_one(payload), timeout=4.0)
+        _restore_live_mongo(srv)
+    except Exception as e:
+        if _is_duplicate_key(e):
+            return
         try:
-            col = getattr(db, COLLECTIONS[collection], None)
-            if col is None:
-                return stored
-            payload = dict(stored)
-            payload.pop("_id", None)
-            await asyncio.wait_for(col.insert_one(payload), timeout=12.0)
-            _restore_live_mongo(srv)
-            return stored
-        except Exception as e:
-            last_error = e
-            if _is_duplicate_key(e):
-                return stored
-            db = _pi_mongo_db(srv)
-    if last_error is not None:
-        try:
-            srv.log_mongo_notice("pi_append", last_error)
+            srv.log_mongo_notice("pi_append", e)
         except Exception:
             pass
+
+
+async def _append(collection: str, doc: Dict[str, Any], block_mongo: bool = True) -> Dict[str, Any]:
+    stored = deepcopy(doc)
+    MEMORY[collection].insert(0, deepcopy(stored))
+    _persist_pi_runtime()
+    if block_mongo:
+        await _flush_append_mongo(collection, stored)
+        return stored
+    _schedule_coro(_flush_append_mongo(collection, stored))
     return stored
 
 
@@ -429,13 +443,18 @@ async def _audit(actor: Dict[str, Any], action: str, target: str, metadata: Opti
         pass
 
 
-async def _geo_lookups() -> Dict[str, Any]:
-    srv = _srv()
-    packaged_acs = srv.load_json_fallback("assemblies.json")
-    mongo_acs = await srv.mongo_wait(srv.db.assembly_constituencies.find({}, {"_id": 0}).to_list(5000), timeout=5.0, fallback=None, tag="pi_acs")
-    assemblies = prefer_packaged_assemblies(mongo_acs, packaged_acs)
-    parliaments = await srv.mongo_wait(srv.db.parliament_constituencies.find({}, {"_id": 0}).to_list(1000), timeout=4.0, fallback=None, tag="pi_pcs") or srv.load_json_fallback("parliaments.json")
-    parties = await srv.mongo_wait(srv.db.political_parties.find({}, {"_id": 0}).to_list(100), timeout=3.0, fallback=None, tag="pi_parties") or srv.load_json_fallback("political_parties.json")
+def _audit_nowait(actor: Dict[str, Any], action: str, target: str, metadata: Optional[dict] = None) -> None:
+    _schedule_coro(_audit(actor, action, target, metadata))
+
+
+_GEO_CACHE: Dict[str, Any] = {"at": 0.0, "data": None}
+_GEO_TTL = 180.0
+
+
+def _geo_from_packaged(srv: Any) -> Dict[str, Any]:
+    assemblies = srv.load_json_fallback("assemblies.json") or []
+    parliaments = srv.load_json_fallback("parliaments.json") or []
+    parties = srv.load_json_fallback("political_parties.json") or []
     return {
         "assemblies": {a.get("id"): a for a in assemblies if a.get("id")},
         "parliaments": {p.get("id"): p for p in parliaments if p.get("id")},
@@ -443,6 +462,36 @@ async def _geo_lookups() -> Dict[str, Any]:
         "assembly_rows": [a for a in assemblies if a.get("id")],
         "parliament_rows": [p for p in parliaments if p.get("id")],
     }
+
+
+async def _geo_lookups() -> Dict[str, Any]:
+    now = time.time()
+    cached = _GEO_CACHE.get("data")
+    if cached and now - float(_GEO_CACHE.get("at") or 0) < _GEO_TTL:
+        return cached
+    srv = _srv()
+    packaged = _geo_from_packaged(srv)
+    mongo_acs = parliaments = parties = None
+    try:
+        mongo_acs, parliaments, parties = await asyncio.gather(
+            srv.mongo_wait(srv.db.assembly_constituencies.find({}, {"_id": 0}).to_list(5000), timeout=1.5, fallback=None, tag="pi_acs"),
+            srv.mongo_wait(srv.db.parliament_constituencies.find({}, {"_id": 0}).to_list(1000), timeout=1.5, fallback=None, tag="pi_pcs"),
+            srv.mongo_wait(srv.db.political_parties.find({}, {"_id": 0}).to_list(100), timeout=1.5, fallback=None, tag="pi_parties"),
+        )
+    except Exception:
+        pass
+    assemblies = prefer_packaged_assemblies(mongo_acs, packaged["assembly_rows"])
+    parliament_rows = parliaments or packaged["parliament_rows"]
+    party_rows = parties or list(packaged["parties"].values())
+    data = {
+        "assemblies": {a.get("id"): a for a in assemblies if a.get("id")},
+        "parliaments": {p.get("id"): p for p in parliament_rows if p.get("id")},
+        "parties": {p.get("id"): p for p in party_rows if p.get("id")},
+        "assembly_rows": [a for a in assemblies if a.get("id")],
+        "parliament_rows": [p for p in parliament_rows if p.get("id")],
+    }
+    _GEO_CACHE.update(at=now, data=data)
+    return data
 
 
 async def _resolved_districts(state_id: Optional[str] = None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
@@ -536,6 +585,130 @@ def recent_collection_rows(
         )
     rows.sort(key=lambda row: row.get("collectedAt") or "", reverse=True)
     return rows[:limit]
+
+
+async def _write_social_account(
+    payload: dict,
+    caps: Dict[str, Any],
+    *,
+    person: Optional[Dict[str, Any]] = None,
+    known_accounts: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    payload = payload or {}
+    person_id = str(payload.get("personId") or "").strip()
+    platform = str(payload.get("platform") or "").strip().lower()
+    url = str(payload.get("profileUrl") or "").strip()
+    if not person_id or platform not in PLATFORMS:
+        raise HTTPException(status_code=400, detail="personId and a supported platform are required")
+    if person is None:
+        person = await _get("political_persons", person_id)
+    if not person:
+        raise HTTPException(status_code=404, detail="Leader not found")
+    if not in_scope(caps, person.get("stateId"), person.get("assemblyConstituencyId")):
+        raise HTTPException(status_code=403, detail="This assembly is outside your assigned geography.")
+    status = str(payload.get("verificationStatus") or "PENDING").upper()
+    if status not in ACCOUNT_STATUSES:
+        status = "PENDING"
+    if status == "NO_ACCOUNT":
+        url = url or f"https://none.invalid/{person_id}/{platform}"
+    if not url and status != "NO_ACCOUNT":
+        raise HTTPException(status_code=400, detail="profileUrl is required")
+    if status != "NO_ACCOUNT":
+        mismatch = profile_url_platform_error(url, platform)
+        if mismatch:
+            raise HTTPException(status_code=400, detail=mismatch)
+    ident = profile_username(url, platform, str(payload.get("accountIdentifier") or "").strip())
+    identity = account_identity_key(platform, url, ident)
+    existing = None
+    if payload.get("id"):
+        existing = await _get("social_media_accounts", payload["id"])
+        if not existing:
+            for row in known_accounts or _list_local("social_media_accounts"):
+                if row.get("id") == payload.get("id"):
+                    existing = row
+                    break
+    rows = known_accounts if known_accounts is not None else _list_local("social_media_accounts")
+    for row in rows:
+        if row.get("id") == (existing or {}).get("id"):
+            continue
+        if row.get("personId") == person_id and str(row.get("platform") or "").lower() == platform:
+            existing = existing or row
+            continue
+        if row.get("identityKey") == identity or (url and row.get("normalizedUrl") == normalize_profile_url(url, platform) and status != "NO_ACCOUNT"):
+            raise HTTPException(status_code=409, detail="Duplicate profile URL or account identifier")
+    followers = payload.get("followers")
+    if followers == "" or followers is None:
+        followers = None
+    else:
+        followers = float(followers)
+    likes = payload.get("avgLikesLast10")
+    comments = payload.get("avgCommentsLast10")
+    views = payload.get("avgViewsLast10")
+    posts = payload.get("postsLast30Days")
+    likes = None if likes in ("", None) else float(likes)
+    comments = None if comments in ("", None) else float(comments)
+    views = None if views in ("", None) else float(views)
+    posts = None if posts in ("", None) else int(float(posts))
+    eng, formula = calculate_engagement(platform, followers, likes, comments, views)
+    now = now_iso()
+    account_id = (existing or {}).get("id") or new_id("sma")
+    doc = dict(existing or {})
+    doc.update(
+        {
+            "id": account_id,
+            "personId": person_id,
+            "platform": platform,
+            "profileUrl": url,
+            "normalizedUrl": normalize_profile_url(url, platform),
+            "accountIdentifier": ident,
+            "identityKey": identity,
+            "followers": followers,
+            "postsLast30Days": posts,
+            "avgLikesLast10": likes,
+            "avgCommentsLast10": comments,
+            "avgViewsLast10": views,
+            "engagementPercent": eng,
+            "engagementFormulaVersion": formula,
+            "verificationStatus": status,
+            "dataCollectionDate": payload.get("dataCollectionDate") or now,
+            "dataSource": payload.get("dataSource") or "MANUAL",
+            "remarks": payload.get("remarks"),
+            "enteredBy": (existing or {}).get("enteredBy") or caps["actorId"],
+            "enteredByName": (existing or {}).get("enteredByName") or caps["actorName"],
+            "updatedAt": now,
+            "noAccount": status == "NO_ACCOUNT",
+            "partyId": person.get("partyId"),
+        }
+    )
+    saved = await _save("social_media_accounts", account_id, doc)
+    if followers is not None or likes is not None or comments is not None or views is not None:
+        await _append(
+            "social_media_snapshots",
+            {
+                "id": new_id("snap"),
+                "accountId": account_id,
+                "personId": person_id,
+                "platform": platform,
+                "followers": followers,
+                "postsLast30Days": posts,
+                "avgLikesLast10": likes,
+                "avgCommentsLast10": comments,
+                "avgViewsLast10": views,
+                "engagementPercent": eng,
+                "engagementFormulaVersion": formula,
+                "collectionDate": doc["dataCollectionDate"],
+                "collectedBy": caps["actorId"],
+                "dataSource": doc["dataSource"],
+                "verificationStatus": status,
+            },
+            block_mongo=False,
+        )
+    await _append(
+        "constituency_contact_history",
+        {"id": new_id("ch"), "contactId": person.get("contactId"), "action": "SOCIAL_ACCOUNT_UPSERT", "actorUserId": caps["actorId"], "timestamp": now, "metadata": {"accountId": account_id, "platform": platform}},
+        block_mongo=False,
+    )
+    return saved
 
 
 def register_pi_routes(api_router) -> None:
@@ -888,7 +1061,7 @@ def register_pi_routes(api_router) -> None:
             existing = await _get("political_persons", payload["id"])
         if not existing:
             needle = normalize_name(name)
-            for row in await _list("political_persons"):
+            for row in _list_local("political_persons"):
                 if row.get("normalizedName") == needle and row.get("assemblyConstituencyId") == ac_id:
                     existing = row
                     break
@@ -925,7 +1098,7 @@ def register_pi_routes(api_router) -> None:
         if payload.get("politicalRole"):
             roles_in = [{"politicalRole": payload.get("politicalRole"), "status": payload.get("currentFormerStatus") or "CURRENT", "electionYear": payload.get("electionYear"), "partyId": party_id, "assemblyConstituencyId": ac_id}]
         if roles_in:
-            existing_roles = [r for r in await _list("political_person_roles") if r.get("personId") == person_id]
+            existing_roles = [r for r in _list_local("political_person_roles") if r.get("personId") == person_id]
             for role in roles_in:
                 match = next((r for r in existing_roles if r.get("politicalRole") == role.get("politicalRole") and r.get("assemblyConstituencyId") == (role.get("assemblyConstituencyId") or ac_id)), None)
                 role_doc = dict(match or {})
@@ -942,8 +1115,21 @@ def register_pi_routes(api_router) -> None:
                     }
                 )
                 await _save("political_person_roles", role_doc["id"], role_doc)
-        saved["roles"] = [r for r in await _list("political_person_roles") if r.get("personId") == person_id]
-        await _audit(actor, "PI_LEADER_UPSERT", person_id, {"name": name, "partyId": party_id})
+        saved["roles"] = [r for r in _list_local("political_person_roles") if r.get("personId") == person_id]
+        accounts_in = payload.get("accounts")
+        saved_accounts: List[Dict[str, Any]] = []
+        if isinstance(accounts_in, list):
+            known = _list_local("social_media_accounts")
+            for raw in accounts_in:
+                if not isinstance(raw, dict):
+                    continue
+                account_payload = dict(raw)
+                account_payload["personId"] = person_id
+                written = await _write_social_account(account_payload, caps, person=saved, known_accounts=known)
+                saved_accounts.append(written)
+                known = [row for row in known if row.get("id") != written.get("id")] + [written]
+        saved["accounts"] = saved_accounts
+        _audit_nowait(actor, "PI_LEADER_UPSERT", person_id, {"name": name, "partyId": party_id})
         return saved
 
     @api_router.delete("/pi/leaders/{person_id}")
@@ -973,7 +1159,7 @@ def register_pi_routes(api_router) -> None:
             existing = await _get("constituency_contacts", person["contactId"])
         if not existing:
             needle = normalize_name(person.get("name") or "")
-            for row in await _list("constituency_contacts"):
+            for row in _list_local("constituency_contacts"):
                 if normalize_name(row.get("name") or "") == needle and row.get("assemblyConstituencyId") == person.get("assemblyConstituencyId"):
                     existing = row
                     break
@@ -998,11 +1184,13 @@ def register_pi_routes(api_router) -> None:
             await _append(
                 "constituency_contact_history",
                 {"id": new_id("ch"), "contactId": contact_id, "action": "NAME_UPDATED", "previous": previous.get("name"), "next": doc.get("name"), "actorUserId": caps["actorId"], "timestamp": now},
+                block_mongo=False,
             )
         elif not previous:
             await _append(
                 "constituency_contact_history",
                 {"id": new_id("ch"), "contactId": contact_id, "action": "CREATED_FROM_PI", "actorUserId": caps["actorId"], "timestamp": now, "metadata": {"personId": person.get("id")}},
+                block_mongo=False,
             )
         return await _save("constituency_contacts", contact_id, doc)
 
@@ -1047,109 +1235,8 @@ def register_pi_routes(api_router) -> None:
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
         _require(caps, "create")
-        payload = payload or {}
-        person_id = str(payload.get("personId") or "").strip()
-        platform = str(payload.get("platform") or "").strip().lower()
-        url = str(payload.get("profileUrl") or "").strip()
-        if not person_id or platform not in PLATFORMS:
-            raise HTTPException(status_code=400, detail="personId and a supported platform are required")
-        person = await _get("political_persons", person_id)
-        if not person:
-            raise HTTPException(status_code=404, detail="Leader not found")
-        if not in_scope(caps, person.get("stateId"), person.get("assemblyConstituencyId")):
-            raise HTTPException(status_code=403, detail="This assembly is outside your assigned geography.")
-        status = str(payload.get("verificationStatus") or "PENDING").upper()
-        if status not in ACCOUNT_STATUSES:
-            status = "PENDING"
-        if status == "NO_ACCOUNT":
-            url = url or f"https://none.invalid/{person_id}/{platform}"
-        if not url and status != "NO_ACCOUNT":
-            raise HTTPException(status_code=400, detail="profileUrl is required")
-        if status != "NO_ACCOUNT":
-            mismatch = profile_url_platform_error(url, platform)
-            if mismatch:
-                raise HTTPException(status_code=400, detail=mismatch)
-        ident = profile_username(url, platform, str(payload.get("accountIdentifier") or "").strip())
-        identity = account_identity_key(platform, url, ident)
-        existing = None
-        if payload.get("id"):
-            existing = await _get("social_media_accounts", payload["id"])
-        for row in await _list("social_media_accounts"):
-            if row.get("id") == (existing or {}).get("id"):
-                continue
-            if row.get("identityKey") == identity or (url and row.get("normalizedUrl") == normalize_profile_url(url, platform) and status != "NO_ACCOUNT"):
-                raise HTTPException(status_code=409, detail="Duplicate profile URL or account identifier")
-        followers = payload.get("followers")
-        if followers == "" or followers is None:
-            followers = None
-        else:
-            followers = float(followers)
-        likes = payload.get("avgLikesLast10")
-        comments = payload.get("avgCommentsLast10")
-        views = payload.get("avgViewsLast10")
-        posts = payload.get("postsLast30Days")
-        likes = None if likes in ("", None) else float(likes)
-        comments = None if comments in ("", None) else float(comments)
-        views = None if views in ("", None) else float(views)
-        posts = None if posts in ("", None) else int(float(posts))
-        eng, formula = calculate_engagement(platform, followers, likes, comments, views)
-        now = now_iso()
-        account_id = (existing or {}).get("id") or new_id("sma")
-        doc = dict(existing or {})
-        doc.update(
-            {
-                "id": account_id,
-                "personId": person_id,
-                "platform": platform,
-                "profileUrl": url,
-                "normalizedUrl": normalize_profile_url(url, platform),
-                "accountIdentifier": ident,
-                "identityKey": identity,
-                "followers": followers,
-                "postsLast30Days": posts,
-                "avgLikesLast10": likes,
-                "avgCommentsLast10": comments,
-                "avgViewsLast10": views,
-                "engagementPercent": eng,
-                "engagementFormulaVersion": formula,
-                "verificationStatus": status,
-                "dataCollectionDate": payload.get("dataCollectionDate") or now,
-                "dataSource": payload.get("dataSource") or "MANUAL",
-                "remarks": payload.get("remarks"),
-                "enteredBy": (existing or {}).get("enteredBy") or caps["actorId"],
-                "enteredByName": (existing or {}).get("enteredByName") or caps["actorName"],
-                "updatedAt": now,
-                "noAccount": status == "NO_ACCOUNT",
-                "partyId": person.get("partyId"),
-            }
-        )
-        saved = await _save("social_media_accounts", account_id, doc)
-        if followers is not None or likes is not None or comments is not None or views is not None:
-            await _append(
-                "social_media_snapshots",
-                {
-                    "id": new_id("snap"),
-                    "accountId": account_id,
-                    "personId": person_id,
-                    "platform": platform,
-                    "followers": followers,
-                    "postsLast30Days": posts,
-                    "avgLikesLast10": likes,
-                    "avgCommentsLast10": comments,
-                    "avgViewsLast10": views,
-                    "engagementPercent": eng,
-                    "engagementFormulaVersion": formula,
-                    "collectionDate": doc["dataCollectionDate"],
-                    "collectedBy": caps["actorId"],
-                    "dataSource": doc["dataSource"],
-                    "verificationStatus": status,
-                },
-            )
-        await _append(
-            "constituency_contact_history",
-            {"id": new_id("ch"), "contactId": person.get("contactId"), "action": "SOCIAL_ACCOUNT_UPSERT", "actorUserId": caps["actorId"], "timestamp": now, "metadata": {"accountId": account_id, "platform": platform}},
-        )
-        await _audit(actor, "PI_SOCIAL_UPSERT", account_id, {"platform": platform, "personId": person_id})
+        saved = await _write_social_account(payload or {}, caps)
+        _audit_nowait(actor, "PI_SOCIAL_UPSERT", saved.get("id"), {"platform": saved.get("platform"), "personId": saved.get("personId")})
         return saved
 
     @api_router.get("/pi/social-accounts/{account_id}/snapshots")

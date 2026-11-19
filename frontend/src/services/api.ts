@@ -2233,7 +2233,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/leaders?${q.toString()}`, userId, {}, 20000);
   },
   savePiLeader(userId: string, payload: any) {
-    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 45000);
+    return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
   },
   deletePiLeader(userId: string, personId: string) {
     return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" });
@@ -2246,7 +2246,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId, {}, 20000);
   },
   savePiAccount(userId: string, payload: any) {
-    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 45000);
+    return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
   },
   getPiSnapshots(userId: string, accountId: string) {
     return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}/snapshots`, userId);

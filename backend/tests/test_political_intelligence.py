@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import time
 
 from backend.services.political_intelligence import (
     account_identity_key,
@@ -269,6 +270,84 @@ def test_pi_api_create_leader_account_snapshot_and_self_verify(monkeypatch):
     assert removed["success"] is True
     leftover = [row for row in memory_list("political_persons") if row.get("id") == leader["id"]]
     assert leftover == []
+
+
+def test_leader_nested_accounts_save_in_one_request(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import memory_list, reset_memory
+
+    reset_memory()
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+
+    async def fake_actor(user_id):
+        return sm_a
+
+    monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
+    monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
+    monkeypatch.setattr(pi_api, "_audit", lambda *a, **k: _async_ok())
+
+    from fastapi import APIRouter
+
+    from backend.services.pi_api import register_pi_routes
+
+    router = APIRouter()
+    register_pi_routes(router)
+    posts = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "POST" in route.methods}
+
+    leader = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Fast Save Rao",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+                "accounts": [
+                    {"platform": "facebook", "profileUrl": "https://facebook.com/fast.save.rao", "followers": 1200},
+                    {"platform": "instagram", "verificationStatus": "NO_ACCOUNT"},
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+    assert leader["id"]
+    assert {row.get("platform") for row in leader.get("accounts") or []} == {"facebook", "instagram"}
+    facebook = next(row for row in leader["accounts"] if row["platform"] == "facebook")
+    assert facebook["followers"] == 1200
+    instagram = next(row for row in leader["accounts"] if row["platform"] == "instagram")
+    assert instagram["verificationStatus"] == "NO_ACCOUNT"
+    stored = [row for row in memory_list("social_media_accounts") if row.get("personId") == leader["id"]]
+    assert len(stored) == 2
+
+
+def test_history_append_does_not_block_when_mongo_hangs(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory
+
+    reset_memory()
+
+    class HangCol:
+        async def insert_one(self, *args, **kwargs):
+            await asyncio.sleep(30)
+            return None
+
+    class HangDb:
+        constituency_contact_history = HangCol()
+
+    class HangSrv:
+        _mongo_circuit_open = False
+        db = HangDb()
+
+        def log_mongo_notice(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr(pi_api, "_srv", lambda: HangSrv())
+    monkeypatch.setattr(pi_api, "_pi_mongo_db", lambda srv: HangDb())
+    started = time.perf_counter()
+    stored = _run(pi_api._append("constituency_contact_history", {"id": "ch-fast", "action": "TEST"}, block_mongo=False))
+    elapsed = time.perf_counter() - started
+    assert stored["id"] == "ch-fast"
+    assert elapsed < 1.0
 
 
 def _async_geo():

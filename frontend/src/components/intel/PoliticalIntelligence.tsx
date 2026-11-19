@@ -748,6 +748,25 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     setSaving("leader");
     setSavingSlot(index);
     try {
+      const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
+      const accountPayloads = PLATFORMS.flatMap((platform) => {
+        const draft = slot.platformDrafts[platform];
+        if (!draft.hasAccount) return [];
+        const existing = accounts.find(
+          (row) => (slot.id && row.personId === slot.id && String(row.platform || "").toLowerCase() === platform)
+        );
+        return [{
+          id: existing?.id,
+          platform,
+          partyId: slot.partyId,
+          profileUrl: draft.hasAccount === "yes" ? String(draft.profileUrl || "").trim() : "",
+          accountIdentifier: draft.hasAccount === "yes"
+            ? socialUsername({ profileUrl: String(draft.profileUrl || "").trim(), platform })
+            : "",
+          followers: draft.hasAccount === "yes" ? num(draft.followers) : undefined,
+          verificationStatus: draft.hasAccount === "no" ? "NO_ACCOUNT" : draft.verified === "yes" ? "VERIFIED" : "PENDING"
+        }];
+      });
       const saved = await politicalApiService.savePiLeader(userId, {
         id: slot.id,
         name: slot.name,
@@ -758,36 +777,36 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         stateId,
         districtId,
         parliamentConstituencyId: pcId,
-        assemblyConstituencyId: acId
+        assemblyConstituencyId: acId,
+        accounts: accountPayloads
       });
       const personId = saved?.id;
-      if (personId) {
-        const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
-        for (const platform of PLATFORMS) {
-          const draft = slot.platformDrafts[platform];
-          if (!draft.hasAccount) continue;
-          const existing = accounts.find(
-            (row) => row.personId === personId && String(row.platform || "").toLowerCase() === platform
-          );
-          await politicalApiService.savePiAccount(userId, {
-            id: existing?.id,
-            personId,
-            platform,
-            partyId: slot.partyId,
-            profileUrl: draft.hasAccount === "yes" ? String(draft.profileUrl || "").trim() : "",
-            accountIdentifier: draft.hasAccount === "yes"
-              ? socialUsername({ profileUrl: String(draft.profileUrl || "").trim(), platform })
-              : "",
-            followers: draft.hasAccount === "yes" ? num(draft.followers) : undefined,
-            verificationStatus: draft.hasAccount === "no" ? "NO_ACCOUNT" : draft.verified === "yes" ? "VERIFIED" : "PENDING"
-          });
-        }
+      if (personId && !Array.isArray(saved?.accounts) && accountPayloads.length) {
+        await Promise.all(
+          accountPayloads.map((payload) => politicalApiService.savePiAccount(userId, { ...payload, personId }))
+        );
       }
       setLeaderAlert(null);
       flash(`${LEADER_SLOTS[index].label} saved.`);
-      const [leaderRows, accountRows] = await Promise.all([loadLeaders(), loadAccounts()]);
-      hydrateLeaderSlots(leaderRows, accountRows);
       setEntryGroup("leaders");
+      const returnedAccounts = Array.isArray(saved?.accounts) ? saved.accounts : [];
+      if (personId && returnedAccounts.length) {
+        const mergedLeaders = [
+          { ...saved, assemblyConstituencyId: saved.assemblyConstituencyId || acId },
+          ...leaders.filter((row) => row.id !== personId)
+        ];
+        const mergedAccounts = [
+          ...returnedAccounts,
+          ...accounts.filter((row) => row.personId !== personId)
+        ];
+        setLeaders(mergedLeaders);
+        setAccounts(mergedAccounts);
+        persistOperatorCache({ leaders: mergedLeaders, accounts: mergedAccounts });
+        hydrateLeaderSlots(mergedLeaders, mergedAccounts);
+      }
+      void Promise.all([loadLeaders(), loadAccounts()]).then(([leaderRows, accountRows]) => {
+        hydrateLeaderSlots(leaderRows, accountRows);
+      }).catch(() => undefined);
     } catch (err: any) {
       const leaderLabel = LEADER_SLOTS[index].label;
       flash(`${leaderLabel}: ${err.message || "Could not save."}`, true);
