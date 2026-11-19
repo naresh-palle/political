@@ -113,6 +113,7 @@ const ROLES = [
   "FORMER_MP",
   "FORMER_MLC",
   "PROSPECTIVE_CANDIDATE",
+  "CONTESTED_CANDIDATE",
   "PARTY_LEADER",
   "PARTY_PRESIDENT",
   "OTHER"
@@ -160,6 +161,7 @@ type LeaderSlotState = {
   name: string;
   partyId: string;
   politicalRole: string;
+  politicalRoles: string[];
   leaderKind: LeaderKind;
   platformDrafts: Record<(typeof PLATFORMS)[number], PlatformDraft>;
   activePlatform: (typeof PLATFORMS)[number];
@@ -170,10 +172,29 @@ function emptyLeaderSlot(slot: (typeof LEADER_SLOTS)[number]): LeaderSlotState {
     name: "",
     partyId: slot.defaultParty,
     politicalRole: slot.defaultRole,
+    politicalRoles: slot.defaultRole ? [slot.defaultRole] : [],
     leaderKind: slot.kind,
     platformDrafts: emptyPlatformDrafts(),
     activePlatform: "facebook"
   };
+}
+
+function mergeById(server: any[], local: any[]) {
+  const byId = new Map<string, any>();
+  for (const row of local || []) {
+    if (row?.id) byId.set(row.id, row);
+  }
+  for (const row of server || []) {
+    if (row?.id) byId.set(row.id, { ...(byId.get(row.id) || {}), ...row });
+  }
+  return Array.from(byId.values());
+}
+
+function roleListFromLeader(row: any, fallback: string[]) {
+  const fromRoles = (row?.roles || []).map((item: any) => item?.politicalRole).filter(Boolean);
+  if (fromRoles.length) return Array.from(new Set(fromRoles));
+  if (row?.politicalRole) return [row.politicalRole];
+  return fallback;
 }
 
 function draftsFromAccounts(personId: string, accountRows: any[]): Record<(typeof PLATFORMS)[number], PlatformDraft> {
@@ -398,8 +419,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       try {
         const saved = await politicalApiService.savePiLeader(userId, leader);
         if (leader?.id && saved?.id) idMap.set(leader.id, saved.id);
-      } catch {
-        // Leader replay is best-effort; accounts still try the original personId.
+      } catch (err: any) {
+        const msg = String(err?.message || "");
+        if (!msg.toLowerCase().includes("already saved") && !msg.toLowerCase().includes("duplicate")) {
+          // Leader replay is best-effort; accounts still try the original personId.
+        }
       }
     }
     for (const account of cache.accounts || []) {
@@ -407,7 +431,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         const personId = (account.personId && idMap.get(account.personId)) || account.personId;
         await politicalApiService.savePiAccount(userId, { ...account, personId });
       } catch {
-        // Skip one account without aborting the rest.
+        // Already saved or one platform failed — keep replaying the rest.
       }
     }
   };
@@ -537,35 +561,21 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const loadLeaders = async () => {
     const data = await politicalApiService.getPiLeaders(userId, { assemblyConstituencyId: acId || undefined, districtId, limit: 200 });
     const items = data.items || [];
-    if (items.length) {
-      setLeaders(items);
-      persistOperatorCache({ leaders: items });
-      return items;
-    }
     const cache = readPiOperatorCache(userId);
     const cached = (cache?.leaders || []).filter((row) => !acId || row.assemblyConstituencyId === acId);
-    if (cached.length) {
-      setLeaders(cached);
-      return cached;
-    }
-    setLeaders([]);
-    return [];
+    const merged = mergeById(items, cached);
+    setLeaders(merged);
+    if (merged.length) persistOperatorCache({ leaders: merged });
+    return merged;
   };
   const loadAccounts = async () => {
     const data = await politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 200 });
     const items = data.items || [];
-    if (items.length) {
-      setAccounts(items);
-      persistOperatorCache({ accounts: items });
-      return items;
-    }
     const cache = readPiOperatorCache(userId);
-    if (cache?.accounts?.length) {
-      setAccounts(cache.accounts);
-      return cache.accounts;
-    }
-    setAccounts([]);
-    return [];
+    const merged = mergeById(items, cache?.accounts || []);
+    setAccounts(merged);
+    if (merged.length) persistOperatorCache({ accounts: merged });
+    return merged;
   };
 
   const hydrateLeaderSlots = (leaderRows: any[], accountRows: any[]) => {
@@ -578,7 +588,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         id: row.id,
         name: row.name || "",
         partyId: row.partyId || "",
-        politicalRole: (row.roles || [])[0]?.politicalRole || next[index].politicalRole,
+        politicalRole: (row.roles || [])[0]?.politicalRole || row.politicalRole || next[index].politicalRole,
+        politicalRoles: roleListFromLeader(row, next[index].politicalRoles),
         leaderKind: LEADER_SLOTS[index].kind,
         platformDrafts: draftsFromAccounts(row.id, accountRows),
         activePlatform: "facebook"
@@ -720,6 +731,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       reportLeaderField(index, "party", "Party", `Select a party on ${LEADER_SLOTS[index].label}.`);
       return;
     }
+    const selectedRoles = (slot.politicalRoles || []).filter(Boolean);
+    if (!selectedRoles.length) {
+      reportLeaderField(index, "role", "Political role", `Select at least one profile role on ${LEADER_SLOTS[index].label}.`);
+      return;
+    }
     for (const platform of PLATFORMS) {
       const draft = slot.platformDrafts[platform];
       if (draft.hasAccount === "yes" && !String(draft.profileUrl || "").trim()) {
@@ -771,7 +787,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         id: slot.id,
         name: slot.name,
         partyId: slot.partyId,
-        politicalRole: slot.politicalRole,
+        politicalRole: selectedRoles[0],
+        roles: selectedRoles.map((role) => ({ politicalRole: role, status: "CURRENT" })),
         leaderKind: slot.leaderKind,
         currentFormerStatus: "CURRENT",
         stateId,
@@ -782,29 +799,36 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       });
       const personId = saved?.id;
       if (personId && !Array.isArray(saved?.accounts) && accountPayloads.length) {
-        await Promise.all(
+        const extra = await Promise.allSettled(
           accountPayloads.map((payload) => politicalApiService.savePiAccount(userId, { ...payload, personId }))
         );
+        saved.accountErrors = extra
+          .map((result, i) => result.status === "rejected" ? { platform: accountPayloads[i].platform, detail: String((result.reason as any)?.message || "Could not save") } : null)
+          .filter(Boolean);
       }
+      const accountErrors = Array.isArray(saved?.accountErrors) ? saved.accountErrors.filter((row: any) => row?.detail) : [];
       setLeaderAlert(null);
-      flash(`${LEADER_SLOTS[index].label} saved.`);
+      if (accountErrors.length) {
+        flash(`${LEADER_SLOTS[index].label} saved. ${accountErrors.map((row: any) => row.detail).join(" ")}`, true);
+      } else {
+        flash(`${LEADER_SLOTS[index].label} saved.`);
+      }
       setEntryGroup("leaders");
       const returnedAccounts = Array.isArray(saved?.accounts) ? saved.accounts : [];
-      if (personId && returnedAccounts.length) {
+      if (personId) {
         const mergedLeaders = [
-          { ...saved, assemblyConstituencyId: saved.assemblyConstituencyId || acId },
+          { ...saved, assemblyConstituencyId: saved.assemblyConstituencyId || acId, roles: saved.roles || selectedRoles.map((role) => ({ politicalRole: role })) },
           ...leaders.filter((row) => row.id !== personId)
         ];
-        const mergedAccounts = [
-          ...returnedAccounts,
-          ...accounts.filter((row) => row.personId !== personId)
-        ];
+        const mergedAccounts = returnedAccounts.length
+          ? [...returnedAccounts, ...accounts.filter((row) => row.personId !== personId)]
+          : accounts;
         setLeaders(mergedLeaders);
         setAccounts(mergedAccounts);
         persistOperatorCache({ leaders: mergedLeaders, accounts: mergedAccounts });
         hydrateLeaderSlots(mergedLeaders, mergedAccounts);
       }
-      void Promise.all([loadLeaders(), loadAccounts()]).then(([leaderRows, accountRows]) => {
+      void Promise.all([loadLeaders(), loadAccounts(), refreshDashboard()]).then(([leaderRows, accountRows]) => {
         hydrateLeaderSlots(leaderRows, accountRows);
       }).catch(() => undefined);
     } catch (err: any) {
@@ -867,6 +891,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       if (!prev || prev.index !== index) return prev;
       if (patch.name !== undefined && prev.field === "name") return null;
       if (patch.partyId !== undefined && prev.field === "party") return null;
+      if (patch.politicalRoles !== undefined && prev.field === "role") return null;
       return prev;
     });
   };
@@ -1337,10 +1362,28 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
                       )}
                     </div>
                     <div>
-                      <label className={LABEL}>Political role</label>
-                      <select className={INPUT} value={slot.politicalRole} onChange={(e) => patchLeaderSlot(index, { politicalRole: e.target.value })}>
-                        {ROLES.map((r) => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
-                      </select>
+                      <label className={LABEL} htmlFor={leaderFieldDomId(index, "role")}>Profile / political role</label>
+                      <div id={leaderFieldDomId(index, "role")} className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {ROLES.map((role) => {
+                          const checked = (slot.politicalRoles || []).includes(role);
+                          return (
+                            <label key={role} className="flex items-center gap-2 min-h-9 px-2 py-1.5 rounded-lg border border-[#22405E] text-[11px] text-[#F5EFE0]">
+                              <input
+                                type="checkbox"
+                                className="accent-[#D4A24C] shrink-0"
+                                checked={checked}
+                                onChange={() => {
+                                  const current = slot.politicalRoles || [];
+                                  const next = checked ? current.filter((item) => item !== role) : [...current, role];
+                                  patchLeaderSlot(index, { politicalRoles: next, politicalRole: next[0] || "" });
+                                }}
+                              />
+                              <span>{role.replace(/_/g, " ")}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {slotAlert?.field === "role" ? <p className="mt-1 text-[11px] text-rose-300">{slotAlert.message}</p> : null}
                     </div>
                     <div className="mt-auto flex flex-wrap gap-2 pt-1">
                       <button type="submit" id={leaderFieldDomId(index, "save")} className={BTN} disabled={!canEdit || slotBusy}>

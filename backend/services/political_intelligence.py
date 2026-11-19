@@ -37,6 +37,7 @@ PERSON_ROLES = (
     "FORMER_MP",
     "FORMER_MLC",
     "PROSPECTIVE_CANDIDATE",
+    "CONTESTED_CANDIDATE",
     "PARTY_LEADER",
     "PARTY_PRESIDENT",
     "OTHER",
@@ -208,12 +209,21 @@ def profile_username(url: str, platform: str = "", identifier: str = "") -> str:
     return parts[0].lstrip("@")
 
 
-def account_identity_key(platform: str, url: str, identifier: str = "") -> str:
+def account_identity_key(
+    platform: str,
+    url: str,
+    identifier: str = "",
+    person_id: str = "",
+    no_account: bool = False,
+) -> str:
+    plat = (platform or "").lower()
+    if no_account or "none.invalid" in (url or "").lower():
+        return f"{plat}|no|{(person_id or '').strip().lower()}"
     ident = (identifier or "").strip().lower().lstrip("@")
     normalized = normalize_profile_url(url, platform)
     if ident:
-        return f"{(platform or '').lower()}|{ident}"
-    return f"{(platform or '').lower()}|{normalized}"
+        return f"{plat}|{ident}"
+    return f"{plat}|{normalized}"
 
 
 def calculate_engagement(

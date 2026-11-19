@@ -21,6 +21,7 @@ from .political_intelligence import (
     ACCOUNT_STATUSES,
     MEMORY,
     PERSON_ROLES,
+    PLATFORM_LABELS,
     PLATFORMS,
     SAMPLE_TAG,
     account_identity_key,
@@ -235,6 +236,26 @@ def _runtime_list(collection: str) -> List[Dict[str, Any]]:
 def _list_local(collection: str) -> List[Dict[str, Any]]:
     """Memory + disk only. Save paths must not wait on a full Mongo collection scan."""
     return _merge_docs(_runtime_list(collection), memory_list(collection))
+
+
+async def _find_person_by_name(ac_id: str, needle: str) -> Optional[Dict[str, Any]]:
+    srv = _srv()
+    db = _pi_mongo_db(srv)
+    if db is None:
+        return None
+    try:
+        col = getattr(db, COLLECTIONS["political_persons"], None)
+        if col is None:
+            return None
+        doc = await asyncio.wait_for(
+            col.find_one({"normalizedName": needle, "assemblyConstituencyId": ac_id}, {"_id": 0}),
+            timeout=2.0,
+        )
+        if doc and doc.get("id"):
+            memory_upsert("political_persons", doc["id"], doc)
+        return doc
+    except Exception:
+        return None
 
 
 def _schedule_coro(coro) -> None:
@@ -618,7 +639,7 @@ async def _write_social_account(
         if mismatch:
             raise HTTPException(status_code=400, detail=mismatch)
     ident = profile_username(url, platform, str(payload.get("accountIdentifier") or "").strip())
-    identity = account_identity_key(platform, url, ident)
+    identity = account_identity_key(platform, url, ident, person_id=person_id, no_account=status == "NO_ACCOUNT")
     existing = None
     if payload.get("id"):
         existing = await _get("social_media_accounts", payload["id"])
@@ -628,14 +649,26 @@ async def _write_social_account(
                     existing = row
                     break
     rows = known_accounts if known_accounts is not None else _list_local("social_media_accounts")
+    normalized = normalize_profile_url(url, platform) if status != "NO_ACCOUNT" else ""
     for row in rows:
         if row.get("id") == (existing or {}).get("id"):
             continue
-        if row.get("personId") == person_id and str(row.get("platform") or "").lower() == platform:
+        same_person_platform = row.get("personId") == person_id and str(row.get("platform") or "").lower() == platform
+        if same_person_platform:
             existing = existing or row
             continue
-        if row.get("identityKey") == identity or (url and row.get("normalizedUrl") == normalize_profile_url(url, platform) and status != "NO_ACCOUNT"):
-            raise HTTPException(status_code=409, detail="Duplicate profile URL or account identifier")
+        if status == "NO_ACCOUNT" or row.get("verificationStatus") == "NO_ACCOUNT" or row.get("noAccount"):
+            continue
+        same_identity = row.get("identityKey") == identity
+        same_url = bool(normalized) and row.get("normalizedUrl") == normalized and str(row.get("platform") or "").lower() == platform
+        if same_identity or same_url:
+            other = await _get("political_persons", str(row.get("personId") or "")) or {}
+            other_name = other.get("name") or "another leader"
+            label = PLATFORM_LABELS.get(platform, platform)
+            raise HTTPException(
+                status_code=409,
+                detail=f"This {label} profile link is already saved for {other_name}. Use a different {label} link, or open that leader to update it.",
+            )
     followers = payload.get("followers")
     if followers == "" or followers is None:
         followers = None
@@ -1065,6 +1098,8 @@ def register_pi_routes(api_router) -> None:
                 if row.get("normalizedName") == needle and row.get("assemblyConstituencyId") == ac_id:
                     existing = row
                     break
+        if not existing:
+            existing = await _find_person_by_name(ac_id, normalize_name(name))
         now = now_iso()
         person_id = (existing or {}).get("id") or payload.get("id") or new_id("pp")
         doc = dict(existing or {})
@@ -1095,7 +1130,7 @@ def register_pi_routes(api_router) -> None:
             doc["contactId"] = doc.get("contactId")
         saved = await _save("political_persons", person_id, doc)
         roles_in = payload.get("roles") if isinstance(payload.get("roles"), list) else None
-        if payload.get("politicalRole"):
+        if not roles_in and payload.get("politicalRole"):
             roles_in = [{"politicalRole": payload.get("politicalRole"), "status": payload.get("currentFormerStatus") or "CURRENT", "electionYear": payload.get("electionYear"), "partyId": party_id, "assemblyConstituencyId": ac_id}]
         if roles_in:
             existing_roles = [r for r in _list_local("political_person_roles") if r.get("personId") == person_id]
@@ -1118,17 +1153,32 @@ def register_pi_routes(api_router) -> None:
         saved["roles"] = [r for r in _list_local("political_person_roles") if r.get("personId") == person_id]
         accounts_in = payload.get("accounts")
         saved_accounts: List[Dict[str, Any]] = []
+        account_errors: List[Dict[str, str]] = []
         if isinstance(accounts_in, list):
             known = _list_local("social_media_accounts")
+            payloads = []
             for raw in accounts_in:
                 if not isinstance(raw, dict):
                     continue
                 account_payload = dict(raw)
                 account_payload["personId"] = person_id
-                written = await _write_social_account(account_payload, caps, person=saved, known_accounts=known)
-                saved_accounts.append(written)
-                known = [row for row in known if row.get("id") != written.get("id")] + [written]
+                payloads.append(account_payload)
+
+            async def _save_one(account_payload: dict) -> None:
+                try:
+                    written = await _write_social_account(account_payload, caps, person=saved, known_accounts=known)
+                    saved_accounts.append(written)
+                except HTTPException as exc:
+                    if exc.status_code == 409:
+                        plat = str(account_payload.get("platform") or "social")
+                        account_errors.append({"platform": plat, "detail": str(exc.detail)})
+                        return
+                    raise
+
+            if payloads:
+                await asyncio.gather(*[_save_one(item) for item in payloads])
         saved["accounts"] = saved_accounts
+        saved["accountErrors"] = account_errors
         _audit_nowait(actor, "PI_LEADER_UPSERT", person_id, {"name": name, "partyId": party_id})
         return saved
 

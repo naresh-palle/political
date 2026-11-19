@@ -3,6 +3,7 @@ import sys
 import time
 
 from backend.services.political_intelligence import (
+    PERSON_ROLES,
     account_identity_key,
     actor_capabilities,
     calculate_engagement,
@@ -15,6 +16,13 @@ from backend.services.political_intelligence import (
     snapshot_growth,
     social_score,
 )
+
+
+def test_no_account_identity_is_per_person():
+    assert account_identity_key("youtube", "https://none.invalid/a/youtube", "", person_id="pp-1", no_account=True) != account_identity_key(
+        "youtube", "https://none.invalid/b/youtube", "", person_id="pp-2", no_account=True
+    )
+    assert "CONTESTED_CANDIDATE" in PERSON_ROLES
 
 
 def test_normalize_profile_url_and_identity():
@@ -318,6 +326,73 @@ def test_leader_nested_accounts_save_in_one_request(monkeypatch):
     assert instagram["verificationStatus"] == "NO_ACCOUNT"
     stored = [row for row in memory_list("social_media_accounts") if row.get("personId") == leader["id"]]
     assert len(stored) == 2
+
+
+def test_two_leaders_can_mark_youtube_as_no_account(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import memory_list, reset_memory
+
+    reset_memory()
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+
+    async def fake_actor(user_id):
+        return sm_a
+
+    monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
+    monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
+    monkeypatch.setattr(pi_api, "_audit", lambda *a, **k: _async_ok())
+
+    from fastapi import APIRouter
+
+    from backend.services.pi_api import register_pi_routes
+
+    router = APIRouter()
+    register_pi_routes(router)
+    posts = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "POST" in route.methods}
+
+    first = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Leader One",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+                "roles": [{"politicalRole": "MLA"}, {"politicalRole": "CONTESTED_CANDIDATE"}],
+                "accounts": [
+                    {"platform": "facebook", "profileUrl": "https://facebook.com/leader.one", "followers": 10},
+                    {"platform": "youtube", "verificationStatus": "NO_ACCOUNT"},
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+    second = _run(
+        posts["/pi/leaders"](
+            {
+                    "name": "Anantha Venkata Rami Reddy",
+                    "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "CONTESTED_CANDIDATE",
+                "accounts": [
+                    {"platform": "facebook", "profileUrl": "https://facebook.com/leader.one", "followers": 11},
+                    {"platform": "instagram", "profileUrl": "https://instagram.com/anantha.reddy", "followers": 8},
+                    {"platform": "x", "profileUrl": "https://x.com/anantha_reddy", "followers": 4},
+                    {"platform": "youtube", "verificationStatus": "NO_ACCOUNT"},
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+    assert first["id"] != second["id"]
+    assert {row["politicalRole"] for row in first["roles"]} >= {"MLA", "CONTESTED_CANDIDATE"}
+    assert len(second["accounts"]) >= 3
+    assert any(row.get("platform") == "youtube" for row in second["accounts"])
+    assert second.get("accountErrors")
+    assert "Facebook" in (second["accountErrors"][0]["detail"] if second["accountErrors"] else "")
+    youtube_rows = [row for row in memory_list("social_media_accounts") if row.get("platform") == "youtube"]
+    assert len(youtube_rows) >= 2
 
 
 def test_history_append_does_not_block_when_mongo_hangs(monkeypatch):
