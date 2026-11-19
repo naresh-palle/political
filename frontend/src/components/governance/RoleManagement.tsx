@@ -158,16 +158,49 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
         return "Deactivated user";
       case "PASSWORD_RESET":
         return "Reset password";
+      case "PI_CONSTITUENCY_UPSERT":
+        return "Saved constituency";
+      case "PI_CONSTITUENCY_DELETE":
+        return "Deleted constituency";
+      case "PI_LEADER_UPSERT":
+        return "Saved leader";
+      case "PI_LEADER_DELETE":
+        return "Deleted leader";
+      case "PI_SOCIAL_UPSERT":
+        return "Saved social account";
+      case "PI_SOCIAL_DELETE":
+        return "Deleted social account";
+      case "PI_VERIFY":
+        return "Updated verification";
+      case "PI_IMPORT":
+        return "Imported PI data";
+      case "PI_SAMPLE_SEED":
+        return "Seeded PI sample data";
       default:
         return String(action || "Activity").replace(/_/g, " ");
     }
+  };
+
+  const formatAuditDetail = (log: any) => {
+    const meta = log?.metadata || {};
+    const bits = [
+      log?.targetUserName,
+      meta.leaderName,
+      meta.platform,
+      meta.assemblyName,
+      meta.profileUrl,
+      meta.from && meta.to ? `${meta.from} → ${meta.to}` : "",
+      meta.importedRows != null ? `imported ${meta.importedRows}` : "",
+      meta.deletedAccounts != null ? `${meta.deletedAccounts} accounts` : ""
+    ].filter((bit, index, all) => bit && all.indexOf(bit) === index);
+    return bits.join(" · ");
   };
 
   const loadAuditLogs = async (targetUserId?: string) => {
     try {
       const logs = await politicalApiService.getAdminAuditLogs({
         targetUserId,
-        limit: 80
+        limit: 200
       });
       if (targetUserId) setUserAuditLogs(logs);
       else setAuditLogs(logs);
@@ -1372,7 +1405,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                             </div>
                             <p className="text-[#F5EFE0]">
                               {formatAuditAction(log.action)}
-                              {log.targetUserName ? ` · ${log.targetUserName}` : ""}
+                              {formatAuditDetail(log) ? ` · ${formatAuditDetail(log)}` : ""}
                             </p>
                             <span className="text-[10px] text-[#8E9CAE] block">
                               Actor: {log.actorName || "Unknown user"}
@@ -1456,7 +1489,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-display text-xl text-[#F5EFE0]">Platform Security & Access Audit Trail</h3>
-              <p className="text-xs text-[#8E9CAE]">Live sign-ins and user-management actions. Mock history has been removed.</p>
+              <p className="text-xs text-[#8E9CAE]">Live sign-ins, user-management, and Political Intelligence collection changes.</p>
             </div>
             <span className={`px-3 py-1 rounded-xl text-xs font-bold ${UNIQUE_TICKET_SURFACE.badge}`}>
               Live usage
@@ -1466,7 +1499,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           <div className="space-y-2.5">
             {auditLogs.length === 0 ? (
               <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#8E9CAE]">
-                No security audit entries yet. Sign-ins and user changes appear here automatically.
+                No security audit entries yet. Sign-ins, user changes, and Political Intelligence collection changes appear here.
               </div>
             ) : (
               auditLogs.map((log) => (
@@ -1478,7 +1511,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     <span className="text-[10px] font-mono text-[#8E9CAE]">{formatAuditTime(log.timestamp)}</span>
                     <p className="text-[#F5EFE0] font-semibold mt-0.5">
                       {formatAuditAction(log.action)}
-                      {log.targetUserName ? ` · ${log.targetUserName}` : ""}
+                      {formatAuditDetail(log) ? ` · ${formatAuditDetail(log)}` : ""}
                     </p>
                     <span className="text-[11px] text-[#D4A24C]">Actor: {log.actorName || "Unknown user"}</span>
                   </div>

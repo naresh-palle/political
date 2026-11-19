@@ -458,16 +458,30 @@ def _require(caps: Dict[str, Any], action: str) -> None:
         raise HTTPException(status_code=403, detail=f"Forbidden: {action} is not allowed for this role.")
 
 
-async def _audit(actor: Dict[str, Any], action: str, target: str, metadata: Optional[dict] = None) -> None:
+async def _audit(
+    actor: Dict[str, Any],
+    action: str,
+    target: str,
+    metadata: Optional[dict] = None,
+    target_name: Optional[str] = None,
+) -> None:
     srv = _srv()
+    meta = dict(metadata or {})
+    label = target_name or meta.get("name") or meta.get("leaderName") or meta.get("summary") or meta.get("assemblyName")
     try:
-        await srv.record_audit_log(actor.get("id"), actor.get("name"), action, target, None, metadata or {})
+        await srv.record_audit_log(actor.get("id"), actor.get("name"), action, target, label, meta)
     except Exception:
         pass
 
 
-def _audit_nowait(actor: Dict[str, Any], action: str, target: str, metadata: Optional[dict] = None) -> None:
-    _schedule_coro(_audit(actor, action, target, metadata))
+def _audit_nowait(
+    actor: Dict[str, Any],
+    action: str,
+    target: str,
+    metadata: Optional[dict] = None,
+    target_name: Optional[str] = None,
+) -> None:
+    _schedule_coro(_audit(actor, action, target, metadata, target_name))
 
 
 _GEO_CACHE: Dict[str, Any] = {"at": 0.0, "data": None}
@@ -1064,7 +1078,13 @@ def register_pi_routes(api_router) -> None:
                 {"id": new_id("cstat-hist"), "assemblyConstituencyId": ac_id, "previous": previous, "changedAt": now, "changedBy": caps["actorId"]},
             )
         saved = await _save("constituency_statistics", doc["id"], doc)
-        await _audit(actor, "PI_CONSTITUENCY_UPSERT", ac_id, {"id": doc["id"]})
+        await _audit(
+            actor,
+            "PI_CONSTITUENCY_UPSERT",
+            ac_id,
+            {"id": doc["id"], "assemblyConstituencyId": ac_id, "assemblyName": doc.get("assemblyName")},
+            target_name=doc.get("assemblyName") or ac_id,
+        )
         return saved
 
     @api_router.delete("/pi/constituencies/{record_id}")
@@ -1076,7 +1096,17 @@ def register_pi_routes(api_router) -> None:
         if not existing:
             raise HTTPException(status_code=404, detail="Constituency record not found")
         await _delete("constituency_statistics", record_id)
-        await _audit(actor, "PI_CONSTITUENCY_DELETE", record_id, {"assemblyConstituencyId": existing.get("assemblyConstituencyId")})
+        await _audit(
+            actor,
+            "PI_CONSTITUENCY_DELETE",
+            record_id,
+            {
+                "assemblyConstituencyId": existing.get("assemblyConstituencyId"),
+                "assemblyName": existing.get("assemblyName"),
+                "districtId": existing.get("districtId"),
+            },
+            target_name=existing.get("assemblyName") or existing.get("assemblyConstituencyId") or record_id,
+        )
         return {"success": True, "id": record_id}
 
     @api_router.get("/pi/leaders")
@@ -1216,7 +1246,7 @@ def register_pi_routes(api_router) -> None:
                 await asyncio.gather(*[_save_one(item) for item in payloads])
         saved["accounts"] = saved_accounts
         saved["accountErrors"] = account_errors
-        _audit_nowait(actor, "PI_LEADER_UPSERT", person_id, {"name": name, "partyId": party_id})
+        _audit_nowait(actor, "PI_LEADER_UPSERT", person_id, {"name": name, "partyId": party_id, "assemblyConstituencyId": saved.get("assemblyConstituencyId")}, target_name=name)
         return saved
 
     @api_router.delete("/pi/leaders/{person_id}")
@@ -1230,14 +1260,34 @@ def register_pi_routes(api_router) -> None:
         for role in await _list("political_person_roles"):
             if role.get("personId") == person_id and role.get("id"):
                 await _delete("political_person_roles", role["id"])
+        deleted_accounts = 0
         for account in await _list("social_media_accounts"):
             if account.get("personId") == person_id and account.get("id"):
                 for snap in await _list("social_media_snapshots"):
                     if snap.get("accountId") == account["id"] and snap.get("id"):
                         await _delete("social_media_snapshots", snap["id"])
                 await _delete("social_media_accounts", account["id"])
+                deleted_accounts += 1
+                await _audit(
+                    actor,
+                    "PI_SOCIAL_DELETE",
+                    account["id"],
+                    {
+                        "platform": account.get("platform"),
+                        "personId": person_id,
+                        "profileUrl": account.get("profileUrl"),
+                        "cascadedFrom": "leader",
+                    },
+                    target_name=account.get("profileUrl") or account.get("platform") or account["id"],
+                )
         await _delete("political_persons", person_id)
-        await _audit(actor, "PI_LEADER_DELETE", person_id, {"name": existing.get("name")})
+        await _audit(
+            actor,
+            "PI_LEADER_DELETE",
+            person_id,
+            {"name": existing.get("name"), "deletedAccounts": deleted_accounts},
+            target_name=existing.get("name") or person_id,
+        )
         return {"success": True, "id": person_id}
 
     async def _upsert_linked_contact(person: Dict[str, Any], caps: Dict[str, Any]) -> Dict[str, Any]:
@@ -1323,8 +1373,49 @@ def register_pi_routes(api_router) -> None:
         caps = actor_capabilities(actor)
         _require(caps, "create")
         saved = await _write_social_account(payload or {}, caps)
-        _audit_nowait(actor, "PI_SOCIAL_UPSERT", saved.get("id"), {"platform": saved.get("platform"), "personId": saved.get("personId")})
+        _audit_nowait(
+            actor,
+            "PI_SOCIAL_UPSERT",
+            saved.get("id"),
+            {
+                "platform": saved.get("platform"),
+                "personId": saved.get("personId"),
+                "profileUrl": saved.get("profileUrl"),
+            },
+            target_name=saved.get("profileUrl") or saved.get("platform") or saved.get("id"),
+        )
         return saved
+
+    @api_router.delete("/pi/social-accounts/{account_id}")
+    async def delete_social_account(account_id: str, userId: Optional[str] = None):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "delete")
+        existing = await _get("social_media_accounts", account_id)
+        if not existing:
+            raise HTTPException(status_code=404, detail="Social account not found")
+        person = await _get("political_persons", existing.get("personId") or "") if existing.get("personId") else {}
+        person = person or {}
+        if not in_scope(caps, person.get("stateId") or existing.get("stateId"), person.get("assemblyConstituencyId") or existing.get("assemblyConstituencyId")):
+            raise HTTPException(status_code=403, detail="Forbidden: this account is outside your scope.")
+        for snap in await _list("social_media_snapshots"):
+            if snap.get("accountId") == account_id and snap.get("id"):
+                await _delete("social_media_snapshots", snap["id"])
+        await _delete("social_media_accounts", account_id)
+        await _audit(
+            actor,
+            "PI_SOCIAL_DELETE",
+            account_id,
+            {
+                "platform": existing.get("platform"),
+                "personId": existing.get("personId"),
+                "leaderName": person.get("name"),
+                "profileUrl": existing.get("profileUrl"),
+                "assemblyConstituencyId": person.get("assemblyConstituencyId") or existing.get("assemblyConstituencyId"),
+            },
+            target_name=person.get("name") or existing.get("profileUrl") or existing.get("platform") or account_id,
+        )
+        return {"success": True, "id": account_id}
 
     @api_router.get("/pi/social-accounts/{account_id}/snapshots")
     async def list_snapshots(account_id: str, userId: Optional[str] = None):
@@ -1428,7 +1519,20 @@ def register_pi_routes(api_router) -> None:
                 "reviewRemarks": payload.get("remarks") or "",
             },
         )
-        await _audit(actor, "PI_VERIFY", record_id, {"from": previous, "to": new_status, "type": record_type})
+        await _audit(
+            actor,
+            "PI_VERIFY",
+            record_id,
+            {
+                "from": previous,
+                "to": new_status,
+                "type": record_type,
+                "platform": doc.get("platform"),
+                "profileUrl": doc.get("profileUrl"),
+                "leaderName": (await _get("political_persons", doc.get("personId") or "") or {}).get("name") if record_type == "social" else doc.get("name"),
+            },
+            target_name=doc.get("profileUrl") or doc.get("name") or record_id,
+        )
         return saved
 
     @api_router.get("/pi/verification/{record_id}/history")
@@ -1777,7 +1881,18 @@ def register_pi_routes(api_router) -> None:
             "source": "CSV",
         }
         await _save("data_import_batches", batch["id"], batch)
-        await _audit(actor, "PI_IMPORT", batch["id"], batch)
+        await _audit(
+            actor,
+            "PI_IMPORT",
+            batch["id"],
+            {
+                "importedRows": imported,
+                "rejectedRows": rejected,
+                "totalRows": preview.get("totalRows"),
+                "source": "CSV",
+            },
+            target_name=f"CSV import {imported} rows",
+        )
         return batch
 
     @api_router.get("/pi/import/batches")

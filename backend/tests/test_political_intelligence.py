@@ -114,6 +114,7 @@ def test_volunteer_cannot_verify():
     smm = actor_capabilities({"id": "usr-smm", "name": "SM M", "primaryRole": "SM_M", "email": "smm"})
     assert smm["view"] is True
     assert smm["create"] is False
+    assert smm["delete"] is True
     assert smm["verify"] is True
     assert smm["isSmM"] is True
 
@@ -508,6 +509,73 @@ def test_verified_and_rejected_queue_is_final(monkeypatch):
     stored = {row["id"]: row for row in memory_list("social_media_accounts")}
     assert stored[keep["id"]]["verificationStatus"] == "VERIFIED"
     assert stored[drop["id"]]["verificationStatus"] == "REJECTED"
+
+
+def test_smm_deletes_social_account_and_writes_audit(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory, memory_list
+
+    reset_memory()
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+    sm_m = {"id": "usr-smm", "name": "SM M", "email": "smm", "primaryRole": "SM_M", "roleId": "SM_M"}
+    audits = []
+
+    async def fake_actor(user_id):
+        return sm_a if user_id == sm_a["id"] else sm_m
+
+    async def capture_audit(actor, action, target, metadata=None, target_name=None):
+        audits.append({"action": action, "target": target, "metadata": metadata or {}, "target_name": target_name})
+
+    monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
+    monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
+    monkeypatch.setattr(pi_api, "_audit", capture_audit)
+    monkeypatch.setattr(pi_api, "_audit_nowait", lambda actor, action, target, metadata=None, target_name=None: audits.append({"action": action, "target": target, "metadata": metadata or {}, "target_name": target_name}))
+
+    from backend.services.pi_api import register_pi_routes
+    from fastapi import APIRouter
+
+    router = APIRouter()
+    register_pi_routes(router)
+    posts = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "POST" in route.methods}
+    deletes = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "DELETE" in route.methods}
+
+    leader = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Delete Me Rao",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+            },
+            userId=sm_a["id"],
+        )
+    )
+    account = _run(
+        posts["/pi/social-accounts"](
+            {
+                "personId": leader["id"],
+                "platform": "instagram",
+                "profileUrl": "https://instagram.com/delete.me.rao",
+                "followers": 9,
+            },
+            userId=sm_a["id"],
+        )
+    )
+    try:
+        _run(deletes["/pi/social-accounts/{account_id}"](account["id"], userId=sm_a["id"]))
+        raise AssertionError("SM A must not delete social accounts")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 403
+
+    removed = _run(deletes["/pi/social-accounts/{account_id}"](account["id"], userId=sm_m["id"]))
+    assert removed["success"] is True
+    assert account["id"] not in {row["id"] for row in memory_list("social_media_accounts")}
+    social_deletes = [row for row in audits if row["action"] == "PI_SOCIAL_DELETE"]
+    assert social_deletes
+    assert social_deletes[-1]["target"] == account["id"]
+    assert social_deletes[-1]["metadata"].get("platform") == "instagram"
+    assert any(row["action"] == "PI_SOCIAL_UPSERT" for row in audits)
 
 
 def test_intelligence_ranks_follow_selected_platform(monkeypatch):

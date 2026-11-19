@@ -438,7 +438,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const isAdminEditor = canManagePoliticalIntelligence(currentUser);
   const canVerify = isSmM || isAdminEditor;
   const canEdit = isSmA || isAdminEditor;
-  const canDelete = isAdminEditor;
+  const canDelete = isSmM || isAdminEditor;
   const visibleTabs = isAdminEditor ? ADMIN_TABS : isSmM ? SMM_TABS : SMA_TABS;
   const initialCache = readPiOperatorCache(userId);
   const replayedRef = useRef(false);
@@ -1135,6 +1135,26 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     }
   };
 
+  const deleteSocialAccount = async (row: any) => {
+    if (!canDelete || !row?.id) return;
+    const label = row.leaderName || row.summary || row.profileUrl || row.platform || row.id;
+    if (!window.confirm(`Delete this ${row.platform || "social"} account${label ? `: ${label}` : ""}?`)) return;
+    try {
+      await politicalApiService.deletePiAccount(userId, row.id);
+      flash("Account deleted.");
+      await Promise.all([loadAccounts(), refreshDashboard(), tab === "verify" ? loadQueue() : Promise.resolve()]);
+    } catch (err: any) {
+      flash(err.message, true);
+    }
+  };
+
+  const deleteCollectedRow = async (row: PiRecentCollection) => {
+    if (!canDelete || !row?.id) return;
+    if (row.recordType === "leader") return deleteLeaderRecord({ ...row, name: row.summary || (row as any).name });
+    if (row.recordType === "social") return deleteSocialAccount(row);
+    return deleteConstituency(row);
+  };
+
   const verify = async (recordType: string, id: string, status: string) => {
     if (actingId) return;
     const next = status.toUpperCase();
@@ -1437,6 +1457,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           <th>Summary</th>
                           <th>Entered by</th>
                           <th>Status</th>
+                          {canDelete ? <th>Delete</th> : null}
                         </tr>
                       </thead>
                       <tbody>
@@ -1460,6 +1481,21 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                             <td>
                               <span className={`px-1.5 py-0.5 rounded border ${statusTone(row.verificationStatus)}`}>{row.verificationStatus || "—"}</span>
                             </td>
+                            {canDelete ? (
+                              <td>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-rose-500/40 text-rose-200 text-[11px] font-bold uppercase tracking-wider"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteCollectedRow(row);
+                                  }}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Delete
+                                </button>
+                              </td>
+                            ) : null}
                           </tr>
                         ))}
                       </tbody>
@@ -1924,15 +1960,29 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       Rejected{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{row.reviewRemarks ? ` · ${row.reviewRemarks}` : ""}
                     </p>
                   )}
-                  {canVerify && queueCanAct(row.verificationStatus) && (
+                  {(canVerify && queueCanAct(row.verificationStatus)) || canDelete ? (
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <button className={BTN} type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
-                      {queueStatusOf(row) === "PENDING" && (
-                        <button className="px-3 py-2 rounded-xl border border-amber-500/40 text-amber-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "NEEDS_RECHECK")}>Recheck</button>
+                      {canVerify && queueCanAct(row.verificationStatus) && (
+                        <>
+                          <button className={BTN} type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
+                          {queueStatusOf(row) === "PENDING" && (
+                            <button className="px-3 py-2 rounded-xl border border-amber-500/40 text-amber-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "NEEDS_RECHECK")}>Recheck</button>
+                          )}
+                          <button className="px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "REJECTED")}>Reject</button>
+                        </>
                       )}
-                      <button className="px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "REJECTED")}>Reject</button>
+                      {canDelete ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs font-bold uppercase tracking-wider"
+                          onClick={() => deleteSocialAccount(row)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete
+                        </button>
+                      ) : null}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               ))}
             </div>

@@ -2248,6 +2248,9 @@ export const politicalApiService = {
   savePiAccount(userId: string, payload: any) {
     return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 20000);
   },
+  deletePiAccount(userId: string, accountId: string) {
+    return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}`, userId, { method: "DELETE" });
+  },
   getPiSnapshots(userId: string, accountId: string) {
     return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}/snapshots`, userId);
   },

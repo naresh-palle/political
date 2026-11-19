@@ -391,7 +391,7 @@ def actor_capabilities(actor: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         "create": is_sma or is_super,
         "update": is_sma or is_super,
         "submit": is_sma or is_super,
-        "delete": is_super,
+        "delete": is_smm or is_super,
         "verify": is_smm or is_super,
         "import": is_smm or is_super,
         "export": is_smm or is_super,
