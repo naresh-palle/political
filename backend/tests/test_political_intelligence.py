@@ -395,6 +395,105 @@ def test_two_leaders_can_mark_youtube_as_no_account(monkeypatch):
     assert len(youtube_rows) >= 2
 
 
+def test_verified_and_rejected_queue_is_final(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory, memory_list
+
+    reset_memory()
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+    sm_m = {"id": "usr-smm", "name": "SM M", "email": "smm", "primaryRole": "SM_M", "roleId": "SM_M"}
+
+    async def fake_actor(user_id):
+        return sm_a if user_id == sm_a["id"] else sm_m
+
+    monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
+    monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
+    monkeypatch.setattr(pi_api, "_audit", lambda *a, **k: _async_ok())
+
+    from fastapi import APIRouter
+
+    from backend.services.pi_api import register_pi_routes
+
+    router = APIRouter()
+    register_pi_routes(router)
+    posts = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "POST" in route.methods}
+    gets = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "GET" in route.methods}
+
+    leader = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Queue Lock Rao",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+            },
+            userId=sm_a["id"],
+        )
+    )
+    keep = _run(
+        posts["/pi/social-accounts"](
+            {
+                "personId": leader["id"],
+                "platform": "facebook",
+                "profileUrl": "https://facebook.com/queue.lock.keep",
+                "followers": 11,
+            },
+            userId=sm_a["id"],
+        )
+    )
+    drop = _run(
+        posts["/pi/social-accounts"](
+            {
+                "personId": leader["id"],
+                "platform": "instagram",
+                "profileUrl": "https://instagram.com/queue.lock.drop",
+                "followers": 7,
+            },
+            userId=sm_a["id"],
+        )
+    )
+
+    pending = _run(gets["/pi/verification-queue"](userId=sm_m["id"], status="PENDING"))
+    assert {row["id"] for row in pending} >= {keep["id"], drop["id"]}
+
+    verified = _run(posts["/pi/verification/{record_type}/{record_id}"]("social", keep["id"], {"status": "VERIFIED"}, userId=sm_m["id"]))
+    assert verified["verificationStatus"] == "VERIFIED"
+    again = _run(posts["/pi/verification/{record_type}/{record_id}"]("social", keep["id"], {"status": "VERIFIED"}, userId=sm_m["id"]))
+    assert again["verificationStatus"] == "VERIFIED"
+    try:
+        _run(posts["/pi/verification/{record_type}/{record_id}"]("social", keep["id"], {"status": "REJECTED", "remarks": "too late"}, userId=sm_m["id"]))
+        raise AssertionError("verified accounts must not be rejected")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 409
+
+    try:
+        _run(posts["/pi/verification/{record_type}/{record_id}"]("social", drop["id"], {"status": "REJECTED"}, userId=sm_m["id"]))
+        raise AssertionError("reject must require remarks")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 400
+    rejected = _run(
+        posts["/pi/verification/{record_type}/{record_id}"]("social", drop["id"], {"status": "REJECTED", "remarks": "wrong handle"}, userId=sm_m["id"])
+    )
+    assert rejected["verificationStatus"] == "REJECTED"
+    try:
+        _run(posts["/pi/verification/{record_type}/{record_id}"]("social", drop["id"], {"status": "VERIFIED"}, userId=sm_m["id"]))
+        raise AssertionError("rejected accounts must stay rejected")
+    except Exception as exc:
+        assert getattr(exc, "status_code", None) == 409
+
+    pending_after = _run(gets["/pi/verification-queue"](userId=sm_m["id"], status="PENDING"))
+    verified_rows = _run(gets["/pi/verification-queue"](userId=sm_m["id"], status="VERIFIED"))
+    rejected_rows = _run(gets["/pi/verification-queue"](userId=sm_m["id"], status="REJECTED"))
+    assert keep["id"] not in {row["id"] for row in pending_after}
+    assert drop["id"] not in {row["id"] for row in pending_after}
+    assert any(row["id"] == keep["id"] and row["verificationStatus"] == "VERIFIED" for row in verified_rows)
+    assert any(row["id"] == drop["id"] and row["verificationStatus"] == "REJECTED" for row in rejected_rows)
+    stored = {row["id"]: row for row in memory_list("social_media_accounts")}
+    assert stored[keep["id"]]["verificationStatus"] == "VERIFIED"
+    assert stored[drop["id"]]["verificationStatus"] == "REJECTED"
+
+
 def test_history_append_does_not_block_when_mongo_hangs(monkeypatch):
     from backend.services import pi_api
     from backend.services.political_intelligence import reset_memory

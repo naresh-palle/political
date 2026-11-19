@@ -322,6 +322,15 @@ function statusTone(status?: string) {
   return "text-[#D4A24C] border-[#D4A24C]/40 bg-[#071322]";
 }
 
+function queueStatusOf(row: any) {
+  return String(row?.verificationStatus || "").toUpperCase();
+}
+
+function queueCanAct(status?: string) {
+  const current = String(status || "").toUpperCase();
+  return current === "PENDING" || current === "NEEDS_RECHECK";
+}
+
 export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ currentUser }) => {
   const userId = currentUser.id;
   const isSmA = isSmAUser(currentUser);
@@ -364,8 +373,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const [leaderAlert, setLeaderAlert] = useState<LeaderFieldAlert | null>(null);
   const [leaders, setLeaders] = useState<any[]>(initialCache?.leaders || []);
   const [accounts, setAccounts] = useState<any[]>(initialCache?.accounts || []);
-  const [queue, setQueue] = useState<any[]>(initialCache?.queue || []);
+  const [queue, setQueue] = useState<any[]>([]);
   const [queueStatus, setQueueStatus] = useState("PENDING");
+  const [actingId, setActingId] = useState("");
   const [intel, setIntel] = useState<any>(null);
   const [intelPlatform, setIntelPlatform] = useState("");
   const [intelParty, setIntelParty] = useState("");
@@ -598,18 +608,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     setLeaderSlots(next);
   };
   const loadQueue = async () => {
-    const rows = await politicalApiService.getPiQueue(userId, queueStatus);
-    if (Array.isArray(rows) && rows.length) {
-      setQueue(rows);
-      persistOperatorCache({ queue: rows });
-      return;
-    }
-    const cache = readPiOperatorCache(userId);
-    if (cache?.queue?.length && queueStatus === "PENDING") {
-      setQueue(cache.queue);
-      return;
-    }
-    setQueue(Array.isArray(rows) ? rows : []);
+    const wanted = String(queueStatus || "PENDING").toUpperCase();
+    const rows = await politicalApiService.getPiQueue(userId, wanted);
+    const list = (Array.isArray(rows) ? rows : []).filter((row) => queueStatusOf(row) === wanted);
+    setQueue(list);
+    if (wanted === "PENDING") persistOperatorCache({ queue: list });
   };
   const loadIntel = async () => {
     setIntel(
@@ -875,13 +878,34 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   };
 
   const verify = async (recordType: string, id: string, status: string) => {
-    const remarks = window.prompt("Review remarks") || "";
+    if (actingId) return;
+    const next = status.toUpperCase();
+    let remarks = "";
+    if (next === "VERIFIED") {
+      if (!window.confirm("Verify this social account? It will move to Verified with no further actions.")) return;
+    } else if (next === "NEEDS_RECHECK") {
+      remarks = window.prompt("Why does this need a recheck?") || "";
+      if (!remarks.trim()) return;
+    } else if (next === "REJECTED") {
+      remarks = window.prompt("Why are you rejecting this account?") || "";
+      if (!remarks.trim()) return;
+    }
+    setActingId(id);
     try {
-      await politicalApiService.verifyPiRecord(userId, recordType, id, { status, remarks });
-      flash(`Marked ${status}`);
+      await politicalApiService.verifyPiRecord(userId, recordType, id, { status: next, remarks });
+      setQueue((prev) => {
+        const remaining = prev.filter((row) => row.id !== id);
+        if (queueStatus === "PENDING") persistOperatorCache({ queue: remaining });
+        return remaining;
+      });
+      flash(next === "VERIFIED" ? "Verified. This account is closed for further action." : next === "REJECTED" ? "Rejected. This account is listed with no actions." : "Sent back for recheck.");
       await loadQueue();
+      await refreshDashboard().catch(() => undefined);
     } catch (err: any) {
       flash(err.message, true);
+      await loadQueue().catch(() => undefined);
+    } finally {
+      setActingId("");
     }
   };
 
@@ -1450,7 +1474,22 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
               <button type="button" key={s} onClick={() => setQueueStatus(s)} className={`px-2 py-1 rounded text-[10px] font-bold border ${queueStatus === s ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s}</button>
             ))}
           </div>
-          {queue.length === 0 ? <EmptyState text="No records in this verification bucket." /> : (
+          <p className="text-[11px] text-[#B9AF95] mb-3 leading-relaxed">
+            Pending accounts can be verified, sent for recheck, or rejected. Recheck items can be verified or rejected. Verified and rejected records stay on those tabs with no further options.
+          </p>
+          {queue.length === 0 ? (
+            <EmptyState
+              text={
+                queueStatus === "PENDING"
+                  ? "No pending accounts to review."
+                  : queueStatus === "NEEDS_RECHECK"
+                    ? "No accounts waiting for recheck."
+                    : queueStatus === "VERIFIED"
+                      ? "No verified accounts yet."
+                      : "No rejected accounts."
+              }
+            />
+          ) : (
             <div className="space-y-2">
               {queue.map((row) => (
                 <div key={row.id} className="p-2.5 rounded-lg border border-[#22405E]">
@@ -1474,11 +1513,23 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
                     );
                   })()}
                   <p className="text-[11px] text-[#B9AF95]">Followers {row.followers ?? "—"} · Entered by {row.enteredByName || row.enteredBy}</p>
-                  {canVerify && (
+                  {queueStatusOf(row) === "VERIFIED" && (
+                    <p className="text-[11px] text-emerald-300 mt-2">
+                      Verified{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{(row.verifiedAt || "").slice(0, 10) ? ` · ${(row.verifiedAt || "").slice(0, 10)}` : ""}. No further action.
+                    </p>
+                  )}
+                  {queueStatusOf(row) === "REJECTED" && (
+                    <p className="text-[11px] text-rose-300 mt-2">
+                      Rejected{row.verifiedByName ? ` by ${row.verifiedByName}` : ""}{row.reviewRemarks ? ` · ${row.reviewRemarks}` : ""}. No further action.
+                    </p>
+                  )}
+                  {canVerify && queueCanAct(row.verificationStatus) && (
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <button className={BTN} onClick={() => verify("social", row.id, "VERIFIED")}>Verify</button>
-                      <button className="px-3 py-2 rounded-xl border border-amber-500/40 text-amber-200 text-xs" onClick={() => verify("social", row.id, "NEEDS_RECHECK")}>Recheck</button>
-                      <button className="px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs" onClick={() => verify("social", row.id, "REJECTED")}>Reject</button>
+                      <button className={BTN} type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
+                      {queueStatusOf(row) === "PENDING" && (
+                        <button className="px-3 py-2 rounded-xl border border-amber-500/40 text-amber-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "NEEDS_RECHECK")}>Recheck</button>
+                      )}
+                      <button className="px-3 py-2 rounded-xl border border-rose-500/40 text-rose-200 text-xs" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "REJECTED")}>Reject</button>
                     </div>
                   )}
                 </div>

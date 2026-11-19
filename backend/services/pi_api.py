@@ -1338,7 +1338,18 @@ def register_pi_routes(api_router) -> None:
             raise HTTPException(status_code=404, detail="Record not found")
         if doc.get("enteredBy") == caps["actorId"] and not caps.get("isSuper"):
             raise HTTPException(status_code=403, detail="Independent verification required: you cannot verify your own submission")
-        previous = doc.get("verificationStatus")
+        previous = str(doc.get("verificationStatus") or "").upper()
+        if previous in {"VERIFIED", "REJECTED"}:
+            if previous == new_status:
+                return doc
+            raise HTTPException(
+                status_code=409,
+                detail=f"This record is already {previous}. Open the {previous} tab to view it — no further action is allowed.",
+            )
+        if previous == "NO_ACCOUNT":
+            raise HTTPException(status_code=400, detail="Accounts marked as no account cannot be verified")
+        if new_status in {"REJECTED", "NEEDS_RECHECK"} and not str(payload.get("remarks") or "").strip():
+            raise HTTPException(status_code=400, detail="Remarks are required when sending for recheck or rejecting")
         now = now_iso()
         doc["verificationStatus"] = new_status
         doc["verifiedBy"] = caps["actorId"]
