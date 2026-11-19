@@ -6,6 +6,7 @@ from backend.services.political_intelligence import (
     PERSON_ROLES,
     account_identity_key,
     actor_capabilities,
+    aggregate_account_metrics,
     calculate_engagement,
     load_sample_into_memory,
     normalize_profile_url,
@@ -76,6 +77,18 @@ def test_snapshot_growth_and_social_score_skip_missing():
     assert score is not None
     assert "engagement" not in meta["parts"]
     assert "posts30" not in meta["parts"]
+
+
+def test_aggregate_account_metrics_uses_only_given_accounts():
+    facebook = {"id": "a-fb", "platform": "facebook", "followers": 5000, "engagementPercent": 4, "postsLast30Days": 10, "growth30": 2}
+    instagram = {"id": "a-ig", "platform": "instagram", "followers": 800, "engagementPercent": 8, "postsLast30Days": 4, "growth30": 20}
+    none = {"id": "a-yt", "platform": "youtube", "followers": 9000, "verificationStatus": "NO_ACCOUNT", "noAccount": True}
+    all_platforms = aggregate_account_metrics([facebook, instagram, none])
+    ig_only = aggregate_account_metrics([instagram])
+    assert all_platforms["followers"] == 5800
+    assert ig_only["followers"] == 800
+    assert ig_only["growth30"] == 20
+    assert ig_only["engagementPercent"] == 8
 
 
 def test_volunteer_cannot_verify():
@@ -492,6 +505,99 @@ def test_verified_and_rejected_queue_is_final(monkeypatch):
     stored = {row["id"]: row for row in memory_list("social_media_accounts")}
     assert stored[keep["id"]]["verificationStatus"] == "VERIFIED"
     assert stored[drop["id"]]["verificationStatus"] == "REJECTED"
+
+
+def test_intelligence_ranks_follow_selected_platform(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import reset_memory
+
+    reset_memory()
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+    sm_m = {"id": "usr-smm", "name": "SM M", "email": "smm", "primaryRole": "SM_M", "roleId": "SM_M"}
+
+    async def fake_actor(user_id):
+        return sm_a if user_id == sm_a["id"] else sm_m
+
+    monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
+    monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
+    monkeypatch.setattr(pi_api, "_audit", lambda *a, **k: _async_ok())
+
+    from fastapi import APIRouter
+
+    from backend.services.pi_api import register_pi_routes
+
+    router = APIRouter()
+    register_pi_routes(router)
+    posts = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "POST" in route.methods}
+    gets = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "GET" in route.methods}
+
+    alpha = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Alpha Rao",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+                "accounts": [
+                    {"platform": "facebook", "profileUrl": "https://facebook.com/alpha.rao", "followers": 9000},
+                    {"platform": "instagram", "profileUrl": "https://instagram.com/alpha.rao", "followers": 100},
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+    beta = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Beta Reddy",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+                "leaderKind": "LEADER_2",
+                "accounts": [
+                    {"platform": "facebook", "profileUrl": "https://facebook.com/beta.reddy", "followers": 100},
+                    {"platform": "instagram", "profileUrl": "https://instagram.com/beta.reddy", "followers": 9000},
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+
+    all_intel = _run(
+        gets["/pi/intelligence"](
+            userId=sm_m["id"],
+            stateId="AP",
+            districtId=None,
+            parliamentConstituencyId=None,
+            assemblyConstituencyId=None,
+            platform=None,
+            partyId=None,
+            rankBy="followers",
+        )
+    )
+    ig_intel = _run(
+        gets["/pi/intelligence"](
+            userId=sm_m["id"],
+            stateId="AP",
+            districtId=None,
+            parliamentConstituencyId=None,
+            assemblyConstituencyId=None,
+            platform="instagram",
+            partyId=None,
+            rankBy="followers",
+        )
+    )
+    all_by_id = {row["id"]: row for row in all_intel["leaders"]}
+    ig_by_id = {row["id"]: row for row in ig_intel["leaders"]}
+    assert all_by_id[alpha["id"]]["rankInConstituency"] < all_by_id[beta["id"]]["rankInConstituency"]
+    assert ig_intel["rankPlatform"] == "instagram"
+    assert ig_by_id[alpha["id"]]["followers"] == 100
+    assert ig_by_id[beta["id"]]["followers"] == 9000
+    assert ig_by_id[beta["id"]]["rankInConstituency"] < ig_by_id[alpha["id"]]["rankInConstituency"]
+    assert ig_by_id[alpha["id"]]["platforms"]["instagram"]["followers"] == 100
+    assert all_by_id[alpha["id"]]["followers"] == 9100
 
 
 def test_history_append_does_not_block_when_mongo_hangs(monkeypatch):

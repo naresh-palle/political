@@ -281,6 +281,43 @@ def snapshot_growth(snapshots: List[Dict[str, Any]], days: int) -> Optional[floa
     return round(((latest_val - old_val) / old_val) * 100.0, 4)
 
 
+def account_is_rankable(account: Optional[Dict[str, Any]]) -> bool:
+    account = account or {}
+    if account.get("noAccount") or str(account.get("verificationStatus") or "").upper() == "NO_ACCOUNT":
+        return False
+    return True
+
+
+def aggregate_account_metrics(accounts: List[Dict[str, Any]], snapshots_by_account: Optional[Dict[str, List[Dict[str, Any]]]] = None) -> Dict[str, Optional[float]]:
+    """Roll followers / engagement / posts / 30-day growth from the given accounts only."""
+    snapshots_by_account = snapshots_by_account or {}
+    combined = None
+    engagements: List[float] = []
+    posts: List[float] = []
+    growths: List[float] = []
+    for acc in accounts:
+        if not account_is_rankable(acc):
+            continue
+        related = snapshots_by_account.get(acc.get("id")) or []
+        g30 = acc.get("growth30")
+        if g30 is None and related:
+            g30 = snapshot_growth(related, 30)
+        if acc.get("followers") is not None:
+            combined = (combined or 0) + acc["followers"]
+        if acc.get("engagementPercent") is not None:
+            engagements.append(acc["engagementPercent"])
+        if acc.get("postsLast30Days") is not None:
+            posts.append(acc["postsLast30Days"])
+        if g30 is not None:
+            growths.append(g30)
+    return {
+        "followers": combined,
+        "engagementPercent": round(sum(engagements) / len(engagements), 4) if engagements else None,
+        "postsLast30Days": sum(posts) if posts else None,
+        "growth30": round(sum(growths) / len(growths), 4) if growths else None,
+    }
+
+
 def _rank_score(values: List[Optional[float]], value: Optional[float]) -> Optional[float]:
     present = [v for v in values if v is not None]
     if value is None or not present:

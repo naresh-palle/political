@@ -25,7 +25,9 @@ from .political_intelligence import (
     PLATFORMS,
     SAMPLE_TAG,
     account_identity_key,
+    account_is_rankable,
     actor_capabilities,
+    aggregate_account_metrics,
     calculate_engagement,
     csv_template,
     in_scope,
@@ -1426,39 +1428,41 @@ def register_pi_routes(api_router) -> None:
                 if val is not None:
                     audience[plat] += int(val)
         assemblies_by_id = geo.get("assemblies") or {}
+        snapshots_by_account: Dict[str, List[Dict[str, Any]]] = {}
+        for snap in snapshots:
+            snapshots_by_account.setdefault(snap.get("accountId"), []).append(snap)
+        wanted_platform = str(platform or "").strip().lower()
+        if wanted_platform and wanted_platform not in PLATFORMS:
+            wanted_platform = ""
         leaders = []
         for person in persons:
             party = geo["parties"].get(person.get("partyId")) or {}
             all_accounts = [a for a in accounts if a.get("personId") == person.get("id")]
-            person_accounts = [a for a in all_accounts if not a.get("noAccount") and a.get("verificationStatus") != "NO_ACCOUNT"]
+            person_accounts = [a for a in all_accounts if account_is_rankable(a)]
             platforms = {}
             for acc in all_accounts:
                 plat = str(acc.get("platform") or "").lower()
-                if plat:
-                    platforms[plat] = {
-                        "followers": acc.get("followers"),
-                        "noAccount": bool(acc.get("noAccount") or acc.get("verificationStatus") == "NO_ACCOUNT"),
-                        "verified": acc.get("verificationStatus") == "VERIFIED",
-                        "profileUrl": acc.get("profileUrl"),
-                    }
-            combined = None
-            engagements = []
-            posts = []
-            growths = []
-            for acc in person_accounts:
-                related = [s for s in snapshots if s.get("accountId") == acc.get("id")]
+                if not plat:
+                    continue
+                related = snapshots_by_account.get(acc.get("id")) or []
                 g30 = snapshot_growth(related, 30)
                 g90 = snapshot_growth(related, 90)
                 acc["growth30"] = g30
                 acc["growth90"] = g90
-                if acc.get("followers") is not None:
-                    combined = (combined or 0) + acc["followers"]
-                if acc.get("engagementPercent") is not None:
-                    engagements.append(acc["engagementPercent"])
-                if acc.get("postsLast30Days") is not None:
-                    posts.append(acc["postsLast30Days"])
-                if g30 is not None:
-                    growths.append(g30)
+                platforms[plat] = {
+                    "followers": acc.get("followers"),
+                    "noAccount": bool(acc.get("noAccount") or acc.get("verificationStatus") == "NO_ACCOUNT"),
+                    "verified": acc.get("verificationStatus") == "VERIFIED",
+                    "profileUrl": acc.get("profileUrl"),
+                    "engagementPercent": acc.get("engagementPercent"),
+                    "growth30": g30,
+                    "postsLast30Days": acc.get("postsLast30Days"),
+                }
+            metric_accounts = [
+                acc for acc in person_accounts
+                if not wanted_platform or str(acc.get("platform") or "").lower() == wanted_platform
+            ]
+            metrics = aggregate_account_metrics(metric_accounts, snapshots_by_account)
             leaders.append(
                 {
                     "id": person.get("id"),
@@ -1474,12 +1478,13 @@ def register_pi_routes(api_router) -> None:
                     "politicalRole": person.get("politicalRole"),
                     "platforms": platforms,
                     "stateId": person.get("stateId"),
-                    "followers": combined,
-                    "engagementPercent": round(sum(engagements) / len(engagements), 4) if engagements else None,
-                    "postsLast30Days": sum(posts) if posts else None,
-                    "growth30": round(sum(growths) / len(growths), 4) if growths else None,
+                    "followers": metrics["followers"],
+                    "engagementPercent": metrics["engagementPercent"],
+                    "postsLast30Days": metrics["postsLast30Days"],
+                    "growth30": metrics["growth30"],
                     "accounts": all_accounts,
                     "verificationStatus": person.get("verificationStatus"),
+                    "rankPlatform": wanted_platform or "all",
                 }
             )
         for row in leaders:
@@ -1578,6 +1583,7 @@ def register_pi_routes(api_router) -> None:
             "platformCompare": list(platform_compare.values()),
             "biggestGap": biggest_gap,
             "rankBy": rank_key,
+            "rankPlatform": wanted_platform or "all",
             "socialScoreDisclaimer": "Social Score is an internal relative index among the filtered leaders. Missing metrics are skipped, never treated as zero. It is not an official election or popularity score.",
         }
 

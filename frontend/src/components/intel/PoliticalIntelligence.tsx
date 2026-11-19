@@ -140,6 +140,55 @@ function rankMetricKey(rankBy: string) {
   return "followers";
 }
 
+function platformDetail(leader: any, platform: string) {
+  const fromMap = leader?.platforms?.[platform];
+  if (fromMap) return fromMap;
+  const acc = (leader?.accounts || []).find((a: any) => String(a.platform || "").toLowerCase() === platform);
+  if (!acc) return null;
+  return {
+    followers: acc.followers,
+    noAccount: Boolean(acc.noAccount || acc.verificationStatus === "NO_ACCOUNT"),
+    verified: acc.verificationStatus === "VERIFIED",
+    profileUrl: acc.profileUrl,
+    engagementPercent: acc.engagementPercent,
+    growth30: acc.growth30,
+    postsLast30Days: acc.postsLast30Days
+  };
+}
+
+function rankMetricForLeader(leader: any, platform: string, rankBy: string): number | null {
+  if (platform) {
+    const detail = platformDetail(leader, platform);
+    if (!detail || detail.noAccount) return null;
+    if (rankBy === "engagement") return detail.engagementPercent == null ? null : Number(detail.engagementPercent);
+    if (rankBy === "growth") return detail.growth30 == null ? null : Number(detail.growth30);
+    if (rankBy === "socialScore") {
+      if (leader.rankPlatform === platform && leader.socialScore != null) return Number(leader.socialScore);
+      return detail.followers == null ? null : Number(detail.followers);
+    }
+    return detail.followers == null ? null : Number(detail.followers);
+  }
+  const key = rankMetricKey(rankBy);
+  const value = leader?.[key];
+  return value == null ? null : Number(value);
+}
+
+function rankInPool(
+  leaders: any[],
+  id: string | undefined,
+  pred: (row: any) => boolean,
+  metric: (row: any) => number | null
+) {
+  const pool = leaders.filter(pred);
+  const sortable = pool
+    .filter((row) => metric(row) != null)
+    .sort((a, b) => Number(metric(b)) - Number(metric(a)));
+  const idx = id ? sortable.findIndex((row) => row.id === id) : -1;
+  return { value: idx >= 0 ? idx + 1 : null, of: sortable.length };
+}
+
+const SELECTED_PLATFORM_CARD = "ring-2 ring-inset ring-[#D4A24C] border-[#D4A24C] bg-[#D4A24C]/10";
+
 type PlatformDraft = {
   hasAccount: "" | "yes" | "no";
   verified: "" | "yes" | "no";
@@ -1631,7 +1680,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
                 <button
                   type="button"
                   onClick={() => setIntelPlatform("")}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${!intelPlatform ? "bg-[#3B82F6] text-white" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${!intelPlatform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
                 >
                   All
                 </button>
@@ -1640,7 +1689,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
                     type="button"
                     key={platform}
                     onClick={() => setIntelPlatform(platform)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${intelPlatform === platform ? "bg-[#3B82F6] text-white" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${intelPlatform === platform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
                   >
                     {PLATFORM_LABEL[platform]}
                   </button>
@@ -1683,6 +1732,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
                 partyId={intelParty}
                 rankBy={rankBy}
                 partyById={partyById}
+                onSelectPlatform={setIntelPlatform}
               />
             ) : (
               <IntelligenceDistrict
@@ -1708,19 +1758,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
     </div>
   );
 };
-
-function platformDetail(leader: any, platform: string) {
-  const fromMap = leader?.platforms?.[platform];
-  if (fromMap) return fromMap;
-  const acc = (leader?.accounts || []).find((a: any) => String(a.platform || "").toLowerCase() === platform);
-  if (!acc) return null;
-  return {
-    followers: acc.followers,
-    noAccount: Boolean(acc.noAccount || acc.verificationStatus === "NO_ACCOUNT"),
-    verified: acc.verificationStatus === "VERIFIED",
-    profileUrl: acc.profileUrl
-  };
-}
 
 function partyLabel(partyById: Record<string, PoliticalParty>, partyId?: string, fallback?: string) {
   const party = partyId ? partyById[partyId] : undefined;
@@ -1807,10 +1844,6 @@ function formatSignedPercent(value?: number | null) {
   return `${n > 0 ? "+" : n < 0 ? "−" : ""}${body}%`;
 }
 
-function poolSize(leaders: any[], pred: (row: any) => boolean) {
-  return leaders.filter(pred).length;
-}
-
 function IntelligenceConstituency({
   intel,
   acId,
@@ -1820,7 +1853,8 @@ function IntelligenceConstituency({
   platform,
   partyId,
   rankBy,
-  partyById
+  partyById,
+  onSelectPlatform
 }: {
   intel: any;
   acId: string;
@@ -1831,6 +1865,7 @@ function IntelligenceConstituency({
   partyId: string;
   rankBy: string;
   partyById: Record<string, PoliticalParty>;
+  onSelectPlatform: (platform: string) => void;
 }) {
   const card = (intel.constituencyCards || []).find((c: any) => c.assemblyConstituencyId === acId) || {};
   const estimates = card.platformEstimates || {
@@ -1845,14 +1880,18 @@ function IntelligenceConstituency({
   const focus = inConstituency.find((l: any) => isSittingMlaKind(l.leaderKind)) || inConstituency[0] || null;
   const rankLabel = RANK_BY_OPTIONS.find((option) => option.id === rankBy)?.label || "Followers";
   const platformLabel = platform ? PLATFORM_LABEL[platform as (typeof PLATFORMS)[number]] || platform : "All";
-  const metricKey = rankMetricKey(rankBy);
-  const rankedPool = [...allLeaders].filter((row: any) => row[metricKey] != null).sort((a: any, b: any) => Number(b[metricKey] || 0) - Number(a[metricKey] || 0));
+  const metricOf = (row: any) => rankMetricForLeader(row, platform, rankBy);
+  const rankedPool = [...allLeaders].filter((row: any) => metricOf(row) != null).sort((a: any, b: any) => Number(metricOf(b)) - Number(metricOf(a)));
   const focusRankIndex = focus ? rankedPool.findIndex((row: any) => row.id === focus.id) : -1;
   const above = focusRankIndex > 0 ? rankedPool[focusRankIndex - 1] : null;
-  const moveUp = above && focus && focus[metricKey] != null ? Number(above[metricKey]) - Number(focus[metricKey]) : null;
+  const focusMetric = focus ? metricOf(focus) : null;
+  const aboveMetric = above ? metricOf(above) : null;
+  const moveUp = aboveMetric != null && focusMetric != null ? Number(aboveMetric) - Number(focusMetric) : null;
+  const focusGrowth = platform ? platformDetail(focus, platform)?.growth30 : focus?.growth30;
   let worstGap: { platform: string; pct: number } | null = null;
   if (focus) {
-    for (const plat of PLATFORMS) {
+    const gapPlatforms = platform ? [platform as (typeof PLATFORMS)[number]] : [...PLATFORMS];
+    for (const plat of gapPlatforms) {
       const detail = platformDetail(focus, plat);
       const estimate = Number(estimates[plat] || 0);
       const noAccount = Boolean(detail?.noAccount);
@@ -1862,11 +1901,11 @@ function IntelligenceConstituency({
     }
   }
   const standings = focus ? [
-    { value: focus.rankInConstituency, of: poolSize(allLeaders, (row) => row.assemblyConstituencyId === acId), caption: "Vs opponents here" },
-    { value: focus.rankInDistrict, of: poolSize(allLeaders, (row) => row.districtId && row.districtId === focus.districtId), caption: "In district" },
-    { value: focus.rankInParliament, of: poolSize(allLeaders, (row) => row.parliamentConstituencyId && row.parliamentConstituencyId === focus.parliamentConstituencyId), caption: "In Parliament seat" },
-    { value: focus.rankInParty, of: poolSize(allLeaders, (row) => row.partyId && row.partyId === focus.partyId), caption: `Among ${partyLabel(partyById, focus.partyId, focus.partyName) || "party"} MLAs` },
-    { value: focus.rankInState, of: poolSize(allLeaders, (row) => row.stateId && row.stateId === focus.stateId), caption: `All ${stateName || "state"} constituencies` }
+    { ...rankInPool(allLeaders, focus.id, (row) => row.assemblyConstituencyId === acId, metricOf), caption: "Vs opponents here" },
+    { ...rankInPool(allLeaders, focus.id, (row) => row.districtId && row.districtId === focus.districtId, metricOf), caption: "In district" },
+    { ...rankInPool(allLeaders, focus.id, (row) => row.parliamentConstituencyId && row.parliamentConstituencyId === focus.parliamentConstituencyId, metricOf), caption: "In Parliament seat" },
+    { ...rankInPool(allLeaders, focus.id, (row) => row.partyId && row.partyId === focus.partyId, metricOf), caption: `Among ${partyLabel(partyById, focus.partyId, focus.partyName) || "party"} MLAs` },
+    { ...rankInPool(allLeaders, focus.id, (row) => row.stateId && row.stateId === focus.stateId, metricOf), caption: `All ${stateName || "state"} constituencies` }
   ] : [];
 
   return (
@@ -1880,13 +1919,22 @@ function IntelligenceConstituency({
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {PLATFORMS.map((plat) => (
-          <div key={plat} className={`${CARD} text-center`}>
-            <span className="text-[11px] text-[#B9AF95] block">{PLATFORM_LABEL[plat]}</span>
-            <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{formatCompactCount(estimates[plat])}</span>
-            <span className="text-[11px] text-[#B9AF95]">users</span>
-          </div>
-        ))}
+        {PLATFORMS.map((plat) => {
+          const selected = platform === plat;
+          return (
+            <button
+              type="button"
+              key={plat}
+              onClick={() => onSelectPlatform(selected ? "" : plat)}
+              className={`${CARD} text-center w-full min-w-0 ${selected ? SELECTED_PLATFORM_CARD : ""}`}
+              aria-pressed={selected}
+            >
+              <span className="text-[11px] text-[#B9AF95] block">{PLATFORM_LABEL[plat]}</span>
+              <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{formatCompactCount(estimates[plat])}</span>
+              <span className="text-[11px] text-[#B9AF95]">users</span>
+            </button>
+          );
+        })}
       </div>
       {focus ? (
         <>
@@ -1906,23 +1954,23 @@ function IntelligenceConstituency({
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className={`${CARD} min-w-0`}>
-              <p className="text-2xl font-display font-bold text-[#F5EFE0]">{focus.socialScore != null ? `${Math.round(Number(focus.socialScore))}/100` : "—"}</p>
+              <p className="text-2xl font-display font-bold text-[#F5EFE0]">{focus.socialScore != null && (!platform || focus.rankPlatform === platform) ? `${Math.round(Number(focus.socialScore))}/100` : "—"}</p>
               <p className="text-[11px] text-[#B9AF95] mt-1">Social score</p>
-              <p className="text-[11px] text-[#B9AF95]">percentile in state</p>
+              <p className="text-[11px] text-[#B9AF95]">{platform ? `percentile in state · ${platformLabel}` : "percentile in state"}</p>
             </div>
             <div className={`${CARD} min-w-0`}>
               <p className="text-2xl font-display font-bold text-[#F5EFE0]">
                 {moveUp == null ? "—" : `${moveUp > 0 ? "+" : ""}${formatCompactCount(Math.abs(moveUp))}`}
               </p>
               <p className="text-[11px] text-[#B9AF95] mt-1">To move up one rank</p>
-              <p className="text-[11px] text-[#B9AF95]">{rankLabel}</p>
+              <p className="text-[11px] text-[#B9AF95]">{rankLabel}{platform ? ` · ${platformLabel}` : ""}</p>
             </div>
             <div className={`${CARD} min-w-0`}>
-              <p className={`text-2xl font-display font-bold ${Number(focus.growth30) > 0 ? "text-emerald-400" : "text-[#F5EFE0]"}`}>
-                {formatSignedPercent(focus.growth30)}
+              <p className={`text-2xl font-display font-bold ${Number(focusGrowth) > 0 ? "text-emerald-400" : "text-[#F5EFE0]"}`}>
+                {formatSignedPercent(focusGrowth)}
               </p>
               <p className="text-[11px] text-[#B9AF95] mt-1">30-day growth</p>
-              <p className="text-[11px] text-[#B9AF95]">followers, all platforms</p>
+              <p className="text-[11px] text-[#B9AF95]">{platform ? `followers, ${platformLabel}` : "followers, all platforms"}</p>
             </div>
             <div className={`${CARD} min-w-0`}>
               <p className="text-2xl font-display font-bold text-[#F5EFE0]">{worstGap?.platform || "—"}</p>
@@ -1955,9 +2003,10 @@ function IntelligenceConstituency({
                 const followers = noAccount ? null : detail?.followers;
                 const pct = followers != null && estimate ? Math.round((Number(followers) / estimate) * 100) : 0;
                 const hasAccount = !noAccount && (Boolean(detail?.verified) || followers != null);
-                const emphasize = !platform || platform === plat;
+                const selected = platform === plat;
+                const emphasize = !platform || selected;
                 return (
-                  <div key={plat} className={`min-w-0 ${emphasize ? "" : "opacity-70"}`}>
+                  <div key={plat} className={`min-w-0 rounded-lg ${selected ? `p-1.5 ${SELECTED_PLATFORM_CARD}` : emphasize ? "" : "opacity-70"}`}>
                     <div className="flex items-center justify-between gap-2 text-[12px]">
                       <span className="text-[#F5EFE0] inline-flex items-center gap-1 min-w-0">
                         {PLATFORM_LABEL[plat]}
