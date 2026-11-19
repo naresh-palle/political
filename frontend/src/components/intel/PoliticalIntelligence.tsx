@@ -154,21 +154,28 @@ function uniqueSorted(values: Array<string | null | undefined>): string[] {
 
 type CollectionFilters = {
   type: string;
-  district: string;
   assembly: string;
-  summary: string;
   enteredBy: string;
   status: string;
 };
 
 function collectionRowMatches(row: PiRecentCollection, filters: CollectionFilters, skip?: keyof CollectionFilters) {
   if (skip !== "type" && filters.type && String(row.recordType || "") !== filters.type) return false;
-  if (skip !== "district" && filters.district && String(row.districtName || "") !== filters.district) return false;
   if (skip !== "assembly" && filters.assembly && String(row.assemblyName || "") !== filters.assembly) return false;
-  if (skip !== "summary" && filters.summary && String(row.summary || "") !== filters.summary) return false;
   if (skip !== "enteredBy" && filters.enteredBy && String(row.enteredByName || "") !== filters.enteredBy) return false;
   if (skip !== "status" && filters.status && String(row.verificationStatus || "") !== filters.status) return false;
   return true;
+}
+
+function isTransientLoadError(err: any) {
+  const msg = String(err?.message || err || "").toLowerCase();
+  return (
+    msg.includes("failed to fetch") ||
+    msg.includes("networkerror") ||
+    msg.includes("network request failed") ||
+    msg === "load failed" ||
+    msg.includes("could not load")
+  );
 }
 
 type QueueFilters = {
@@ -493,9 +500,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const [collectionPageSize, setCollectionPageSize] = useState<(typeof COLLECTION_PAGE_SIZES)[number]>(10);
   const [collectionPage, setCollectionPage] = useState(1);
   const [collectionType, setCollectionType] = useState("");
-  const [collectionDistrict, setCollectionDistrict] = useState("");
   const [collectionAssembly, setCollectionAssembly] = useState("");
-  const [collectionSummary, setCollectionSummary] = useState("");
   const [collectionEnteredBy, setCollectionEnteredBy] = useState("");
   const [collectionStatus, setCollectionStatus] = useState("");
   const [intel, setIntel] = useState<any>(null);
@@ -545,12 +550,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   }, [dashboard, districtId, selectedDistrict]);
   const collectionFilters = useMemo<CollectionFilters>(() => ({
     type: collectionType,
-    district: collectionDistrict,
     assembly: collectionAssembly,
-    summary: collectionSummary,
     enteredBy: collectionEnteredBy,
     status: collectionStatus
-  }), [collectionType, collectionDistrict, collectionAssembly, collectionSummary, collectionEnteredBy, collectionStatus]);
+  }), [collectionType, collectionAssembly, collectionEnteredBy, collectionStatus]);
   const collectionFilterOptions = useMemo(() => {
     const facet = (skip: keyof CollectionFilters, pick: (row: PiRecentCollection) => string | null | undefined) =>
       uniqueSorted(dashboardRecent.filter((row) => collectionRowMatches(row, collectionFilters, skip)).map(pick));
@@ -559,9 +562,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         value,
         label: RECORD_TYPE_LABEL[value] || value
       })),
-      districts: facet("district", (row) => row.districtName),
       assemblies: facet("assembly", (row) => row.assemblyName),
-      summaries: facet("summary", (row) => row.summary),
       enteredBy: facet("enteredBy", (row) => row.enteredByName),
       statuses: facet("status", (row) => row.verificationStatus)
     };
@@ -571,13 +572,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     [dashboardRecent, collectionFilters]
   );
   const collectionFiltersActive = Boolean(
-    collectionType || collectionDistrict || collectionAssembly || collectionSummary || collectionEnteredBy || collectionStatus
+    collectionType || collectionAssembly || collectionEnteredBy || collectionStatus
   );
   const clearCollectionFilters = () => {
     setCollectionType("");
-    setCollectionDistrict("");
     setCollectionAssembly("");
-    setCollectionSummary("");
     setCollectionEnteredBy("");
     setCollectionStatus("");
     setCollectionPage(1);
@@ -619,6 +618,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const pagedQueue = filteredQueue.slice((queuePageSafe - 1) * queuePageSize, queuePageSafe * queuePageSize);
 
   const flash = (msg: string, isError = false) => {
+    if (isError && isTransientLoadError({ message: msg })) {
+      setError("");
+      return;
+    }
     setOk(isError ? "" : msg);
     setError(isError ? msg : "");
   };
@@ -716,7 +719,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       if (!scopedDistrict) {
         setDashboard((prev) => prev || cache?.dashboard || null);
       }
-      flash(e.message || "Could not load dashboard", true);
+      if (!isTransientLoadError(e)) flash(e.message || "Could not load dashboard", true);
     } finally {
       if (req === dashReqRef.current) setPageLoading(false);
     }
@@ -878,14 +881,17 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   }, [userId, stateId, districtId, pcId, acId, tab, entryGroup]);
 
   useEffect(() => {
-    if (tab === "dashboard") refreshDashboard().catch((e) => flash(e.message, true));
+    setError("");
+    setOk("");
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab === "dashboard") refreshDashboard().catch(() => undefined);
   }, [tab, stateId, districtId, userId]);
 
   useEffect(() => {
     setCollectionType("");
-    setCollectionDistrict("");
     setCollectionAssembly("");
-    setCollectionSummary("");
     setCollectionEnteredBy("");
     setCollectionStatus("");
     setCollectionPage(1);
@@ -893,7 +899,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
   useEffect(() => {
     setCollectionPage(1);
-  }, [collectionPageSize, filteredRecent.length, collectionType, collectionDistrict, collectionAssembly, collectionSummary, collectionEnteredBy, collectionStatus]);
+  }, [collectionPageSize, filteredRecent.length, collectionType, collectionAssembly, collectionEnteredBy, collectionStatus]);
 
   useEffect(() => {
     setQueueDistrict("");
@@ -908,19 +914,19 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
   useEffect(() => {
     if (tab === "constituencies") {
-      loadConstituencies().catch((e) => flash(e.message, true));
+      loadConstituencies().catch(() => undefined);
       Promise.all([loadLeaders(), loadAccounts()])
         .then(([leaderRows, accountRows]) => hydrateLeaderSlots(leaderRows, accountRows))
-        .catch((e) => flash(e.message, true));
+        .catch(() => undefined);
     }
   }, [tab, stateId, districtId, acId, userId]);
 
   useEffect(() => {
-    if (tab === "verify") loadQueue().catch((e) => flash(e.message, true));
+    if (tab === "verify") loadQueue().catch(() => undefined);
   }, [tab, queueStatus, userId]);
 
   useEffect(() => {
-    if (tab === "intelligence") loadIntel().catch((e) => flash(e.message, true));
+    if (tab === "intelligence") loadIntel().catch(() => undefined);
   }, [tab, intelPlatform, intelParty, rankBy, stateId, districtId, pcId, acId, userId]);
 
   const saveConstituency = async (e: React.FormEvent) => {
@@ -1329,7 +1335,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         ))}
       </div>
 
-      {(error || ok) && (
+      {(error || ok) && !isTransientLoadError({ message: error }) && (
         <div className={`p-3 rounded-xl text-xs border ${error ? "border-rose-500/40 text-rose-200 bg-rose-950/40" : "border-emerald-500/40 text-emerald-200 bg-emerald-950/40"}`}>
           {error || ok}
         </div>
@@ -1407,7 +1413,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   ) : null}
                 </div>
                 {dashboardRecent.length > 0 ? (
-                  <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                       <CollectionFilterSelect
                         label="Type"
                         value={collectionType}
@@ -1416,25 +1422,13 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         options={collectionFilterOptions.types}
                       />
                       <CollectionFilterSelect
-                        label="District"
-                        value={collectionDistrict}
-                        onChange={setCollectionDistrict}
-                        allLabel="All districts"
-                        options={collectionFilterOptions.districts.map((value) => ({ value, label: value }))}
-                      />
-                      <CollectionFilterSelect
                         label="Assembly"
-                        value={collectionAssembly}
+                        value={districtId ? collectionAssembly : ""}
                         onChange={setCollectionAssembly}
                         allLabel="All assemblies"
+                        lockedLabel="Select district first"
+                        disabled={!districtId}
                         options={collectionFilterOptions.assemblies.map((value) => ({ value, label: value }))}
-                      />
-                      <CollectionFilterSelect
-                        label="Summary"
-                        value={collectionSummary}
-                        onChange={setCollectionSummary}
-                        allLabel="All summaries"
-                        options={collectionFilterOptions.summaries.map((value) => ({ value, label: value }))}
                       />
                       <CollectionFilterSelect
                         label="Entered by"
@@ -1905,24 +1899,35 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   compact
                   label="District"
                   value={queueDistrict}
-                  onChange={setQueueDistrict}
+                  onChange={(value) => {
+                    setQueueDistrict(value);
+                    setQueueAssembly("");
+                    setQueuePlatform("");
+                  }}
                   allLabel="All districts"
                   options={queueFilterOptions.districts.map((value) => ({ value, label: value }))}
                 />
                 <CollectionFilterSelect
                   compact
                   label="Assembly"
-                  value={queueAssembly}
-                  onChange={setQueueAssembly}
+                  value={queueDistrict ? queueAssembly : ""}
+                  onChange={(value) => {
+                    setQueueAssembly(value);
+                    setQueuePlatform("");
+                  }}
                   allLabel="All assemblies"
+                  lockedLabel="Select district first"
+                  disabled={!queueDistrict}
                   options={queueFilterOptions.assemblies.map((value) => ({ value, label: value }))}
                 />
                 <CollectionFilterSelect
                   compact
                   label="Platform"
-                  value={queuePlatform}
+                  value={queueDistrict && queueAssembly ? queuePlatform : ""}
                   onChange={setQueuePlatform}
                   allLabel="All platforms"
+                  lockedLabel="Select assembly first"
+                  disabled={!queueDistrict || !queueAssembly}
                   options={queueFilterOptions.platforms}
                 />
             </div>
@@ -2077,13 +2082,13 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             <h2 className="text-sm font-bold text-[#F5EFE0]">Filters</h2>
             <div>
               <label className={LABEL}>State</label>
-              <select className={INPUT} value={stateId} onChange={(e) => { setStateId(e.target.value); setDistrictId(""); setPcId(""); setAcId(""); }}>
+              <select className={INPUT} value={stateId} onChange={(e) => { setStateId(e.target.value); setDistrictId(""); setPcId(""); setAcId(""); setIntelPlatform(""); }}>
                 {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>
               <label className={LABEL}>District</label>
-              <select className={INPUT} value={districtId} onChange={(e) => { setDistrictId(e.target.value); setPcId(""); setAcId(""); }}>
+              <select className={INPUT} value={districtId} onChange={(e) => { setDistrictId(e.target.value); setPcId(""); setAcId(""); setIntelPlatform(""); }}>
                 <option value="">Select district</option>
                 {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
@@ -2097,12 +2102,13 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 onChange={(e) => {
                   const id = e.target.value;
                   setAcId(id);
+                  setIntelPlatform("");
                   const ac = filteredAcs.find((a) => a.id === id);
                   const nextPc = ac?.parliamentConstituencyId || ac?.parliamentId || "";
                   if (nextPc) setPcId(nextPc);
                 }}
               >
-                <option value="">{districtId ? "All in district" : "Select district first"}</option>
+                <option value="">{districtId ? "Select constituency" : "Select district first"}</option>
                 {districtId ? filteredAcs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>) : null}
               </select>
             </div>
@@ -2111,8 +2117,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
+                  disabled={!acId}
                   onClick={() => setIntelPlatform("")}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${!intelPlatform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold disabled:opacity-50 disabled:cursor-not-allowed ${!intelPlatform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
                 >
                   All
                 </button>
@@ -2120,8 +2127,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   <button
                     type="button"
                     key={platform}
+                    disabled={!acId}
                     onClick={() => setIntelPlatform(platform)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${intelPlatform === platform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold disabled:opacity-50 disabled:cursor-not-allowed ${intelPlatform === platform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
                   >
                     {PLATFORM_LABEL[platform]}
                   </button>
@@ -2475,7 +2483,9 @@ function CollectionFilterSelect({
   onChange,
   options,
   allLabel,
-  compact
+  compact,
+  disabled,
+  lockedLabel
 }: {
   label: string;
   value: string;
@@ -2483,6 +2493,8 @@ function CollectionFilterSelect({
   options: { value: string; label: string }[];
   allLabel: string;
   compact?: boolean;
+  disabled?: boolean;
+  lockedLabel?: string;
 }) {
   const optionsWithValue = value && !options.some((opt) => opt.value === value)
     ? [{ value, label: RECORD_TYPE_LABEL[value] || value }, ...options]
@@ -2491,13 +2503,14 @@ function CollectionFilterSelect({
     <label className="min-w-0">
       <span className={compact ? "block text-[9px] uppercase tracking-wider font-bold text-[#D4A24C] mb-0.5" : LABEL}>{label}</span>
       <select
-        className={`${INPUT} ${compact ? "py-1 text-xs rounded-lg" : "py-1.5"}`}
-        value={value}
+        className={`${INPUT} ${compact ? "py-1 text-xs rounded-lg" : "py-1.5"} disabled:opacity-60 disabled:cursor-not-allowed`}
+        value={disabled ? "" : value}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
       >
-        <option value="">{allLabel}</option>
-        {optionsWithValue.map((opt) => (
+        <option value="">{disabled ? (lockedLabel || allLabel) : allLabel}</option>
+        {disabled ? null : optionsWithValue.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
