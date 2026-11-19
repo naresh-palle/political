@@ -181,6 +181,7 @@ function AppInner() {
   });
 
   const [viewState, setViewState] = useState<"select" | "loading" | "audit">("select");
+  const [piDataEntryTick, setPiDataEntryTick] = useState(0);
   
   const [activeProduct, setActiveProduct] = useState<ActiveProductType>(() => {
     const currentHash = window.location.hash.toLowerCase().split("?")[0];
@@ -303,6 +304,7 @@ function AppInner() {
       } else if (HASH_TO_PRODUCT_MAP[currentHash]) {
         const prod = HASH_TO_PRODUCT_MAP[currentHash];
         setActiveProduct(prod);
+        if (prod === "intel") setPiDataEntryTick((n) => n + 1);
         try {
           const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
           if (savedUser) setRoute("app");
@@ -383,6 +385,9 @@ function AppInner() {
       targetProduct = ["contacts", "fieldops", "assigntickets", "grievances"].includes(product) ? product : "fieldops";
     }
     setActiveProduct(targetProduct);
+    if (targetProduct === "intel") {
+      setPiDataEntryTick((n) => n + 1);
+    }
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, targetProduct);
     } catch {}
@@ -628,7 +633,7 @@ function AppInner() {
                 )}
 
                 {activeProduct === "intel" && canAccessPoliticalIntelligence(currentProfile) && (
-                  <PoliticalIntelligence currentUser={currentProfile} />
+                  <PoliticalIntelligence currentUser={currentProfile} openDataEntryTick={piDataEntryTick} />
                 )}
 
                 {/* PDF Export Modal */}

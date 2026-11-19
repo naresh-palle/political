@@ -777,6 +777,15 @@ def test_constituency_update_preserves_history_and_links_contact(monkeypatch):
     assert any(row.get("recordType") == "leader" for row in recent)
     nandyal = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="AP", districtId="AP-DIST-NANDYAL"))
     assert any(row.get("districtId") == "AP-DIST-NANDYAL" for row in (nandyal.get("recentCollections") or []))
+    assert nandyal.get("lastDataCollectionDate")
+    assert any(row.get("id") == "AP-DIST-NANDYAL" for row in (nandyal.get("districts") or []))
+    assert all(
+        row.get("districtId") == "AP-DIST-NANDYAL" or row.get("assemblyConstituencyId") == "AP-AC-139"
+        for row in (nandyal.get("recentCollections") or [])
+    )
+    kurnool = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="AP", districtId="AP-DIST-KURNOOL"))
+    assert not any(row.get("assemblyConstituencyId") == "AP-AC-139" for row in (kurnool.get("recentCollections") or []))
+    assert any(row.get("id") == "AP-DIST-KURNOOL" for row in (kurnool.get("districts") or []))
     other = _run(gets["/pi/dashboard"](userId=admin["id"], stateId="TS", districtId=None))
     assert other["constituenciesEntered"] == 0
     assert not any(row.get("assemblyConstituencyId") == "AP-AC-139" for row in (other.get("recentCollections") or []))

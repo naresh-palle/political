@@ -380,7 +380,7 @@ function queueCanAct(status?: string) {
   return current === "PENDING" || current === "NEEDS_RECHECK";
 }
 
-export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ currentUser }) => {
+export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDataEntryTick?: number }> = ({ currentUser, openDataEntryTick = 0 }) => {
   const userId = currentUser.id;
   const isSmA = isSmAUser(currentUser);
   const isSmM = isSmMUser(currentUser);
@@ -391,12 +391,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const visibleTabs = isAdminEditor ? ADMIN_TABS : isSmM ? SMM_TABS : SMA_TABS;
   const initialCache = readPiOperatorCache(userId);
   const replayedRef = useRef(false);
+  const dashReqRef = useRef(0);
 
-  const [tab, setTab] = useState<Tab>(() => {
-    const cachedTab = initialCache?.tab as Tab | undefined;
-    if (cachedTab && visibleTabs.some((item) => item.id === cachedTab)) return cachedTab;
-    return "dashboard";
-  });
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [entryGroup, setEntryGroup] = useState<EntryGroup>((initialCache?.entryGroup as EntryGroup) || "constituency");
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState<SaveKind>(null);
@@ -435,11 +432,41 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   const csvFileRef = useRef<HTMLInputElement>(null);
 
   const partyById = useMemo(() => Object.fromEntries(parties.map((p) => [p.id, p])), [parties]);
+  const selectedDistrict = useMemo(
+    () => districts.find((d) => d.id === districtId) || null,
+    [districts, districtId]
+  );
   const selectedDistrictProgress = useMemo(() => {
-    const rows = dashboard?.districts || [];
     if (!districtId) return null;
-    return rows.find((d: PiDistrictProgress) => d.id === districtId) || null;
-  }, [dashboard, districtId]);
+    const rows = dashboard?.districts || [];
+    const hit = rows.find((d: PiDistrictProgress) => d.id === districtId);
+    if (hit) return hit;
+    if (!selectedDistrict) return null;
+    const acCount = Array.isArray(selectedDistrict.assemblyConstituencyIds) ? selectedDistrict.assemblyConstituencyIds.length : 0;
+    return {
+      id: selectedDistrict.id,
+      name: selectedDistrict.name,
+      stateId: selectedDistrict.stateId || stateId,
+      totalConstituencies: acCount,
+      constituenciesEntered: 0,
+      constituenciesPending: acCount,
+      totalLeaders: 0,
+      totalAccounts: 0,
+      verifiedAccounts: 0,
+      needsRecheck: 0,
+      verificationPercent: null,
+      lastUpdated: null
+    } as PiDistrictProgress;
+  }, [dashboard, districtId, selectedDistrict, stateId]);
+  const dashboardRecent = useMemo(() => {
+    const rows = dashboard?.recentCollections || [];
+    if (!districtId) return rows;
+    const acIds = new Set<string>(selectedDistrict?.assemblyConstituencyIds || []);
+    return rows.filter((row: PiRecentCollection) => {
+      if (row.districtId && row.districtId === districtId) return true;
+      return Boolean(row.assemblyConstituencyId && acIds.has(row.assemblyConstituencyId));
+    });
+  }, [dashboard, districtId, selectedDistrict]);
 
   const flash = (msg: string, isError = false) => {
     setOk(isError ? "" : msg);
@@ -505,14 +532,19 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
   };
 
   const refreshDashboard = async () => {
+    const req = ++dashReqRef.current;
+    const scopedDistrict = districtId || undefined;
     setPageLoading(true);
     try {
-      const data = await politicalApiService.getPiDashboard(userId, stateId, districtId || undefined);
+      const data = await politicalApiService.getPiDashboard(userId, stateId, scopedDistrict);
+      if (req !== dashReqRef.current) return;
       const cache = readPiOperatorCache(userId);
-      if (emptyDashboard(data)) {
+      if (emptyDashboard(data) && !scopedDistrict) {
         if (canEdit && cacheHasPiData(cache)) {
           await replayCachedPi();
-          const again = await politicalApiService.getPiDashboard(userId, stateId, districtId || undefined).catch(() => data);
+          if (req !== dashReqRef.current) return;
+          const again = await politicalApiService.getPiDashboard(userId, stateId, scopedDistrict).catch(() => data);
+          if (req !== dashReqRef.current) return;
           if (!emptyDashboard(again)) {
             setDashboard(again);
             persistOperatorCache({ dashboard: again });
@@ -529,11 +561,14 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       setDashboard(data);
       persistOperatorCache({ dashboard: data });
     } catch (e: any) {
+      if (req !== dashReqRef.current) return;
       const cache = readPiOperatorCache(userId);
-      setDashboard((prev) => prev || cache?.dashboard || null);
+      if (!scopedDistrict) {
+        setDashboard((prev) => prev || cache?.dashboard || null);
+      }
       flash(e.message || "Could not load dashboard", true);
     } finally {
-      setPageLoading(false);
+      if (req === dashReqRef.current) setPageLoading(false);
     }
   };
 
@@ -672,6 +707,17 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
       })
     );
   };
+
+  const goToDataEntry = (next?: { districtId?: string; acId?: string; pcId?: string }) => {
+    if (next?.districtId) setDistrictId(next.districtId);
+    if (next?.pcId) setPcId(next.pcId);
+    if (next?.acId) setAcId(next.acId);
+    setTab(visibleTabs.some((item) => item.id === "constituencies") ? "constituencies" : "dashboard");
+  };
+
+  useEffect(() => {
+    setTab("dashboard");
+  }, [openDataEntryTick]);
 
   useEffect(() => {
     if (!visibleTabs.some((item) => item.id === tab)) setTab("dashboard");
@@ -1055,7 +1101,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4A24C] font-bold">Political Intelligence</p>
           <h1 className="text-2xl font-display text-[#F5EFE0]">
-            {tab === "constituencies" ? "Constituency Data Form" : tab === "intelligence" ? "Political Intelligence" : "Constituency data collection"}
+            {tab === "constituencies"
+              ? "Constituency Data Form"
+              : tab === "intelligence"
+                ? "Intelligence"
+                : tab === "verify"
+                  ? "Verification Queue"
+                  : tab === "import"
+                    ? "Import / Export"
+                    : "Data Entry Dashboard"}
           </h1>
           {tab === "constituencies" && (
             <p className="text-sm text-[#B9AF95] mt-1">Fill one constituency at a time. Takes about 10 minutes.</p>
@@ -1105,10 +1159,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-2">
-                <Kpi label="Total constituencies" value={dashboard.totalConstituencies} onClick={isSmM ? () => setTab("intelligence") : undefined} />
-                <Kpi label="Entered" value={dashboard.constituenciesEntered} onClick={isSmM ? () => setTab("intelligence") : undefined} />
-                <Kpi label="Leaders" value={dashboard.totalLeaders} onClick={isSmM ? () => setTab("intelligence") : undefined} />
-                <Kpi label="Social accounts" value={dashboard.totalSocialAccounts} onClick={isSmM ? () => setTab("intelligence") : undefined} />
+                <Kpi label="Total constituencies" value={dashboard.totalConstituencies} onClick={() => goToDataEntry()} />
+                <Kpi label="Entered" value={dashboard.constituenciesEntered} onClick={() => goToDataEntry()} />
+                <Kpi label="Leaders" value={dashboard.totalLeaders} onClick={() => goToDataEntry()} />
+                <Kpi label="Social accounts" value={dashboard.totalSocialAccounts} onClick={() => goToDataEntry()} />
                 <Kpi label="Verified" value={dashboard.verifiedAccounts} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
                 <Kpi label="Pending" value={dashboard.pendingVerification} onClick={isSmM ? () => { setQueueStatus("PENDING"); setTab("verify"); } : undefined} />
                 <Kpi label="Recheck" value={dashboard.needsRecheck} onClick={isSmM ? () => { setQueueStatus("NEEDS_RECHECK"); setTab("verify"); } : undefined} />
@@ -1118,11 +1172,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-2">
                   <h2 className="text-sm font-bold text-[#F5EFE0]">Last collection</h2>
                   <p className="text-[11px] text-[#B9AF95]">
-                    Latest in this {districtId ? "district" : "state"}: {(dashboard.lastDataCollectionDate || "").slice(0, 10) || "—"}
+                    Latest in {selectedDistrictName || (districtId ? "this district" : "this state")}: {(dashboard.lastDataCollectionDate || dashboardRecent[0]?.collectedAt || "").toString().slice(0, 10) || "—"}
                   </p>
                 </div>
-                {(dashboard.recentCollections || []).length === 0 ? (
-                  <EmptyState text="No collections yet for this state and district. Save a constituency, leader, or social account to see it here." />
+                {dashboardRecent.length === 0 ? (
+                  <EmptyState text={districtId ? `No collections yet for ${selectedDistrictName || "this district"}. Save a constituency, leader, or social account to see it here.` : "No collections yet for this state and district. Save a constituency, leader, or social account to see it here."} />
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs table-fixed">
@@ -1138,14 +1192,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
                         </tr>
                       </thead>
                       <tbody>
-                        {(dashboard.recentCollections || []).map((row: PiRecentCollection) => (
+                        {dashboardRecent.map((row: PiRecentCollection) => (
                           <tr
                             key={`${row.recordType}-${row.id}`}
                             className="text-[#F5EFE0] border-t border-[#22405E] cursor-pointer hover:bg-[#131E2D]"
                             onClick={() => {
-                              if (row.districtId) setDistrictId(row.districtId);
-                              if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
-                              setTab(isSmM ? "intelligence" : "constituencies");
+                              goToDataEntry({
+                                districtId: row.districtId,
+                                acId: row.assemblyConstituencyId
+                              });
                             }}
                           >
                             <td className="py-1.5 break-words">{(row.collectedAt || "").slice(0, 10) || "—"}</td>
@@ -1167,10 +1222,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile }> = ({ 
               {selectedDistrictProgress && (
                 <button
                   onClick={() => {
-                    setDistrictId(selectedDistrictProgress.id);
-                    setPcId("");
-                    setAcId("");
-                    setTab(isSmM ? "intelligence" : "constituencies");
+                    goToDataEntry({ districtId: selectedDistrictProgress.id });
                   }}
                   className={`text-left ${CARD} w-full`}
                 >
