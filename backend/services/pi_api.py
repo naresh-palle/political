@@ -550,7 +550,7 @@ def recent_collection_rows(
     accounts: List[Dict[str, Any]],
     district_names: Dict[str, str],
     assembly_names: Dict[str, str],
-    limit: int = 25,
+    limit: int = 200,
     ac_to_district: Optional[Dict[str, str]] = None,
 ) -> List[Dict[str, Any]]:
     """Newest constituency, leader, and social saves for the Data Entry Dashboard."""

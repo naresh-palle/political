@@ -2,6 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Database,
   Download,
   Loader2,
@@ -132,6 +136,7 @@ const RANK_BY_OPTIONS = [
   { id: "growth", label: "30-day growth" },
   { id: "socialScore", label: "Social score" }
 ] as const;
+const COLLECTION_PAGE_SIZES = [10, 25, 50, 100] as const;
 
 function rankMetricKey(rankBy: string) {
   if (rankBy === "engagement") return "engagementPercent";
@@ -422,6 +427,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const [queue, setQueue] = useState<any[]>([]);
   const [queueStatus, setQueueStatus] = useState("PENDING");
   const [actingId, setActingId] = useState("");
+  const [collectionPageSize, setCollectionPageSize] = useState<(typeof COLLECTION_PAGE_SIZES)[number]>(10);
+  const [collectionPage, setCollectionPage] = useState(1);
   const [intel, setIntel] = useState<any>(null);
   const [intelPlatform, setIntelPlatform] = useState("");
   const [intelParty, setIntelParty] = useState("");
@@ -467,6 +474,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       return Boolean(row.assemblyConstituencyId && acIds.has(row.assemblyConstituencyId));
     });
   }, [dashboard, districtId, selectedDistrict]);
+  const collectionTotalPages = Math.max(1, Math.ceil(dashboardRecent.length / collectionPageSize));
+  const collectionPageSafe = Math.min(collectionPage, collectionTotalPages);
+  const pagedRecent = dashboardRecent.slice((collectionPageSafe - 1) * collectionPageSize, collectionPageSafe * collectionPageSize);
 
   const flash = (msg: string, isError = false) => {
     setOk(isError ? "" : msg);
@@ -730,6 +740,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   useEffect(() => {
     if (tab === "dashboard") refreshDashboard().catch((e) => flash(e.message, true));
   }, [tab, stateId, districtId, userId]);
+
+  useEffect(() => {
+    setCollectionPage(1);
+  }, [districtId, stateId, collectionPageSize, dashboardRecent.length]);
 
   useEffect(() => {
     if (tab === "constituencies") {
@@ -1187,15 +1201,32 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 </button>
               )}
               <div className={CARD}>
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-2">
-                  <h2 className="text-sm font-bold text-[#F5EFE0]">Last collection</h2>
-                  <p className="text-[11px] text-[#B9AF95]">
-                    Latest in {selectedDistrictName || (districtId ? "this district" : "this state")}: {(dashboard.lastDataCollectionDate || dashboardRecent[0]?.collectedAt || "").toString().slice(0, 10) || "—"}
-                  </p>
+                <div className="flex flex-col gap-2 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+                    <h2 className="text-sm font-bold text-[#F5EFE0]">Last collection</h2>
+                    <p className="text-[11px] text-[#B9AF95]">
+                      Latest in {selectedDistrictName || (districtId ? "this district" : "this state")}: {(dashboard.lastDataCollectionDate || dashboardRecent[0]?.collectedAt || "").toString().slice(0, 10) || "—"}
+                    </p>
+                  </div>
+                  {dashboardRecent.length > 0 ? (
+                    <label className="inline-flex flex-wrap items-center gap-1.5 text-[11px] text-[#B9AF95]">
+                      Records per page
+                      <select
+                        className={`${INPUT} w-auto min-w-[7.5rem] py-1`}
+                        value={collectionPageSize}
+                        onChange={(e) => setCollectionPageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
+                      >
+                        {COLLECTION_PAGE_SIZES.map((size) => (
+                          <option key={size} value={size}>{size} / page</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                 </div>
                 {dashboardRecent.length === 0 ? (
                   <EmptyState text={districtId ? `No collections yet for ${selectedDistrictName || "this district"}. Save a constituency, leader, or social account to see it here.` : "No collections yet for this state and district. Save a constituency, leader, or social account to see it here."} />
                 ) : (
+                  <>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs table-fixed">
                       <thead>
@@ -1210,7 +1241,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         </tr>
                       </thead>
                       <tbody>
-                        {dashboardRecent.map((row: PiRecentCollection) => (
+                        {pagedRecent.map((row: PiRecentCollection) => (
                           <tr
                             key={`${row.recordType}-${row.id}`}
                             className="text-[#F5EFE0] border-t border-[#22405E] cursor-pointer hover:bg-[#131E2D]"
@@ -1235,6 +1266,27 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       </tbody>
                     </table>
                   </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-3 text-[11px] text-[#B9AF95]">
+                    <p>
+                      Showing {(collectionPageSafe - 1) * collectionPageSize + 1}–{Math.min(collectionPageSafe * collectionPageSize, dashboardRecent.length)} of {dashboardRecent.length}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe <= 1} onClick={() => setCollectionPage(1)} aria-label="First page">
+                        <ChevronsLeft className="w-3.5 h-3.5 inline" /> First
+                      </button>
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe <= 1} onClick={() => setCollectionPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                        <ChevronLeft className="w-3.5 h-3.5 inline" /> Previous
+                      </button>
+                      <span className="px-2 text-[#F5EFE0] font-semibold">Page {collectionPageSafe} of {collectionTotalPages}</span>
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe >= collectionTotalPages} onClick={() => setCollectionPage((p) => Math.min(collectionTotalPages, p + 1))} aria-label="Next page">
+                        Next <ChevronRight className="w-3.5 h-3.5 inline" />
+                      </button>
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe >= collectionTotalPages} onClick={() => setCollectionPage(collectionTotalPages)} aria-label="Last page">
+                        Last <ChevronsRight className="w-3.5 h-3.5 inline" />
+                      </button>
+                    </div>
+                  </div>
+                  </>
                 )}
               </div>
             </>
