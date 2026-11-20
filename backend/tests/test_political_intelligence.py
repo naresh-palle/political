@@ -37,6 +37,27 @@ def test_normalize_profile_url_and_identity():
     assert profile_username("https://none.invalid/abc/facebook", "facebook") == ""
 
 
+def test_facebook_people_and_share_urls_are_distinct():
+    palle = "https://www.facebook.com/people/Palle-Sindhura-Reddy/100044111111111"
+    kethireddy = "https://www.facebook.com/people/Kethireddy-Venkatrami-Reddy/100064222222222"
+    p_slug = "https://www.facebook.com/p/Kethireddy-Venkatrami-Reddy-100064222222222/"
+    share_a = "https://www.facebook.com/share/1AbCdEfGh/"
+    share_b = "https://www.facebook.com/share/p/19XyZabcde/"
+    profile_php = "https://facebook.com/profile.php?id=100044111111111"
+
+    assert profile_username(palle, "facebook") == "100044111111111"
+    assert profile_username(kethireddy, "facebook") == "100064222222222"
+    assert profile_username(p_slug, "facebook") == "100064222222222"
+    assert profile_username(palle, "facebook", "people") == "100044111111111"
+    assert account_identity_key("facebook", palle, "people") != account_identity_key("facebook", kethireddy, "people")
+    assert account_identity_key("facebook", kethireddy, "people") == account_identity_key("facebook", p_slug, "")
+    assert account_identity_key("facebook", palle) == account_identity_key("facebook", profile_php)
+    assert account_identity_key("facebook", share_a, "share") != account_identity_key("facebook", share_b, "share")
+    assert account_identity_key("instagram", "https://instagram.com/p/AbCdEf1", "p") != account_identity_key(
+        "instagram", "https://instagram.com/p/XyZ987", "p"
+    )
+
+
 def test_profile_url_must_match_platform():
     assert profile_url_platform_error("https://twitter.com/sample_rao", "facebook")
     assert "X / Twitter" in (profile_url_platform_error("https://x.com/sample_rao", "facebook") or "")
@@ -407,6 +428,102 @@ def test_two_leaders_can_mark_youtube_as_no_account(monkeypatch):
     assert "Facebook" in (second["accountErrors"][0]["detail"] if second["accountErrors"] else "")
     youtube_rows = [row for row in memory_list("social_media_accounts") if row.get("platform") == "youtube"]
     assert len(youtube_rows) >= 2
+
+
+def test_facebook_people_urls_save_for_two_leaders(monkeypatch):
+    from backend.services import pi_api
+    from backend.services.political_intelligence import memory_list, reset_memory
+
+    reset_memory()
+    sm_a = {"id": "usr-sma", "name": "SM A", "email": "sma", "primaryRole": "SM_A", "roleId": "SM_A"}
+
+    async def fake_actor(user_id):
+        return sm_a
+
+    monkeypatch.setattr(pi_api, "_load_actor", fake_actor)
+    monkeypatch.setattr(pi_api, "_geo_lookups", lambda: _async_geo())
+    monkeypatch.setattr(pi_api, "_audit", lambda *a, **k: _async_ok())
+
+    from fastapi import APIRouter
+
+    from backend.services.pi_api import register_pi_routes
+
+    router = APIRouter()
+    register_pi_routes(router)
+    posts = {route.path: route.endpoint for route in router.routes if getattr(route, "methods", None) and "POST" in route.methods}
+
+    palle = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Palle Sindhura Reddy",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+                "leaderKind": "SITTING_MLA",
+                "accounts": [
+                    {
+                        "platform": "facebook",
+                        "profileUrl": "https://www.facebook.com/people/Palle-Sindhura-Reddy/100044111111111",
+                        "accountIdentifier": "people",
+                        "followers": 12000,
+                    }
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+    kethireddy = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Kethireddy Venkatrami Reddy",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "MLA",
+                "leaderKind": "SITTING_MLA",
+                "accounts": [
+                    {
+                        "platform": "facebook",
+                        "profileUrl": "https://www.facebook.com/people/Kethireddy-Venkatrami-Reddy/100064222222222",
+                        "accountIdentifier": "people",
+                        "followers": 8000,
+                    }
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+    assert not palle.get("accountErrors")
+    assert not kethireddy.get("accountErrors")
+    facebook_rows = [row for row in memory_list("social_media_accounts") if row.get("platform") == "facebook"]
+    assert len(facebook_rows) >= 2
+    assert {row.get("personId") for row in facebook_rows} >= {palle["id"], kethireddy["id"]}
+
+    duplicate = _run(
+        posts["/pi/leaders"](
+            {
+                "name": "Sathya Kumar Yadav",
+                "partyId": "TDP",
+                "assemblyConstituencyId": "AP-AC-139",
+                "stateId": "AP",
+                "politicalRole": "PARTY_LEADER",
+                "leaderKind": "PARTY_LEADER",
+                "accounts": [
+                    {
+                        "platform": "facebook",
+                        "profileUrl": "https://www.facebook.com/people/Kethireddy-Venkatrami-Reddy/100064222222222",
+                        "accountIdentifier": "people",
+                        "followers": 1,
+                    }
+                ],
+            },
+            userId=sm_a["id"],
+        )
+    )
+    assert duplicate.get("accountErrors")
+    assert "Facebook" in duplicate["accountErrors"][0]["detail"]
+    assert "Kethireddy" in duplicate["accountErrors"][0]["detail"]
 
 
 def test_verified_and_rejected_queue_is_final(monkeypatch):

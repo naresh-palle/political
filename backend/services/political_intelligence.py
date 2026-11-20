@@ -113,6 +113,91 @@ PLATFORM_LABELS = {
     "youtube": "YouTube",
 }
 
+# Path prefixes / tokens that are Facebook/Instagram/X/YouTube chrome, not a person.
+GENERIC_SOCIAL_IDENTIFIERS = frozenset(
+    {
+        "people",
+        "p",
+        "pages",
+        "page",
+        "pg",
+        "groups",
+        "group",
+        "watch",
+        "reel",
+        "reels",
+        "stories",
+        "story",
+        "share",
+        "photo",
+        "photos",
+        "video",
+        "videos",
+        "posts",
+        "post",
+        "permalink.php",
+        "profile.php",
+        "photo.php",
+        "story.php",
+        "events",
+        "event",
+        "marketplace",
+        "gaming",
+        "login",
+        "home",
+        "notifications",
+        "bookmarks",
+        "settings",
+        "help",
+        "privacy",
+        "search",
+        "hashtag",
+        "live",
+        "notes",
+        "plugins",
+        "sharer",
+        "dialog",
+        "ajax",
+        "ads",
+        "business",
+        "create",
+        "fundraisers",
+        "memories",
+        "saved",
+        "friends",
+        "messages",
+        "recover",
+        "checkpoint",
+        "explore",
+        "accounts",
+        "directory",
+        "legal",
+        "about",
+        "tv",
+        "channel",
+        "c",
+        "user",
+        "playlist",
+        "shorts",
+        "clip",
+        "embed",
+        "feed",
+        "results",
+        "i",
+        "intent",
+        "compose",
+        "www",
+        "index.html",
+        "profile",
+        "profiles",
+    }
+)
+
+
+def is_generic_social_identifier(ident: str) -> bool:
+    token = (ident or "").strip().lower().lstrip("@")
+    return (not token) or token in GENERIC_SOCIAL_IDENTIFIERS
+
 
 def profile_url_host(url: str) -> str:
     normalized = normalize_profile_url(url)
@@ -166,7 +251,7 @@ def normalize_profile_url(url: str, platform: str = "") -> str:
         host = host[4:]
     if host in {"twitter.com", "mobile.twitter.com", "t.co"}:
         host = "x.com"
-    if host in {"m.facebook.com", "web.facebook.com", "fb.com"}:
+    if host in {"m.facebook.com", "web.facebook.com", "fb.com", "fb.me"}:
         host = "facebook.com"
     if host in {"instagr.am"}:
         host = "instagram.com"
@@ -175,8 +260,11 @@ def normalize_profile_url(url: str, platform: str = "") -> str:
     path = re.sub(r"/+", "/", parsed.path or "").rstrip("/")
     query = parse_qs(parsed.query or "")
     keep = {}
-    if host == "facebook.com" and "id" in query:
-        keep["id"] = query["id"][0]
+    if host == "facebook.com":
+        for key in ("id", "fbid", "story_fbid"):
+            if key in query and query[key]:
+                keep[key] = query[key][0]
+                break
     if host == "youtube.com" and path in {"/watch", "/playlist"}:
         for key in ("v", "list"):
             if key in query:
@@ -185,9 +273,17 @@ def normalize_profile_url(url: str, platform: str = "") -> str:
     return cleaned.lower()
 
 
+def _numeric_id(value: str) -> str:
+    text = (value or "").strip()
+    if re.fullmatch(r"\d{5,}", text):
+        return text
+    match = re.search(r"(?:^|-)(\d{5,})$", text)
+    return match.group(1) if match else ""
+
+
 def profile_username(url: str, platform: str = "", identifier: str = "") -> str:
     ident = (identifier or "").strip().lstrip("@")
-    if ident:
+    if ident and not is_generic_social_identifier(ident):
         return ident
     normalized = normalize_profile_url(url, platform)
     if not normalized:
@@ -197,16 +293,36 @@ def profile_username(url: str, platform: str = "", identifier: str = "") -> str:
     if host in {"none.invalid", "invalid"}:
         return ""
     query = parse_qs(parsed.query or "")
-    if query.get("id"):
-        return query["id"][0]
-    if query.get("v"):
-        return query["v"][0]
+    for key in ("id", "v", "fbid", "story_fbid"):
+        value = (query.get(key) or [""])[0]
+        if value and not is_generic_social_identifier(value):
+            return value
     parts = [p for p in (parsed.path or "").split("/") if p]
     if not parts:
         return ""
-    if parts[0] in {"c", "channel", "user", "watch", "playlist"} and len(parts) > 1:
+    first = parts[0].lower()
+    if host == "facebook.com" and first == "people" and len(parts) >= 2:
+        return _numeric_id(parts[-1]) or parts[-1].lstrip("@")
+    if host == "facebook.com" and first == "p" and len(parts) >= 2:
+        return _numeric_id(parts[1]) or parts[1].lstrip("@")
+    if host == "facebook.com" and first in {"pages", "page", "pg"} and len(parts) >= 2:
+        return _numeric_id(parts[-1]) or parts[-1].lstrip("@")
+    if host == "facebook.com" and first == "share" and len(parts) >= 2:
+        return parts[-1].lstrip("@")
+    if host == "instagram.com" and first in {"p", "reel", "reels", "tv"} and len(parts) >= 2:
         return parts[1].lstrip("@")
-    return parts[0].lstrip("@")
+    if host == "youtube.com" and first in {"shorts", "clip", "embed"} and len(parts) >= 2:
+        return parts[1].lstrip("@")
+    if host in {"x.com", "twitter.com"} and first == "i" and len(parts) >= 2:
+        return parts[-1].lstrip("@")
+    if first in {"c", "channel", "user", "watch", "playlist"} and len(parts) > 1:
+        return parts[1].lstrip("@")
+    if not is_generic_social_identifier(parts[0]):
+        return parts[0].lstrip("@")
+    for part in parts[1:]:
+        if not is_generic_social_identifier(part):
+            return part.lstrip("@")
+    return ""
 
 
 def account_identity_key(
@@ -219,10 +335,10 @@ def account_identity_key(
     plat = (platform or "").lower()
     if no_account or "none.invalid" in (url or "").lower():
         return f"{plat}|no|{(person_id or '').strip().lower()}"
-    ident = (identifier or "").strip().lower().lstrip("@")
+    extracted = profile_username(url, platform, identifier).strip().lower().lstrip("@")
+    if extracted and not is_generic_social_identifier(extracted):
+        return f"{plat}|{extracted}"
     normalized = normalize_profile_url(url, platform)
-    if ident:
-        return f"{plat}|{ident}"
     return f"{plat}|{normalized}"
 
 

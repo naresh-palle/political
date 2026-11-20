@@ -320,6 +320,25 @@ function draftsFromAccounts(personId: string, accountRows: any[]): Record<(typeo
   return next;
 }
 
+function draftHasTypedValue(draft?: PlatformDraft) {
+  return Boolean(draft && (draft.hasAccount || draft.profileUrl || draft.followers || draft.verified));
+}
+
+function mergePlatformDrafts(
+  server: Record<(typeof PLATFORMS)[number], PlatformDraft>,
+  local?: Record<(typeof PLATFORMS)[number], PlatformDraft>
+) {
+  const next = emptyPlatformDrafts();
+  for (const platform of PLATFORMS) {
+    const fromServer = server[platform];
+    const fromLocal = local?.[platform];
+    if (fromServer?.hasAccount) next[platform] = fromServer;
+    else if (draftHasTypedValue(fromLocal)) next[platform] = fromLocal!;
+    else next[platform] = fromServer || next[platform];
+  }
+  return next;
+}
+
 function todayIsoDate() {
   const d = new Date();
   const y = d.getFullYear();
@@ -380,21 +399,74 @@ function profileUrlPlatformError(url: string, platform: (typeof PLATFORMS)[numbe
   return "";
 }
 
+const GENERIC_SOCIAL_IDENTIFIERS = new Set([
+  "people", "p", "pages", "page", "pg", "groups", "group", "watch", "reel", "reels",
+  "stories", "story", "share", "photo", "photos", "video", "videos", "posts", "post",
+  "permalink.php", "profile.php", "photo.php", "story.php", "events", "event",
+  "marketplace", "gaming", "login", "home", "notifications", "bookmarks", "settings",
+  "help", "privacy", "search", "hashtag", "live", "notes", "plugins", "sharer",
+  "dialog", "ajax", "ads", "business", "create", "fundraisers", "memories", "saved",
+  "friends", "messages", "recover", "checkpoint", "explore", "accounts", "directory",
+  "legal", "about", "tv", "channel", "c", "user", "playlist", "shorts", "clip",
+  "embed", "feed", "results", "i", "intent", "compose", "www", "index.html", "profile",
+  "profiles"
+]);
+
+function isGenericSocialIdentifier(ident?: string) {
+  const token = String(ident || "").trim().replace(/^@/, "").toLowerCase();
+  return !token || GENERIC_SOCIAL_IDENTIFIERS.has(token);
+}
+
+function numericSocialId(value?: string) {
+  const text = String(value || "").trim();
+  if (/^\d{5,}$/.test(text)) return text;
+  const match = text.match(/(?:^|-)(\d{5,})$/);
+  return match?.[1] || "";
+}
+
 function socialUsername(row: { accountUsername?: string; accountIdentifier?: string; profileUrl?: string; platform?: string }) {
   const stored = String(row.accountUsername || row.accountIdentifier || "").trim().replace(/^@/, "");
-  if (stored) return stored;
+  if (stored && !isGenericSocialIdentifier(stored)) return stored;
   const href = profileHref(row.profileUrl);
   if (!href) return "";
   try {
     const parsed = new URL(href);
-    const id = parsed.searchParams.get("id") || parsed.searchParams.get("v");
-    if (id) return id;
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    if (!parts.length) return "";
-    if (["c", "channel", "user", "watch", "playlist"].includes(parts[0].toLowerCase()) && parts[1]) {
-      return decodeURIComponent(parts[1]).replace(/^@/, "");
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    const isFacebook = host.includes("facebook.") || host === "fb.com" || host === "fb.me";
+    for (const key of ["id", "v", "fbid", "story_fbid"]) {
+      const value = parsed.searchParams.get(key);
+      if (value && !isGenericSocialIdentifier(value)) return value;
     }
-    return decodeURIComponent(parts[0]).replace(/^@/, "");
+    const parts = parsed.pathname.split("/").filter(Boolean).map((part) => decodeURIComponent(part));
+    if (!parts.length) return "";
+    const first = parts[0].toLowerCase();
+    if (isFacebook && first === "people" && parts[1]) {
+      return numericSocialId(parts[parts.length - 1]) || parts[parts.length - 1].replace(/^@/, "");
+    }
+    if (isFacebook && first === "p" && parts[1]) {
+      return numericSocialId(parts[1]) || parts[1].replace(/^@/, "");
+    }
+    if (isFacebook && ["pages", "page", "pg"].includes(first) && parts[1]) {
+      return numericSocialId(parts[parts.length - 1]) || parts[parts.length - 1].replace(/^@/, "");
+    }
+    if (isFacebook && first === "share" && parts[1]) {
+      return parts[parts.length - 1].replace(/^@/, "");
+    }
+    if (host.includes("instagram.") && ["p", "reel", "reels", "tv"].includes(first) && parts[1]) {
+      return parts[1].replace(/^@/, "");
+    }
+    if (host.includes("youtube.") && ["shorts", "clip", "embed"].includes(first) && parts[1]) {
+      return parts[1].replace(/^@/, "");
+    }
+    if ((host === "x.com" || host.includes("twitter.")) && first === "i" && parts[1]) {
+      return parts[parts.length - 1].replace(/^@/, "");
+    }
+    if (["c", "channel", "user", "watch", "playlist"].includes(first) && parts[1]) {
+      return parts[1].replace(/^@/, "");
+    }
+    if (!isGenericSocialIdentifier(parts[0])) return parts[0].replace(/^@/, "");
+    const unique = parts.slice(1).find((part) => !isGenericSocialIdentifier(part));
+    return unique ? unique.replace(/^@/, "") : "";
   } catch {
     return "";
   }
@@ -835,24 +907,41 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     return merged;
   };
 
-  const hydrateLeaderSlots = (leaderRows: any[], accountRows: any[]) => {
-    const next = LEADER_SLOTS.map(emptyLeaderSlot);
+  const hydrateLeaderSlots = (leaderRows: any[], accountRows: any[], mode: "replace" | "merge" = "replace") => {
     const scoped = acId ? leaderRows.filter((row) => row.assemblyConstituencyId === acId) : [];
-    for (const row of scoped) {
-      const index = slotIndexForKind(row.leaderKind);
-      if (index < 0 || next[index].id) continue;
-      next[index] = {
-        id: row.id,
-        name: row.name || "",
-        partyId: row.partyId || "",
-        politicalRole: (row.roles || [])[0]?.politicalRole || row.politicalRole || next[index].politicalRole,
-        politicalRoles: roleListFromLeader(row, next[index].politicalRoles),
-        leaderKind: LEADER_SLOTS[index].kind,
-        platformDrafts: draftsFromAccounts(row.id, accountRows),
-        activePlatform: "facebook"
-      };
-    }
-    setLeaderSlots(next);
+    setLeaderSlots((prev) => {
+      const used = new Set<string>();
+      return LEADER_SLOTS.map((def, index) => {
+        const empty = emptyLeaderSlot(def);
+        const row = scoped.find((item) => slotIndexForKind(item.leaderKind) === index && item.id && !used.has(item.id));
+        if (row?.id) used.add(row.id);
+        const serverSlot: LeaderSlotState = row
+          ? {
+              id: row.id,
+              name: row.name || "",
+              partyId: row.partyId || "",
+              politicalRole: (row.roles || [])[0]?.politicalRole || row.politicalRole || empty.politicalRole,
+              politicalRoles: roleListFromLeader(row, empty.politicalRoles),
+              leaderKind: def.kind,
+              platformDrafts: draftsFromAccounts(row.id, accountRows),
+              activePlatform: "facebook"
+            }
+          : empty;
+        const local = prev[index];
+        if (mode === "replace" || !local) return serverSlot;
+        if (!serverSlot.id) {
+          return {
+            ...local,
+            platformDrafts: mergePlatformDrafts(serverSlot.platformDrafts, local.platformDrafts)
+          };
+        }
+        return {
+          ...serverSlot,
+          platformDrafts: mergePlatformDrafts(serverSlot.platformDrafts, local.platformDrafts),
+          activePlatform: local.activePlatform || serverSlot.activePlatform
+        };
+      });
+    });
   };
   const loadQueue = async () => {
     const wanted = String(queueStatus || "PENDING").toUpperCase();
@@ -1066,7 +1155,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           partyId: slot.partyId,
           profileUrl: draft.hasAccount === "yes" ? String(draft.profileUrl || "").trim() : "",
           accountIdentifier: draft.hasAccount === "yes"
-            ? socialUsername({ profileUrl: String(draft.profileUrl || "").trim(), platform })
+            ? (socialUsername({ profileUrl: String(draft.profileUrl || "").trim(), platform }) || "")
             : "",
           followers: draft.hasAccount === "yes" ? num(draft.followers) : undefined,
           verificationStatus: draft.hasAccount === "no" ? "NO_ACCOUNT" : draft.verified === "yes" ? "VERIFIED" : "PENDING"
@@ -1096,10 +1185,22 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           .filter(Boolean);
       }
       const accountErrors = Array.isArray(saved?.accountErrors) ? saved.accountErrors.filter((row: any) => row?.detail) : [];
-      setLeaderAlert(null);
       if (accountErrors.length) {
+        const first = accountErrors[0];
+        const failedPlatform = String(first?.platform || "");
         flash(`${LEADER_SLOTS[index].label} saved. ${accountErrors.map((row: any) => row.detail).join(" ")}`, true);
+        if ((PLATFORMS as readonly string[]).includes(failedPlatform)) {
+          patchLeaderSlot(index, { activePlatform: failedPlatform as (typeof PLATFORMS)[number] });
+          setLeaderAlert({
+            index,
+            field: `profileUrl-${failedPlatform}`,
+            leaderLabel: LEADER_SLOTS[index].label,
+            fieldLabel: `${PLATFORM_LABEL[failedPlatform as (typeof PLATFORMS)[number]]} profile link`,
+            message: String(first.detail)
+          });
+        }
       } else {
+        setLeaderAlert(null);
         flash(`${LEADER_SLOTS[index].label} saved.`);
       }
       setEntryGroup("leaders");
@@ -1110,15 +1211,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           ...leaders.filter((row) => row.id !== personId)
         ];
         const mergedAccounts = returnedAccounts.length
-          ? [...returnedAccounts, ...accounts.filter((row) => row.personId !== personId)]
+          ? [...returnedAccounts, ...accounts.filter((row) => !(row.personId === personId && returnedAccounts.some((savedRow: any) => String(savedRow.platform || "").toLowerCase() === String(row.platform || "").toLowerCase())))]
           : accounts;
         setLeaders(mergedLeaders);
         setAccounts(mergedAccounts);
         persistOperatorCache({ leaders: mergedLeaders, accounts: mergedAccounts });
-        hydrateLeaderSlots(mergedLeaders, mergedAccounts);
+        hydrateLeaderSlots(mergedLeaders, mergedAccounts, "merge");
       }
       void Promise.all([loadLeaders(), loadAccounts(), refreshDashboard()]).then(([leaderRows, accountRows]) => {
-        hydrateLeaderSlots(leaderRows, accountRows);
+        hydrateLeaderSlots(leaderRows, accountRows, "merge");
       }).catch(() => undefined);
     } catch (err: any) {
       const leaderLabel = LEADER_SLOTS[index].label;

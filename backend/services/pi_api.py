@@ -684,6 +684,26 @@ async def _write_social_account(
                     break
     rows = known_accounts if known_accounts is not None else _list_local("social_media_accounts")
     normalized = normalize_profile_url(url, platform) if status != "NO_ACCOUNT" else ""
+
+    def _row_no_account(row: dict) -> bool:
+        return str(row.get("verificationStatus") or "").upper() == "NO_ACCOUNT" or bool(row.get("noAccount"))
+
+    def _row_identity(row: dict) -> str:
+        row_platform = str(row.get("platform") or "").lower()
+        row_url = str(row.get("profileUrl") or "")
+        return account_identity_key(
+            row_platform,
+            row_url,
+            str(row.get("accountIdentifier") or ""),
+            person_id=str(row.get("personId") or ""),
+            no_account=_row_no_account(row),
+        )
+
+    def _row_normalized(row: dict) -> str:
+        if _row_no_account(row):
+            return ""
+        return normalize_profile_url(str(row.get("profileUrl") or ""), str(row.get("platform") or ""))
+
     for row in rows:
         if row.get("id") == (existing or {}).get("id"):
             continue
@@ -691,10 +711,10 @@ async def _write_social_account(
         if same_person_platform:
             existing = existing or row
             continue
-        if status == "NO_ACCOUNT" or row.get("verificationStatus") == "NO_ACCOUNT" or row.get("noAccount"):
+        if status == "NO_ACCOUNT" or _row_no_account(row):
             continue
-        same_identity = row.get("identityKey") == identity
-        same_url = bool(normalized) and row.get("normalizedUrl") == normalized and str(row.get("platform") or "").lower() == platform
+        same_identity = bool(identity) and _row_identity(row) == identity
+        same_url = bool(normalized) and _row_normalized(row) == normalized and str(row.get("platform") or "").lower() == platform
         if same_identity or same_url:
             other = await _get("political_persons", str(row.get("personId") or "")) or {}
             other_name = other.get("name") or "another leader"
