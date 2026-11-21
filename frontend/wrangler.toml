@@ -1,8 +1,7 @@
 name = "leaders-lens"
 compatibility_date = "2026-11-21"
+pages_build_output_dir = "dist"
 
-# Static Vite app. Cloudflare Git builds: Path=frontend, then
-# build `npm ci && npm run build` and deploy `npx wrangler deploy`.
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
