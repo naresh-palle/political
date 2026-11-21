@@ -296,7 +296,7 @@ def _hydrate_memory_from_runtime() -> None:
                 MEMORY[collection].insert(0, deepcopy(row))
 
 
-async def _list(collection: str) -> List[Dict[str, Any]]:
+async def _list(collection: str, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     srv = _srv()
     mem = memory_list(collection)
     disk = _runtime_list(collection)
@@ -307,11 +307,12 @@ async def _list(collection: str) -> List[Dict[str, Any]]:
     db = _pi_mongo_db(srv)
     if db is None:
         return merged or mem
+    filt = {key: value for key, value in (query or {}).items() if value not in (None, "")}
     try:
         col = getattr(db, COLLECTIONS[collection], None)
         if col is None:
             return merged or mem
-        docs = await asyncio.wait_for(col.find({}, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT), timeout=4.0)
+        docs = await asyncio.wait_for(col.find(filt, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT), timeout=12.0)
         if not docs:
             return merged or mem
         return _merge_docs(list(docs), disk, mem)
@@ -1022,7 +1023,10 @@ def register_pi_routes(api_router) -> None:
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
         _require(caps, "view")
-        rows = await _list("constituency_statistics")
+        query = {}
+        if districtId:
+            query["districtId"] = districtId
+        rows = await _list("constituency_statistics", query or None)
         if stateId:
             rows = [r for r in rows if str(r.get("stateId") or "").upper() == stateId.upper()]
         if districtId:
@@ -1144,7 +1148,8 @@ def register_pi_routes(api_router) -> None:
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
         _require(caps, "view")
-        rows = await _list("political_persons")
+        person_query = {"assemblyConstituencyId": assemblyConstituencyId} if assemblyConstituencyId else None
+        rows = await _list("political_persons", person_query)
         roles = await _list("political_person_roles")
         if assemblyConstituencyId:
             rows = [r for r in rows if r.get("assemblyConstituencyId") == assemblyConstituencyId]
@@ -1371,8 +1376,16 @@ def register_pi_routes(api_router) -> None:
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
         _require(caps, "view")
-        persons = {p.get("id"): p for p in await _list("political_persons")}
-        rows = await _list("social_media_accounts")
+        person_query = {"assemblyConstituencyId": assemblyConstituencyId} if assemblyConstituencyId else ({"id": personId} if personId else None)
+        persons = {p.get("id"): p for p in await _list("political_persons", person_query)}
+        person_ids = [pid for pid in persons.keys() if pid]
+        if personId:
+            account_query: Optional[Dict[str, Any]] = {"personId": personId}
+        elif assemblyConstituencyId:
+            account_query = {"personId": {"$in": person_ids or ["__none__"]}}
+        else:
+            account_query = None
+        rows = await _list("social_media_accounts", account_query)
         if personId:
             rows = [r for r in rows if r.get("personId") == personId]
         if platform:

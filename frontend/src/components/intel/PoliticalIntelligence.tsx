@@ -339,6 +339,47 @@ function mergePlatformDrafts(
   return next;
 }
 
+function buildLeaderSlots(
+  leaderRows: any[],
+  accountRows: any[],
+  assemblyId: string,
+  prev?: LeaderSlotState[],
+  mode: "replace" | "merge" = "replace"
+) {
+  const scoped = assemblyId ? (leaderRows || []).filter((row) => row.assemblyConstituencyId === assemblyId) : [];
+  const used = new Set<string>();
+  return LEADER_SLOTS.map((def, index) => {
+    const empty = emptyLeaderSlot(def);
+    const row = scoped.find((item) => slotIndexForKind(item.leaderKind) === index && item.id && !used.has(item.id));
+    if (row?.id) used.add(row.id);
+    const serverSlot: LeaderSlotState = row
+      ? {
+          id: row.id,
+          name: row.name || "",
+          partyId: row.partyId || "",
+          politicalRole: (row.roles || [])[0]?.politicalRole || row.politicalRole || empty.politicalRole,
+          politicalRoles: roleListFromLeader(row, empty.politicalRoles),
+          leaderKind: def.kind,
+          platformDrafts: draftsFromAccounts(row.id, accountRows || []),
+          activePlatform: "facebook"
+        }
+      : empty;
+    const local = prev?.[index];
+    if (mode === "replace" || !local) return serverSlot;
+    if (!serverSlot.id) {
+      return {
+        ...local,
+        platformDrafts: mergePlatformDrafts(serverSlot.platformDrafts, local.platformDrafts)
+      };
+    }
+    return {
+      ...serverSlot,
+      platformDrafts: mergePlatformDrafts(serverSlot.platformDrafts, local.platformDrafts),
+      activePlatform: local.activePlatform || serverSlot.activePlatform
+    };
+  });
+}
+
 function todayIsoDate() {
   const d = new Date();
   const y = d.getFullYear();
@@ -545,7 +586,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const replayedRef = useRef(false);
   const dashReqRef = useRef(0);
 
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() => {
+    const cached = initialCache?.tab as Tab | undefined;
+    if (cached && ["dashboard", "constituencies", "verify", "import", "intelligence"].includes(cached)) return cached;
+    return "dashboard";
+  });
   const [entryGroup, setEntryGroup] = useState<EntryGroup>((initialCache?.entryGroup as EntryGroup) || "constituency");
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState<SaveKind>(null);
@@ -566,7 +611,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     dataCollectionDate: todayIsoDate()
   });
   const [constRows, setConstRows] = useState<any[]>(initialCache?.constRows || []);
-  const [leaderSlots, setLeaderSlots] = useState<LeaderSlotState[]>(() => LEADER_SLOTS.map(emptyLeaderSlot));
+  const [leaderSlots, setLeaderSlots] = useState<LeaderSlotState[]>(() =>
+    buildLeaderSlots(initialCache?.leaders || [], initialCache?.accounts || [], initialCache?.acId || "")
+  );
   const [savingSlot, setSavingSlot] = useState<number | null>(null);
   const [leaderAlert, setLeaderAlert] = useState<LeaderFieldAlert | null>(null);
   const [leaders, setLeaders] = useState<any[]>(initialCache?.leaders || []);
@@ -871,77 +918,76 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const selectedDistrictName = districts.find((d) => d.id === districtId)?.name || "";
 
   const loadConstituencies = async () => {
-    const data = await politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 200 });
-    const items = data.items || [];
-    if (items.length) {
-      setConstRows(items);
-      persistOperatorCache({ constRows: items });
-      return items;
-    }
     const cache = readPiOperatorCache(userId);
-    const cached = (cache?.constRows || []).filter((row) => !districtId || row.districtId === districtId || row.assemblyConstituencyId);
-    if (cached.length) {
-      setConstRows(cached);
-      return cached;
+    const cachedAll = cache?.constRows || [];
+    const cachedScoped = cachedAll.filter((row) => !districtId || row.districtId === districtId || row.assemblyConstituencyId);
+    try {
+      const data = await politicalApiService.getPiConstituencies(userId, { stateId, districtId, limit: 200 });
+      const items = data.items || [];
+      if (!items.length && cachedScoped.length) {
+        setConstRows(cachedScoped);
+        return cachedScoped;
+      }
+      const others = districtId ? cachedAll.filter((row) => row.districtId && row.districtId !== districtId) : [];
+      const mergedAll = mergeById(items, others);
+      if (mergedAll.length) persistOperatorCache({ constRows: mergedAll });
+      const scoped = districtId ? mergedAll.filter((row) => row.districtId === districtId || items.some((item: any) => item.id === row.id)) : mergedAll;
+      setConstRows(scoped.length ? scoped : items);
+      return scoped.length ? scoped : items;
+    } catch {
+      setConstRows(cachedScoped);
+      return cachedScoped;
     }
-    setConstRows([]);
-    return [];
   };
   const loadLeaders = async () => {
-    const data = await politicalApiService.getPiLeaders(userId, { assemblyConstituencyId: acId || undefined, districtId, limit: 200 });
-    const items = data.items || [];
     const cache = readPiOperatorCache(userId);
-    const cached = (cache?.leaders || []).filter((row) => !acId || row.assemblyConstituencyId === acId);
-    const merged = mergeById(items, cached);
-    setLeaders(merged);
-    if (merged.length) persistOperatorCache({ leaders: merged });
-    return merged;
+    const cachedAll = cache?.leaders || [];
+    const cachedScoped = cachedAll.filter((row) => !acId || row.assemblyConstituencyId === acId);
+    try {
+      const data = await politicalApiService.getPiLeaders(userId, { assemblyConstituencyId: acId || undefined, districtId, limit: 200 });
+      const items = data.items || [];
+      if (!items.length && cachedScoped.length) {
+        setLeaders(cachedScoped);
+        return cachedScoped;
+      }
+      const others = acId ? cachedAll.filter((row) => row.assemblyConstituencyId !== acId) : [];
+      const mergedAll = mergeById(items, others);
+      if (mergedAll.length) persistOperatorCache({ leaders: mergedAll });
+      const scoped = acId ? mergedAll.filter((row) => row.assemblyConstituencyId === acId) : mergedAll;
+      setLeaders(scoped);
+      return scoped;
+    } catch {
+      setLeaders(cachedScoped);
+      return cachedScoped;
+    }
   };
   const loadAccounts = async () => {
-    const data = await politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 200 });
-    const items = data.items || [];
     const cache = readPiOperatorCache(userId);
-    const merged = mergeById(items, cache?.accounts || []);
-    setAccounts(merged);
-    if (merged.length) persistOperatorCache({ accounts: merged });
-    return merged;
+    const cachedAll = cache?.accounts || [];
+    const leaderIds = new Set((cache?.leaders || []).filter((row) => !acId || row.assemblyConstituencyId === acId).map((row) => row.id));
+    const cachedScoped = cachedAll.filter((row) => !acId || leaderIds.has(row.personId) || !row.personId);
+    try {
+      const data = await politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 200 });
+      const items = data.items || [];
+      if (!items.length && cachedScoped.length) {
+        setAccounts(cachedScoped);
+        return cachedScoped;
+      }
+      const itemIds = new Set(items.map((row: any) => row.id));
+      const others = items.length ? cachedAll.filter((row) => !itemIds.has(row.id) && (!acId || !leaderIds.has(row.personId))) : cachedAll;
+      const mergedAll = mergeById(items, others);
+      if (mergedAll.length) persistOperatorCache({ accounts: mergedAll });
+      const scoped = acId ? mergedAll.filter((row) => leaderIds.has(row.personId) || items.some((item: any) => item.id === row.id)) : mergedAll;
+      setAccounts(scoped.length ? scoped : mergedAll);
+      return scoped.length ? scoped : mergedAll;
+    } catch {
+      setAccounts(cachedScoped);
+      return cachedScoped;
+    }
   };
 
   const hydrateLeaderSlots = (leaderRows: any[], accountRows: any[], mode: "replace" | "merge" = "replace") => {
-    const scoped = acId ? leaderRows.filter((row) => row.assemblyConstituencyId === acId) : [];
-    setLeaderSlots((prev) => {
-      const used = new Set<string>();
-      return LEADER_SLOTS.map((def, index) => {
-        const empty = emptyLeaderSlot(def);
-        const row = scoped.find((item) => slotIndexForKind(item.leaderKind) === index && item.id && !used.has(item.id));
-        if (row?.id) used.add(row.id);
-        const serverSlot: LeaderSlotState = row
-          ? {
-              id: row.id,
-              name: row.name || "",
-              partyId: row.partyId || "",
-              politicalRole: (row.roles || [])[0]?.politicalRole || row.politicalRole || empty.politicalRole,
-              politicalRoles: roleListFromLeader(row, empty.politicalRoles),
-              leaderKind: def.kind,
-              platformDrafts: draftsFromAccounts(row.id, accountRows),
-              activePlatform: "facebook"
-            }
-          : empty;
-        const local = prev[index];
-        if (mode === "replace" || !local) return serverSlot;
-        if (!serverSlot.id) {
-          return {
-            ...local,
-            platformDrafts: mergePlatformDrafts(serverSlot.platformDrafts, local.platformDrafts)
-          };
-        }
-        return {
-          ...serverSlot,
-          platformDrafts: mergePlatformDrafts(serverSlot.platformDrafts, local.platformDrafts),
-          activePlatform: local.activePlatform || serverSlot.activePlatform
-        };
-      });
-    });
+    setLeaderSlots((prev) => buildLeaderSlots(leaderRows, accountRows, acId, prev, mode));
   };
   const loadQueue = async () => {
     const wanted = String(queueStatus || "PENDING").toUpperCase();
@@ -967,8 +1013,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     setTab(visibleTabs.some((item) => item.id === "constituencies") ? "constituencies" : "dashboard");
   };
 
+  const openTickRef = useRef(openDataEntryTick);
   useEffect(() => {
-    setTab("dashboard");
+    if (openDataEntryTick === openTickRef.current) return;
+    openTickRef.current = openDataEntryTick;
+    if (openDataEntryTick) setTab("dashboard");
   }, [openDataEntryTick]);
 
   useEffect(() => {
@@ -1215,7 +1264,14 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           : accounts;
         setLeaders(mergedLeaders);
         setAccounts(mergedAccounts);
-        persistOperatorCache({ leaders: mergedLeaders, accounts: mergedAccounts });
+        const cache = readPiOperatorCache(userId);
+        persistOperatorCache({
+          leaders: mergeById(
+            mergedLeaders,
+            (cache?.leaders || []).filter((row) => !acId || row.assemblyConstituencyId !== acId)
+          ),
+          accounts: mergeById(mergedAccounts, cache?.accounts || [])
+        });
         hydrateLeaderSlots(mergedLeaders, mergedAccounts, "merge");
       }
       void Promise.all([loadLeaders(), loadAccounts(), refreshDashboard()]).then(([leaderRows, accountRows]) => {
