@@ -5,6 +5,7 @@ import asyncio
 import csv
 import io
 import json
+import logging
 import sys
 import threading
 import time
@@ -12,6 +13,8 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger("pi_api")
 
 from fastapi import HTTPException, Query
 from fastapi.responses import PlainTextResponse

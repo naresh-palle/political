@@ -60,6 +60,7 @@ MEMORY: Dict[str, Any] = {
     "political_person_roles": {},
     "social_media_accounts": {},
     "social_media_snapshots": [],
+    "monthly_ads_metrics": {},
     "data_verification_history": [],
     "data_import_batches": [],
     "constituency_contacts": {},
