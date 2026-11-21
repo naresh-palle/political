@@ -1426,6 +1426,18 @@ def register_pi_routes(api_router) -> None:
         )
         return saved
 
+    @api_router.post("/pi/fetch-social-metrics")
+    async def fetch_social_metrics_endpoint(payload: dict, userId: Optional[str] = None):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "create")
+        platform = str(payload.get("platform") or "").strip().lower()
+        url = str(payload.get("profileUrl") or payload.get("url") or "").strip()
+        if not platform or not url:
+            raise HTTPException(status_code=400, detail="platform and profileUrl are required")
+        from services.social_fetcher import auto_fetch_metrics
+        return await auto_fetch_metrics(platform, url)
+
     @api_router.delete("/pi/social-accounts/{account_id}")
     async def delete_social_account(account_id: str, userId: Optional[str] = None):
         actor = await _load_actor(userId)

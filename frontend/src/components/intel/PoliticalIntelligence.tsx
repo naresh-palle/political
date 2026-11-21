@@ -10,6 +10,7 @@ import {
   Download,
   Loader2,
   MapPin,
+  Sparkles,
   Trash2,
   Upload,
   X
@@ -649,6 +650,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const [csvText, setCsvText] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [exportingAi, setExportingAi] = useState(false);
+  const [fetchingMetrics, setFetchingMetrics] = useState<string | null>(null);
+  const [metricsNotice, setMetricsNotice] = useState<string | null>(null);
   const csvFileRef = useRef<HTMLInputElement>(null);
 
   const partyById = useMemo(() => Object.fromEntries(parties.map((p) => [p.id, p])), [parties]);
@@ -1436,6 +1439,39 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     });
   };
 
+  const handleAutoFetchMetrics = async (slotIndex: number, platform: (typeof PLATFORMS)[number]) => {
+    const slot = leaderSlots[slotIndex];
+    const draft = slot.platformDrafts[platform];
+    const url = String(draft?.profileUrl || "").trim();
+    if (!url) {
+      flash("Please enter a profile link first before auto-fetching metrics.", true);
+      return;
+    }
+    const key = `${slotIndex}-${platform}`;
+    setFetchingMetrics(key);
+    setMetricsNotice(null);
+    try {
+      const res = await politicalApiService.fetchSocialMetrics(userId, platform, url);
+      if (res && res.success) {
+        if (res.followers !== undefined && res.followers !== null) {
+          setSlotPlatformField(slotIndex, platform, "followers", String(res.followers));
+        }
+        if (res.verified) {
+          setSlotPlatformField(slotIndex, platform, "verified", "yes");
+        }
+        const reachInfo = res.avgViewsLast10 ? ` · Est. Reach: ${Number(res.avgViewsLast10).toLocaleString()} views` : "";
+        setMetricsNotice(`✓ Auto-fetched: ${Number(res.followers || 0).toLocaleString()} followers${reachInfo}`);
+        flash(`Auto-fetched metrics for @${res.username || platform}!`, false);
+      } else {
+        flash(res?.detail || "Could not auto-fetch metrics. Check URL or API key in settings.", true);
+      }
+    } catch (err: any) {
+      flash(err?.message || "Could not reach auto-fetch service.", true);
+    } finally {
+      setFetchingMetrics(null);
+    }
+  };
+
   const downloadSavedExcel = () => {
     const header = ["Constituency", "District", "Voters", "Leaders", "Collected by", "Date", "Status"];
     const lines = [
@@ -1972,17 +2008,36 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         )}
                       </div>
                       {drafts[activePlatform].hasAccount === "yes" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <Field label="Followers / subscribers" type="number" value={drafts[activePlatform].followers} onChange={(v) => setSlotPlatformField(index, activePlatform, "followers", v)} />
-                          <Field
-                            id={leaderFieldDomId(index, `profileUrl-${activePlatform}`)}
-                            label="Profile link"
-                            value={drafts[activePlatform].profileUrl}
-                            invalid={profileInvalid}
-                            hint={profileInvalid ? slotAlert?.message : undefined}
-                            onChange={(v) => setSlotPlatformField(index, activePlatform, "profileUrl", v)}
-                          />
-                        </div>
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <Field label="Followers / subscribers" type="number" value={drafts[activePlatform].followers} onChange={(v) => setSlotPlatformField(index, activePlatform, "followers", v)} />
+                            <Field
+                              id={leaderFieldDomId(index, `profileUrl-${activePlatform}`)}
+                              label="Profile link"
+                              value={drafts[activePlatform].profileUrl}
+                              invalid={profileInvalid}
+                              hint={profileInvalid ? slotAlert?.message : undefined}
+                              onChange={(v) => setSlotPlatformField(index, activePlatform, "profileUrl", v)}
+                            />
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 -mt-1 mb-1">
+                            <button
+                              type="button"
+                              disabled={fetchingMetrics === `${index}-${activePlatform}` || !drafts[activePlatform].profileUrl}
+                              onClick={() => handleAutoFetchMetrics(index, activePlatform)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold border border-[#D4A24C]/60 text-[#D4A24C] hover:bg-[#D4A24C]/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              title="Fetch live follower count and reach automatically"
+                            >
+                              <Sparkles className="w-3 h-3 text-[#D4A24C]" />
+                              {fetchingMetrics === `${index}-${activePlatform}` ? "Fetching Followers & Reach…" : "⚡ Auto-Fetch Followers & Reach"}
+                            </button>
+                            {metricsNotice && (
+                              <span className="text-[10px] text-emerald-300 font-medium">
+                                {metricsNotice}
+                              </span>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
                     <div>
