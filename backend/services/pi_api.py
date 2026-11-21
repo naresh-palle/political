@@ -144,6 +144,7 @@ COLLECTIONS = {
     "political_person_roles": "political_person_roles",
     "social_media_accounts": "social_media_accounts",
     "social_media_snapshots": "social_media_snapshots",
+    "monthly_ads_metrics": "monthly_ads_metrics",
     "data_verification_history": "data_verification_history",
     "data_import_batches": "data_import_batches",
     "constituency_contacts": "constituency_contacts",
@@ -799,6 +800,90 @@ async def _write_social_account(
     return saved
 
 
+async def sync_all_social_media_accounts(actor_id: str = "cron-worker") -> Dict[str, Any]:
+    """Auto-fetch latest followers, reach, and posts count for all active social media accounts."""
+    from services.social_fetcher import auto_fetch_metrics
+    now = datetime.now(timezone.utc).isoformat()
+    current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+    accounts = await _list("social_media_accounts")
+    updated = 0
+    errors = 0
+
+    for acc in accounts:
+        url = (acc.get("profileUrl") or acc.get("url") or "").strip()
+        platform = (acc.get("platform") or "").strip().lower()
+        if not url or acc.get("noAccount") or not platform:
+            continue
+        try:
+            res = await auto_fetch_metrics(platform, url)
+            if res and res.get("success") and res.get("followers") is not None:
+                followers = int(res["followers"])
+                views = int(res.get("avgViewsLast10") or 0)
+                likes = int(res.get("avgLikesLast10") or 0)
+                posts = int(res.get("postsLast30Days") or acc.get("postsLast30Days") or 0)
+                verified = bool(res.get("verified"))
+
+                acc_id = acc.get("id") or acc.get("_id")
+                if acc_id:
+                    acc["followers"] = followers
+                    acc["avgViewsLast10"] = views
+                    acc["avgLikesLast10"] = likes
+                    if posts > 0:
+                        acc["postsLast30Days"] = posts
+                    acc["verified"] = verified
+                    acc["lastAutoFetchedAt"] = now
+                    acc["updatedAt"] = now
+                    await _save("social_media_accounts", str(acc_id), acc)
+
+                    await _append(
+                        "social_media_snapshots",
+                        {
+                            "id": new_id("snap"),
+                            "accountId": str(acc_id),
+                            "personId": acc.get("personId"),
+                            "platform": platform,
+                            "followers": followers,
+                            "postsLast30Days": posts,
+                            "avgViewsLast10": views,
+                            "avgLikesLast10": likes,
+                            "timestamp": now,
+                            "dataSource": "WEEKLY_CRON_AUTO_FETCH",
+                            "verificationStatus": acc.get("verificationStatus") or "VERIFIED",
+                        },
+                        block_mongo=False,
+                    )
+
+                    if acc.get("personId"):
+                        mam_id = f"mam-{acc.get('personId')}-{platform}-{current_month}"
+                        existing_mam = await _get("monthly_ads_metrics", mam_id)
+                        mam_doc = {
+                            "id": mam_id,
+                            "leaderId": acc.get("personId"),
+                            "accountId": str(acc_id),
+                            "platform": platform,
+                            "month": current_month,
+                            "postsCount": posts if posts > 0 else (existing_mam.get("postsCount", 0) if existing_mam else 0),
+                            "adsCount": existing_mam.get("adsCount", 0) if existing_mam else 0,
+                            "reach": views if views > 0 else (existing_mam.get("reach", 0) if existing_mam else 0),
+                            "updatedAt": now,
+                            "updatedBy": actor_id,
+                        }
+                        await _save("monthly_ads_metrics", mam_id, mam_doc)
+
+                    updated += 1
+        except Exception as ex:
+            logger.warning("Error syncing account %s (%s): %s", acc.get("id"), url, ex)
+            errors += 1
+
+    return {
+        "success": True,
+        "updated": updated,
+        "total": len(accounts),
+        "errors": errors,
+        "timestamp": now,
+    }
+
+
 def register_pi_routes(api_router) -> None:
     _hydrate_memory_from_runtime()
 
@@ -1438,6 +1523,60 @@ def register_pi_routes(api_router) -> None:
         from services.social_fetcher import auto_fetch_metrics
         return await auto_fetch_metrics(platform, url)
 
+    @api_router.post("/pi/trigger-weekly-cron")
+    async def trigger_weekly_cron_endpoint(userId: Optional[str] = None):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "view")
+        return await sync_all_social_media_accounts(actor.get("id") or "smm")
+
+    @api_router.get("/pi/monthly-ads-metrics")
+    async def get_monthly_ads_metrics(
+        userId: Optional[str] = None,
+        month: Optional[str] = None,
+        leaderId: Optional[str] = None,
+    ):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "view")
+        records = await _list("monthly_ads_metrics")
+        if month:
+            records = [r for r in records if r.get("month") == month]
+        if leaderId:
+            records = [r for r in records if r.get("leaderId") == leaderId]
+        return records
+
+    @api_router.post("/pi/monthly-ads-metrics")
+    async def save_monthly_ads_metrics(payload: dict, userId: Optional[str] = None):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "create")
+        now = datetime.now(timezone.utc).isoformat()
+        leader_id = payload.get("leaderId")
+        month = payload.get("month") or datetime.now(timezone.utc).strftime("%Y-%m")
+        platform = payload.get("platform") or "all"
+        if not leader_id:
+            raise HTTPException(status_code=400, detail="leaderId is required")
+
+        mam_id = payload.get("id") or f"mam-{leader_id}-{platform}-{month}"
+        existing = await _get("monthly_ads_metrics", mam_id)
+        doc = {
+            "id": mam_id,
+            "leaderId": leader_id,
+            "accountId": payload.get("accountId") or (existing or {}).get("accountId"),
+            "platform": platform,
+            "month": month,
+            "postsCount": int(payload.get("postsCount") or 0),
+            "adsCount": int(payload.get("adsCount") or 0),
+            "reach": int(payload.get("reach") or 0),
+            "spend": float(payload.get("spend") or 0.0),
+            "notes": payload.get("notes") or "",
+            "updatedAt": now,
+            "updatedBy": actor.get("id") or "smm"
+        }
+        saved = await _save("monthly_ads_metrics", mam_id, doc)
+        return saved
+
     @api_router.delete("/pi/social-accounts/{account_id}")
     async def delete_social_account(account_id: str, userId: Optional[str] = None):
         actor = await _load_actor(userId)
@@ -1607,6 +1746,7 @@ def register_pi_routes(api_router) -> None:
         platform: Optional[str] = None,
         partyId: Optional[str] = None,
         rankBy: Optional[str] = "followers",
+        month: Optional[str] = None,
     ):
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
@@ -1616,6 +1756,16 @@ def register_pi_routes(api_router) -> None:
         accounts = await _list("social_media_accounts")
         snapshots = await _list("social_media_snapshots")
         stats = await _list("constituency_statistics")
+        monthly_ads = await _list("monthly_ads_metrics")
+
+        wanted_month = (month or datetime.now(timezone.utc).strftime("%Y-%m")).strip()
+        monthly_by_leader: Dict[str, Dict[str, Any]] = {}
+        for m_doc in monthly_ads:
+            if m_doc.get("month") == wanted_month:
+                l_id = m_doc.get("leaderId")
+                plat = m_doc.get("platform") or "all"
+                if l_id:
+                    monthly_by_leader[f"{l_id}:{plat}"] = m_doc
         if stateId:
             persons = [p for p in persons if str(p.get("stateId") or "").upper() == stateId.upper()]
             stats = [s for s in stats if str(s.get("stateId") or "").upper() == stateId.upper()]
@@ -1675,6 +1825,41 @@ def register_pi_routes(api_router) -> None:
                 if not wanted_platform or str(acc.get("platform") or "").lower() == wanted_platform
             ]
             metrics = aggregate_account_metrics(metric_accounts, snapshots_by_account)
+
+            l_id = person.get("id")
+            m_total = monthly_by_leader.get(f"{l_id}:all")
+            m_posts_sum = 0
+            m_ads_sum = 0
+            m_reach_sum = 0
+            has_explicit_m = False
+            for p_k in PLATFORMS:
+                p_m = monthly_by_leader.get(f"{l_id}:{p_k}")
+                if p_m:
+                    has_explicit_m = True
+                    m_posts_sum += int(p_m.get("postsCount") or 0)
+                    m_ads_sum += int(p_m.get("adsCount") or 0)
+                    m_reach_sum += int(p_m.get("reach") or 0)
+
+            if m_total:
+                total_posts = int(m_total.get("postsCount") or 0)
+                total_ads = int(m_total.get("adsCount") or 0)
+                total_reach = int(m_total.get("reach") or 0)
+            elif has_explicit_m:
+                total_posts = m_posts_sum
+                total_ads = m_ads_sum
+                total_reach = m_reach_sum
+            else:
+                total_posts = int(metrics.get("postsLast30Days") or 0)
+                total_ads = 0
+                total_reach = sum(int(acc.get("avgViewsLast10") or 0) for acc in all_accounts)
+
+            leader_monthly = {
+                "month": wanted_month,
+                "postsCount": total_posts,
+                "adsCount": total_ads,
+                "reach": total_reach,
+            }
+
             leaders.append(
                 {
                     "id": person.get("id"),
@@ -1694,6 +1879,7 @@ def register_pi_routes(api_router) -> None:
                     "engagementPercent": metrics["engagementPercent"],
                     "postsLast30Days": metrics["postsLast30Days"],
                     "growth30": metrics["growth30"],
+                    "monthlyMetrics": leader_monthly,
                     "accounts": all_accounts,
                     "verificationStatus": person.get("verificationStatus"),
                     "rankPlatform": wanted_platform or "all",
@@ -1796,6 +1982,7 @@ def register_pi_routes(api_router) -> None:
             "biggestGap": biggest_gap,
             "rankBy": rank_key,
             "rankPlatform": wanted_platform or "all",
+            "selectedMonth": wanted_month,
             "socialScoreDisclaimer": "Social Score is an internal relative index among the filtered leaders. Missing metrics are skipped, never treated as zero. It is not an official election or popularity score.",
         }
 

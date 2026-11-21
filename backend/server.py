@@ -3643,12 +3643,29 @@ async def _startup_db_seed_bg():
         log_mongo_notice("startup seed", e)
 
 
+async def _weekly_social_cron_loop():
+    """Background weekly cron job to auto-fetch followers and reach for all social media accounts."""
+    # Delay initial run 60s so Render health checks succeed without waiting
+    await asyncio.sleep(60)
+    while True:
+        try:
+            logger.info("Starting weekly social media auto-fetch cron...")
+            from services.pi_api import sync_all_social_media_accounts
+            res = await sync_all_social_media_accounts("weekly-cron")
+            logger.info("Weekly social cron completed: %s", res)
+        except Exception as e:
+            logger.error("Weekly social cron loop error: %s", e)
+        # 7 days interval = 604,800 seconds
+        await asyncio.sleep(604800)
+
+
 @app.on_event("startup")
 async def startup_db_seed():
     """Do not block Uvicorn listen / Render health checks on Atlas."""
     if _mongo_circuit_open:
         return
     asyncio.create_task(_startup_db_seed_bg())
+    asyncio.create_task(_weekly_social_cron_loop())
 
 
 async def refresh_live_officer_ticket_seeds():

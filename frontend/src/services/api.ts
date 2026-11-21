@@ -2308,6 +2308,19 @@ export const politicalApiService = {
   getPiContacts(userId: string) {
     return this.piRequest("/pi/contacts", userId);
   },
+  triggerWeeklyCron(userId: string) {
+    return this.piRequest("/pi/trigger-weekly-cron", userId, { method: "POST" }, 60000);
+  },
+  getMonthlyAdsMetrics(userId: string, params: Record<string, string | undefined> = {}) {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v) q.set(k, v);
+    });
+    return this.piRequest(`/pi/monthly-ads-metrics?${q.toString()}`, userId, {}, 15000);
+  },
+  saveMonthlyAdsMetrics(userId: string, payload: any) {
+    return this.piRequest("/pi/monthly-ads-metrics", userId, { method: "POST", body: JSON.stringify(payload) }, 10000);
+  },
   seedPiSample(userId: string) {
     return this.piRequest("/pi/seed-sample?confirm=SAMPLE", userId, { method: "POST" });
   }

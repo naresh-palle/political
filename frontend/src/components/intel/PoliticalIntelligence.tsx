@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -10,6 +11,7 @@ import {
   Download,
   Loader2,
   MapPin,
+  RefreshCw,
   Sparkles,
   Trash2,
   Upload,
@@ -254,6 +256,20 @@ function rankInPool(
     .sort((a, b) => Number(metric(b)) - Number(metric(a)));
   const idx = id ? sortable.findIndex((row) => row.id === id) : -1;
   return { value: idx >= 0 ? idx + 1 : null, of: sortable.length };
+}
+
+function formatMonthName(monthStr: string): string {
+  if (!monthStr || !monthStr.includes("-")) return monthStr;
+  const [y, m] = monthStr.split("-").map(Number);
+  const date = new Date(y, m - 1, 1);
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function getAdjacentMonth(monthStr: string, delta: number): string {
+  const [y, m] = (monthStr || "").split("-").map(Number);
+  if (!y || !m) return monthStr;
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 const SELECTED_PLATFORM_CARD = "ring-2 ring-inset ring-[#D4A24C] border-[#D4A24C] bg-[#D4A24C]/10";
@@ -647,6 +663,14 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const [intelPlatform, setIntelPlatform] = useState("");
   const [intelParty, setIntelParty] = useState("");
   const [rankBy, setRankBy] = useState("followers");
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [syncingAllAccounts, setSyncingAllAccounts] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState<{ updated?: number; total?: number; time?: string } | null>(null);
+  const [editingMonthlyLeader, setEditingMonthlyLeader] = useState<any | null>(null);
+  const [editingMonthlyData, setEditingMonthlyData] = useState({ postsCount: 0, adsCount: 0, reach: 0, spend: 0 });
   const [csvText, setCsvText] = useState("");
   const [preview, setPreview] = useState<any>(null);
   const [exportingAi, setExportingAi] = useState(false);
@@ -1025,9 +1049,49 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       await politicalApiService.getPiIntelligence(userId, {
         stateId,
         platform: intelPlatform || undefined,
-        rankBy
+        rankBy,
+        month: selectedMonth
       })
     );
+  };
+
+  const triggerWeeklySync = async () => {
+    if (syncingAllAccounts) return;
+    setSyncingAllAccounts(true);
+    try {
+      const res = await politicalApiService.triggerWeeklyCron(userId);
+      if (res && res.success) {
+        setLastSyncResult({ updated: res.updated, total: res.total, time: new Date().toLocaleTimeString() });
+        flash(`Auto-synced ${res.updated} of ${res.total} social accounts!`, false);
+        if (tab === "intelligence") await loadIntel();
+        await refreshDashboard();
+      } else {
+        flash("Could not complete weekly auto-sync. Check server logs.", true);
+      }
+    } catch (err: any) {
+      flash(err?.message || "Sync error", true);
+    } finally {
+      setSyncingAllAccounts(false);
+    }
+  };
+
+  const saveMonthlyAds = async () => {
+    if (!editingMonthlyLeader) return;
+    try {
+      await politicalApiService.saveMonthlyAdsMetrics(userId, {
+        leaderId: editingMonthlyLeader.id,
+        month: selectedMonth,
+        postsCount: Number(editingMonthlyData.postsCount) || 0,
+        adsCount: Number(editingMonthlyData.adsCount) || 0,
+        reach: Number(editingMonthlyData.reach) || 0,
+        spend: Number(editingMonthlyData.spend) || 0
+      });
+      flash(`Saved ${selectedMonth} performance for ${editingMonthlyLeader.name}!`, false);
+      setEditingMonthlyLeader(null);
+      await loadIntel();
+    } catch (err: any) {
+      flash(err?.message || "Could not save performance metrics.", true);
+    }
   };
 
   const goToDataEntry = (next?: { districtId?: string; acId?: string; pcId?: string }) => {
@@ -1115,7 +1179,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
   useEffect(() => {
     if (tab === "intelligence") loadIntel().catch(() => undefined);
-  }, [tab, intelPlatform, intelParty, rankBy, stateId, districtId, pcId, acId, userId]);
+  }, [tab, intelPlatform, intelParty, rankBy, stateId, districtId, pcId, acId, selectedMonth, userId]);
 
   const saveConstituency = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2419,6 +2483,60 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             ) : null}
           </aside>
           <div className="flex-1 min-w-0 space-y-4">
+            {isSmM && (
+              <div className={`${CARD} p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-[#D4A24C]/40 bg-[#0F2238]`}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-[#F5EFE0] flex items-center gap-1 mr-1">
+                    <Calendar className="w-3.5 h-3.5 text-[#D4A24C]" />
+                    <span>Month:</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, -1))}
+                    className="px-2.5 py-1 text-xs rounded-lg border border-[#22405E] text-[#B9AF95] hover:text-[#F5EFE0] hover:border-[#D4A24C]"
+                  >
+                    ◀ Prev
+                  </button>
+                  <span className="px-3 py-1 rounded-lg bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] font-bold text-xs">
+                    {formatMonthName(selectedMonth)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, 1))}
+                    className="px-2.5 py-1 text-xs rounded-lg border border-[#22405E] text-[#B9AF95] hover:text-[#F5EFE0] hover:border-[#D4A24C]"
+                  >
+                    Next ▶
+                  </button>
+                  <select
+                    className="text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2 py-1 ml-1"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                  >
+                    <option value={getAdjacentMonth(selectedMonth, -1)}>Previous Month ({formatMonthName(getAdjacentMonth(selectedMonth, -1))})</option>
+                    <option value={selectedMonth}>Current Month ({formatMonthName(selectedMonth)})</option>
+                    <option value={getAdjacentMonth(selectedMonth, 1)}>Next Month ({formatMonthName(getAdjacentMonth(selectedMonth, 1))})</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={triggerWeeklySync}
+                    disabled={syncingAllAccounts}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D4A24C] to-[#E6B865] text-[#071322] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${syncingAllAccounts ? "animate-spin" : ""}`} />
+                    {syncingAllAccounts ? "Auto-Fetching Social Accounts…" : "⚡ Sync All (Weekly Cron)"}
+                  </button>
+                  {lastSyncResult ? (
+                    <span className="text-[11px] text-emerald-400">
+                      ✓ {lastSyncResult.updated} accounts updated
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            )}
+
             {!districtId ? (
               <EmptyState text="Select a district to see constituency reach." />
             ) : acId ? (
@@ -2433,6 +2551,17 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 rankBy={rankBy}
                 partyById={partyById}
                 onSelectPlatform={setIntelPlatform}
+                isSmM={isSmM}
+                selectedMonth={selectedMonth}
+                onEditMonthly={(leader) => {
+                  setEditingMonthlyLeader(leader);
+                  setEditingMonthlyData({
+                    postsCount: leader.monthlyMetrics?.postsCount || 0,
+                    adsCount: leader.monthlyMetrics?.adsCount || 0,
+                    reach: leader.monthlyMetrics?.reach || 0,
+                    spend: 0
+                  });
+                }}
               />
             ) : (
               <IntelligenceDistrict
@@ -2454,6 +2583,94 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
       {leaderAlert && (
         <LeaderFieldPopup alert={leaderAlert} onClose={dismissLeaderAlert} />
+      )}
+
+      {editingMonthlyLeader && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className={`${CARD} w-full max-w-md border-2 border-[#D4A24C] shadow-2xl p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150`}>
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-base font-bold text-[#F5EFE0]">
+                  Edit Ads & Posts Performance
+                </h3>
+                <p className="text-xs text-[#B9AF95] mt-0.5">
+                  {editingMonthlyLeader.name} · {formatMonthName(selectedMonth)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingMonthlyLeader(null)}
+                className="text-[#B9AF95] hover:text-[#F5EFE0] p-1"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className={LABEL}>Posts Posted in {formatMonthName(selectedMonth)}</label>
+                <input
+                  type="number"
+                  className={INPUT}
+                  value={editingMonthlyData.postsCount}
+                  onChange={(e) => setEditingMonthlyData({ ...editingMonthlyData, postsCount: Number(e.target.value) || 0 })}
+                  placeholder="e.g. 18"
+                />
+              </div>
+
+              <div>
+                <label className={LABEL}>Ads Posted in {formatMonthName(selectedMonth)}</label>
+                <input
+                  type="number"
+                  className={INPUT}
+                  value={editingMonthlyData.adsCount}
+                  onChange={(e) => setEditingMonthlyData({ ...editingMonthlyData, adsCount: Number(e.target.value) || 0 })}
+                  placeholder="e.g. 4"
+                />
+              </div>
+
+              <div>
+                <label className={LABEL}>Total Campaign & Post Reach (Views)</label>
+                <input
+                  type="number"
+                  className={INPUT}
+                  value={editingMonthlyData.reach}
+                  onChange={(e) => setEditingMonthlyData({ ...editingMonthlyData, reach: Number(e.target.value) || 0 })}
+                  placeholder="e.g. 45000"
+                />
+              </div>
+
+              <div>
+                <label className={LABEL}>Estimated Ad Spend (₹) (Optional)</label>
+                <input
+                  type="number"
+                  className={INPUT}
+                  value={editingMonthlyData.spend}
+                  onChange={(e) => setEditingMonthlyData({ ...editingMonthlyData, spend: Number(e.target.value) || 0 })}
+                  placeholder="e.g. 15000"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#22405E]/60">
+              <button
+                type="button"
+                onClick={() => setEditingMonthlyLeader(null)}
+                className="px-3 py-1.5 text-xs rounded-xl border border-[#22405E] text-[#B9AF95] hover:text-[#F5EFE0]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveMonthlyAds}
+                className={BTN}
+              >
+                Save Performance
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -2554,7 +2771,10 @@ function IntelligenceConstituency({
   partyId,
   rankBy,
   partyById,
-  onSelectPlatform
+  onSelectPlatform,
+  isSmM,
+  selectedMonth,
+  onEditMonthly
 }: {
   intel: any;
   acId: string;
@@ -2566,6 +2786,9 @@ function IntelligenceConstituency({
   rankBy: string;
   partyById: Record<string, PoliticalParty>;
   onSelectPlatform: (platform: string) => void;
+  isSmM?: boolean;
+  selectedMonth?: string;
+  onEditMonthly?: (leader: any) => void;
 }) {
   const card = (intel.constituencyCards || []).find((c: any) => c.assemblyConstituencyId === acId) || {};
   const estimates = card.platformEstimates || {
@@ -2729,6 +2952,38 @@ function IntelligenceConstituency({
                   </div>
                 );
               })}
+              {isSmM && (
+                <div className="mt-3 pt-2.5 border-t border-[#22405E]/80 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-[#D4A24C] flex items-center gap-1">
+                      <span>📢 Ads & Content · {formatMonthName(selectedMonth || "")}</span>
+                    </span>
+                    {onEditMonthly && (
+                      <button
+                        type="button"
+                        onClick={() => onEditMonthly(leader)}
+                        className="text-[11px] text-[#D4A24C] hover:underline font-semibold"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 text-center bg-[#071322]/80 p-2 rounded-lg border border-[#22405E]/60">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Posts</p>
+                      <p className="text-xs font-bold text-[#F5EFE0] mt-0.5">{leader.monthlyMetrics?.postsCount ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Ads</p>
+                      <p className="text-xs font-bold text-[#F5EFE0] mt-0.5">{leader.monthlyMetrics?.adsCount ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Reach</p>
+                      <p className="text-xs font-bold text-emerald-400 mt-0.5">{formatCompactCount(leader.monthlyMetrics?.reach ?? 0)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         }) : <EmptyState text="No leaders entered for this constituency." />}
