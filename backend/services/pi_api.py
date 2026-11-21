@@ -1173,6 +1173,12 @@ def register_pi_routes(api_router) -> None:
                 "assemblyConstituencyId": ac_id,
                 "assemblyName": payload.get("assemblyName") or doc.get("assemblyName"),
                 "totalVoters": payload.get("totalVoters") if payload.get("totalVoters") not in ("", None) else doc.get("totalVoters"),
+                "maleElectors": payload.get("maleElectors") if payload.get("maleElectors") not in ("", None) else doc.get("maleElectors"),
+                "femaleElectors": payload.get("femaleElectors") if payload.get("femaleElectors") not in ("", None) else doc.get("femaleElectors"),
+                "otherElectors": payload.get("otherElectors") if payload.get("otherElectors") not in ("", None) else doc.get("otherElectors"),
+                "pollingStations": payload.get("pollingStations") if payload.get("pollingStations") not in ("", None) else doc.get("pollingStations"),
+                "facebookAccount": payload.get("facebookAccount") or doc.get("facebookAccount") or "",
+                "instagramAccount": payload.get("instagramAccount") or doc.get("instagramAccount") or "",
                 "ruralPercent": payload.get("ruralPercent") if payload.get("ruralPercent") not in ("", None) else doc.get("ruralPercent"),
                 "estimatedFacebookUsers": payload.get("estimatedFacebookUsers") if payload.get("estimatedFacebookUsers") not in ("", None) else doc.get("estimatedFacebookUsers"),
                 "estimatedInstagramUsers": payload.get("estimatedInstagramUsers") if payload.get("estimatedInstagramUsers") not in ("", None) else doc.get("estimatedInstagramUsers"),
@@ -1589,7 +1595,7 @@ def register_pi_routes(api_router) -> None:
     @api_router.get("/pi/constituencies/{ac_id}/audience-estimates")
     async def get_constituency_audience_estimates(
         ac_id: str,
-        radius: float = Query(default=0.0, ge=0.0, le=40.0),
+        radius: float = Query(default=40.0, ge=0.0, le=40.0),
         userId: Optional[str] = None
     ):
         actor = await _load_actor(userId)
@@ -1642,7 +1648,7 @@ def register_pi_routes(api_router) -> None:
     async def refresh_constituency_audience_estimates(
         ac_id: str,
         payload: Optional[dict] = None,
-        radius: float = Query(default=0.0, ge=0.0, le=40.0),
+        radius: float = Query(default=40.0, ge=0.0, le=40.0),
         userId: Optional[str] = None
     ):
         actor = await _load_actor(userId)

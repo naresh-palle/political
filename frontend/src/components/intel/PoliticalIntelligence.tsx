@@ -1182,6 +1182,36 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     if (tab === "intelligence") loadIntel().catch(() => undefined);
   }, [tab, intelPlatform, intelParty, rankBy, stateId, districtId, pcId, acId, selectedMonth, userId]);
 
+  useEffect(() => {
+    if (!acId || tab !== "constituencies") return;
+    politicalApiService.getConstituencyAudienceEstimates(userId, acId, 40)
+      .then((report) => {
+        if (!report) return;
+        const eci = report.electoralStatistics || {};
+        const pe = report.platformEstimates || {};
+        setConstForm((prev: any) => {
+          const hasExisting = prev.assemblyConstituencyId === acId && prev.id;
+          return {
+            ...prev,
+            assemblyConstituencyId: acId,
+            assemblyName: report.assemblyName || prev.assemblyName,
+            totalVoters: hasExisting && prev.totalVoters ? prev.totalVoters : (eci.totalElectors ?? ""),
+            maleElectors: hasExisting && prev.maleElectors ? prev.maleElectors : (eci.maleElectors ?? ""),
+            femaleElectors: hasExisting && prev.femaleElectors ? prev.femaleElectors : (eci.femaleElectors ?? ""),
+            otherElectors: hasExisting && prev.otherElectors ? prev.otherElectors : (eci.otherElectors ?? ""),
+            pollingStations: hasExisting && prev.pollingStations ? prev.pollingStations : (eci.pollingStations ?? ""),
+            estimatedFacebookUsers: hasExisting && prev.estimatedFacebookUsers ? prev.estimatedFacebookUsers : (pe.facebook?.constituencyAudience ?? ""),
+            estimatedInstagramUsers: hasExisting && prev.estimatedInstagramUsers ? prev.estimatedInstagramUsers : (pe.instagram?.constituencyAudience ?? ""),
+            estimatedXUsers: hasExisting && prev.estimatedXUsers ? prev.estimatedXUsers : (pe.x?.constituencyAudience ?? ""),
+            estimatedYouTubeUsers: hasExisting && prev.estimatedYouTubeUsers ? prev.estimatedYouTubeUsers : (pe.youtube?.constituencyAudience ?? ""),
+            facebookAccount: prev.facebookAccount || "",
+            instagramAccount: prev.instagramAccount || ""
+          };
+        });
+      })
+      .catch(() => undefined);
+  }, [acId, tab, userId]);
+
   const saveConstituency = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1205,6 +1235,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         assemblyConstituencyId: acId,
         assemblyName: filteredAcs.find((a) => a.id === acId)?.name,
         totalVoters: num(constForm.totalVoters),
+        maleElectors: num(constForm.maleElectors),
+        femaleElectors: num(constForm.femaleElectors),
+        otherElectors: num(constForm.otherElectors),
+        pollingStations: num(constForm.pollingStations),
+        facebookAccount: String(constForm.facebookAccount || "").trim(),
+        instagramAccount: String(constForm.instagramAccount || "").trim(),
         ruralPercent: num(constForm.ruralPercent),
         estimatedFacebookUsers: num(constForm.estimatedFacebookUsers),
         estimatedInstagramUsers: num(constForm.estimatedInstagramUsers),
@@ -1664,9 +1700,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             <EmptyState text="No constituency statistics yet. Enter a constituency or load SAMPLE data." />
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2">
                 <Kpi label="Total constituencies" value={dashboard.totalConstituencies} onClick={() => goToDataEntry()} />
-                <Kpi label="Entered" value={dashboard.constituenciesEntered} onClick={() => goToDataEntry()} />
                 <Kpi label="Leaders" value={dashboard.totalLeaders} onClick={() => goToDataEntry()} />
                 <Kpi label="Social accounts" value={dashboard.totalSocialAccounts} onClick={() => goToDataEntry()} />
                 <Kpi label="Verified" value={dashboard.verifiedAccounts} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
@@ -1685,7 +1720,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     <span className="font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</span>
                     <MapPin className="w-4 h-4 text-[#D4A24C]" />
                   </div>
-                  <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} constituencies entered</p>
+                  <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.totalConstituencies} constituencies</p>
                   <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.verificationPercent == null ? "No accounts yet" : `${selectedDistrictProgress.verificationPercent}% verified`} · {selectedDistrictProgress.needsRecheck} recheck</p>
                   <div className="mt-2 h-1.5 rounded bg-[#142B45]">
                     <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${selectedDistrictProgress.totalConstituencies ? (selectedDistrictProgress.constituenciesEntered / selectedDistrictProgress.totalConstituencies) * 100 : 0}%` }} />
@@ -1891,15 +1926,46 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           <>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <form noValidate onSubmit={saveConstituency} className={`${CARD} space-y-3`}>
-              <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency entry</h2>
-              <Field label="Total voters" type="number" value={constForm.totalVoters || ""} onChange={(v) => setConstForm({ ...constForm, totalVoters: v })} />
-              <p className="text-[11px] text-[#D4A24C]">Estimated social media users (not observed counts)</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="Est. Facebook users" type="number" value={constForm.estimatedFacebookUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedFacebookUsers: v })} />
-                <Field label="Est. Instagram users" type="number" value={constForm.estimatedInstagramUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedInstagramUsers: v })} />
-                <Field label="Est. X users" type="number" value={constForm.estimatedXUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedXUsers: v })} />
-                <Field label="Est. YouTube users" type="number" value={constForm.estimatedYouTubeUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedYouTubeUsers: v })} />
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency entry</h2>
+                {constForm.id ? (
+                  <span className="text-[10px] text-amber-300 font-bold uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">Editing saved entry</span>
+                ) : (
+                  <span className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">Auto-fetched from ECI & AI</span>
+                )}
               </div>
+
+              {/* Electoral Roll Statistics */}
+              <div>
+                <Field label="Total voters (Official ECI Roll)" type="number" value={constForm.totalVoters || ""} onChange={(v) => setConstForm({ ...constForm, totalVoters: v })} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Male electors" type="number" value={constForm.maleElectors || ""} onChange={(v) => setConstForm({ ...constForm, maleElectors: v })} />
+                <Field label="Female electors" type="number" value={constForm.femaleElectors || ""} onChange={(v) => setConstForm({ ...constForm, femaleElectors: v })} />
+                <Field label="Other electors" type="number" value={constForm.otherElectors || ""} onChange={(v) => setConstForm({ ...constForm, otherElectors: v })} />
+                <Field label="Polling stations" type="number" value={constForm.pollingStations || ""} onChange={(v) => setConstForm({ ...constForm, pollingStations: v })} />
+              </div>
+
+              {/* Estimated Social Media Users */}
+              <div className="pt-1">
+                <p className="text-[11px] text-[#D4A24C] font-semibold">Estimated social media users (Auto-fetched)</p>
+                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                  <Field label="Est. Facebook users" type="number" value={constForm.estimatedFacebookUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedFacebookUsers: v })} />
+                  <Field label="Est. Instagram users" type="number" value={constForm.estimatedInstagramUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedInstagramUsers: v })} />
+                  <Field label="Est. X users" type="number" value={constForm.estimatedXUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedXUsers: v })} />
+                  <Field label="Est. YouTube users" type="number" value={constForm.estimatedYouTubeUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedYouTubeUsers: v })} />
+                </div>
+              </div>
+
+              {/* Constituency Official Social Accounts */}
+              <div className="pt-1">
+                <p className="text-[11px] text-[#D4A24C] font-semibold">Constituency Social Media Accounts</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                  <Field label="Facebook account (URL / Page)" value={constForm.facebookAccount || ""} onChange={(v) => setConstForm({ ...constForm, facebookAccount: v })} />
+                  <Field label="Instagram account (URL / Handle)" value={constForm.instagramAccount || ""} onChange={(v) => setConstForm({ ...constForm, instagramAccount: v })} />
+                </div>
+              </div>
+
               <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
               <button type="submit" className={BTN} disabled={!!saving || !acId || !canEdit}>{saving === "constituency" ? "Saving…" : constForm.id ? "Save changes" : "Save constituency"}</button>
               {ok && !error && ok.startsWith("Saved") && (
@@ -1958,7 +2024,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           {selectedDistrictProgress && (
             <div className={CARD}>
               <h2 className="text-sm font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</h2>
-              <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} entered · {selectedDistrictProgress.constituenciesPending} pending</p>
+              <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.totalConstituencies} constituencies · Auto-fetched</p>
               <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.totalLeaders} leaders · {selectedDistrictProgress.totalAccounts} accounts · {selectedDistrictProgress.verifiedAccounts} verified</p>
             </div>
           )}

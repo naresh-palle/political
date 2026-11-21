@@ -9,8 +9,6 @@ import {
   HelpCircle,
   Layers,
   Radio,
-  Sliders,
-  Vote,
   Sparkles,
   Info
 } from "lucide-react";
@@ -49,7 +47,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
   stateId = "AP",
   userId
 }) => {
-  const [radiusKm, setRadiusKm] = useState<number>(0);
+  const RADIUS_KM = 40;
   const [geoView, setGeoView] = useState<"constituency" | "radius">("constituency");
   const [report, setReport] = useState<ConstituencyAudienceReport | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -59,14 +57,14 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
 
   useEffect(() => {
     if (!acId) return;
-    loadAudienceEstimates(radiusKm);
-  }, [acId, radiusKm]);
+    loadAudienceEstimates();
+  }, [acId]);
 
-  const loadAudienceEstimates = async (radius: number) => {
+  const loadAudienceEstimates = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await politicalApiService.getConstituencyAudienceEstimates(userId, acId, radius);
+      const data = await politicalApiService.getConstituencyAudienceEstimates(userId, acId, RADIUS_KM);
       setReport(data);
     } catch (err: any) {
       console.error("Failed to load audience estimates:", err);
@@ -80,7 +78,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
     setRefreshing(true);
     setError(null);
     try {
-      const data = await politicalApiService.refreshConstituencyAudienceEstimates(userId, acId, radiusKm);
+      const data = await politicalApiService.refreshConstituencyAudienceEstimates(userId, acId, RADIUS_KM);
       setReport(data);
     } catch (err: any) {
       console.error("Failed to refresh audience estimates:", err);
@@ -154,13 +152,13 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
         </div>
       )}
 
-      {/* GEOGRAPHICAL TARGETING CONTROL BAR */}
-      <div className={`${CARD} space-y-4`}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#22405E]/60 pb-3">
+      {/* GEOGRAPHICAL TARGETING CONTROL BAR (40 km Standard) */}
+      <div className={`${CARD} space-y-3`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Compass className="w-4 h-4 text-[#D4A24C]" />
             <h3 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wide">
-              Geographical Targeting & Radius Buffer
+              Geographical Targeting (40 km Standard)
             </h3>
           </div>
 
@@ -168,142 +166,37 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
           <div className="inline-flex p-1 rounded-xl bg-[#071322] border border-[#22405E]">
             <button
               type="button"
-              onClick={() => {
-                setGeoView("constituency");
-                setRadiusKm(0);
-              }}
+              onClick={() => setGeoView("constituency")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                geoView === "constituency" && radiusKm === 0
+                geoView === "constituency"
                   ? "bg-[#D4A24C] text-[#071322] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0]"
               }`}
             >
-              A. Constituency Only (0 km)
+              A. Constituency Only (40 km)
             </button>
             <button
               type="button"
-              onClick={() => {
-                setGeoView("radius");
-                if (radiusKm === 0) setRadiusKm(15);
-              }}
+              onClick={() => setGeoView("radius")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                geoView === "radius" || radiusKm > 0
+                geoView === "radius"
                   ? "bg-[#D4A24C] text-[#071322] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0]"
               }`}
             >
-              B. Constituency + Surrounding Radius
+              B. Constituency + Surrounding Radius (40 km)
             </button>
           </div>
         </div>
 
-        {/* Interactive Radius Slider (0 to 40 km) */}
-        <div className="space-y-3 pt-1">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-[#B9AF95] flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5 text-[#D4A24C]" />
-              Surrounding Buffer Radius: <span className="text-[#F5EFE0] font-bold text-sm">{radiusKm} km</span>
-              {radiusKm === 0 ? " (Official Boundary Only)" : ` (+${radiusKm} km adjacent area)`}
-            </label>
-            <div className="flex items-center gap-1.5">
-              {[0, 10, 20, 30, 40].map((preset) => (
-                <button
-                  type="button"
-                  key={preset}
-                  onClick={() => {
-                    setRadiusKm(preset);
-                    setGeoView(preset === 0 ? "constituency" : "radius");
-                  }}
-                  className={`px-2 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${
-                    radiusKm === preset
-                      ? "bg-[#D4A24C]/25 text-[#D4A24C] border border-[#D4A24C]"
-                      : "bg-[#071322] text-[#8E9CAE] hover:text-[#F5EFE0] border border-[#22405E]"
-                  }`}
-                >
-                  {preset} km
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <input
-            type="range"
-            min={0}
-            max={40}
-            step={1}
-            value={radiusKm}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              setRadiusKm(val);
-              setGeoView(val === 0 ? "constituency" : "radius");
-            }}
-            className="w-full accent-[#D4A24C] bg-[#142B45] h-2 rounded-lg cursor-pointer"
-          />
-
-          <p className="text-[11px] text-[#8E9CAE] flex items-center gap-1.5">
-            <Info className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
-            <span>
-              {radiusKm === 0
-                ? "Displaying audience exclusively within the official physical Assembly Constituency boundary."
-                : `Displaying combined reach: ${acName} core constituency + ${radiusKm} km surrounding territory buffer.`}
-            </span>
-          </p>
-        </div>
-      </div>
-
-      {/* ELECTORAL STATISTICS SECTION */}
-      <div className={`${CARD} space-y-3`}>
-        <div className="flex items-center justify-between border-b border-[#22405E]/60 pb-2">
-          <div className="flex items-center gap-2">
-            <Vote className="w-4 h-4 text-[#D4A24C]" />
-            <h3 className="text-xs font-bold text-[#F5EFE0] uppercase tracking-wider">
-              Official Electoral Roll Statistics (ECI Benchmark)
-            </h3>
-          </div>
-          <span className="text-[10px] text-[#B9AF95]">Source: {electoral.source}</span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
-            <p className="text-[10px] uppercase font-bold text-[#8E9CAE] tracking-wider">Total Registered Electors</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#F5EFE0] mt-1">
-              {electoral.totalElectors.toLocaleString("en-IN")}
-            </p>
-            <p className="text-[10px] text-[#B9AF95] mt-0.5">100% of adult electorate</p>
-          </div>
-
-          <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
-            <p className="text-[10px] uppercase font-bold text-[#8E9CAE] tracking-wider">Male Electors</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#F5EFE0] mt-1">
-              {electoral.maleElectors.toLocaleString("en-IN")}
-            </p>
-            <p className="text-[10px] text-sky-400 mt-0.5">~50.2% of voters</p>
-          </div>
-
-          <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
-            <p className="text-[10px] uppercase font-bold text-[#8E9CAE] tracking-wider">Female Electors</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#F5EFE0] mt-1">
-              {electoral.femaleElectors.toLocaleString("en-IN")}
-            </p>
-            <p className="text-[10px] text-pink-400 mt-0.5">~49.7% of voters</p>
-          </div>
-
-          <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
-            <p className="text-[10px] uppercase font-bold text-[#8E9CAE] tracking-wider">Other Electors</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#F5EFE0] mt-1">
-              {electoral.otherElectors.toLocaleString("en-IN")}
-            </p>
-            <p className="text-[10px] text-[#B9AF95] mt-0.5">Third gender voters</p>
-          </div>
-
-          <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
-            <p className="text-[10px] uppercase font-bold text-[#8E9CAE] tracking-wider">Polling Stations</p>
-            <p className="text-xl sm:text-2xl font-display font-bold text-[#D4A24C] mt-1">
-              {electoral.pollingStations}
-            </p>
-            <p className="text-[10px] text-[#B9AF95] mt-0.5">~920 voters / booth</p>
-          </div>
-        </div>
+        <p className="text-[11px] text-[#8E9CAE] flex items-center gap-1.5 pt-1 border-t border-[#22405E]/40">
+          <Info className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
+          <span>
+            {geoView === "constituency"
+              ? `Displaying audience exclusively within the official physical boundary of ${acName} Assembly Constituency (40 km baseline).`
+              : `Displaying combined reach: ${acName} 40 km constituency core + 40 km surrounding territory buffer.`}
+          </span>
+        </p>
       </div>
 
       {/* 4 INDEPENDENT SOCIAL MEDIA PLATFORM AUDIENCE CARDS */}
@@ -315,7 +208,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
             constituencyAudience: 0,
             totalRadiusAudience: 0,
             surroundingAudience: 0,
-            surroundingRadiusKm: radiusKm,
+            surroundingRadiusKm: RADIUS_KM,
             estimationMethod: "Statistical Estimate",
             dataSource: "Documented Baseline Ratios",
             geographicalCoverage: `${acName} Constituency`,
@@ -323,7 +216,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
             lastUpdated: new Date().toISOString()
           };
 
-          const audienceDisplay = radiusKm > 0 ? detail.totalRadiusAudience : detail.constituencyAudience;
+          const audienceDisplay = geoView === "radius" ? detail.totalRadiusAudience : detail.constituencyAudience;
           const badge = METHOD_BADGES[detail.estimationMethod] || METHOD_BADGES["Statistical Estimate"];
 
           return (
@@ -342,7 +235,9 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
                 </div>
 
                 <div className="mt-3">
-                  <span className="text-xs uppercase font-semibold text-[#8E9CAE]">Estimated Audience</span>
+                  <span className="text-xs uppercase font-semibold text-[#8E9CAE]">
+                    {geoView === "radius" ? "Constituency + Surrounding (40 km)" : "Constituency Only (40 km)"}
+                  </span>
                   <p className="text-3xl font-display font-bold text-[#D4A24C] tracking-tight mt-0.5">
                     {formatAudienceCount(audienceDisplay)}
                   </p>
@@ -351,18 +246,20 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
                   </p>
                 </div>
 
-                {radiusKm > 0 && (
-                  <div className="mt-3 p-2.5 rounded-xl bg-[#071322] border border-[#22405E]/80 space-y-1 text-[11px]">
-                    <div className="flex justify-between text-[#B9AF95]">
-                      <span>Constituency Core:</span>
-                      <span className="font-semibold text-[#F5EFE0]">{formatAudienceCount(detail.constituencyAudience)}</span>
-                    </div>
-                    <div className="flex justify-between text-amber-300">
-                      <span>Surrounding ({radiusKm} km):</span>
-                      <span className="font-semibold">+{formatAudienceCount(detail.surroundingAudience)}</span>
-                    </div>
+                <div className="mt-3 p-2.5 rounded-xl bg-[#071322] border border-[#22405E]/80 space-y-1.5 text-[11px]">
+                  <div className="flex justify-between text-[#B9AF95]">
+                    <span>Constituency (40 km):</span>
+                    <span className="font-semibold text-[#F5EFE0]">{formatAudienceCount(detail.constituencyAudience)}</span>
                   </div>
-                )}
+                  <div className="flex justify-between text-amber-300">
+                    <span>Surrounding (40 km):</span>
+                    <span className="font-semibold">+{formatAudienceCount(detail.surroundingAudience)}</span>
+                  </div>
+                  <div className="flex justify-between text-[#D4A24C] pt-1 border-t border-[#22405E]/50 font-bold">
+                    <span>Total Combined:</span>
+                    <span>{formatAudienceCount(detail.totalRadiusAudience)}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-3 border-t border-[#22405E]/60 space-y-1.5 text-[10px] text-[#8E9CAE]">
@@ -396,7 +293,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
             </h3>
           </div>
           <span className="text-[11px] text-[#D4A24C] font-semibold">
-            {radiusKm === 0 ? "Constituency View (0 km)" : `Radius View (+${radiusKm} km buffer)`}
+            {geoView === "constituency" ? "Constituency View (40 km)" : "Radius View (Constituency + 40 km Surrounding)"}
           </span>
         </div>
 
@@ -406,47 +303,50 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
               <tr className="border-b border-[#22405E] text-[#8E9CAE] text-[10px] uppercase font-bold tracking-wider">
                 <th className="py-2.5 px-3">Platform</th>
                 <th className="py-2.5 px-3">Estimated Audience</th>
-                <th className="py-2.5 px-3">Constituency Core</th>
-                <th className="py-2.5 px-3">Surrounding ({radiusKm} km)</th>
+                <th className="py-2.5 px-3">Constituency Core (40 km)</th>
+                <th className="py-2.5 px-3">Surrounding (40 km)</th>
                 <th className="py-2.5 px-3">Estimation Method</th>
                 <th className="py-2.5 px-3">Status</th>
                 <th className="py-2.5 px-3">Data Source</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#22405E]/40 text-[#F5EFE0]">
-              {(report?.comparisonTable || []).map((row) => (
-                <tr key={row.platform} className="hover:bg-[#131E2D]/60 transition-colors">
-                  <td className="py-3 px-3 font-bold text-[#F5EFE0] flex items-center gap-1.5">
-                    <span>
-                      {row.platform.includes("Facebook") ? "📘" : row.platform.includes("Instagram") ? "📸" : row.platform.includes("X") ? "𝕏" : "▶️"}
-                    </span>
-                    {row.platform}
-                  </td>
-                  <td className="py-3 px-3 font-display font-bold text-[#D4A24C] text-sm">
-                    {formatAudienceCount(row.estimatedAudience)}
-                    <span className="text-[10px] text-[#8E9CAE] font-normal block font-mono">
-                      {row.estimatedAudience.toLocaleString("en-IN")}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 font-medium text-[#F5EFE0]">
-                    {formatAudienceCount(row.constituencyOnlyAudience)}
-                  </td>
-                  <td className="py-3 px-3 text-amber-300 font-medium">
-                    {row.surroundingAudience > 0 ? `+${formatAudienceCount(row.surroundingAudience)}` : "—"}
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${METHOD_BADGES[row.estimationMethod]?.bg || "bg-amber-500/10"} ${METHOD_BADGES[row.estimationMethod]?.text || "text-amber-400"} ${METHOD_BADGES[row.estimationMethod]?.border || "border-amber-500/30"}`}>
-                      {row.estimationMethod}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-[11px] text-emerald-400">
-                    {row.status}
-                  </td>
-                  <td className="py-3 px-3 text-[11px] text-[#B9AF95] max-w-[200px] truncate" title={row.dataSource}>
-                    {row.dataSource}
-                  </td>
-                </tr>
-              ))}
+              {(report?.comparisonTable || []).map((row) => {
+                const currentAudience = geoView === "constituency" ? row.constituencyOnlyAudience : row.estimatedAudience;
+                return (
+                  <tr key={row.platform} className="hover:bg-[#131E2D]/60 transition-colors">
+                    <td className="py-3 px-3 font-bold text-[#F5EFE0] flex items-center gap-1.5">
+                      <span>
+                        {row.platform.includes("Facebook") ? "📘" : row.platform.includes("Instagram") ? "📸" : row.platform.includes("X") ? "𝕏" : "▶️"}
+                      </span>
+                      {row.platform}
+                    </td>
+                    <td className="py-3 px-3 font-display font-bold text-[#D4A24C] text-sm">
+                      {formatAudienceCount(currentAudience)}
+                      <span className="text-[10px] text-[#8E9CAE] font-normal block font-mono">
+                        {currentAudience.toLocaleString("en-IN")}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 font-medium text-[#F5EFE0]">
+                      {formatAudienceCount(row.constituencyOnlyAudience)}
+                    </td>
+                    <td className="py-3 px-3 text-amber-300 font-medium">
+                      +{formatAudienceCount(row.surroundingAudience)}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${METHOD_BADGES[row.estimationMethod]?.bg || "bg-amber-500/10"} ${METHOD_BADGES[row.estimationMethod]?.text || "text-amber-400"} ${METHOD_BADGES[row.estimationMethod]?.border || "border-amber-500/30"}`}>
+                        {row.estimationMethod}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-[11px] text-emerald-400">
+                      {row.status}
+                    </td>
+                    <td className="py-3 px-3 text-[11px] text-[#B9AF95] max-w-[200px] truncate" title={row.dataSource}>
+                      {row.dataSource}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
