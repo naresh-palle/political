@@ -23,7 +23,6 @@ import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import { cacheHasPiData, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
 import { downloadPiCsvExport } from "../../utils/piExcelExport";
-import { SocialAudienceEstimation } from "./SocialAudienceEstimation";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
@@ -1971,21 +1970,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 <p className="text-[11px] text-emerald-300">{ok}</p>
               )}
             </form>
-
-            {acId ? (
-              <SocialAudienceEstimation
-                acId={acId}
-                acName={selectedAssemblyName || acId}
-                districtName={selectedDistrictName}
-                stateId={stateId}
-                userId={userId}
-              />
-            ) : (
-              <div className={`${CARD} text-center py-8`}>
-                <p className="text-sm text-[#D4A24C] font-semibold">Select an Assembly Constituency above to view Social Media Audience Estimation.</p>
-                <p className="text-[11px] text-[#B9AF95] mt-1">Automatic audience estimation across Facebook, Instagram, X, and YouTube with 40 km standard targeting.</p>
-              </div>
-            )}
           </>
           )}
 
@@ -2578,6 +2562,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 onSelectPlatform={setIntelPlatform}
                 isSmM={isSmM}
                 selectedMonth={selectedMonth}
+                userId={userId}
                 onEditMonthly={(leader) => {
                   setEditingMonthlyLeader(leader);
                   setEditingMonthlyData({
@@ -2799,6 +2784,7 @@ function IntelligenceConstituency({
   onSelectPlatform,
   isSmM,
   selectedMonth,
+  userId,
   onEditMonthly
 }: {
   intel: any;
@@ -2813,15 +2799,40 @@ function IntelligenceConstituency({
   onSelectPlatform: (platform: string) => void;
   isSmM?: boolean;
   selectedMonth?: string;
+  userId?: string;
   onEditMonthly?: (leader: any) => void;
 }) {
+  const [liveEstimates, setLiveEstimates] = useState<any>(null);
+
+  useEffect(() => {
+    if (!acId) return;
+    politicalApiService.getConstituencyAudienceEstimates(userId, acId, 40)
+      .then((rep) => {
+        if (rep?.platformEstimates) {
+          setLiveEstimates({
+            facebook: rep.platformEstimates.facebook?.constituencyAudience || 0,
+            instagram: rep.platformEstimates.instagram?.constituencyAudience || 0,
+            x: rep.platformEstimates.x?.constituencyAudience || 0,
+            youtube: rep.platformEstimates.youtube?.constituencyAudience || 0
+          });
+        }
+      })
+      .catch(() => undefined);
+  }, [acId, userId]);
+
   const card = (intel.constituencyCards || []).find((c: any) => c.assemblyConstituencyId === acId) || {};
-  const estimates = card.platformEstimates || {
-    facebook: intel.audienceEstimates?.facebook || 0,
-    instagram: intel.audienceEstimates?.instagram || 0,
-    x: intel.audienceEstimates?.x || 0,
-    youtube: intel.audienceEstimates?.youtube || 0
-  };
+  const estimates = (liveEstimates && (liveEstimates.facebook || liveEstimates.instagram))
+    ? liveEstimates
+    : (card.platformEstimates && (card.platformEstimates.facebook || card.platformEstimates.instagram))
+    ? card.platformEstimates
+    : (intel.audienceEstimates && (intel.audienceEstimates.facebook || intel.audienceEstimates.instagram))
+    ? intel.audienceEstimates
+    : {
+        facebook: 0,
+        instagram: 0,
+        x: 0,
+        youtube: 0
+      };
   const allLeaders = intel.leaders || [];
   const inConstituency = allLeaders.filter((l: any) => l.assemblyConstituencyId === acId);
   const leaders = partyId ? inConstituency.filter((l: any) => String(l.partyId || "").toUpperCase() === partyId.toUpperCase()) : inConstituency;

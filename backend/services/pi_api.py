@@ -2047,6 +2047,17 @@ def register_pi_routes(api_router) -> None:
                 "opponent": leaders[1].get("name"),
                 "followersDelta": leaders[0]["followers"] - leaders[1]["followers"],
             }
+        # Ensure the selected assembly is included in stats even if not yet saved in DB
+        if assemblyConstituencyId and not any(s.get("assemblyConstituencyId") == assemblyConstituencyId for s in stats):
+            ac_obj = assemblies_by_id.get(assemblyConstituencyId) or {}
+            stats.append({
+                "assemblyConstituencyId": assemblyConstituencyId,
+                "assemblyName": ac_obj.get("name") or assemblyConstituencyId,
+                "districtId": ac_obj.get("districtId"),
+                "stateId": ac_obj.get("stateId") or "AP",
+                "totalVoters": int(ac_obj.get("totalVoters") or 225000),
+            })
+
         constituency_cards = []
         for stat in stats:
             ac_id = stat.get("assemblyConstituencyId")
@@ -2055,12 +2066,40 @@ def register_pi_routes(api_router) -> None:
                 (l for l in ac_leaders if (l.get("leaderKind") or "SITTING_MLA") in {"SITTING_MLA", "LEADER_1"}),
                 None,
             ) or (ac_leaders[0] if ac_leaders else None)
+
+            fb_val = int(stat.get("estimatedFacebookUsers") or 0)
+            ig_val = int(stat.get("estimatedInstagramUsers") or 0)
+            x_val = int(stat.get("estimatedXUsers") or 0)
+            yt_val = int(stat.get("estimatedYouTubeUsers") or 0)
+
+            if not (fb_val and ig_val and x_val and yt_val):
+                ac_meta = assemblies_by_id.get(ac_id) or {}
+                tot_v = int(stat.get("totalVoters") or ac_meta.get("totalVoters") or 225000)
+                dyn_est = audience_estimator.generate_full_constituency_estimates(
+                    assembly_id=ac_id,
+                    assembly_name=stat.get("assemblyName") or ac_meta.get("name") or ac_id,
+                    district_name=ac_meta.get("districtName") or "",
+                    state_id=ac_meta.get("stateId") or stat.get("stateId") or "AP",
+                    total_voters=tot_v,
+                    radius_km=40.0
+                )
+                pe = dyn_est.get("platformEstimates") or {}
+                fb_val = fb_val or int(pe.get("facebook", {}).get("constituencyAudience") or 0)
+                ig_val = ig_val or int(pe.get("instagram", {}).get("constituencyAudience") or 0)
+                x_val = x_val or int(pe.get("x", {}).get("constituencyAudience") or 0)
+                yt_val = yt_val or int(pe.get("youtube", {}).get("constituencyAudience") or 0)
+
             estimates = {
-                "facebook": int(stat.get("estimatedFacebookUsers") or 0),
-                "instagram": int(stat.get("estimatedInstagramUsers") or 0),
-                "x": int(stat.get("estimatedXUsers") or 0),
-                "youtube": int(stat.get("estimatedYouTubeUsers") or 0),
+                "facebook": fb_val,
+                "instagram": ig_val,
+                "x": x_val,
+                "youtube": yt_val,
             }
+            if assemblyConstituencyId and ac_id == assemblyConstituencyId:
+                audience["facebook"] = fb_val
+                audience["instagram"] = ig_val
+                audience["x"] = x_val
+                audience["youtube"] = yt_val
             plat_followers = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0}
             source = sitting or {}
             for plat, detail in (source.get("platforms") or {}).items():
