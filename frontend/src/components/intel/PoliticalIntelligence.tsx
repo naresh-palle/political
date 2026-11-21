@@ -185,9 +185,19 @@ type QueueFilters = {
 };
 
 function queueRowMatches(row: any, filters: QueueFilters, skip?: keyof QueueFilters) {
-  if (skip !== "district" && filters.district && String(row.districtName || "") !== filters.district) return false;
-  if (skip !== "assembly" && filters.assembly && String(row.assemblyName || "") !== filters.assembly) return false;
-  if (skip !== "platform" && filters.platform && String(row.platform || "").toLowerCase() !== filters.platform) return false;
+  if (skip !== "district" && filters.district) {
+    const d = filters.district.trim().toLowerCase();
+    const rowDName = String(row.districtName || "").trim().toLowerCase();
+    const rowDId = String(row.districtId || "").trim().toLowerCase();
+    if (rowDName !== d && rowDId !== d) return false;
+  }
+  if (skip !== "assembly" && filters.assembly) {
+    const a = filters.assembly.trim().toLowerCase();
+    const rowAName = String(row.assemblyName || "").trim().toLowerCase();
+    const rowAId = String(row.assemblyConstituencyId || "").trim().toLowerCase();
+    if (rowAName !== a && rowAId !== a) return false;
+  }
+  if (skip !== "platform" && filters.platform && String(row.platform || "").toLowerCase() !== filters.platform.toLowerCase()) return false;
   return true;
 }
 
@@ -646,6 +656,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     () => districts.find((d) => d.id === districtId) || null,
     [districts, districtId]
   );
+  const selectedDistrictName = selectedDistrict?.name || districts.find((d) => d.id === districtId)?.name || "";
   const selectedDistrictProgress = useMemo(() => {
     if (!districtId) return null;
     const rows = dashboard?.districts || [];
@@ -674,9 +685,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     const acIds = new Set<string>(selectedDistrict?.assemblyConstituencyIds || []);
     return rows.filter((row: PiRecentCollection) => {
       if (row.districtId && row.districtId === districtId) return true;
+      if (row.districtName && selectedDistrictName && String(row.districtName).toLowerCase() === String(selectedDistrictName).toLowerCase()) return true;
       return Boolean(row.assemblyConstituencyId && acIds.has(row.assemblyConstituencyId));
     });
-  }, [dashboard, districtId, selectedDistrict]);
+  }, [dashboard, districtId, selectedDistrict, selectedDistrictName]);
   const collectionFilters = useMemo<CollectionFilters>(() => ({
     type: collectionType,
     assembly: collectionAssembly,
@@ -723,23 +735,33 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     const facet = (skip: keyof QueueFilters, pick: (row: any) => string | null | undefined) =>
       uniqueSorted(queue.filter((row) => queueRowMatches(row, queueFilters, skip)).map(pick));
     return {
-      districts: facet("district", (row) => row.districtName),
-      assemblies: facet("assembly", (row) => row.assemblyName),
+      districts: facet("district", (row) => row.districtName || row.districtId),
+      assemblies: facet("assembly", (row) => row.assemblyName || row.assemblyConstituencyId),
       platforms: facet("platform", (row) => String(row.platform || "").toLowerCase()).map((value) => ({
         value,
         label: PLATFORM_LABEL[value as keyof typeof PLATFORM_LABEL] || value
       }))
     };
   }, [queue, queueFilters]);
+  const queueDistrictOptions = useMemo(() => {
+    const fromQueue = queueFilterOptions.districts;
+    const fromMasters = districts.map((d) => d.name).filter(Boolean);
+    const combined = Array.from(new Set([...fromMasters, ...fromQueue])).sort((a, b) => a.localeCompare(b));
+    return combined.map((value) => ({ value, label: value }));
+  }, [queueFilterOptions.districts, districts]);
+
   const filteredQueue = useMemo(
     () => queue.filter((row) => queueRowMatches(row, queueFilters)),
     [queue, queueFilters]
   );
-  const queueFiltersActive = Boolean(queueDistrict || queueAssembly || queuePlatform);
+  const queueFiltersActive = Boolean(queueDistrict || queueAssembly || queuePlatform || districtId || acId);
   const clearQueueFilters = () => {
     setQueueDistrict("");
     setQueueAssembly("");
     setQueuePlatform("");
+    setDistrictId("");
+    setAcId("");
+    setPcId("");
     setQueuePage(1);
   };
   const queueTotalPages = Math.max(1, Math.ceil(filteredQueue.length / queuePageSize));
@@ -915,7 +937,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   }, [assemblies, districts, districtId, pcId]);
 
   const selectedAssemblyName = filteredAcs.find((a) => a.id === acId)?.name || "";
-  const selectedDistrictName = districts.find((d) => d.id === districtId)?.name || "";
 
   const loadConstituencies = async () => {
     const cache = readPiOperatorCache(userId);
@@ -1049,10 +1070,26 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     setCollectionPage(1);
   }, [collectionPageSize, filteredRecent.length, collectionType, collectionAssembly, collectionEnteredBy, collectionStatus]);
 
+  // Synchronize verification queue geography filter with active district & assembly
   useEffect(() => {
-    setQueueDistrict("");
-    setQueueAssembly("");
-    setQueuePlatform("");
+    if (districtId) {
+      const distName = districts.find((d) => d.id === districtId)?.name || districtId;
+      setQueueDistrict(distName);
+    } else {
+      setQueueDistrict("");
+    }
+  }, [districtId, districts]);
+
+  useEffect(() => {
+    if (acId) {
+      const acName = assemblies.find((a) => a.id === acId)?.name || acId;
+      setQueueAssembly(acName);
+    } else {
+      setQueueAssembly("");
+    }
+  }, [acId, assemblies]);
+
+  useEffect(() => {
     setQueuePage(1);
   }, [queueStatus]);
 
@@ -2038,67 +2075,69 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 <button type="button" key={s.id} onClick={() => setQueueStatus(s.id)} className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${queueStatus === s.id ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s.label}</button>
               ))}
             </div>
-            {queue.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {queueFiltersActive ? (
-                  <button type="button" className="text-[10px] font-semibold text-[#D4A24C]" onClick={clearQueueFilters}>
-                    Clear filters
-                  </button>
-                ) : null}
-                <label className="inline-flex flex-wrap items-center gap-1 text-[10px] text-[#B9AF95]">
-                  Records per page
-                  <select
-                    className={`${INPUT} w-auto min-w-[6.5rem] py-0.5 text-xs`}
-                    value={queuePageSize}
-                    onChange={(e) => setQueuePageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
-                  >
-                    {COLLECTION_PAGE_SIZES.map((size) => (
-                      <option key={size} value={size}>{size} / page</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            ) : null}
-          </div>
-          {queue.length > 0 ? (
-            <div className="mb-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
-                <CollectionFilterSelect
-                  compact
-                  label="District"
-                  value={queueDistrict}
-                  onChange={(value) => {
-                    setQueueDistrict(value);
-                    setQueueAssembly("");
-                    setQueuePlatform("");
-                  }}
-                  allLabel="All districts"
-                  options={queueFilterOptions.districts.map((value) => ({ value, label: value }))}
-                />
-                <CollectionFilterSelect
-                  compact
-                  label="Assembly"
-                  value={queueDistrict ? queueAssembly : ""}
-                  onChange={(value) => {
-                    setQueueAssembly(value);
-                    setQueuePlatform("");
-                  }}
-                  allLabel="All assemblies"
-                  lockedLabel="Select district first"
-                  disabled={!queueDistrict}
-                  options={queueFilterOptions.assemblies.map((value) => ({ value, label: value }))}
-                />
-                <CollectionFilterSelect
-                  compact
-                  label="Platform"
-                  value={queueDistrict && queueAssembly ? queuePlatform : ""}
-                  onChange={setQueuePlatform}
-                  allLabel="All platforms"
-                  lockedLabel="Select assembly first"
-                  disabled={!queueDistrict || !queueAssembly}
-                  options={queueFilterOptions.platforms}
-                />
+            <div className="flex flex-wrap items-center gap-1.5">
+              {queueFiltersActive ? (
+                <button type="button" className="text-[10px] font-semibold text-[#D4A24C]" onClick={clearQueueFilters}>
+                  Clear filters
+                </button>
+              ) : null}
+              <label className="inline-flex flex-wrap items-center gap-1 text-[10px] text-[#B9AF95]">
+                Records per page
+                <select
+                  className={`${INPUT} w-auto min-w-[6.5rem] py-0.5 text-xs`}
+                  value={queuePageSize}
+                  onChange={(e) => setQueuePageSize(Number(e.target.value) as (typeof COLLECTION_PAGE_SIZES)[number])}
+                >
+                  {COLLECTION_PAGE_SIZES.map((size) => (
+                    <option key={size} value={size}>{size} / page</option>
+                  ))}
+                </select>
+              </label>
             </div>
-          ) : null}
+          </div>
+          <div className="mb-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
+              <CollectionFilterSelect
+                compact
+                label="District"
+                value={queueDistrict}
+                onChange={(value) => {
+                  setQueueDistrict(value);
+                  setQueueAssembly("");
+                  setQueuePlatform("");
+                  const matched = districts.find((d) => d.name === value || d.id === value);
+                  setDistrictId(matched ? matched.id : value);
+                  setAcId("");
+                  setPcId("");
+                }}
+                allLabel="All districts"
+                options={queueDistrictOptions}
+              />
+              <CollectionFilterSelect
+                compact
+                label="Assembly"
+                value={queueDistrict ? queueAssembly : ""}
+                onChange={(value) => {
+                  setQueueAssembly(value);
+                  setQueuePlatform("");
+                  const matched = assemblies.find((a) => a.name === value || a.id === value);
+                  setAcId(matched ? matched.id : value);
+                }}
+                allLabel="All assemblies"
+                lockedLabel="Select district first"
+                disabled={!queueDistrict}
+                options={queueFilterOptions.assemblies.map((value) => ({ value, label: value }))}
+              />
+              <CollectionFilterSelect
+                compact
+                label="Platform"
+                value={queueDistrict && queueAssembly ? queuePlatform : ""}
+                onChange={setQueuePlatform}
+                allLabel="All platforms"
+                lockedLabel="Select assembly first"
+                disabled={!queueDistrict || !queueAssembly}
+                options={queueFilterOptions.platforms}
+              />
+          </div>
           {queue.length === 0 ? (
             <EmptyState
               compact
