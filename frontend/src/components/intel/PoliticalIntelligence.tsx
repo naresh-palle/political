@@ -2042,26 +2042,25 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     </div>
                     <div>
                       <label className={LABEL} htmlFor={leaderFieldDomId(index, "role")}>Profile / political role</label>
-                      <div id={leaderFieldDomId(index, "role")} className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                        {ROLES.map((role) => {
-                          const checked = (slot.politicalRoles || []).includes(role);
-                          return (
-                            <label key={role} className="flex items-center gap-2 min-h-9 px-2 py-1.5 rounded-lg border border-[#22405E] text-[11px] text-[#F5EFE0]">
-                              <input
-                                type="checkbox"
-                                className="accent-[#D4A24C] shrink-0"
-                                checked={checked}
-                                onChange={() => {
-                                  const current = slot.politicalRoles || [];
-                                  const next = checked ? current.filter((item) => item !== role) : [...current, role];
-                                  patchLeaderSlot(index, { politicalRoles: next, politicalRole: next[0] || "" });
-                                }}
-                              />
-                              <span>{role.replace(/_/g, " ")}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
+                      <select
+                        id={leaderFieldDomId(index, "role")}
+                        className={INPUT}
+                        value={slot.politicalRole || (slot.politicalRoles && slot.politicalRoles[0]) || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          patchLeaderSlot(index, {
+                            politicalRole: val,
+                            politicalRoles: val ? [val] : []
+                          });
+                        }}
+                      >
+                        <option value="">Select profile / political role</option>
+                        {ROLES.map((role) => (
+                          <option key={role} value={role}>
+                            {role.replace(/_/g, " ")}
+                          </option>
+                        ))}
+                      </select>
                       {slotAlert?.field === "role" ? <p className="mt-1 text-[11px] text-rose-300">{slotAlert.message}</p> : null}
                     </div>
                     <div className="mt-auto flex flex-wrap gap-2 pt-1">
