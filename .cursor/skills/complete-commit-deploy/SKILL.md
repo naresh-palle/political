@@ -45,7 +45,7 @@ Keep those files in the same commit as the related code when the workflow itself
 
 ## 3. Deploy GitHub Pages (always when the turn produced a shippable commit)
 
-Site: https://leaderslensconsulting.com (GitHub Pages for `naresh-palle/political`).
+Site: https://leaderslensconsulting.com (GitHub Pages for `naresh-palle/political`). Production frontend stays on GitHub Pages until a Cloudflare DNS cutover is explicitly approved. `.github/workflows/cloudflare-pages.yml` deploys `frontend/` with Wrangler only when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set; otherwise the job skips. Do not disable Pages, change apex/www DNS, or point the custom domain at Cloudflare without that approval. Never use palramai.in.
 
 1. `cd frontend && npm run build` (syncs `dist/` → `docs/` and repo root).
 2. `cd frontend && npm run deploy` (`gh-pages -d dist --dotfiles`).
