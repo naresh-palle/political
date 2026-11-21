@@ -28,6 +28,7 @@ const distIndex = path.join(distDir, 'index.html');
 const dist404 = path.join(distDir, '404.html');
 const distCname = path.join(distDir, 'CNAME');
 const distNojekyll = path.join(distDir, '.nojekyll');
+const distRedirects = path.join(distDir, '_redirects');
 const publicDir = path.join(frontendDir, 'public');
 const public404 = path.join(publicDir, '404.html');
 const domainName = 'leaderslensconsulting.com';
@@ -38,6 +39,7 @@ if (fs.existsSync(distIndex)) {
 }
 fs.writeFileSync(distCname, domainName, 'utf-8');
 fs.writeFileSync(distNojekyll, '', 'utf-8');
+fs.writeFileSync(distRedirects, '/*    /index.html   200\n', 'utf-8');
 
 // 2. Sync dist to docs/
 if (fs.existsSync(distDir)) {

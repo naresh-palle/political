@@ -9,8 +9,6 @@
     "build": "tsc -b && vite build && node sync_build.js",
     "lint": "oxlint",
     "preview": "vite preview --host 0.0.0.0 --port 3000",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist --dotfiles",
     "cf:deploy": "wrangler deploy",
     "cf:preview": "wrangler versions upload"
   },
@@ -40,6 +38,7 @@
     "oxlint": "^1.79.0",
     "tailwindcss": "^4.1.11",
     "typescript": "~5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "wrangler": "^3.114.0"
   }
 }

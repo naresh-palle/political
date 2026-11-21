@@ -1,42 +1,27 @@
 ---
 name: smart-deployment
 description: >-
-  After every code change, commit, push git, deploy GitHub Pages, and deploy
-  Render via origin/main. Also run complete-commit-deploy. Use on any frontend,
-  backend, or full-stack edit.
+  Target-based deployment protocol for Leader's Lens.
+  Automatically deploys Cloudflare Pages (frontend) and Render (backend) upon git push to origin/main.
 ---
 
 # Smart Deployment Protocol
 
-**Required on every code change.** Run `.cursor/skills/complete-commit-deploy/SKILL.md` in the same turn: update skills if the ship workflow changed, commit, push git, GitHub Pages, Render.
+**Required on every code change.**
 
-**Required on every UI change.** Run `.cursor/skills/cross-device-ui-parity/SKILL.md`: laptop, desktop, tablet, iPad, and mobile must show the same alignment and the same information. Do not hide fields on smaller screens.
+1. **Build Verification**: Run `npm run build` in `frontend/` to confirm zero TypeScript and Vite bundle errors.
+2. **Cloudflare SPA Routing**: Ensure `_redirects` exists in `frontend/public/` and `dist/`.
+3. **Continuous Deployment via Git**:
+   - Push to `origin main` to trigger:
+     - **Cloudflare Pages**: Automatic build and deploy of frontend at `leaders-lens.pages.dev` / `leaderslensconsulting.com`.
+     - **Render**: Automatic backend redeploy at `https://political-ddmj.onrender.com/`.
 
-**Required before any new product/UI/role change.** Run `.cursor/skills/confirm-before-change/SKILL.md`: check prior requirements, ask which users and screens if unclear, and keep every section and every user correct. Not limited to SM A or Political Intelligence.
+## Target Notes
 
-If this protocol itself changes, update this file plus the complete-commit-deploy skill, `AGENTS.md`, and `.agent/rules/deployment-rules.md`.
+### Cloudflare Pages (frontend)
+- **Triggers**: Changes in `frontend/src/`, `frontend/public/`, `frontend/index.html`, `frontend/package.json`, CSS, UI, layouts.
+- **Procedure**: `npm run build` in `frontend/`, verify bundle, push commit to `origin main`.
 
-## Always ship both production targets
-
-Do not leave work only on a feature branch.
-
-1. **Git** — commit and `git push -u origin <branch>`. Open or update the PR.
-2. **GitHub Pages** — `cd frontend && npm run build && npm run deploy`.
-   Site: https://leaderslensconsulting.com
-3. **Render** — update **`origin/main`** so https://political-ddmj.onrender.com/ auto-deploys.
-
-## Target notes
-
-### GitHub Pages (frontend)
-
-- **Triggers**: `frontend/src/`, `frontend/public/`, `frontend/index.html`, `frontend/package.json`, `docs/`, CSS, UI, layouts, or a production Pages sync.
-- **Procedure**: `npm run build` in `frontend/` (syncs `dist/` → root and `docs/` with `.nojekyll`), then `npm run deploy` (`gh-pages`). Commit synced Pages files and push.
-
-### Render (backend / Mongo)
-
-- **Triggers**: `backend/`, `requirements.txt`, `start.sh`, `build.sh`, `render.yaml`, API contracts, seed JSON used by the API.
-- **Procedure**: commit, then move the commit to `origin/main`. A branch-only push does not deploy Render.
-
-### Full-stack or mixed turns
-
-Run Pages **and** Render. Default when both layers moved, and also when the user asked to always deploy both.
+### Render (backend / MongoDB)
+- **Triggers**: Changes in `backend/`, `requirements.txt`, `start.sh`, `build.sh`, `render.yaml`.
+- **Procedure**: Push commit to `origin main` to trigger Render auto-deploy.
