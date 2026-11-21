@@ -3466,6 +3466,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def add_production_no_cache_headers(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 LIVE_CUTOVER_ID = "live_cutover_sma_smm_v1"
 PLAIN_USERNAME_CUTOVER_ID = "live_cutover_plain_usernames_v1"
 PI_OPERATIONAL_COLLECTIONS = (
@@ -3560,6 +3571,49 @@ async def apply_plain_username_cutover():
         log_mongo_notice("plain username cutover", e)
 
 
+async def ensure_mongodb_indexes():
+    """Ensure high-performance background indexes exist on all core collections."""
+    if _mongo_circuit_open or db is None:
+        return
+    try:
+        # Core geography & users
+        await db.countries.create_index("code", unique=True, background=True)
+        await db.states.create_index([("countryId", 1), ("code", 1)], unique=True, background=True)
+        await db.districts.create_index("id", unique=True, background=True)
+        await db.districts.create_index("stateId", background=True)
+        await db.assembly_constituencies.create_index([("stateId", 1), ("number", 1)], background=True)
+        await db.assembly_constituencies.create_index("id", unique=True, background=True)
+        await db.assembly_district_map.create_index("assemblyConstituencyId", background=True)
+        await db.users.create_index("email", unique=True, background=True)
+        await db.users.create_index("id", unique=True, background=True)
+
+        # Field ops & tickets
+        await db.field_issues.create_index("id", unique=True, background=True)
+        await db.field_issues.create_index("status", background=True)
+        await db.field_issues.create_index("assignedVolunteerId", background=True)
+        await db.field_issues.create_index("assemblyConstituencyId", background=True)
+        await db.field_issues.create_index("createdAt", background=True)
+
+        # Political Intelligence (Persons, Accounts, Statistics)
+        await db.political_persons.create_index("id", unique=True, background=True)
+        await db.political_persons.create_index([("normalizedName", 1), ("assemblyConstituencyId", 1)], background=True)
+        await db.political_persons.create_index("assemblyConstituencyId", background=True)
+        await db.political_persons.create_index("districtId", background=True)
+        await db.political_persons.create_index("stateId", background=True)
+        await db.political_persons.create_index("enteredBy", background=True)
+
+        await db.social_media_accounts.create_index("id", unique=True, background=True)
+        await db.social_media_accounts.create_index("personId", background=True)
+        await db.social_media_accounts.create_index("identityKey", background=True)
+        await db.social_media_accounts.create_index("verificationStatus", background=True)
+
+        await db.social_media_snapshots.create_index([("accountId", 1), ("collectionDate", -1)], background=True)
+        await db.constituency_statistics.create_index("assemblyConstituencyId", unique=True, background=True)
+        await db.constituency_contacts.create_index("politicalPersonId", background=True)
+    except Exception as e:
+        log_mongo_notice("ensure_indexes", e)
+
+
 async def _startup_db_seed_body():
     if _mongo_circuit_open:
         return
@@ -3568,6 +3622,7 @@ async def _startup_db_seed_body():
     except Exception as e:
         log_mongo_notice("startup ping", e)
         return
+    await ensure_mongodb_indexes()
     count = await db.states.count_documents({})
     if count == 0:
         logger.info("MongoDB geography empty, executing auto-seed...")
