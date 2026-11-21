@@ -1924,7 +1924,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
           {entryGroup === "constituency" && (
           <>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <form noValidate onSubmit={saveConstituency} className={`${CARD} space-y-3`}>
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency entry</h2>
@@ -1939,7 +1938,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               <div>
                 <Field label="Total voters (Official ECI Roll)" type="number" value={constForm.totalVoters || ""} onChange={(v) => setConstForm({ ...constForm, totalVoters: v })} />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <Field label="Male electors" type="number" value={constForm.maleElectors || ""} onChange={(v) => setConstForm({ ...constForm, maleElectors: v })} />
                 <Field label="Female electors" type="number" value={constForm.femaleElectors || ""} onChange={(v) => setConstForm({ ...constForm, femaleElectors: v })} />
                 <Field label="Other electors" type="number" value={constForm.otherElectors || ""} onChange={(v) => setConstForm({ ...constForm, otherElectors: v })} />
@@ -1949,7 +1948,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               {/* Estimated Social Media Users */}
               <div className="pt-1">
                 <p className="text-[11px] text-[#D4A24C] font-semibold">Estimated social media users (Auto-fetched)</p>
-                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
                   <Field label="Est. Facebook users" type="number" value={constForm.estimatedFacebookUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedFacebookUsers: v })} />
                   <Field label="Est. Instagram users" type="number" value={constForm.estimatedInstagramUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedInstagramUsers: v })} />
                   <Field label="Est. X users" type="number" value={constForm.estimatedXUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedXUsers: v })} />
@@ -1972,77 +1971,21 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 <p className="text-[11px] text-emerald-300">{ok}</p>
               )}
             </form>
-            <div className={CARD}>
-              <h2 className="text-sm font-bold text-[#F5EFE0] mb-2">Saved constituencies ({constRows.length})</h2>
-              {constRows.length === 0 ? <EmptyState text="No constituency statistics for this filter." /> : (
-                <div className="space-y-2">
-                  {constRows.map((row) => {
-                    const leaderCount = row.leaderCount ?? leaders.filter((l) => l.assemblyConstituencyId === row.assemblyConstituencyId).length;
-                    return (
-                      <div key={row.id} className="w-full text-left p-2.5 rounded-lg border border-[#22405E]">
-                        <button
-                          type="button"
-                          className="w-full text-left hover:bg-[#131E2D] rounded-lg"
-                          onClick={() => {
-                            if (row.districtId) setDistrictId(row.districtId);
-                            if (row.parliamentConstituencyId) setPcId(row.parliamentConstituencyId);
-                            if (row.assemblyConstituencyId) setAcId(row.assemblyConstituencyId);
-                            setConstForm({
-                              ...row,
-                              enteredByName: row.enteredByName || constForm.enteredByName,
-                              dataCollectionDate: (row.dataCollectionDate || "").slice(0, 10)
-                            });
-                          }}
-                        >
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <span className="font-bold text-[#F5EFE0] break-words">{row.assemblyName || row.assemblyConstituencyId}{row.districtName ? ` · ${row.districtName}` : selectedDistrictName ? ` · ${selectedDistrictName}` : ""}</span>
-                            <span className="text-[11px] text-[#B9AF95]">{leaderCount} leaders · {row.enteredByName || "—"}</span>
-                          </div>
-                          <p className="text-[11px] text-[#B9AF95] mt-1">Voters {row.totalVoters ?? "—"} · {(row.dataCollectionDate || "").slice(0, 10) || "—"} · {row.verificationStatus}</p>
-                          {canEdit ? <p className="text-[11px] text-[#D4A24C] mt-1 font-semibold uppercase tracking-wider">Edit / modify</p> : null}
-                        </button>
-                        {canDelete && (
-                          <button
-                            type="button"
-                            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-200 text-[11px] font-bold uppercase tracking-wider"
-                            onClick={() => deleteConstituency(row)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                  <button type="button" className="px-4 py-2 rounded-xl border border-[#22405E] text-[#F5EFE0] text-xs font-bold uppercase tracking-wider" onClick={downloadSavedExcel}>
-                    Download Excel
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          {selectedDistrictProgress && (
-            <div className={CARD}>
-              <h2 className="text-sm font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</h2>
-              <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.totalConstituencies} constituencies · Auto-fetched</p>
-              <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.totalLeaders} leaders · {selectedDistrictProgress.totalAccounts} accounts · {selectedDistrictProgress.verifiedAccounts} verified</p>
-            </div>
-          )}
 
-          {acId ? (
-            <SocialAudienceEstimation
-              acId={acId}
-              acName={selectedAssemblyName || acId}
-              districtName={selectedDistrictName}
-              stateId={stateId}
-              userId={userId}
-            />
-          ) : (
-            <div className={`${CARD} text-center py-8`}>
-              <p className="text-sm text-[#D4A24C] font-semibold">Select an Assembly Constituency above to view Social Media Audience Estimation.</p>
-              <p className="text-[11px] text-[#B9AF95] mt-1">Automatic audience estimation across Facebook, Instagram, X, and YouTube with 0–40 km radius buffer.</p>
-            </div>
-          )}
+            {acId ? (
+              <SocialAudienceEstimation
+                acId={acId}
+                acName={selectedAssemblyName || acId}
+                districtName={selectedDistrictName}
+                stateId={stateId}
+                userId={userId}
+              />
+            ) : (
+              <div className={`${CARD} text-center py-8`}>
+                <p className="text-sm text-[#D4A24C] font-semibold">Select an Assembly Constituency above to view Social Media Audience Estimation.</p>
+                <p className="text-[11px] text-[#B9AF95] mt-1">Automatic audience estimation across Facebook, Instagram, X, and YouTube with 40 km standard targeting.</p>
+              </div>
+            )}
           </>
           )}
 
