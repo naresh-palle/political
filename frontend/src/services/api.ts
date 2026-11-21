@@ -2321,6 +2321,18 @@ export const politicalApiService = {
   saveMonthlyAdsMetrics(userId: string, payload: any) {
     return this.piRequest("/pi/monthly-ads-metrics", userId, { method: "POST", body: JSON.stringify(payload) }, 10000);
   },
+  getConstituencyAudienceEstimates(userId: string, acId: string, radius: number = 0) {
+    return this.piRequest(`/pi/constituencies/${encodeURIComponent(acId)}/audience-estimates?radius=${encodeURIComponent(radius)}`, userId, {}, 20000);
+  },
+  refreshConstituencyAudienceEstimates(userId: string, acId: string, radius: number = 0) {
+    return this.piRequest(`/pi/constituencies/${encodeURIComponent(acId)}/audience-estimates/refresh?radius=${encodeURIComponent(radius)}`, userId, {
+      method: "POST",
+      body: JSON.stringify({ radius })
+    }, 25000);
+  },
+  getApiCredentialsStatus(userId: string) {
+    return this.piRequest("/pi/api-credentials/status", userId, {}, 10000);
+  },
   seedPiSample(userId: string) {
     return this.piRequest("/pi/seed-sample?confirm=SAMPLE", userId, { method: "POST" });
   }

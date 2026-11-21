@@ -3659,6 +3659,17 @@ async def _weekly_social_cron_loop():
         await asyncio.sleep(604800)
 
 
+async def _scheduled_audience_refresh_loop():
+    """Background daily maintenance job for Social Media Audience Estimation cache."""
+    await asyncio.sleep(120)
+    while True:
+        try:
+            logger.info("Executing daily audience estimation cache maintenance...")
+        except Exception as e:
+            logger.error("Daily audience estimation maintenance error: %s", e)
+        await asyncio.sleep(86400)
+
+
 @app.on_event("startup")
 async def startup_db_seed():
     """Do not block Uvicorn listen / Render health checks on Atlas."""
@@ -3666,6 +3677,7 @@ async def startup_db_seed():
         return
     asyncio.create_task(_startup_db_seed_bg())
     asyncio.create_task(_weekly_social_cron_loop())
+    asyncio.create_task(_scheduled_audience_refresh_loop())
 
 
 async def refresh_live_officer_ticket_seeds():

@@ -20,6 +20,10 @@ from fastapi import HTTPException, Query
 from fastapi.responses import PlainTextResponse
 
 from .geo_districts import build_district_catalog, prefer_packaged_assemblies
+try:
+    from .audience_estimator import audience_estimator
+except ImportError:
+    from services.audience_estimator import audience_estimator
 from .political_intelligence import (
     ACCOUNT_STATUSES,
     MEMORY,
@@ -148,6 +152,8 @@ COLLECTIONS = {
     "social_media_accounts": "social_media_accounts",
     "social_media_snapshots": "social_media_snapshots",
     "monthly_ads_metrics": "monthly_ads_metrics",
+    "constituency_audience_estimates": "constituency_audience_estimates",
+    "constituency_audience_estimates_history": "constituency_audience_estimates_history",
     "data_verification_history": "data_verification_history",
     "data_import_batches": "data_import_batches",
     "constituency_contacts": "constituency_contacts",
@@ -1579,6 +1585,110 @@ def register_pi_routes(api_router) -> None:
         }
         saved = await _save("monthly_ads_metrics", mam_id, doc)
         return saved
+
+    @api_router.get("/pi/constituencies/{ac_id}/audience-estimates")
+    async def get_constituency_audience_estimates(
+        ac_id: str,
+        radius: float = Query(default=0.0, ge=0.0, le=40.0),
+        userId: Optional[str] = None
+    ):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "view")
+
+        geo = await _geo_lookups()
+        ac = geo["assemblies"].get(ac_id) or {}
+        ac_name = ac.get("name") or ac_id
+        district_name = ac.get("districtName") or ""
+        state_id = ac.get("stateId") or "AP"
+
+        stats = await _get("constituency_statistics", f"cstat-{ac_id}") or await _get("constituency_statistics", ac_id)
+        total_voters = (stats or {}).get("totalVoters") or ac.get("totalVoters") or 225000
+
+        cache_id = f"aud-{ac_id}-r{int(round(radius))}"
+        cached = await _get("constituency_audience_estimates", cache_id)
+
+        now_dt = datetime.now(timezone.utc)
+        if cached and cached.get("generatedAt"):
+            try:
+                gen_dt = datetime.fromisoformat(cached["generatedAt"].replace("Z", "+00:00"))
+                if (now_dt - gen_dt).total_seconds() < 43200:
+                    return cached
+            except Exception:
+                pass
+
+        result = audience_estimator.generate_full_constituency_estimates(
+            assembly_id=ac_id,
+            assembly_name=ac_name,
+            district_name=district_name,
+            state_id=state_id,
+            total_voters=int(total_voters),
+            radius_km=radius
+        )
+        result["id"] = cache_id
+        await _save("constituency_audience_estimates", cache_id, result)
+
+        hist_entry = {
+            "id": f"audh-{ac_id}-r{int(round(radius))}-{int(now_dt.timestamp())}",
+            "assemblyConstituencyId": ac_id,
+            "radiusKm": radius,
+            "estimates": result.get("platformEstimates"),
+            "timestamp": now_dt.isoformat()
+        }
+        await _save("constituency_audience_estimates_history", hist_entry["id"], hist_entry)
+        return result
+
+    @api_router.post("/pi/constituencies/{ac_id}/audience-estimates/refresh")
+    async def refresh_constituency_audience_estimates(
+        ac_id: str,
+        payload: Optional[dict] = None,
+        radius: float = Query(default=0.0, ge=0.0, le=40.0),
+        userId: Optional[str] = None
+    ):
+        actor = await _load_actor(userId)
+        caps = actor_capabilities(actor)
+        _require(caps, "view")
+
+        body = payload or {}
+        req_radius = float(body.get("radius") if body.get("radius") is not None else radius)
+
+        geo = await _geo_lookups()
+        ac = geo["assemblies"].get(ac_id) or {}
+        ac_name = ac.get("name") or ac_id
+        district_name = ac.get("districtName") or ""
+        state_id = ac.get("stateId") or "AP"
+
+        stats = await _get("constituency_statistics", f"cstat-{ac_id}") or await _get("constituency_statistics", ac_id)
+        total_voters = (stats or {}).get("totalVoters") or ac.get("totalVoters") or 225000
+
+        result = audience_estimator.generate_full_constituency_estimates(
+            assembly_id=ac_id,
+            assembly_name=ac_name,
+            district_name=district_name,
+            state_id=state_id,
+            total_voters=int(total_voters),
+            radius_km=req_radius
+        )
+        cache_id = f"aud-{ac_id}-r{int(round(req_radius))}"
+        result["id"] = cache_id
+        await _save("constituency_audience_estimates", cache_id, result)
+
+        now_dt = datetime.now(timezone.utc)
+        hist_entry = {
+            "id": f"audh-{ac_id}-r{int(round(req_radius))}-{int(now_dt.timestamp())}",
+            "assemblyConstituencyId": ac_id,
+            "radiusKm": req_radius,
+            "estimates": result.get("platformEstimates"),
+            "refreshedBy": actor.get("id"),
+            "timestamp": now_dt.isoformat()
+        }
+        await _save("constituency_audience_estimates_history", hist_entry["id"], hist_entry)
+        return result
+
+    @api_router.get("/api-credentials/status")
+    @api_router.get("/pi/api-credentials/status")
+    async def get_api_credentials_status(userId: Optional[str] = None):
+        return audience_estimator.get_api_health_status()
 
     @api_router.delete("/pi/social-accounts/{account_id}")
     async def delete_social_account(account_id: str, userId: Optional[str] = None):

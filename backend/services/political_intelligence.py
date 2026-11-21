@@ -61,6 +61,8 @@ MEMORY: Dict[str, Any] = {
     "social_media_accounts": {},
     "social_media_snapshots": [],
     "monthly_ads_metrics": {},
+    "constituency_audience_estimates": {},
+    "constituency_audience_estimates_history": [],
     "data_verification_history": [],
     "data_import_batches": [],
     "constituency_contacts": {},

@@ -23,6 +23,7 @@ import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import { cacheHasPiData, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
 import { downloadPiCsvExport } from "../../utils/piExcelExport";
+import { SocialAudienceEstimation } from "./SocialAudienceEstimation";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
 type EntryGroup = "constituency" | "leaders";
@@ -1959,6 +1960,21 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               <h2 className="text-sm font-bold text-[#F5EFE0]">{selectedDistrictProgress.name}</h2>
               <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.constituenciesEntered}/{selectedDistrictProgress.totalConstituencies} entered · {selectedDistrictProgress.constituenciesPending} pending</p>
               <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.totalLeaders} leaders · {selectedDistrictProgress.totalAccounts} accounts · {selectedDistrictProgress.verifiedAccounts} verified</p>
+            </div>
+          )}
+
+          {acId ? (
+            <SocialAudienceEstimation
+              acId={acId}
+              acName={selectedAssemblyName || acId}
+              districtName={selectedDistrictName}
+              stateId={stateId}
+              userId={userId}
+            />
+          ) : (
+            <div className={`${CARD} text-center py-8`}>
+              <p className="text-sm text-[#D4A24C] font-semibold">Select an Assembly Constituency above to view Social Media Audience Estimation.</p>
+              <p className="text-[11px] text-[#B9AF95] mt-1">Automatic audience estimation across Facebook, Instagram, X, and YouTube with 0–40 km radius buffer.</p>
             </div>
           )}
           </>

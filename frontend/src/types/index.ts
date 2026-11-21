@@ -699,3 +699,50 @@ export interface PiDashboard {
   districtId?: string | null;
 }
 
+export interface AudiencePlatformDetail {
+  platform: string;
+  platformDisplayName: string;
+  constituencyAudience: number;
+  totalRadiusAudience: number;
+  surroundingAudience: number;
+  surroundingRadiusKm: number;
+  estimationMethod: "Platform Estimate" | "Geographical Approximation" | "Statistical Estimate" | "Partial Coverage" | "Data Unavailable" | string;
+  dataSource: string;
+  geographicalCoverage: string;
+  apiAvailabilityStatus: string;
+  lastUpdated: string;
+}
+
+export interface AudienceComparisonTableRow {
+  platform: string;
+  estimatedAudience: number;
+  constituencyOnlyAudience: number;
+  surroundingAudience: number;
+  estimationMethod: string;
+  status: string;
+  dataSource: string;
+}
+
+export interface ElectoralStatistics {
+  totalElectors: number;
+  maleElectors: number;
+  femaleElectors: number;
+  otherElectors: number;
+  pollingStations: number;
+  source: string;
+  sourceDate: string;
+}
+
+export interface ConstituencyAudienceReport {
+  assemblyConstituencyId: string;
+  assemblyName: string;
+  districtName: string;
+  stateId: string;
+  surroundingRadiusKm: number;
+  electoralStatistics: ElectoralStatistics;
+  platformEstimates: Record<string, AudiencePlatformDetail>;
+  comparisonTable: AudienceComparisonTableRow[];
+  apiHealth?: Record<string, any>;
+  generatedAt: string;
+}
+
