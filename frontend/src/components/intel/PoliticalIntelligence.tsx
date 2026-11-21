@@ -1975,8 +1975,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   <span className="text-[10px] text-[#B9AF95]">Required to enable save</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Field label="Facebook account (URL / Page) *" value={constForm.facebookAccount || ""} onChange={(v) => setConstForm({ ...constForm, facebookAccount: v })} />
-                  <Field label="Instagram account (URL / Handle) *" value={constForm.instagramAccount || ""} onChange={(v) => setConstForm({ ...constForm, instagramAccount: v })} />
+                  <Field id="pi-const-fb" label="Facebook account (URL / Page) *" value={constForm.facebookAccount || ""} onChange={(v) => setConstForm({ ...constForm, facebookAccount: v })} />
+                  <Field id="pi-const-ig" label="Instagram account (URL / Handle) *" value={constForm.instagramAccount || ""} onChange={(v) => setConstForm({ ...constForm, instagramAccount: v })} />
                 </div>
 
                 {/* Auto-fetch weekly option */}
