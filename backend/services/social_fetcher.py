@@ -53,7 +53,14 @@ def extract_username(url: str, platform: str) -> str:
 
 async def fetch_youtube_metrics(url: str, api_key: Optional[str] = None) -> Dict[str, Any]:
     """Fetch subscriber count and reach (views) from YouTube Data API v3."""
-    api_key = api_key or os.getenv("YOUTUBE_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    api_key = (
+        api_key
+        or os.getenv("YOUTUBE_API_KEY")
+        or os.getenv("GOOGLE_API_KEY")
+        or os.getenv("YOUTUBE_KEY")
+        or os.getenv("youtube_api_key")
+        or ""
+    ).strip()
     username = extract_username(url, "youtube")
     
     if not api_key:
@@ -268,7 +275,15 @@ async def auto_fetch_metrics(platform: str, url: str) -> Dict[str, Any]:
         return await fetch_youtube_metrics(url)
 
     # 2. Instagram, X, Facebook: use RapidAPI / Unified Social API key if provided
-    rapidapi_key = os.getenv("RAPIDAPI_KEY") or os.getenv("SOCIAL_API_KEY")
+    rapidapi_key = (
+        os.getenv("RAPIDAPI_KEY")
+        or os.getenv("RAPID_API_KEY")
+        or os.getenv("X_RAPIDAPI_KEY")
+        or os.getenv("SOCIAL_API_KEY")
+        or os.getenv("rapidapi_key")
+        or os.getenv("RapidAPI_Key")
+        or ""
+    ).strip()
     if rapidapi_key:
         return await fetch_social_metrics_via_rapidapi(plat, username, rapidapi_key)
 
