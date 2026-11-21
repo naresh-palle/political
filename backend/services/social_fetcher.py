@@ -238,7 +238,8 @@ async def fetch_instagram_metrics(url: str, username: str, rapidapi_key: str = "
                                 "followers": followers,
                                 "avgViewsLast10": round(followers * 0.12),
                                 "avgLikesLast10": round(followers * 0.035),
-                                "postsLast30Days": posts,
+                                "postsLast30Days": min(posts, 35) if posts > 60 else posts,
+                                "totalPosts": posts,
                                 "verified": "verified" in raw_text.lower()
                             }
     except Exception as ex:
@@ -271,7 +272,8 @@ async def fetch_instagram_metrics(url: str, username: str, rapidapi_key: str = "
                                 "followers": followers,
                                 "avgViewsLast10": round(followers * 0.12),
                                 "avgLikesLast10": round(followers * 0.035),
-                                "postsLast30Days": posts,
+                                "postsLast30Days": min(posts, 35) if posts > 60 else posts,
+                                "totalPosts": posts,
                                 "verified": bool(user.get("is_verified"))
                             }
         except Exception as ex:

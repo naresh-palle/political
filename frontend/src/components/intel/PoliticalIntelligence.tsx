@@ -667,6 +667,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
+  const availableMonths = useMemo(() => {
+    const list: string[] = [];
+    const now = new Date();
+    for (let i = 1; i >= -11; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      list.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return list;
+  }, []);
   const [syncingAllAccounts, setSyncingAllAccounts] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<{ updated?: number; total?: number; time?: string } | null>(null);
   const [editingMonthlyLeader, setEditingMonthlyLeader] = useState<any | null>(null);
@@ -1190,21 +1199,24 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         const pe = report.platformEstimates || {};
         setConstForm((prev: any) => {
           const hasExisting = prev.assemblyConstituencyId === acId && prev.id;
+          const savedConst = constRows.find((r) => r.assemblyConstituencyId === acId);
           return {
             ...prev,
+            id: hasExisting ? prev.id : savedConst?.id,
             assemblyConstituencyId: acId,
             assemblyName: report.assemblyName || prev.assemblyName,
-            totalVoters: hasExisting && prev.totalVoters ? prev.totalVoters : (eci.totalElectors ?? ""),
-            maleElectors: hasExisting && prev.maleElectors ? prev.maleElectors : (eci.maleElectors ?? ""),
-            femaleElectors: hasExisting && prev.femaleElectors ? prev.femaleElectors : (eci.femaleElectors ?? ""),
-            otherElectors: hasExisting && prev.otherElectors ? prev.otherElectors : (eci.otherElectors ?? ""),
-            pollingStations: hasExisting && prev.pollingStations ? prev.pollingStations : (eci.pollingStations ?? ""),
-            estimatedFacebookUsers: hasExisting && prev.estimatedFacebookUsers ? prev.estimatedFacebookUsers : (pe.facebook?.constituencyAudience ?? ""),
-            estimatedInstagramUsers: hasExisting && prev.estimatedInstagramUsers ? prev.estimatedInstagramUsers : (pe.instagram?.constituencyAudience ?? ""),
-            estimatedXUsers: hasExisting && prev.estimatedXUsers ? prev.estimatedXUsers : (pe.x?.constituencyAudience ?? ""),
-            estimatedYouTubeUsers: hasExisting && prev.estimatedYouTubeUsers ? prev.estimatedYouTubeUsers : (pe.youtube?.constituencyAudience ?? ""),
-            facebookAccount: prev.facebookAccount || "",
-            instagramAccount: prev.instagramAccount || ""
+            totalVoters: hasExisting && prev.totalVoters ? prev.totalVoters : (savedConst?.totalVoters ?? eci.totalElectors ?? ""),
+            maleElectors: hasExisting && prev.maleElectors ? prev.maleElectors : (savedConst?.maleElectors ?? eci.maleElectors ?? ""),
+            femaleElectors: hasExisting && prev.femaleElectors ? prev.femaleElectors : (savedConst?.femaleElectors ?? eci.femaleElectors ?? ""),
+            otherElectors: hasExisting && prev.otherElectors ? prev.otherElectors : (savedConst?.otherElectors ?? eci.otherElectors ?? ""),
+            pollingStations: hasExisting && prev.pollingStations ? prev.pollingStations : (savedConst?.pollingStations ?? eci.pollingStations ?? ""),
+            estimatedFacebookUsers: hasExisting && prev.estimatedFacebookUsers ? prev.estimatedFacebookUsers : (savedConst?.estimatedFacebookUsers ?? pe.facebook?.constituencyAudience ?? ""),
+            estimatedInstagramUsers: hasExisting && prev.estimatedInstagramUsers ? prev.estimatedInstagramUsers : (savedConst?.estimatedInstagramUsers ?? pe.instagram?.constituencyAudience ?? ""),
+            estimatedXUsers: hasExisting && prev.estimatedXUsers ? prev.estimatedXUsers : (savedConst?.estimatedXUsers ?? pe.x?.constituencyAudience ?? ""),
+            estimatedYouTubeUsers: hasExisting && prev.estimatedYouTubeUsers ? prev.estimatedYouTubeUsers : (savedConst?.estimatedYouTubeUsers ?? pe.youtube?.constituencyAudience ?? ""),
+            facebookAccount: prev.facebookAccount || savedConst?.facebookAccount || "",
+            instagramAccount: prev.instagramAccount || savedConst?.instagramAccount || "",
+            autoFetchWeekly: prev.autoFetchWeekly !== undefined ? prev.autoFetchWeekly : (savedConst?.autoFetchWeekly !== false)
           };
         });
       })
@@ -1240,6 +1252,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         pollingStations: num(constForm.pollingStations),
         facebookAccount: String(constForm.facebookAccount || "").trim(),
         instagramAccount: String(constForm.instagramAccount || "").trim(),
+        autoFetchWeekly: constForm.autoFetchWeekly !== false,
         ruralPercent: num(constForm.ruralPercent),
         estimatedFacebookUsers: num(constForm.estimatedFacebookUsers),
         estimatedInstagramUsers: num(constForm.estimatedInstagramUsers),
@@ -1956,16 +1969,59 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               </div>
 
               {/* Constituency Official Social Accounts */}
-              <div className="pt-1">
-                <p className="text-[11px] text-[#D4A24C] font-semibold">Constituency Social Media Accounts</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
-                  <Field label="Facebook account (URL / Page)" value={constForm.facebookAccount || ""} onChange={(v) => setConstForm({ ...constForm, facebookAccount: v })} />
-                  <Field label="Instagram account (URL / Handle)" value={constForm.instagramAccount || ""} onChange={(v) => setConstForm({ ...constForm, instagramAccount: v })} />
+              <div className="pt-1 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-[#D4A24C] font-semibold">Constituency Social Media Accounts *</p>
+                  <span className="text-[10px] text-[#B9AF95]">Required to enable save</span>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Field label="Facebook account (URL / Page) *" value={constForm.facebookAccount || ""} onChange={(v) => setConstForm({ ...constForm, facebookAccount: v })} />
+                  <Field label="Instagram account (URL / Handle) *" value={constForm.instagramAccount || ""} onChange={(v) => setConstForm({ ...constForm, instagramAccount: v })} />
+                </div>
+
+                {/* Auto-fetch weekly option */}
+                <label className="flex items-center gap-2.5 p-2 rounded-xl border border-[#22405E] bg-[#071322]/80 cursor-pointer hover:border-[#D4A24C]/60 transition-colors">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded text-[#D4A24C] focus:ring-[#D4A24C] border-[#22405E] bg-[#071322]"
+                    checked={constForm.autoFetchWeekly !== false}
+                    onChange={(e) => setConstForm({ ...constForm, autoFetchWeekly: e.target.checked })}
+                  />
+                  <div className="text-xs">
+                    <span className="font-bold text-[#F5EFE0] flex items-center gap-1.5">
+                      <RefreshCw className="w-3 h-3 text-[#D4A24C]" />
+                      Auto-fetch for every 1 week
+                    </span>
+                    <p className="text-[10px] text-[#B9AF95]">Automatically refresh social metrics and reach for this constituency every week</p>
+                  </div>
+                </label>
               </div>
 
               <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
-              <button type="submit" className={BTN} disabled={!!saving || !acId || !canEdit}>{saving === "constituency" ? "Saving…" : constForm.id ? "Save changes" : "Save constituency"}</button>
+
+              {(() => {
+                const hasRequiredSocial = Boolean(
+                  String(constForm.facebookAccount || "").trim() &&
+                  String(constForm.instagramAccount || "").trim()
+                );
+                const isSaveDisabled = !!saving || !acId || !canEdit || !hasRequiredSocial;
+                return (
+                  <div>
+                    <button
+                      type="submit"
+                      className={`${BTN} ${isSaveDisabled ? "opacity-50 cursor-not-allowed bg-[#22405E] text-[#B9AF95] border-[#22405E]" : ""}`}
+                      disabled={isSaveDisabled}
+                    >
+                      {saving === "constituency" ? "Saving…" : constForm.id ? "Save changes" : "Save constituency"}
+                    </button>
+                    {!hasRequiredSocial && (
+                      <p className="text-[11px] text-amber-400 mt-1.5 flex items-center gap-1">
+                        <span>⚠️</span> Please add both Facebook account (URL / Page) and Instagram account (URL / Handle) to enable saving.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
               {ok && !error && ok.startsWith("Saved") && (
                 <p className="text-[11px] text-emerald-300">{ok}</p>
               )}
@@ -2517,13 +2573,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     Next ▶
                   </button>
                   <select
-                    className="text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2 py-1 ml-1"
+                    className="text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2 py-1 ml-1 cursor-pointer focus:border-[#D4A24C]"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
                   >
-                    <option value={getAdjacentMonth(selectedMonth, -1)}>Previous Month ({formatMonthName(getAdjacentMonth(selectedMonth, -1))})</option>
-                    <option value={selectedMonth}>Current Month ({formatMonthName(selectedMonth)})</option>
-                    <option value={getAdjacentMonth(selectedMonth, 1)}>Next Month ({formatMonthName(getAdjacentMonth(selectedMonth, 1))})</option>
+                    {availableMonths.map((m) => (
+                      <option key={m} value={m}>
+                        {formatMonthName(m)}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
