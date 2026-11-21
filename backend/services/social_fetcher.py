@@ -13,6 +13,7 @@ Fetches Followers, Reach (Views), Likes, and Verified badge automatically from:
 import os
 import re
 import html
+import urllib.parse
 import logging
 from typing import Dict, Any, Optional
 
@@ -91,16 +92,55 @@ def extract_username(url: str, platform: str) -> str:
 # FACEBOOK FETCHER
 # ---------------------------------------------------------------------------
 async def fetch_facebook_metrics(url: str, username: str, rapidapi_key: str = "") -> Dict[str, Any]:
-    """Fetch Facebook followers & reach using direct crawler extraction or RapidAPI."""
+    """Fetch Facebook followers & reach using Facebook Page Widget plugin or RapidAPI."""
     if not httpx:
         return {"success": False, "platform": "facebook", "detail": "httpx library not available"}
 
     target_url = url if url.startswith("http") else f"https://www.facebook.com/{username}"
 
-    # 1. Direct Meta Crawler extraction (Free, instant, accurate)
+    # 1. Official Facebook Page Plugin Widget (Bypasses datacenter/cloud IP login redirects on Render)
     try:
-        async with httpx.AsyncClient(headers=CRAWLER_HEADERS, follow_redirects=True, timeout=10.0) as client:
+        encoded_url = urllib.parse.quote(target_url, safe="")
+        widget_url = f"https://www.facebook.com/plugins/page.php?href={encoded_url}&tabs&width=500&show_text=true"
+        browser_headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9"
+        }
+        async with httpx.AsyncClient(headers=browser_headers, timeout=10.0) as client:
+            res = await client.get(widget_url)
+            if res.status_code == 200:
+                raw_text = html.unescape(res.text)
+                f_matches = re.findall(r"([\d.,]+[kKmMbB]?)\s+followers", raw_text, re.IGNORECASE)
+                if f_matches:
+                    followers = parse_count(f_matches[0])
+                    if followers > 0:
+                        reach = 0
+                        reach_matches = re.findall(r"([\d.,]+[kKmMbB]?)\s+talking about this", raw_text, re.IGNORECASE)
+                        if reach_matches:
+                            reach = parse_count(reach_matches[0])
+                        verified = "verified" in raw_text.lower() or "blue tick" in raw_text.lower()
+                        return {
+                            "success": True,
+                            "platform": "facebook",
+                            "username": username,
+                            "followers": followers,
+                            "avgViewsLast10": reach if reach > 0 else round(followers * 0.08),
+                            "avgLikesLast10": round(followers * 0.015),
+                            "verified": verified
+                        }
+    except Exception as ex:
+        logger.warning("Facebook widget extraction notice for %s: %s", username, ex)
+
+    # 2. Direct Meta Crawler extraction (Free, instant, accurate)
+    try:
+        async with httpx.AsyncClient(headers=CRAWLER_HEADERS, follow_redirects=False, timeout=10.0) as client:
             res = await client.get(target_url)
+            # If 301/302, follow only if it doesn't lead to login
+            if res.status_code in (301, 302, 307):
+                loc = res.headers.get("location", "")
+                if loc and "login" not in loc.lower():
+                    res = await client.get(loc)
             if res.status_code == 200:
                 raw_text = html.unescape(res.text)
                 desc_match = re.search(r'content="([^"]*followers[^"]*)"', raw_text, re.IGNORECASE)
@@ -110,7 +150,6 @@ async def fetch_facebook_metrics(url: str, username: str, rapidapi_key: str = ""
                 if f_match:
                     followers = parse_count(f_match.group(1))
                     if followers > 0:
-                        # Extract reach / engagement ('talking about this')
                         reach = 0
                         reach_match = re.search(r'([\d.,]+[kKmMbB]?)\s+talking about this', desc, re.IGNORECASE)
                         if reach_match:
@@ -129,7 +168,7 @@ async def fetch_facebook_metrics(url: str, username: str, rapidapi_key: str = ""
     except Exception as ex:
         logger.warning("Facebook crawler extraction notice for %s: %s", username, ex)
 
-    # 2. Fallback to RapidAPI if key provided
+    # 3. Fallback to RapidAPI if key provided
     if rapidapi_key:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
