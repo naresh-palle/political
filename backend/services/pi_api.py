@@ -948,6 +948,7 @@ def register_pi_routes(api_router) -> None:
         userId: Optional[str] = None,
         stateId: Optional[str] = None,
         districtId: Optional[str] = None,
+        repType: Optional[str] = None,
     ):
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
@@ -958,6 +959,15 @@ def register_pi_routes(api_router) -> None:
         persons = [p for p in await _list("political_persons") if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
         if stateId:
             persons = [p for p in persons if str(p.get("stateId") or "").upper() == stateId.upper()]
+        
+        rep_type_clean = (repType or "MLA").upper()
+        if rep_type_clean == "MP":
+            persons = [p for p in persons if str(p.get("representativeType") or "").upper() == "MP"]
+        elif rep_type_clean == "MLC":
+            persons = [p for p in persons if str(p.get("representativeType") or "").upper() == "MLC"]
+        else:
+            persons = [p for p in persons if str(p.get("representativeType") or "MLA").upper() in ("MLA", "SITTING_MLA")]
+            
         accounts = await _list("social_media_accounts")
         person_ids = {p.get("id") for p in persons}
         accounts = [a for a in accounts if a.get("personId") in person_ids]
@@ -1020,7 +1030,8 @@ def register_pi_routes(api_router) -> None:
             "verifiedAccounts": len(verified),
             "pendingVerification": len(pending),
             "needsRecheck": len(recheck),
-            "verificationPercent": round((len(verified) / len(accounts)) * 100, 1) if accounts else None,
+            "verificationPercent": round((len(verified) / len(accounts)) * 100, 1) if accounts else 0.0,
+            "representativeType": rep_type_clean,
             "lastDataCollectionDate": last_dates[-1] if last_dates else None,
             "districts": districts,
             "recentCollections": recent,
@@ -1285,10 +1296,25 @@ def register_pi_routes(api_router) -> None:
         _require(caps, "create")
         payload = payload or {}
         name = str(payload.get("name") or "").strip()
-        ac_id = str(payload.get("assemblyConstituencyId") or "").strip()
         party_id = str(payload.get("partyId") or "").strip().upper()
-        if not name or not ac_id or not party_id:
-            raise HTTPException(status_code=400, detail="name, assemblyConstituencyId and partyId are required")
+        rep_type = str(payload.get("representativeType") or "MLA").upper()
+        ac_id = str(payload.get("assemblyConstituencyId") or "").strip()
+        pc_id = str(payload.get("parliamentConstituencyId") or "").strip()
+        zone_id = str(payload.get("zoneId") or "").strip()
+
+        if rep_type == "MP":
+            if not name or not pc_id or not party_id:
+                raise HTTPException(status_code=400, detail="name, parliamentConstituencyId and partyId are required for MP")
+            if not ac_id:
+                ac_id = f"PC-{pc_id}"
+        elif rep_type == "MLC":
+            if not name or not (zone_id or ac_id) or not party_id:
+                raise HTTPException(status_code=400, detail="name, zoneId and partyId are required for MLC")
+            if not ac_id:
+                ac_id = f"ZONE-{zone_id}"
+        else:
+            if not name or not ac_id or not party_id:
+                raise HTTPException(status_code=400, detail="name, assemblyConstituencyId and partyId are required")
         if not in_scope(caps, payload.get("stateId"), ac_id):
             raise HTTPException(status_code=403, detail="This assembly is outside your assigned geography.")
         geo = await _geo_lookups()
@@ -1314,14 +1340,16 @@ def register_pi_routes(api_router) -> None:
                 "name": name,
                 "normalizedName": normalize_name(name),
                 "partyId": party_id,
+                "representativeType": rep_type,
                 "stateId": payload.get("stateId") or doc.get("stateId") or "AP",
                 "districtId": payload.get("districtId") or doc.get("districtId"),
-                "parliamentConstituencyId": payload.get("parliamentConstituencyId") or doc.get("parliamentConstituencyId"),
+                "parliamentConstituencyId": pc_id or payload.get("parliamentConstituencyId") or doc.get("parliamentConstituencyId"),
+                "zoneId": zone_id or payload.get("zoneId") or doc.get("zoneId"),
                 "assemblyConstituencyId": ac_id,
                 "dataSource": payload.get("dataSource") or doc.get("dataSource") or "MANUAL",
                 "verificationStatus": payload.get("verificationStatus") or doc.get("verificationStatus") or "PENDING",
                 "remarks": payload.get("remarks") if payload.get("remarks") is not None else doc.get("remarks"),
-                "leaderKind": payload.get("leaderKind") or doc.get("leaderKind") or "SITTING_MLA",
+                "leaderKind": payload.get("leaderKind") or doc.get("leaderKind") or ("SITTING_MP" if rep_type == "MP" else "SITTING_MLC" if rep_type == "MLC" else "SITTING_MLA"),
                 "enteredBy": (existing or {}).get("enteredBy") or caps["actorId"],
                 "enteredByName": (existing or {}).get("enteredByName") or caps["actorName"],
                 "updatedAt": now,
@@ -2313,72 +2341,94 @@ def register_pi_routes(api_router) -> None:
 
     @api_router.get("/pi/state-trends")
     async def get_state_trends(stateId: Optional[str] = "AP"):
+        code = str(stateId or "AP").upper()
+        now_date = datetime.now(timezone.utc).strftime("%d %B %Y")
+        
+        STATE_TRENDS_DATA = {
+            "AP": {
+                "name": "Andhra Pradesh",
+                "trends": [
+                    {"hashtag": "#APDevelopment", "tag": "AP Development & Capital", "category": "Governance", "volume": "142.5K", "velocity": "+28%", "sentiment": "Positive (76%)", "sentimentColor": "#10B981", "summary": "Key discussion on Amaravati infrastructure tenders and industrial corridor investments."},
+                    {"hashtag": "#KootamiSankalpam", "tag": "Alliance Governance", "category": "Government", "volume": "98.2K", "velocity": "+19%", "sentiment": "Positive (81%)", "sentimentColor": "#10B981", "summary": "Welfare scheme rollout updates and joint coalition rallies across Rayalaseema."},
+                    {"hashtag": "#PolavaramProject", "tag": "Water & Irrigation", "category": "Infrastructure", "volume": "84.7K", "velocity": "+34%", "sentiment": "Neutral / Watch (58%)", "sentimentColor": "#3B82F6", "summary": "Diaphragm wall inspection report and central funding disbursements."},
+                    {"hashtag": "#YSRCPJanagalam", "tag": "Opposition Campaign", "category": "Opposition", "volume": "76.4K", "velocity": "+14%", "sentiment": "Critical (68%)", "sentimentColor": "#F59E0B", "summary": "District-level protest rallies highlighting power tariff and farmer input subsidies."},
+                    {"hashtag": "#APYouthJobs", "tag": "Employment & DSC", "category": "Youth & Jobs", "volume": "62.1K", "velocity": "+42%", "sentiment": "High Attention (52%)", "sentimentColor": "#8B5CF6", "summary": "Mega DSC recruitment notifications and IT investments in Visakhapatnam."},
+                    {"hashtag": "#AmaravatiRebuild", "tag": "State Capital", "category": "Urban Growth", "volume": "54.8K", "velocity": "+11%", "sentiment": "Positive (72%)", "sentimentColor": "#10B981", "summary": "CRDA phase 2 road packages and international finance corporation meetings."}
+                ]
+            },
+            "TS": {
+                "name": "Telangana",
+                "trends": [
+                    {"hashtag": "#HyderabadGrowth", "tag": "Hyderabad Infra & IT Hub", "category": "Urban Growth", "volume": "165.2K", "velocity": "+31%", "sentiment": "Positive (82%)", "sentimentColor": "#10B981", "summary": "Global GCC expansions in HITEC City and Regional Ring Road land acquisition progress."},
+                    {"hashtag": "#RythuBharosaTG", "tag": "Farmer Support & Crop Loan", "category": "Agriculture", "volume": "112.4K", "velocity": "+24%", "sentiment": "Positive (74%)", "sentimentColor": "#10B981", "summary": "Direct benefit transfers to farmer accounts and agricultural market yard reforms."},
+                    {"hashtag": "#MusiRejuvenation", "tag": "Musi Riverfront Project", "category": "Environment", "volume": "95.8K", "velocity": "+48%", "sentiment": "Neutral / Watch (61%)", "sentimentColor": "#3B82F6", "summary": "Comprehensive ecological survey and public hearings for river beautification corridor."},
+                    {"hashtag": "#BRSPrajaPoru", "tag": "Opposition Public Outreach", "category": "Opposition", "volume": "88.6K", "velocity": "+18%", "sentiment": "Critical (71%)", "sentimentColor": "#F59E0B", "summary": "Opposition ground yatras focusing on unemployment allowances and rural drinking water schemes."},
+                    {"hashtag": "#TGYouthAspirations", "tag": "TGPSC Notifications & Jobs", "category": "Youth & Jobs", "volume": "74.3K", "velocity": "+38%", "sentiment": "High Attention (59%)", "sentimentColor": "#8B5CF6", "summary": "Group 1 mains schedule announcements and skill development university partnerships."},
+                    {"hashtag": "#KaleshwaramAudit", "tag": "Irrigation Vigilance", "category": "Infrastructure", "volume": "63.1K", "velocity": "+15%", "sentiment": "Critical (65%)", "sentimentColor": "#F59E0B", "summary": "National Dam Safety Authority recommendations and interim restoration review."}
+                ]
+            },
+            "TG": {
+                "name": "Telangana",
+                "trends": [
+                    {"hashtag": "#HyderabadGrowth", "tag": "Hyderabad Infra & IT Hub", "category": "Urban Growth", "volume": "165.2K", "velocity": "+31%", "sentiment": "Positive (82%)", "sentimentColor": "#10B981", "summary": "Global GCC expansions in HITEC City and Regional Ring Road land acquisition progress."},
+                    {"hashtag": "#RythuBharosaTG", "tag": "Farmer Support & Crop Loan", "category": "Agriculture", "volume": "112.4K", "velocity": "+24%", "sentiment": "Positive (74%)", "sentimentColor": "#10B981", "summary": "Direct benefit transfers to farmer accounts and agricultural market yard reforms."},
+                    {"hashtag": "#MusiRejuvenation", "tag": "Musi Riverfront Project", "category": "Environment", "volume": "95.8K", "velocity": "+48%", "sentiment": "Neutral / Watch (61%)", "sentimentColor": "#3B82F6", "summary": "Comprehensive ecological survey and public hearings for river beautification corridor."},
+                    {"hashtag": "#BRSPrajaPoru", "tag": "Opposition Public Outreach", "category": "Opposition", "volume": "88.6K", "velocity": "+18%", "sentiment": "Critical (71%)", "sentimentColor": "#F59E0B", "summary": "Opposition ground yatras focusing on unemployment allowances and rural drinking water schemes."},
+                    {"hashtag": "#TGYouthAspirations", "tag": "TGPSC Notifications & Jobs", "category": "Youth & Jobs", "volume": "74.3K", "velocity": "+38%", "sentiment": "High Attention (59%)", "sentimentColor": "#8B5CF6", "summary": "Group 1 mains schedule announcements and skill development university partnerships."},
+                    {"hashtag": "#KaleshwaramAudit", "tag": "Irrigation Vigilance", "category": "Infrastructure", "volume": "63.1K", "velocity": "+15%", "sentiment": "Critical (65%)", "sentimentColor": "#F59E0B", "summary": "National Dam Safety Authority recommendations and interim restoration review."}
+                ]
+            },
+            "KA": {
+                "name": "Karnataka",
+                "trends": [
+                    {"hashtag": "#BengaluruInfra", "tag": "Namma Metro & Outer Ring Road", "category": "Infrastructure", "volume": "184.1K", "velocity": "+35%", "sentiment": "Neutral / Watch (60%)", "sentimentColor": "#3B82F6", "summary": "Metro Phase 2A/2B construction pace and suburban railway project corridor approvals."},
+                    {"hashtag": "#KarnatakaGuarantees", "tag": "Gruha Lakshmi & Shakti Schemes", "category": "Welfare", "volume": "129.5K", "velocity": "+16%", "sentiment": "Positive (79%)", "sentimentColor": "#10B981", "summary": "Monthly DBT disbursement audit and free public transit ridership benchmarks."},
+                    {"hashtag": "#KABJPProtests", "tag": "Opposition Anti-Graft Drive", "category": "Opposition", "volume": "96.2K", "velocity": "+22%", "sentiment": "Critical (70%)", "sentimentColor": "#F59E0B", "summary": "Statewide demonstrations over urban land allotment probe and legislative queries."},
+                    {"hashtag": "#TechKarnataka", "tag": "AI Tech Summit & Innovation Hub", "category": "Technology", "volume": "82.4K", "velocity": "+29%", "sentiment": "Positive (85%)", "sentimentColor": "#10B981", "summary": "Global capability centers launching in North Bengaluru hardware aerospace park."}
+                ]
+            },
+            "MH": {
+                "name": "Maharashtra",
+                "trends": [
+                    {"hashtag": "#LadkiBahinYojana", "tag": "Direct Women Assistance", "category": "Welfare", "volume": "210.4K", "velocity": "+45%", "sentiment": "Positive (86%)", "sentimentColor": "#10B981", "summary": "Installment transfers reaching over 2.1 Crore women across Konkan and Marathwada."},
+                    {"hashtag": "#MumbaiCoastalRoad", "tag": "Arterial Transit Connectivity", "category": "Infrastructure", "volume": "145.8K", "velocity": "+26%", "sentiment": "Positive (80%)", "sentimentColor": "#10B981", "summary": "Bandra-Worli sea link connector inauguration and northern toll-free freeway extensions."},
+                    {"hashtag": "#MVARallyMH", "tag": "Opposition Alliance Coordination", "category": "Opposition", "volume": "118.2K", "velocity": "+32%", "sentiment": "Critical (67%)", "sentimentColor": "#F59E0B", "summary": "Seat distribution conventions and agrarian MSP protest marches in Western Maharashtra."}
+                ]
+            },
+            "TN": {
+                "name": "Tamil Nadu",
+                "trends": [
+                    {"hashtag": "#DravidianModel", "tag": "Inclusive Industrial Welfare", "category": "Governance", "volume": "172.6K", "velocity": "+25%", "sentiment": "Positive (81%)", "sentimentColor": "#10B981", "summary": "Kalaignar Magalir Urimai Thogai monthly assistance and electronics export leadership."},
+                    {"hashtag": "#ChennaiMetroPhase2", "tag": "Mass Rapid Transit Network", "category": "Infrastructure", "volume": "131.0K", "velocity": "+33%", "sentiment": "Positive (78%)", "sentimentColor": "#10B981", "summary": "Tunnel boring breakthrough on Corridor 3 and elevated depot civil tenders."},
+                    {"hashtag": "#AIADMKJanashakthi", "tag": "Opposition Revival Rallies", "category": "Opposition", "volume": "104.5K", "velocity": "+21%", "sentiment": "Critical (69%)", "sentimentColor": "#F59E0B", "summary": "Statewide district functionary meetings targeting power tariff revisions and law order."}
+                ]
+            },
+            "UP": {
+                "name": "Uttar Pradesh",
+                "trends": [
+                    {"hashtag": "#UPEpressways", "tag": "Ganga & Bundelkhand Corridor", "category": "Infrastructure", "volume": "240.2K", "velocity": "+39%", "sentiment": "Positive (84%)", "sentimentColor": "#10B981", "summary": "Ganga Expressway final asphalt stretch completion and defense corridor manufacturing units."},
+                    {"hashtag": "#UPInvestments", "tag": "Global Investors Grounding", "category": "Economy", "volume": "165.7K", "velocity": "+27%", "sentiment": "Positive (82%)", "sentimentColor": "#10B981", "summary": "Noida Data Center park operationalization and agro-food processing incentives in Purvanchal."},
+                    {"hashtag": "#SPDharanaUP", "tag": "PDA Social Justice Outreach", "category": "Opposition", "volume": "122.9K", "velocity": "+18%", "sentiment": "Critical (66%)", "sentimentColor": "#F59E0B", "summary": "Block-level memorandum submissions on youth exam schedules and sugarcane dues."}
+                ]
+            }
+        }
+        
+        target = STATE_TRENDS_DATA.get(code)
+        if not target:
+            target = {
+                "name": code,
+                "trends": [
+                    {"hashtag": f"#{code}Governance", "tag": f"{code} Public Administration", "category": "Governance", "volume": "45.0K", "velocity": "+15%", "sentiment": "Positive (74%)", "sentimentColor": "#10B981", "summary": f"Key state administrative decisions and citizen welfare program updates across {code}."},
+                    {"hashtag": f"#{code}Development", "tag": "State Infrastructure Priorities", "category": "Infrastructure", "volume": "38.2K", "velocity": "+21%", "sentiment": "Positive (78%)", "sentimentColor": "#10B981", "summary": f"Highway developments, regional water works, and district connectivity reviews in {code}."},
+                    {"hashtag": f"#{code}Voices", "tag": "Civic & Opposition Discussion", "category": "Opposition", "volume": "29.5K", "velocity": "+12%", "sentiment": "Neutral / Watch (55%)", "sentimentColor": "#3B82F6", "summary": f"Public debate on youth employment opportunities, inflation control, and district representations."}
+                ]
+            }
+            
         return {
-            "stateId": stateId or "AP",
-            "stateName": "Andhra Pradesh",
-            "date": datetime.now(timezone.utc).strftime("%d %B %Y"),
-            "trends": [
-                {
-                    "hashtag": "#APDevelopment",
-                    "tag": "AP Development & Capital",
-                    "category": "Governance",
-                    "volume": "142.5K",
-                    "velocity": "+28%",
-                    "sentiment": "Positive (76%)",
-                    "sentimentColor": "#10B981",
-                    "summary": "Key discussion on Amaravati infrastructure tenders and industrial corridor investments."
-                },
-                {
-                    "hashtag": "#KootamiSankalpam",
-                    "tag": "Alliance Governance",
-                    "category": "Government",
-                    "volume": "98.2K",
-                    "velocity": "+19%",
-                    "sentiment": "Positive (81%)",
-                    "sentimentColor": "#10B981",
-                    "summary": "Welfare scheme rollout updates and joint coalition rallies across Rayalaseema."
-                },
-                {
-                    "hashtag": "#PolavaramProject",
-                    "tag": "Water & Irrigation",
-                    "category": "Infrastructure",
-                    "volume": "84.7K",
-                    "velocity": "+34%",
-                    "sentiment": "Neutral / Watch (58%)",
-                    "sentimentColor": "#3B82F6",
-                    "summary": "Diaphragm wall inspection report and central funding disbursements."
-                },
-                {
-                    "hashtag": "#YSRCPJanagalam",
-                    "tag": "Opposition Campaign",
-                    "category": "Opposition",
-                    "volume": "76.4K",
-                    "velocity": "+14%",
-                    "sentiment": "Critical (68%)",
-                    "sentimentColor": "#F59E0B",
-                    "summary": "District-level protest rallies highlighting power tariff and farmer input subsidies."
-                },
-                {
-                    "hashtag": "#APYouthJobs",
-                    "tag": "Employment & DSC",
-                    "category": "Youth & Jobs",
-                    "volume": "62.1K",
-                    "velocity": "+42%",
-                    "sentiment": "High Attention (52%)",
-                    "sentimentColor": "#8B5CF6",
-                    "summary": "Mega DSC recruitment notifications and IT investments in Visakhapatnam."
-                },
-                {
-                    "hashtag": "#AmaravatiRebuild",
-                    "tag": "State Capital",
-                    "category": "Urban Growth",
-                    "volume": "54.8K",
-                    "velocity": "+11%",
-                    "sentiment": "Positive (72%)",
-                    "sentimentColor": "#10B981",
-                    "summary": "CRDA phase 2 road packages and international finance corporation meetings."
-                }
-            ]
+            "stateId": code,
+            "stateName": target["name"],
+            "date": now_date,
+            "trends": target["trends"]
         }
 
     @api_router.get("/pi/import/template")

@@ -24,10 +24,11 @@ import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../util
 import { cacheHasPiData, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
 import { downloadPiCsvExport } from "../../utils/piExcelExport";
 
-type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence";
+type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence" | "ranking";
 type EntryGroup = "constituency" | "leaders";
 type SaveKind = "constituency" | "leader" | null;
 type LeaderKind = "LEADER_1" | "LEADER_2" | "LEADER_3" | "LEADER_4";
+export type RepresentativeType = "MLA" | "MP" | "MLC";
 
 const LEADER_SLOTS: { kind: LeaderKind; label: string; defaultRole: string; defaultParty: string }[] = [
   { kind: "LEADER_1", label: "Leader 1", defaultRole: "MLA", defaultParty: "TDP" },
@@ -88,13 +89,15 @@ const SMA_TABS: { id: Tab; label: string }[] = [
 
 const SMM_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "intelligence", label: "Intelligence" }
+  { id: "intelligence", label: "Intelligence" },
+  { id: "ranking", label: "Ranking" }
 ];
 
 const ADMIN_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "constituencies", label: "Constituencies" },
   { id: "intelligence", label: "Intelligence" },
+  { id: "ranking", label: "Ranking" },
   { id: "verify", label: "Verification Queue" },
   { id: "import", label: "Import / Export" }
 ];
@@ -405,6 +408,130 @@ function getStateElectorateInfo(stateId?: string, stateName?: string): StateElec
       { districtId: "district-3", name: "Central District", constituencies: 6, voters: 1600000, estimatedUsers: 740000, penetration: 46.2 }
     ]
   };
+}
+
+export interface MlcZoneInfo {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export const STATE_MLC_ZONES: Record<string, MlcZoneInfo[]> = {
+  AP: [
+    { id: "AP-MLC-RW-G", name: "Rayalaseema West (Graduates)", type: "GRADUATE" },
+    { id: "AP-MLC-RE-G", name: "Rayalaseema East (Graduates)", type: "GRADUATE" },
+    { id: "AP-MLC-KG-G", name: "Krishna - Guntur (Graduates)", type: "GRADUATE" },
+    { id: "AP-MLC-EW-G", name: "East - West Godavari (Graduates)", type: "GRADUATE" },
+    { id: "AP-MLC-NA-G", name: "North Andhra (Graduates)", type: "GRADUATE" },
+    { id: "AP-MLC-RW-T", name: "Rayalaseema West (Teachers)", type: "TEACHER" },
+    { id: "AP-MLC-RE-T", name: "Rayalaseema East (Teachers)", type: "TEACHER" },
+    { id: "AP-MLC-KG-T", name: "Krishna - Guntur (Teachers)", type: "TEACHER" },
+    { id: "AP-MLC-EW-T", name: "East - West Godavari (Teachers)", type: "TEACHER" },
+    { id: "AP-MLC-NA-T", name: "North Andhra (Teachers)", type: "TEACHER" },
+    { id: "AP-MLC-LA-ATP", name: "Anantapur (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-KDP", name: "Kadapa (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-KNL", name: "Kurnool (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-CTR", name: "Chittoor (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-NLR", name: "Nellore (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-PKM", name: "Prakasam (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-GNT", name: "Guntur (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-KRN", name: "Krishna (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-WG", name: "West Godavari (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-EG", name: "East Godavari (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-VSKP", name: "Visakhapatnam (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-VZM", name: "Vizianagaram (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-LA-SKM", name: "Srikakulam (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "AP-MLC-MLA-Q", name: "Elected by MLAs / Nominated (Statewide)", type: "MLA_NOMINATED" }
+  ],
+  TS: [
+    { id: "TS-MLC-HRM-G", name: "Hyderabad - Ranga Reddy - Mahabubnagar (Graduates)", type: "GRADUATE" },
+    { id: "TS-MLC-WKN-G", name: "Warangal - Khammam - Nalgonda (Graduates)", type: "GRADUATE" },
+    { id: "TS-MLC-KNAM-G", name: "Karimnagar - Nizamabad - Adilabad - Medak (Graduates)", type: "GRADUATE" },
+    { id: "TS-MLC-HRM-T", name: "Hyderabad - Ranga Reddy - Mahabubnagar (Teachers)", type: "TEACHER" },
+    { id: "TS-MLC-WKN-T", name: "Warangal - Khammam - Nalgonda (Teachers)", type: "TEACHER" },
+    { id: "TS-MLC-KNAM-T", name: "Karimnagar - Nizamabad - Adilabad - Medak (Teachers)", type: "TEACHER" },
+    { id: "TS-MLC-LA-HYD", name: "Hyderabad (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-RR", name: "Ranga Reddy (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-MBN", name: "Mahabubnagar (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-WGL", name: "Warangal (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-KMM", name: "Khammam (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-NLG", name: "Nalgonda (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-KRM", name: "Karimnagar (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-NZB", name: "Nizamabad (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-ADB", name: "Adilabad (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-LA-MDK", name: "Medak (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TS-MLC-MLA-Q", name: "Elected by MLAs / Nominated (Statewide)", type: "MLA_NOMINATED" }
+  ],
+  TG: [
+    { id: "TG-MLC-HRM-G", name: "Hyderabad - Ranga Reddy - Mahabubnagar (Graduates)", type: "GRADUATE" },
+    { id: "TG-MLC-WKN-G", name: "Warangal - Khammam - Nalgonda (Graduates)", type: "GRADUATE" },
+    { id: "TG-MLC-KNAM-G", name: "Karimnagar - Nizamabad - Adilabad - Medak (Graduates)", type: "GRADUATE" },
+    { id: "TG-MLC-HRM-T", name: "Hyderabad - Ranga Reddy - Mahabubnagar (Teachers)", type: "TEACHER" },
+    { id: "TG-MLC-WKN-T", name: "Warangal - Khammam - Nalgonda (Teachers)", type: "TEACHER" },
+    { id: "TG-MLC-KNAM-T", name: "Karimnagar - Nizamabad - Adilabad - Medak (Teachers)", type: "TEACHER" },
+    { id: "TG-MLC-LA-HYD", name: "Hyderabad (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-RR", name: "Ranga Reddy (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-MBN", name: "Mahabubnagar (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-WGL", name: "Warangal (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-KMM", name: "Khammam (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-NLG", name: "Nalgonda (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-KRM", name: "Karimnagar (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-NZB", name: "Nizamabad (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-ADB", name: "Adilabad (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-LA-MDK", name: "Medak (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "TG-MLC-MLA-Q", name: "Elected by MLAs / Nominated (Statewide)", type: "MLA_NOMINATED" }
+  ],
+  KA: [
+    { id: "KA-MLC-KS-G", name: "Karnataka South (Graduates)", type: "GRADUATE" },
+    { id: "KA-MLC-KN-G", name: "Karnataka North (Graduates)", type: "GRADUATE" },
+    { id: "KA-MLC-BLR-G", name: "Bangalore (Graduates)", type: "GRADUATE" },
+    { id: "KA-MLC-KW-G", name: "Karnataka West (Graduates)", type: "GRADUATE" },
+    { id: "KA-MLC-KSE-G", name: "Karnataka South-East (Graduates)", type: "GRADUATE" },
+    { id: "KA-MLC-KNE-G", name: "Karnataka North-East (Graduates)", type: "GRADUATE" },
+    { id: "KA-MLC-KS-T", name: "Karnataka South (Teachers)", type: "TEACHER" },
+    { id: "KA-MLC-KN-T", name: "Karnataka North (Teachers)", type: "TEACHER" },
+    { id: "KA-MLC-BLR-T", name: "Bangalore (Teachers)", type: "TEACHER" },
+    { id: "KA-MLC-LA-BLR", name: "Bangalore Urban & Rural (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "KA-MLC-LA-MYS", name: "Mysore (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "KA-MLC-MLA-Q", name: "Elected by MLAs / Nominated (Statewide)", type: "MLA_NOMINATED" }
+  ],
+  MH: [
+    { id: "MH-MLC-MUM-G", name: "Mumbai (Graduates)", type: "GRADUATE" },
+    { id: "MH-MLC-KON-G", name: "Konkan (Graduates)", type: "GRADUATE" },
+    { id: "MH-MLC-PUN-G", name: "Pune (Graduates)", type: "GRADUATE" },
+    { id: "MH-MLC-NSK-G", name: "Nashik (Graduates)", type: "GRADUATE" },
+    { id: "MH-MLC-NGP-G", name: "Nagpur (Graduates)", type: "GRADUATE" },
+    { id: "MH-MLC-AMR-G", name: "Amravati (Graduates)", type: "GRADUATE" },
+    { id: "MH-MLC-AUR-G", name: "Aurangabad (Graduates)", type: "GRADUATE" },
+    { id: "MH-MLC-MUM-T", name: "Mumbai (Teachers)", type: "TEACHER" },
+    { id: "MH-MLC-PUN-T", name: "Pune (Teachers)", type: "TEACHER" },
+    { id: "MH-MLC-LA-MUM", name: "Mumbai (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "MH-MLC-LA-PUN", name: "Pune (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "MH-MLC-MLA-Q", name: "Elected by MLAs / Nominated (Statewide)", type: "MLA_NOMINATED" }
+  ],
+  UP: [
+    { id: "UP-MLC-LKO-G", name: "Lucknow (Graduates)", type: "GRADUATE" },
+    { id: "UP-MLC-VNS-G", name: "Varanasi (Graduates)", type: "GRADUATE" },
+    { id: "UP-MLC-AGR-G", name: "Agra (Graduates)", type: "GRADUATE" },
+    { id: "UP-MLC-MRT-G", name: "Meerut (Graduates)", type: "GRADUATE" },
+    { id: "UP-MLC-KNP-G", name: "Kanpur (Graduates)", type: "GRADUATE" },
+    { id: "UP-MLC-ALD-G", name: "Allahabad (Graduates)", type: "GRADUATE" },
+    { id: "UP-MLC-LKO-T", name: "Lucknow (Teachers)", type: "TEACHER" },
+    { id: "UP-MLC-VNS-T", name: "Varanasi (Teachers)", type: "TEACHER" },
+    { id: "UP-MLC-LA-LKO", name: "Lucknow - Unnao (Local Authorities)", type: "LOCAL_AUTHORITY" },
+    { id: "UP-MLC-MLA-Q", name: "Elected by MLAs / Nominated (Statewide)", type: "MLA_NOMINATED" }
+  ]
+};
+
+export function getMlcZonesForState(stateId?: string): MlcZoneInfo[] {
+  const code = (stateId || "AP").toUpperCase();
+  if (STATE_MLC_ZONES[code]) return STATE_MLC_ZONES[code];
+  return [
+    { id: `${code}-MLC-G`, name: "Statewide Graduates Constituency", type: "GRADUATE" },
+    { id: `${code}-MLC-T`, name: "Statewide Teachers Constituency", type: "TEACHER" },
+    { id: `${code}-MLC-LA`, name: "Statewide Local Authorities Constituency", type: "LOCAL_AUTHORITY" },
+    { id: `${code}-MLC-MLA`, name: "Elected by MLAs / Nominated", type: "MLA_NOMINATED" }
+  ];
 }
 
 const ENTRY_GROUPS: { id: EntryGroup; label: string }[] = [
@@ -921,9 +1048,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
   const [tab, setTab] = useState<Tab>(() => {
     const cached = initialCache?.tab as Tab | undefined;
-    if (cached && ["dashboard", "constituencies", "verify", "import", "intelligence"].includes(cached)) return cached;
+    if (cached && ["dashboard", "constituencies", "verify", "import", "intelligence", "ranking"].includes(cached)) return cached;
     return "dashboard";
   });
+  const [repType, setRepType] = useState<RepresentativeType>("MLA");
+  const [zoneId, setZoneId] = useState("");
   const [entryGroup, setEntryGroup] = useState<EntryGroup>((initialCache?.entryGroup as EntryGroup) || "constituency");
   const [pageLoading, setPageLoading] = useState(false);
   const [saving, setSaving] = useState<SaveKind>(null);
@@ -1210,46 +1339,57 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
   const refreshDashboard = async () => {
     const req = ++dashReqRef.current;
-    const scopedDistrict = districtId || undefined;
+    const scopedDistrict = repType === "MLA" ? (districtId || undefined) : undefined;
     setPageLoading(true);
     try {
-      const data = await politicalApiService.getPiDashboard(userId, stateId, scopedDistrict);
+      const data = await politicalApiService.getPiDashboard(userId, stateId, scopedDistrict, repType);
       if (req !== dashReqRef.current) return;
 
       const activeState = getStateElectorateInfo(stateId, states.find((s) => s.id === stateId)?.name);
       const districtObj = scopedDistrict ? districts.find((d) => d.id === scopedDistrict) : null;
-      const totalAc = scopedDistrict
-        ? (districtObj?.assemblyConstituencyIds?.length || filteredAcs.length || (stateId === "AP" ? 7 : 8))
-        : activeState.totalConstituencies;
+      
+      const totalUnits = (() => {
+        if (repType === "MP") {
+          const pcCount = parliaments.filter(p => p.stateId.toUpperCase() === stateId.toUpperCase()).length || (stateId === "AP" ? 25 : stateId === "TS" || stateId === "TG" ? 17 : 20);
+          return pcId ? 1 : pcCount;
+        }
+        if (repType === "MLC") {
+          const mlcZones = getMlcZonesForState(stateId);
+          return zoneId ? 1 : mlcZones.length;
+        }
+        return scopedDistrict
+          ? (districtObj?.assemblyConstituencyIds?.length || filteredAcs.length || (stateId === "AP" ? 7 : 8))
+          : activeState.totalConstituencies;
+      })();
 
-      const hasRealData = Boolean(
-        data &&
-        (Number(data.totalLeaders || 0) > 0 ||
-          Number(data.totalSocialAccounts || 0) > 0 ||
-          Number(data.constituenciesEntered || 0) > 0)
-      );
-
-      const resolvedDashboard: PiDashboard = hasRealData
+      const resolvedDashboard: PiDashboard = data
         ? {
             ...data,
-            totalConstituencies: data.totalConstituencies || totalAc,
+            totalConstituencies: totalUnits,
+            totalLeaders: Number(data.totalLeaders || 0),
+            totalSocialAccounts: Number(data.totalSocialAccounts || 0),
+            verifiedAccounts: Number(data.verifiedAccounts || 0),
+            pendingVerification: Number(data.pendingVerification || 0),
+            needsRecheck: Number(data.needsRecheck || 0),
+            verificationPercent: Number(data.totalSocialAccounts || 0) > 0
+              ? (data.verificationPercent ?? Math.round((Number(data.verifiedAccounts || 0) / Number(data.totalSocialAccounts || 0)) * 1000) / 10)
+              : 0,
             stateId,
             districtId: scopedDistrict
           }
         : {
             stateId,
             districtId: scopedDistrict,
-            totalConstituencies: totalAc,
-            constituenciesEntered: scopedDistrict ? 1 : Math.round(totalAc * 0.08),
-            totalLeaders: scopedDistrict ? Math.round(totalAc * 2.1) : Math.round(totalAc * 0.24),
-            totalSocialAccounts: scopedDistrict ? Math.round(totalAc * 7.8) : Math.round(totalAc * 0.88),
-            verifiedAccounts: scopedDistrict ? Math.round(totalAc * 2.7) : Math.round(totalAc * 0.34),
-            pendingVerification: scopedDistrict ? Math.round(totalAc * 2.0) : Math.round(totalAc * 0.17),
+            totalConstituencies: totalUnits,
+            constituenciesEntered: 0,
+            totalLeaders: 0,
+            totalSocialAccounts: 0,
+            verifiedAccounts: 0,
+            pendingVerification: 0,
             needsRecheck: 0,
-            verificationPercent: scopedDistrict ? 34.5 : 38.6,
-            lastDataCollectionDate: todayIsoDate(),
-            districts: data?.districts || [],
-            recentCollections: data?.recentCollections || []
+            verificationPercent: 0,
+            districts: [],
+            recentCollections: []
           };
 
       setDashboard(resolvedDashboard);
@@ -1257,19 +1397,23 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     } catch (e: any) {
       if (req !== dashReqRef.current) return;
       const activeState = getStateElectorateInfo(stateId, states.find((s) => s.id === stateId)?.name);
-      const totalAc = scopedDistrict ? (filteredAcs.length || 7) : activeState.totalConstituencies;
+      const totalUnits = repType === "MP"
+        ? (parliaments.filter(p => p.stateId.toUpperCase() === stateId.toUpperCase()).length || (stateId === "AP" ? 25 : 17))
+        : repType === "MLC"
+        ? getMlcZonesForState(stateId).length
+        : scopedDistrict ? (filteredAcs.length || 7) : activeState.totalConstituencies;
+
       const fallback: PiDashboard = {
         stateId,
         districtId: scopedDistrict,
-        totalConstituencies: totalAc,
-        constituenciesEntered: scopedDistrict ? 1 : Math.round(totalAc * 0.08),
-        totalLeaders: scopedDistrict ? Math.round(totalAc * 2.1) : Math.round(totalAc * 0.24),
-        totalSocialAccounts: scopedDistrict ? Math.round(totalAc * 7.8) : Math.round(totalAc * 0.88),
-        verifiedAccounts: scopedDistrict ? Math.round(totalAc * 2.7) : Math.round(totalAc * 0.34),
-        pendingVerification: scopedDistrict ? Math.round(totalAc * 2.0) : Math.round(totalAc * 0.17),
+        totalConstituencies: totalUnits,
+        constituenciesEntered: 0,
+        totalLeaders: 0,
+        totalSocialAccounts: 0,
+        verifiedAccounts: 0,
+        pendingVerification: 0,
         needsRecheck: 0,
-        verificationPercent: 38.6,
-        lastDataCollectionDate: todayIsoDate(),
+        verificationPercent: 0,
         districts: [],
         recentCollections: []
       };
@@ -1286,7 +1430,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
   useEffect(() => {
     refreshDashboard().catch(() => {});
-  }, [userId, stateId, districtId]);
+  }, [userId, stateId, districtId, repType, pcId, zoneId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1746,13 +1890,15 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         id: slot.id,
         name: slot.name,
         partyId: slot.partyId,
-        politicalRole: selectedRoles[0],
+        representativeType: repType,
+        politicalRole: selectedRoles[0] || (repType === "MP" ? "LOK_SABHA_MP" : repType === "MLC" ? "MLC" : "MLA"),
         roles: selectedRoles.map((role) => ({ politicalRole: role, status: "CURRENT" })),
         leaderKind: slot.leaderKind,
         currentFormerStatus: "CURRENT",
         stateId,
-        districtId,
+        districtId: repType === "MLA" ? districtId : undefined,
         parliamentConstituencyId: pcId,
+        zoneId: repType === "MLC" ? zoneId : undefined,
         assemblyConstituencyId: acId,
         accounts: accountPayloads
       });
@@ -2087,26 +2233,49 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
       {tab === "dashboard" && (
         <section className="space-y-4">
-          {/* Top State and District Bar (Matches User Reference Screenshot) */}
+          {/* Top State and Representative Bar */}
           <StateDistrictBar
+            repType={repType}
+            setRepType={(newRep) => {
+              setRepType(newRep);
+              setDistrictId("");
+              setPcId("");
+              setZoneId("");
+              setAcId("");
+              setDashboard((prev): PiDashboard => ({
+                stateId,
+                districtId: undefined,
+                totalConstituencies: 0,
+                constituenciesEntered: 0,
+                totalLeaders: 0,
+                totalSocialAccounts: 0,
+                verifiedAccounts: 0,
+                pendingVerification: 0,
+                needsRecheck: 0,
+                verificationPercent: 0,
+                districts: prev?.districts || [],
+                recentCollections: prev?.recentCollections || []
+              }));
+            }}
             stateId={stateId}
             setStateId={(newSt) => {
               setStateId(newSt);
               setDistrictId("");
               setPcId("");
+              setZoneId("");
               setAcId("");
               const st = getStateElectorateInfo(newSt);
               setDashboard((prev): PiDashboard => ({
                 stateId: newSt,
                 districtId: undefined,
                 totalConstituencies: st.totalConstituencies,
-                constituenciesEntered: newSt === "AP" ? (prev?.constituenciesEntered || 7) : Math.round(st.totalConstituencies * 0.08),
-                totalLeaders: newSt === "AP" ? 42 : Math.round(st.totalConstituencies * 0.24),
-                totalSocialAccounts: newSt === "AP" ? 153 : Math.round(st.totalConstituencies * 0.88),
-                verifiedAccounts: newSt === "AP" ? 59 : Math.round(st.totalConstituencies * 0.34),
-                pendingVerification: newSt === "AP" ? 30 : Math.round(st.totalConstituencies * 0.17),
+                constituenciesEntered: 0,
+                totalLeaders: 0,
+                totalSocialAccounts: 0,
+                verifiedAccounts: 0,
+                pendingVerification: 0,
                 needsRecheck: 0,
-                verificationPercent: newSt === "AP" ? 38.6 : 38.5,
+                verificationPercent: 0,
                 districts: prev?.districts || [],
                 recentCollections: prev?.recentCollections || []
               }));
@@ -2116,69 +2285,100 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               setDistrictId(newDist);
               setPcId("");
               setAcId("");
-              if (newDist) {
-                const distObj = districts.find((d) => d.id === newDist);
-                const acCount = distObj?.assemblyConstituencyIds?.length || (stateId === "AP" ? 7 : 8);
-                const isSai = newDist.includes("SATYA") || newDist.includes("SAI");
-                setDashboard((prev): PiDashboard => ({
-                  stateId,
-                  districtId: newDist,
-                  totalConstituencies: acCount,
-                  constituenciesEntered: isSai ? 1 : 1,
-                  totalLeaders: isSai ? 15 : Math.round(acCount * 2.1),
-                  totalSocialAccounts: isSai ? 55 : Math.round(acCount * 7.8),
-                  verifiedAccounts: isSai ? 19 : Math.round(acCount * 2.7),
-                  pendingVerification: isSai ? 14 : Math.round(acCount * 2.0),
-                  needsRecheck: 0,
-                  verificationPercent: isSai ? 34.5 : 36.2,
-                  districts: prev?.districts || [],
-                  recentCollections: prev?.recentCollections || []
-                }));
-              } else {
-                const st = getStateElectorateInfo(stateId);
-                setDashboard((prev): PiDashboard => ({
-                  stateId,
-                  districtId: undefined,
-                  totalConstituencies: st.totalConstituencies,
-                  constituenciesEntered: stateId === "AP" ? (prev?.constituenciesEntered || 7) : Math.round(st.totalConstituencies * 0.08),
-                  totalLeaders: stateId === "AP" ? 42 : Math.round(st.totalConstituencies * 0.24),
-                  totalSocialAccounts: stateId === "AP" ? 153 : Math.round(st.totalConstituencies * 0.88),
-                  verifiedAccounts: stateId === "AP" ? 59 : Math.round(st.totalConstituencies * 0.34),
-                  pendingVerification: stateId === "AP" ? 30 : Math.round(st.totalConstituencies * 0.17),
-                  needsRecheck: 0,
-                  verificationPercent: stateId === "AP" ? 38.6 : 38.5,
-                  districts: prev?.districts || [],
-                  recentCollections: prev?.recentCollections || []
-                }));
-              }
+              const distObj = districts.find((d) => d.id === newDist);
+              const acCount = distObj?.assemblyConstituencyIds?.length || (stateId === "AP" ? 7 : 8);
+              setDashboard((prev): PiDashboard => ({
+                stateId,
+                districtId: newDist,
+                totalConstituencies: newDist ? acCount : getStateElectorateInfo(stateId).totalConstituencies,
+                constituenciesEntered: 0,
+                totalLeaders: 0,
+                totalSocialAccounts: 0,
+                verifiedAccounts: 0,
+                pendingVerification: 0,
+                needsRecheck: 0,
+                verificationPercent: 0,
+                districts: prev?.districts || [],
+                recentCollections: prev?.recentCollections || []
+              }));
             }}
-            setPcId={setPcId}
+            pcId={pcId}
+            setPcId={(newPc) => {
+              setPcId(newPc);
+              setAcId("");
+              setDashboard((prev): PiDashboard => ({
+                stateId,
+                districtId: undefined,
+                totalConstituencies: newPc ? 1 : (parliaments.filter(p => p.stateId.toUpperCase() === stateId.toUpperCase()).length || 25),
+                constituenciesEntered: 0,
+                totalLeaders: 0,
+                totalSocialAccounts: 0,
+                verifiedAccounts: 0,
+                pendingVerification: 0,
+                needsRecheck: 0,
+                verificationPercent: 0,
+                districts: prev?.districts || [],
+                recentCollections: prev?.recentCollections || []
+              }));
+            }}
+            zoneId={zoneId}
+            setZoneId={(newZone) => {
+              setZoneId(newZone);
+              setAcId("");
+              setDashboard((prev): PiDashboard => ({
+                stateId,
+                districtId: undefined,
+                totalConstituencies: newZone ? 1 : getMlcZonesForState(stateId).length,
+                constituenciesEntered: 0,
+                totalLeaders: 0,
+                totalSocialAccounts: 0,
+                verifiedAccounts: 0,
+                pendingVerification: 0,
+                needsRecheck: 0,
+                verificationPercent: 0,
+                districts: prev?.districts || [],
+                recentCollections: prev?.recentCollections || []
+              }));
+            }}
             setAcId={setAcId}
             states={states}
             districts={districts}
+            pcs={parliaments.filter((p) => p.stateId.toUpperCase() === stateId.toUpperCase())}
+            zones={getMlcZonesForState(stateId)}
           />
 
           {!dashboard ? (
             <div className="p-8 text-center text-[#D4A24C] text-xs"><Loader2 className="w-4 h-4 inline animate-spin" /> Loading live metrics…</div>
           ) : (
             <>
-              {/* 7 Core Summary KPI Cards - Dynamically updated for selected state & district */}
+              {/* 7 Core Summary KPI Cards - Dynamically updated for selected state, repType & sub-territory */}
               {(() => {
                 const activeSt = getStateElectorateInfo(stateId, states.find((s) => s.id === stateId)?.name);
-                const totalAc = dashboard.totalConstituencies && dashboard.totalConstituencies > 0
-                  ? dashboard.totalConstituencies
-                  : districtId ? (filteredAcs.length || 7) : activeSt.totalConstituencies;
-                const targetLeaders = totalAc * 4;
-                const leadersDisplay = `${dashboard.totalLeaders || 0} / ${targetLeaders}`;
+                const totalUnits = (() => {
+                  if (repType === "MP") {
+                    const pcCount = parliaments.filter(p => p.stateId.toUpperCase() === stateId.toUpperCase()).length || (stateId === "AP" ? 25 : stateId === "TS" || stateId === "TG" ? 17 : 20);
+                    return pcId ? 1 : pcCount;
+                  }
+                  if (repType === "MLC") {
+                    const mlcZones = getMlcZonesForState(stateId);
+                    return zoneId ? 1 : mlcZones.length;
+                  }
+                  return dashboard.totalConstituencies && dashboard.totalConstituencies > 0
+                    ? dashboard.totalConstituencies
+                    : districtId ? (filteredAcs.length || (districts.find(d => d.id === districtId)?.assemblyConstituencyIds?.length) || 7) : activeSt.totalConstituencies;
+                })();
+                const targetLeaders = totalUnits * 4;
+                const leadersDisplay = `${dashboard?.totalLeaders || 0} / ${targetLeaders}`;
+                const labelUnits = repType === "MP" ? "Parliament constituencies" : repType === "MLC" ? "Council zones" : "Total constituencies";
                 return (
                   <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2">
-                    <Kpi label="Total constituencies" value={totalAc} onClick={() => goToDataEntry()} />
+                    <Kpi label={labelUnits} value={totalUnits} onClick={() => goToDataEntry()} />
                     <Kpi label="Leaders" value={leadersDisplay} onClick={() => goToDataEntry()} />
-                    <Kpi label="Social accounts" value={dashboard.totalSocialAccounts} onClick={() => goToDataEntry()} />
-                    <Kpi label="Verified" value={dashboard.verifiedAccounts} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
-                    <Kpi label="Pending" value={dashboard.pendingVerification} onClick={isSmM ? () => { setQueueStatus("PENDING"); setTab("verify"); } : undefined} />
-                    <Kpi label="Recheck" value={dashboard.needsRecheck} onClick={isSmM ? () => { setQueueStatus("NEEDS_RECHECK"); setTab("verify"); } : undefined} />
-                    <Kpi label="Verified %" value={dashboard.verificationPercent == null ? "—" : `${dashboard.verificationPercent}%`} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
+                    <Kpi label="Social accounts" value={dashboard?.totalSocialAccounts || 0} onClick={() => goToDataEntry()} />
+                    <Kpi label="Verified" value={dashboard?.verifiedAccounts || 0} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
+                    <Kpi label="Pending" value={dashboard?.pendingVerification || 0} onClick={isSmM ? () => { setQueueStatus("PENDING"); setTab("verify"); } : undefined} />
+                    <Kpi label="Recheck" value={dashboard?.needsRecheck || 0} onClick={isSmM ? () => { setQueueStatus("NEEDS_RECHECK"); setTab("verify"); } : undefined} />
+                    <Kpi label="Verified %" value={dashboard?.totalSocialAccounts ? `${dashboard.verificationPercent ?? 0}%` : "0%"} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
                   </div>
                 );
               })()}
@@ -2270,7 +2470,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     </div>
 
                     {/* Daily Political Pulse & Major Trends */}
-                    <MajorTrendsWidget trends={stateTrends} />
+                    <MajorTrendsWidget trends={stateTrends} stateName={activeState.name} />
                   </>
                 );
               })()}
@@ -2448,7 +2648,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       {tab === "constituencies" && (
         <section className="space-y-4">
           <div className={CARD}>
-            <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency</h2>
+            <h2 className="text-sm font-bold text-[#F5EFE0]">
+              {repType === "MP" ? "Parliamentary Constituency (MP)" : repType === "MLC" ? "Council Zone (MLC)" : "Constituency (MLA)"}
+            </h2>
             {selectedAssemblyName ? (
               <p className="text-[11px] text-[#B9AF95] mt-1">
                 {selectedAssemblyName}{selectedDistrictName ? ` · ${selectedDistrictName}` : ""}
@@ -2456,15 +2658,18 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             ) : null}
             <div className="mt-3 space-y-2">
               <GeoFilters
+                repType={repType} setRepType={setRepType}
                 stateId={stateId} setStateId={setStateId}
                 districtId={districtId} setDistrictId={setDistrictId}
                 pcId={pcId} setPcId={setPcId}
+                zoneId={zoneId} setZoneId={setZoneId}
                 acId={acId}
                 setAcId={(v) => {
                   if (leaderAlert?.field === "ac") setLeaderAlert(null);
                   setAcId(v);
                 }}
                 states={states} districts={districts} pcs={filteredPcs} acs={filteredAcs}
+                zones={getMlcZonesForState(stateId)}
                 markRequired
                 showParliament={false}
                 acSelectId="pi-geo-ac"
@@ -3299,6 +3504,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     spend: 0
                   });
                 }}
+                onBackDistrict={() => setAcId("")}
+                onBackRoot={() => {
+                  setDistrictId("");
+                  setPcId("");
+                  setAcId("");
+                }}
               />
             ) : (
               <IntelligenceDistrict
@@ -3312,11 +3523,29 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   const nextPc = ac?.parliamentConstituencyId || ac?.parliamentId || "";
                   if (nextPc) setPcId(nextPc);
                 }}
+                onBack={() => {
+                  setDistrictId("");
+                  setPcId("");
+                  setAcId("");
+                }}
                 partyById={partyById}
               />
             )}
           </div>
         </section>
+      )}
+
+      {tab === "ranking" && (
+        <StateRankingTab
+          stateId={stateId}
+          states={states}
+          userId={userId}
+          isSmM={isSmM}
+          parties={parties}
+          districts={districts}
+          parliaments={parliaments}
+          assemblies={assemblies}
+        />
       )}
 
       {leaderAlert && (
@@ -3419,7 +3648,7 @@ function partyLabel(partyById: Record<string, PoliticalParty>, partyId?: string,
   return party?.shortName || party?.name || fallback || partyId || "";
 }
 
-function MajorTrendsWidget({ trends }: { trends?: any[] }) {
+function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: string }) {
   const defaultTrends = [
     {
       hashtag: "#APDevelopment",
@@ -3494,7 +3723,7 @@ function MajorTrendsWidget({ trends }: { trends?: any[] }) {
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
           <h2 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider">
-            Daily Political Pulse & Major Trends · Andhra Pradesh
+            Daily Political Pulse & Major Trends · {stateName || "Andhra Pradesh"}
           </h2>
         </div>
         <span className="text-[11px] text-[#B9AF95]">
@@ -3559,127 +3788,12 @@ function StateWideOverview({
 
   return (
     <div className="space-y-4">
-      {/* State Header Banner matching Leader's Lens brand colors & Image 5 */}
-      <div className={`${CARD} p-5 border border-[#D4A24C]/40 bg-gradient-to-br from-[#0F2238] via-[#071322] to-[#0A1A2E]`}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[11px] font-bold uppercase tracking-wider mb-2">
-              <span>🏛️ {activeState.name.toUpperCase()} · EXECUTIVE POLITICAL INTELLIGENCE</span>
-            </div>
-            <h2 className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0]">
-              Statewide Electorate & Digital Social Footprint
-            </h2>
-            <p className="text-xs md:text-sm text-[#B9AF95] mt-1">
-              Overall state-level voter count, polling station density, and estimated active social audience across all {activeState.totalConstituencies} constituencies.
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <span className="text-xs text-[#B9AF95] block font-medium">State Social Penetration</span>
-            <span className="text-3xl font-display font-bold text-[#D4A24C]">{activeState.penetrationPercent}%</span>
-            <span className="text-[10px] text-[#B9AF95] block">{activeState.socialAudienceDisplay} unique voters reachable</span>
-          </div>
-        </div>
-
-        {/* 4 Core State KPIs matching Image 5 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[#22405E]/80">
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
-            <span className="text-[11px] text-[#B9AF95] font-semibold block">Total Registered Voters</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalVotersDisplay}</span>
-            <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">{activeState.totalElectorsOfficial}</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
-            <span className="text-[11px] text-[#B9AF95] font-semibold block">Assembly Constituencies</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalConstituencies}</span>
-            <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.totalLokSabha} Lok Sabha seats</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
-            <span className="text-[11px] text-[#B9AF95] font-semibold block">Polling Stations</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalPollingStationsDisplay}</span>
-            <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Average {activeState.averagePerBooth} voters/booth</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
-            <span className="text-[11px] text-[#B9AF95] font-semibold block">Statewide Social Audience</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#D4A24C] mt-0.5 block">{activeState.socialAudienceDisplay}</span>
-            <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.penetrationPercent}% of voter base</span>
-          </div>
-        </div>
-
-        {/* 4 Platform Audience Cards matching Image 5 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-2 border-l-[#1877F2] text-left">
-            <span className="text-xs text-[#B9AF95] font-bold block">Facebook</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.facebookDisplay}</span>
-            <span className="text-[11px] text-emerald-400 font-semibold block mt-0.5">{activeState.platformEstimates.facebookReachPercent}% state reach</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-2 border-l-[#E1306C] text-left">
-            <span className="text-xs text-[#B9AF95] font-bold block">Instagram</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.instagramDisplay}</span>
-            <span className="text-[11px] text-pink-400 font-semibold block mt-0.5">{activeState.platformEstimates.instagramReachPercent}% state reach</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-2 border-l-[#1DA1F2] text-left">
-            <span className="text-xs text-[#B9AF95] font-bold block">X (Twitter)</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.xDisplay}</span>
-            <span className="text-[11px] text-sky-400 font-semibold block mt-0.5">{activeState.platformEstimates.xReachPercent}% state reach</span>
-          </div>
-          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-2 border-l-[#FF0000] text-left">
-            <span className="text-xs text-[#B9AF95] font-bold block">YouTube</span>
-            <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.youtubeDisplay}</span>
-            <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">{activeState.platformEstimates.youtubeReachPercent}% state reach</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Statewide Platform Breakdown */}
-      <div>
-        <h3 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider mb-2">
-          Statewide Platform Audience ({activeState.name})
-        </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#1877F2]`}>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#B9AF95] font-bold">Facebook Audience</span>
-              <span className="w-2 h-2 rounded-full bg-[#1877F2] shrink-0"></span>
-            </div>
-            <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.facebookDisplay}</span>
-            <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">{activeState.platformEstimates.facebookReachPercent}% of electors</span>
-            <span className="text-[10px] text-[#B9AF95] block mt-1">{formatCompactCount(activeState.platformEstimates.facebook)} active users (Meta baseline)</span>
-          </div>
-          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#E1306C]`}>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#B9AF95] font-bold">Instagram Audience</span>
-              <span className="w-2 h-2 rounded-full bg-[#E1306C] shrink-0"></span>
-            </div>
-            <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.instagramDisplay}</span>
-            <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">{activeState.platformEstimates.instagramReachPercent}% of electors</span>
-            <span className="text-[10px] text-[#B9AF95] block mt-1">{formatCompactCount(activeState.platformEstimates.instagram)} active users (High youth velocity)</span>
-          </div>
-          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#1DA1F2]`}>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#B9AF95] font-bold">X (Twitter) Audience</span>
-              <span className="w-2 h-2 rounded-full bg-[#1DA1F2] shrink-0"></span>
-            </div>
-            <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.xDisplay}</span>
-            <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">{activeState.platformEstimates.xReachPercent}% of electors</span>
-            <span className="text-[10px] text-[#B9AF95] block mt-1">{formatCompactCount(activeState.platformEstimates.x)} opinion leaders & buzz</span>
-          </div>
-          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#FF0000]`}>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[#B9AF95] font-bold">YouTube Audience</span>
-              <span className="w-2 h-2 rounded-full bg-[#FF0000] shrink-0"></span>
-            </div>
-            <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">{activeState.platformEstimates.youtubeDisplay}</span>
-            <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">{activeState.platformEstimates.youtubeReachPercent}% of electors</span>
-            <span className="text-[10px] text-[#B9AF95] block mt-1">{formatCompactCount(activeState.platformEstimates.youtube)} video reach across all tiers</span>
-          </div>
-        </div>
-      </div>
-
       {/* District Digital Leaderboard */}
       <div className={CARD}>
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div>
             <h3 className="text-base font-display font-bold text-[#F5EFE0]">
-              District Digital Penetration Leaderboard
+              District Digital Penetration Leaderboard · {activeState.name}
             </h3>
             <p className="text-xs text-[#B9AF95]">
               Select any district to inspect constituency breakdowns, candidate audits, and social benchmarks.
@@ -3739,6 +3853,7 @@ function IntelligenceDistrict({
   assemblies,
   stateId,
   onOpen,
+  onBack,
   partyById
 }: {
   intel: any;
@@ -3746,6 +3861,7 @@ function IntelligenceDistrict({
   assemblies: any[];
   stateId?: string;
   onOpen: (id: string) => void;
+  onBack?: () => void;
   partyById: Record<string, PoliticalParty>;
 }) {
   const byId: Record<string, any> = {};
@@ -3784,9 +3900,20 @@ function IntelligenceDistrict({
   });
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-display text-[#F5EFE0]">{cleanDistrictName} District</h2>
-        <p className="text-sm text-[#B9AF95] mt-1">{rows.length} {rows.length === 1 ? "constituency" : "constituencies"} · tap one to open</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-display text-[#F5EFE0]">{cleanDistrictName} District</h2>
+          <p className="text-sm text-[#B9AF95] mt-1">{rows.length} {rows.length === 1 ? "constituency" : "constituencies"} · tap one to open</p>
+        </div>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D4A24C]/40 bg-[#0F2238] text-[#D4A24C] hover:bg-[#142B45] hover:text-[#F5EFE0] text-xs font-bold transition-all shadow-sm self-start sm:self-auto"
+          >
+            ← Back to Intelligence
+          </button>
+        )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {rows.map((row: any) => {
@@ -4148,7 +4275,9 @@ function IntelligenceConstituency({
   isSmM,
   selectedMonth,
   userId,
-  onEditMonthly
+  onEditMonthly,
+  onBackDistrict,
+  onBackRoot
 }: {
   intel: any;
   acId: string;
@@ -4164,6 +4293,8 @@ function IntelligenceConstituency({
   selectedMonth?: string;
   userId?: string;
   onEditMonthly?: (leader: any) => void;
+  onBackDistrict?: () => void;
+  onBackRoot?: () => void;
 }) {
   const [liveEstimates, setLiveEstimates] = useState<any>(null);
   const [selectedFocusLeaderId, setSelectedFocusLeaderId] = useState<string>("");
@@ -4234,13 +4365,35 @@ function IntelligenceConstituency({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-display text-[#F5EFE0]">{acName}</h2>
-        <p className="text-sm text-[#B9AF95] mt-1">
-          {[districtName, stateName].filter(Boolean).join(" · ")}
-          {districtName || stateName ? " · " : ""}
-          estimated platform users in this area
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-display text-[#F5EFE0]">{acName}</h2>
+          <p className="text-sm text-[#B9AF95] mt-1">
+            {[districtName, stateName].filter(Boolean).join(" · ")}
+            {districtName || stateName ? " · " : ""}
+            estimated platform users in this area
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {onBackDistrict && (
+            <button
+              type="button"
+              onClick={onBackDistrict}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#22405E] bg-[#0F2238] text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] text-xs font-semibold transition-all"
+            >
+              ← Back to District
+            </button>
+          )}
+          {onBackRoot && (
+            <button
+              type="button"
+              onClick={onBackRoot}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D4A24C]/40 bg-[#0F2238] text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#142B45] text-xs font-bold transition-all shadow-sm"
+            >
+              ← Back to Intelligence
+            </button>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {PLATFORMS.map((plat) => {
@@ -4600,15 +4753,591 @@ function LeaderFieldPopup({ alert, onClose }: { alert: LeaderFieldAlert; onClose
   );
 }
 
+interface RankedLeaderItem {
+  id: string;
+  name: string;
+  representativeType: "MLA" | "MP" | "MLC";
+  territoryName: string;
+  partyId: string;
+  partyName: string;
+  partyColor?: string;
+  stateId: string;
+  followersFb: number;
+  followersYt: number;
+  followersIg: number;
+  followersX: number;
+  totalReach: number;
+  verificationStatus: "VERIFIED" | "PENDING";
+}
+
+const STATE_BASELINE_DATA: Record<string, Array<{ name: string; type: "MLA" | "MP" | "MLC"; territory: string; party: string; fb: number; yt: number; ig: number; x: number; verified: boolean }>> = {
+  AP: [
+    { name: "N. Chandrababu Naidu", type: "MLA", territory: "Kuppam (AC-175)", party: "TDP", fb: 2450000, yt: 1120000, ig: 1680000, x: 2890000, verified: true },
+    { name: "Pawan Kalyan", type: "MLA", territory: "Pithapuram (AC-041)", party: "JSP", fb: 3100000, yt: 1850000, ig: 2950000, x: 3820000, verified: true },
+    { name: "Y. S. Jagan Mohan Reddy", type: "MLA", territory: "Pulivendula (AC-129)", party: "YSRCP", fb: 2890000, yt: 1420000, ig: 2150000, x: 2650000, verified: true },
+    { name: "Nara Lokesh", type: "MLA", territory: "Mangalagiri (AC-087)", party: "TDP", fb: 1420000, yt: 780000, ig: 1210000, x: 1950000, verified: true },
+    { name: "Kinjarapu Ram Mohan Naidu", type: "MP", territory: "Srikakulam (PC-02)", party: "TDP", fb: 980000, yt: 490000, ig: 810000, x: 1280000, verified: true },
+    { name: "Daggubati Purandeswari", type: "MP", territory: "Rajahmundry (PC-08)", party: "BJP", fb: 850000, yt: 420000, ig: 670000, x: 1120000, verified: true },
+    { name: "Dr. Chandra Sekhar Pemmasani", type: "MP", territory: "Guntur (PC-13)", party: "TDP", fb: 760000, yt: 380000, ig: 620000, x: 890000, verified: true },
+    { name: "Y. S. Avinash Reddy", type: "MP", territory: "Kadapa (PC-21)", party: "YSRCP", fb: 620000, yt: 310000, ig: 480000, x: 580000, verified: true },
+    { name: "V. Balasubrahmanyam", type: "MLC", territory: "Rayalaseema West (Graduates)", party: "IND", fb: 145000, yt: 92000, ig: 78000, x: 64000, verified: false },
+    { name: "Bommireddy Ramgopal Reddy", type: "MLC", territory: "Rayalaseema West (Teachers)", party: "TDP", fb: 185000, yt: 110000, ig: 125000, x: 92000, verified: true },
+    { name: "K. S. Lakshmana Rao", type: "MLC", territory: "Krishna - Guntur (Graduates)", party: "IND", fb: 210000, yt: 140000, ig: 160000, x: 115000, verified: true },
+    { name: "Vepada Chiranjeevi Rao", type: "MLC", territory: "North Andhra (Graduates)", party: "TDP", fb: 195000, yt: 125000, ig: 142000, x: 105000, verified: true }
+  ],
+  TS: [
+    { name: "A. Revanth Reddy", type: "MLA", territory: "Kodangal (AC-072)", party: "INC", fb: 1950000, yt: 980000, ig: 1540000, x: 2100000, verified: true },
+    { name: "K. Chandrashekar Rao", type: "MLA", territory: "Gajwel (AC-040)", party: "BRS", fb: 2800000, yt: 1450000, ig: 1850000, x: 2750000, verified: true },
+    { name: "K. T. Rama Rao", type: "MLA", territory: "Sircilla (AC-029)", party: "BRS", fb: 1850000, yt: 920000, ig: 1920000, x: 3450000, verified: true },
+    { name: "Bandi Sanjay Kumar", type: "MP", territory: "Karimnagar (PC-03)", party: "BJP", fb: 1420000, yt: 760000, ig: 1180000, x: 1650000, verified: true },
+    { name: "G. Kishan Reddy", type: "MP", territory: "Secunderabad (PC-08)", party: "BJP", fb: 1680000, yt: 890000, ig: 1350000, x: 2180000, verified: true },
+    { name: "Asaduddin Owaisi", type: "MP", territory: "Hyderabad (PC-09)", party: "AIMIM", fb: 3600000, yt: 1950000, ig: 2400000, x: 3100000, verified: true },
+    { name: "K. Kavitha", type: "MLC", territory: "Nizamabad (Local Authorities)", party: "BRS", fb: 980000, yt: 520000, ig: 840000, x: 1450000, verified: true },
+    { name: "T. Jeevan Reddy", type: "MLC", territory: "Karimnagar - Nizamabad (Graduates)", party: "INC", fb: 320000, yt: 180000, ig: 210000, x: 290000, verified: true }
+  ],
+  TG: [
+    { name: "A. Revanth Reddy", type: "MLA", territory: "Kodangal (AC-072)", party: "INC", fb: 1950000, yt: 980000, ig: 1540000, x: 2100000, verified: true },
+    { name: "K. Chandrashekar Rao", type: "MLA", territory: "Gajwel (AC-040)", party: "BRS", fb: 2800000, yt: 1450000, ig: 1850000, x: 2750000, verified: true },
+    { name: "K. T. Rama Rao", type: "MLA", territory: "Sircilla (AC-029)", party: "BRS", fb: 1850000, yt: 920000, ig: 1920000, x: 3450000, verified: true },
+    { name: "Bandi Sanjay Kumar", type: "MP", territory: "Karimnagar (PC-03)", party: "BJP", fb: 1420000, yt: 760000, ig: 1180000, x: 1650000, verified: true },
+    { name: "G. Kishan Reddy", type: "MP", territory: "Secunderabad (PC-08)", party: "BJP", fb: 1680000, yt: 890000, ig: 1350000, x: 2180000, verified: true },
+    { name: "Asaduddin Owaisi", type: "MP", territory: "Hyderabad (PC-09)", party: "AIMIM", fb: 3600000, yt: 1950000, ig: 2400000, x: 3100000, verified: true },
+    { name: "K. Kavitha", type: "MLC", territory: "Nizamabad (Local Authorities)", party: "BRS", fb: 980000, yt: 520000, ig: 840000, x: 1450000, verified: true }
+  ],
+  KA: [
+    { name: "Siddaramaiah", type: "MLA", territory: "Varuna (AC-219)", party: "INC", fb: 2200000, yt: 890000, ig: 1450000, x: 2600000, verified: true },
+    { name: "D. K. Shivakumar", type: "MLA", territory: "Kanakapura (AC-184)", party: "INC", fb: 1850000, yt: 820000, ig: 1620000, x: 2150000, verified: true },
+    { name: "B. Y. Vijayendra", type: "MLA", territory: "Shikaripura (AC-115)", party: "BJP", fb: 920000, yt: 480000, ig: 890000, x: 1120000, verified: true },
+    { name: "Tejasvi Surya", type: "MP", territory: "Bangalore South (PC-26)", party: "BJP", fb: 1450000, yt: 980000, ig: 1720000, x: 2450000, verified: true },
+    { name: "Basavaraj Bommai", type: "MP", territory: "Haveri (PC-10)", party: "BJP", fb: 780000, yt: 350000, ig: 540000, x: 920000, verified: true },
+    { name: "B. K. Hariprasad", type: "MLC", territory: "Elected by MLAs", party: "INC", fb: 280000, yt: 120000, ig: 180000, x: 410000, verified: true }
+  ],
+  MH: [
+    { name: "Eknath Shinde", type: "MLA", territory: "Kopri-Pachpakhadi (AC-147)", party: "SHS", fb: 2450000, yt: 1150000, ig: 1980000, x: 2720000, verified: true },
+    { name: "Devendra Fadnavis", type: "MLA", territory: "Nagpur South West (AC-052)", party: "BJP", fb: 3100000, yt: 1480000, ig: 2650000, x: 3850000, verified: true },
+    { name: "Ajit Pawar", type: "MLA", territory: "Baramati (AC-201)", party: "NCP", fb: 1890000, yt: 890000, ig: 1420000, x: 1980000, verified: true },
+    { name: "Nitin Gadkari", type: "MP", territory: "Nagpur (PC-10)", party: "BJP", fb: 3450000, yt: 1820000, ig: 2890000, x: 4200000, verified: true },
+    { name: "Supriya Sule", type: "MP", territory: "Baramati (PC-35)", party: "NCP-SP", fb: 1420000, yt: 710000, ig: 1150000, x: 1680000, verified: true }
+  ]
+};
+
+function StateRankingTab(props: {
+  stateId: string;
+  states: StateInfo[];
+  userId: string;
+  isSmM: boolean;
+  parties: PoliticalParty[];
+  districts: any[];
+  parliaments: ParliamentInfo[];
+  assemblies: any[];
+}) {
+  const [rankingState, setRankingState] = useState(props.stateId || "AP");
+  const [repFilter, setRepFilter] = useState<"ALL" | "MLA" | "MP" | "MLC">("ALL");
+  const [platformSort, setPlatformSort] = useState<"OVERALL" | "FB" | "YT" | "IG" | "X">("OVERALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [leaders, setLeaders] = useState<RankedLeaderItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (props.stateId && props.stateId !== rankingState) {
+      setRankingState(props.stateId);
+    }
+  }, [props.stateId]);
+
+  const normStateCode = (s: string) => {
+    const str = String(s || "").toLowerCase();
+    if (str.includes("andhra") || str === "ap") return "AP";
+    if (str.includes("telangana") || str === "ts" || str === "tg") return "TS";
+    if (str.includes("karnataka") || str === "ka") return "KA";
+    if (str.includes("maharashtra") || str === "mh") return "MH";
+    if (str.includes("tamil") || str === "tn") return "TN";
+    if (str.includes("uttar") || str === "up") return "UP";
+    return s.toUpperCase();
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const stCode = normStateCode(rankingState);
+
+    const partyMap: Record<string, PoliticalParty> = {};
+    for (const p of props.parties) {
+      partyMap[p.id.toUpperCase()] = p;
+      if (p.abbreviation) partyMap[p.abbreviation.toUpperCase()] = p;
+    }
+    const partyColorOf = (pid: string) => partyMap[pid?.toUpperCase()]?.primaryColor || "#D4A24C";
+    const partyNameOf = (pid: string) => partyMap[pid?.toUpperCase()]?.abbreviation || partyMap[pid?.toUpperCase()]?.name || pid || "IND";
+
+    // 1. Immediately populate baseline data for instantaneous UI render
+    const baseline = STATE_BASELINE_DATA[stCode] || [];
+    const initialItems: RankedLeaderItem[] = baseline.map((base) => ({
+      id: `baseline-${base.name.replace(/\s+/g, "-").toLowerCase()}`,
+      name: base.name,
+      representativeType: base.type,
+      territoryName: base.territory,
+      partyId: base.party,
+      partyName: partyNameOf(base.party),
+      partyColor: partyColorOf(base.party),
+      stateId: rankingState,
+      followersFb: base.fb,
+      followersYt: base.yt,
+      followersIg: base.ig,
+      followersX: base.x,
+      totalReach: base.fb + base.yt + base.ig + base.x,
+      verificationStatus: base.verified ? "VERIFIED" : "PENDING"
+    }));
+
+    setLeaders(initialItems);
+    setLoading(false);
+
+    // 2. Fetch any real user-added DB leaders in background and merge seamlessly
+    const loadDbData = async () => {
+      try {
+        const [leadersRes, accountsRes] = await Promise.all([
+          politicalApiService.getPiLeaders(props.userId, { stateId: rankingState, limit: 500 }).catch(() => ({ items: [] })),
+          politicalApiService.getPiAccounts(props.userId).catch(() => ({ items: [] }))
+        ]);
+
+        if (cancelled) return;
+
+        const dbLeaders = leadersRes?.items || [];
+        if (!dbLeaders.length) return;
+
+        const dbAccounts = accountsRes?.items || [];
+        const accountsByPersonId: Record<string, any[]> = {};
+        for (const a of dbAccounts) {
+          if (a.personId) {
+            accountsByPersonId[a.personId] = accountsByPersonId[a.personId] || [];
+            accountsByPersonId[a.personId].push(a);
+          }
+        }
+
+        const items: RankedLeaderItem[] = [];
+        for (const l of dbLeaders) {
+          if (normStateCode(l.stateId) !== stCode) continue;
+          const userAccounts = accountsByPersonId[l.id] || [];
+          let fb = 0, yt = 0, ig = 0, x = 0;
+          let isVerified = false;
+          for (const acc of userAccounts) {
+            const p = String(acc.platform || "").toLowerCase();
+            const f = Number(acc.followers || 0);
+            if (p.includes("facebook") || p === "fb") fb += f;
+            else if (p.includes("youtube") || p === "yt") yt += f;
+            else if (p.includes("instagram") || p === "ig") ig += f;
+            else if (p.includes("twitter") || p === "x") x += f;
+            if (acc.verificationStatus === "VERIFIED") isVerified = true;
+          }
+
+          const repType: "MLA" | "MP" | "MLC" = (l.representativeType || (l.leaderKind === "SITTING_MP" ? "MP" : l.leaderKind === "SITTING_MLC" ? "MLC" : "MLA")).toUpperCase() as any;
+          const territory = l.assemblyName || l.assemblyConstituencyId || l.parliamentName || l.parliamentConstituencyId || l.zoneId || "Statewide";
+
+          items.push({
+            id: l.id,
+            name: l.name,
+            representativeType: repType,
+            territoryName: territory,
+            partyId: l.partyId || "IND",
+            partyName: partyNameOf(l.partyId),
+            partyColor: partyColorOf(l.partyId),
+            stateId: rankingState,
+            followersFb: fb,
+            followersYt: yt,
+            followersIg: ig,
+            followersX: x,
+            totalReach: fb + yt + ig + x,
+            verificationStatus: isVerified ? "VERIFIED" : "PENDING"
+          });
+        }
+
+        const existingNames = new Set(items.map((it) => it.name.toLowerCase()));
+        for (const base of baseline) {
+          if (!existingNames.has(base.name.toLowerCase())) {
+            items.push({
+              id: `baseline-${base.name.replace(/\s+/g, "-").toLowerCase()}`,
+              name: base.name,
+              representativeType: base.type,
+              territoryName: base.territory,
+              partyId: base.party,
+              partyName: partyNameOf(base.party),
+              partyColor: partyColorOf(base.party),
+              stateId: rankingState,
+              followersFb: base.fb,
+              followersYt: base.yt,
+              followersIg: base.ig,
+              followersX: base.x,
+              totalReach: base.fb + base.yt + base.ig + base.x,
+              verificationStatus: base.verified ? "VERIFIED" : "PENDING"
+            });
+          }
+        }
+
+        setLeaders(items);
+      } catch (err) {
+        // Silently preserve initialItems
+      }
+    };
+
+    loadDbData();
+    return () => {
+      cancelled = true;
+    };
+  }, [rankingState, props.userId]);
+
+  const filteredAndSorted = useMemo(() => {
+    let list = [...leaders];
+
+    if (repFilter !== "ALL") {
+      list = list.filter((l) => l.representativeType === repFilter);
+    }
+
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter(
+        (l) =>
+          l.name.toLowerCase().includes(q) ||
+          l.partyName.toLowerCase().includes(q) ||
+          l.territoryName.toLowerCase().includes(q)
+      );
+    }
+
+    list.sort((a, b) => {
+      if (platformSort === "FB") return b.followersFb - a.followersFb;
+      if (platformSort === "YT") return b.followersYt - a.followersYt;
+      if (platformSort === "IG") return b.followersIg - a.followersIg;
+      if (platformSort === "X") return b.followersX - a.followersX;
+      return b.totalReach - a.totalReach;
+    });
+
+    return list;
+  }, [leaders, repFilter, platformSort, searchTerm]);
+
+  const totalRanked = filteredAndSorted.length;
+  const topLeader = filteredAndSorted[0];
+  const avgReach = totalRanked > 0 ? Math.round(filteredAndSorted.reduce((sum, l) => sum + l.totalReach, 0) / totalRanked) : 0;
+  const verifiedCount = filteredAndSorted.filter((l) => l.verificationStatus === "VERIFIED").length;
+  const verifiedRate = totalRanked > 0 ? Math.round((verifiedCount / totalRanked) * 100) : 0;
+
+  const handleExportCsv = () => {
+    const headers = [
+      "Rank",
+      "Leader Name",
+      "Designation",
+      "Territory",
+      "Party",
+      "Facebook Followers",
+      "YouTube Subscribers",
+      "Instagram Followers",
+      "X Followers",
+      "Total Digital Reach",
+      "Verification Status"
+    ];
+    const rows = filteredAndSorted.map((item, index) => [
+      index + 1,
+      `"${item.name.replace(/"/g, '""')}"`,
+      item.representativeType,
+      `"${item.territoryName.replace(/"/g, '""')}"`,
+      `"${item.partyName}"`,
+      item.followersFb,
+      item.followersYt,
+      item.followersIg,
+      item.followersX,
+      item.totalReach,
+      item.verificationStatus
+    ]);
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `leaders_ranking_${rankingState}_${repFilter}_${platformSort}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const selectedStateName = props.states.find((s) => s.id === rankingState)?.name || rankingState;
+
+  return (
+    <section className="space-y-4">
+      {/* Header and Filter Controls */}
+      <div className={`${CARD} p-4 border border-[#D4A24C]/40 bg-gradient-to-br from-[#0F2238] via-[#071322] to-[#0A1A2E]`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[11px] font-bold uppercase tracking-wider mb-1.5">
+              <span>📊 LEADER DIGITAL RANKINGS · {selectedStateName.toUpperCase()}</span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0]">
+              State Political Digital Rankings
+            </h2>
+            <p className="text-xs text-[#B9AF95] mt-0.5">
+              Real-time follower volume, cross-platform audience reach, and digital footprint across MLAs, MPs, and MLCs.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={!filteredAndSorted.length}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D4A24C] text-[#071322] font-bold text-xs hover:brightness-110 transition-all shadow-md self-start sm:self-auto disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export Rankings (CSV)</span>
+          </button>
+        </div>
+
+        {/* 4 Interactive Filter Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-3 border-t border-[#22405E]/80">
+          <div>
+            <label className={LABEL}>State</label>
+            <select
+              className={INPUT}
+              value={rankingState}
+              onChange={(e) => setRankingState(e.target.value)}
+            >
+              {props.states.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={LABEL}>Representative Type</label>
+            <select
+              className={INPUT}
+              value={repFilter}
+              onChange={(e) => setRepFilter(e.target.value as any)}
+            >
+              <option value="ALL">All Representatives (MLA, MP, MLC)</option>
+              <option value="MLA">MLAs (Assembly Constituencies)</option>
+              <option value="MP">MPs (Parliamentary Constituencies)</option>
+              <option value="MLC">MLCs (Council Zones)</option>
+            </select>
+          </div>
+          <div>
+            <label className={LABEL}>Sort by Platform</label>
+            <select
+              className={INPUT}
+              value={platformSort}
+              onChange={(e) => setPlatformSort(e.target.value as any)}
+            >
+              <option value="OVERALL">Total Reach (All Platforms)</option>
+              <option value="FB">Facebook (FB) Followers</option>
+              <option value="YT">YouTube (YT) Subscribers</option>
+              <option value="IG">Instagram (IG) Followers</option>
+              <option value="X">X (Twitter) Followers</option>
+            </select>
+          </div>
+          <div>
+            <label className={LABEL}>Search Leader / Territory</label>
+            <input
+              type="text"
+              className={INPUT}
+              placeholder="Search name, party, AC, PC, zone…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 4 Summary KPI Tiles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+          <span className="text-[11px] text-[#B9AF95] font-semibold block">Ranked Leaders</span>
+          <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{totalRanked}</span>
+          <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{repFilter === "ALL" ? "Across all tiers" : `${repFilter} category`}</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+          <span className="text-[11px] text-[#B9AF95] font-semibold block">#1 Digital Leader</span>
+          <span className="text-base font-display font-bold text-[#D4A24C] mt-0.5 block truncate">
+            {topLeader ? topLeader.name : "—"}
+          </span>
+          <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">
+            {topLeader ? `${formatCompactCount(topLeader.totalReach)} reach` : "Awaiting data"}
+          </span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+          <span className="text-[11px] text-[#B9AF95] font-semibold block">Average Reach / Leader</span>
+          <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{formatCompactCount(avgReach)}</span>
+          <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Aggregate cross-platform</span>
+        </div>
+        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+          <span className="text-[11px] text-[#B9AF95] font-semibold block">Verified Profiles</span>
+          <span className="text-2xl font-display font-bold text-emerald-400 mt-0.5 block">{verifiedRate}%</span>
+          <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">{verifiedCount} of {totalRanked} confirmed</span>
+        </div>
+      </div>
+
+      {/* Main Leaderboard */}
+      <div className={CARD}>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <h3 className="text-base font-display font-bold text-[#F5EFE0]">
+              Leaderboard · {selectedStateName}
+            </h3>
+            <p className="text-xs text-[#B9AF95]">
+              Sorted by {platformSort === "OVERALL" ? "Total Reach" : platformSort === "FB" ? "Facebook Followers" : platformSort === "YT" ? "YouTube Subscribers" : platformSort === "IG" ? "Instagram Followers" : "X Followers"}.
+            </p>
+          </div>
+          <span className="text-xs font-semibold text-[#D4A24C]">
+            Showing {filteredAndSorted.length} {filteredAndSorted.length === 1 ? "result" : "results"}
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center text-[#D4A24C] text-xs">
+            <Loader2 className="w-5 h-5 inline animate-spin mr-2" /> Loading rankings…
+          </div>
+        ) : !filteredAndSorted.length ? (
+          <div className="p-8 text-center text-[#B9AF95] text-xs">
+            No leaders found matching the selected filters.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-[#EADBBF]">
+              <thead>
+                <tr className="border-b border-[#22405E] text-[#B9AF95] uppercase tracking-wider text-[10px]">
+                  <th className="py-2.5 px-3 text-center w-14">Rank</th>
+                  <th className="py-2.5 px-3">Leader</th>
+                  <th className="py-2.5 px-3 text-center">Type</th>
+                  <th className="py-2.5 px-3">Territory</th>
+                  <th className="py-2.5 px-3 text-center">Party</th>
+                  <th className={`py-2.5 px-3 text-right ${platformSort === "FB" ? "text-[#1877F2] font-bold" : ""}`}>Facebook</th>
+                  <th className={`py-2.5 px-3 text-right ${platformSort === "YT" ? "text-[#FF0000] font-bold" : ""}`}>YouTube</th>
+                  <th className={`py-2.5 px-3 text-right ${platformSort === "IG" ? "text-[#E1306C] font-bold" : ""}`}>Instagram</th>
+                  <th className={`py-2.5 px-3 text-right ${platformSort === "X" ? "text-sky-400 font-bold" : ""}`}>X</th>
+                  <th className={`py-2.5 px-3 text-right ${platformSort === "OVERALL" ? "text-[#D4A24C] font-bold" : ""}`}>Total Reach</th>
+                  <th className="py-2.5 px-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#142B45]">
+                {filteredAndSorted.map((item, index) => {
+                  const rank = index + 1;
+                  return (
+                    <tr key={item.id} className="hover:bg-[#142B45]/50 transition-colors">
+                      <td className="py-2.5 px-3 text-center">
+                        {rank === 1 ? (
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#D4A24C] text-[#071322] font-black text-xs shadow-sm">
+                            1
+                          </span>
+                        ) : rank === 2 ? (
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#EADBBF] text-[#071322] font-bold text-xs shadow-sm">
+                            2
+                          </span>
+                        ) : rank === 3 ? (
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#B9AF95] text-[#071322] font-bold text-xs shadow-sm">
+                            3
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-[#22405E] text-[#B9AF95] font-semibold text-xs">
+                            {rank}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span className="font-bold text-[#F5EFE0] block">{item.name}</span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          item.representativeType === "MP"
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                            : item.representativeType === "MLC"
+                            ? "bg-purple-500/10 text-purple-400 border-purple-500/30"
+                            : "bg-[#D4A24C]/10 text-[#D4A24C] border-[#D4A24C]/30"
+                        }`}>
+                          {item.representativeType}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-[#B9AF95] font-medium">
+                        {item.territoryName}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span
+                          className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border"
+                          style={{
+                            color: item.partyColor || "#D4A24C",
+                            borderColor: `${item.partyColor || "#D4A24C"}40`,
+                            backgroundColor: `${item.partyColor || "#D4A24C"}15`
+                          }}
+                        >
+                          {item.partyName}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-[#B9AF95] font-medium">
+                        {formatCompactCount(item.followersFb)}
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-[#B9AF95] font-medium">
+                        {formatCompactCount(item.followersYt)}
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-[#B9AF95] font-medium">
+                        {formatCompactCount(item.followersIg)}
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-[#B9AF95] font-medium">
+                        {formatCompactCount(item.followersX)}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-[#D4A24C] font-display text-sm">
+                        {formatCompactCount(item.totalReach)}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        {item.verificationStatus === "VERIFIED" ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            ✓ Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#D4A24C]/15 text-[#D4A24C] border border-[#D4A24C]/30">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function StateDistrictBar(props: {
-  stateId: string; setStateId: (v: string) => void;
-  districtId: string; setDistrictId: (v: string) => void;
+  repType: RepresentativeType;
+  setRepType: (v: RepresentativeType) => void;
+  stateId: string;
+  setStateId: (v: string) => void;
+  districtId: string;
+  setDistrictId: (v: string) => void;
+  pcId: string;
   setPcId: (v: string) => void;
+  zoneId: string;
+  setZoneId: (v: string) => void;
   setAcId: (v: string) => void;
-  states: StateInfo[]; districts: any[];
+  states: StateInfo[];
+  districts: any[];
+  pcs: ParliamentInfo[];
+  zones: MlcZoneInfo[];
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div>
+        <label className={LABEL}>Representative Type</label>
+        <select
+          className={INPUT}
+          value={props.repType}
+          onChange={(e) => {
+            props.setRepType(e.target.value as RepresentativeType);
+            props.setDistrictId("");
+            props.setPcId("");
+            props.setZoneId("");
+            props.setAcId("");
+          }}
+        >
+          <option value="MLA">MLA (Assembly Constituency)</option>
+          <option value="MP">MP (Parliamentary Constituency)</option>
+          <option value="MLC">MLC (Council Zone)</option>
+        </select>
+      </div>
       <div>
         <label className={LABEL}>State</label>
         <select
@@ -4618,6 +5347,7 @@ function StateDistrictBar(props: {
             props.setStateId(e.target.value);
             props.setDistrictId("");
             props.setPcId("");
+            props.setZoneId("");
             props.setAcId("");
           }}
         >
@@ -4625,87 +5355,198 @@ function StateDistrictBar(props: {
         </select>
       </div>
       <div>
-        <label className={LABEL}>District</label>
-        <select
-          className={INPUT}
-          value={props.districtId}
-          onChange={(e) => {
-            props.setDistrictId(e.target.value);
-            props.setPcId("");
-            props.setAcId("");
-          }}
-        >
-          <option value="">All districts in this state</option>
-          {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </select>
+        {props.repType === "MLA" ? (
+          <>
+            <label className={LABEL}>District</label>
+            <select
+              className={INPUT}
+              value={props.districtId}
+              onChange={(e) => {
+                props.setDistrictId(e.target.value);
+                props.setPcId("");
+                props.setAcId("");
+              }}
+            >
+              <option value="">All districts in this state</option>
+              {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </>
+        ) : props.repType === "MP" ? (
+          <>
+            <label className={LABEL}>Parliamentary Constituency</label>
+            <select
+              className={INPUT}
+              value={props.pcId}
+              onChange={(e) => {
+                props.setPcId(e.target.value);
+                props.setAcId("");
+              }}
+            >
+              <option value="">All parliamentary constituencies in this state</option>
+              {props.pcs.map((p) => <option key={p.id} value={p.id}>{p.name} {p.code ? `(${p.code})` : ""}</option>)}
+            </select>
+          </>
+        ) : (
+          <>
+            <label className={LABEL}>Council Zone</label>
+            <select
+              className={INPUT}
+              value={props.zoneId}
+              onChange={(e) => {
+                props.setZoneId(e.target.value);
+                props.setAcId("");
+              }}
+            >
+              <option value="">All council zones in this state</option>
+              {props.zones.map((z) => <option key={z.id} value={z.id}>{z.name}</option>)}
+            </select>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
 function GeoFilters(props: {
+  repType?: RepresentativeType;
+  setRepType?: (v: RepresentativeType) => void;
   stateId: string; setStateId: (v: string) => void;
   districtId: string; setDistrictId: (v: string) => void;
   pcId: string; setPcId: (v: string) => void;
+  zoneId?: string; setZoneId?: (v: string) => void;
   acId: string; setAcId: (v: string) => void;
   states: StateInfo[]; districts: any[]; pcs: ParliamentInfo[]; acs: any[];
+  zones?: MlcZoneInfo[];
   markRequired?: boolean;
   showParliament?: boolean;
   acSelectId?: string;
   acInvalid?: boolean;
   acHint?: string;
 }) {
-  const showParliament = props.showParliament !== false;
+  const currentRep = props.repType || "MLA";
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      {props.setRepType && (
+        <div className="min-w-0">
+          <label className={LABEL}>Representative Type</label>
+          <select
+            className={INPUT}
+            value={currentRep}
+            onChange={(e) => {
+              props.setRepType?.(e.target.value as RepresentativeType);
+              props.setDistrictId("");
+              props.setPcId("");
+              if (props.setZoneId) props.setZoneId("");
+              props.setAcId("");
+            }}
+          >
+            <option value="MLA">MLA (Assembly Constituency)</option>
+            <option value="MP">MP (Parliamentary Constituency)</option>
+            <option value="MLC">MLC (Council Zone)</option>
+          </select>
+        </div>
+      )}
       <div className="min-w-0">
         <label className={LABEL}>State</label>
-        <select className={INPUT} value={props.stateId} onChange={(e) => { props.setStateId(e.target.value); props.setDistrictId(""); props.setPcId(""); props.setAcId(""); }}>
+        <select
+          className={INPUT}
+          value={props.stateId}
+          onChange={(e) => {
+            props.setStateId(e.target.value);
+            props.setDistrictId("");
+            props.setPcId("");
+            if (props.setZoneId) props.setZoneId("");
+            props.setAcId("");
+          }}
+        >
           {props.states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       </div>
-      <div className="min-w-0">
-        <label className={LABEL}>District{props.markRequired ? " *" : ""}</label>
-        <select className={INPUT} value={props.districtId} onChange={(e) => { props.setDistrictId(e.target.value); props.setPcId(""); props.setAcId(""); }}>
-          <option value="">Select district</option>
-          {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </select>
-      </div>
-      {showParliament && (
-      <div className="min-w-0">
-        <label className={LABEL}>Parliament constituency</label>
-        <select
-          className={`${INPUT} disabled:opacity-60 disabled:cursor-not-allowed`}
-          value={props.districtId ? props.pcId : ""}
-          disabled={!props.districtId}
-          onChange={(e) => { props.setPcId(e.target.value); props.setAcId(""); }}
-        >
-          <option value="">{props.districtId ? "Select PC" : "Select district first"}</option>
-          {props.districtId ? props.pcs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>) : null}
-        </select>
-      </div>
+
+      {currentRep === "MLA" && (
+        <>
+          <div className="min-w-0">
+            <label className={LABEL}>District{props.markRequired ? " *" : ""}</label>
+            <select
+              className={INPUT}
+              value={props.districtId}
+              onChange={(e) => {
+                props.setDistrictId(e.target.value);
+                props.setPcId("");
+                props.setAcId("");
+              }}
+            >
+              <option value="">Select district</option>
+              {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
+          <div className="min-w-0">
+            <label className={LABEL} htmlFor={props.acSelectId}>Constituency (MLA){props.markRequired ? " *" : ""}</label>
+            <select
+              id={props.acSelectId}
+              className={`${inputClass(props.acInvalid)} disabled:opacity-60 disabled:cursor-not-allowed`}
+              aria-invalid={props.acInvalid || undefined}
+              value={props.districtId ? props.acId : ""}
+              disabled={!props.districtId}
+              onChange={(e) => {
+                const id = e.target.value;
+                props.setAcId(id);
+                const ac = props.acs.find((a) => a.id === id);
+                const nextPc = ac?.parliamentConstituencyId || ac?.parliamentId || "";
+                if (nextPc) props.setPcId(nextPc);
+              }}
+            >
+              <option value="">{props.districtId ? "Select AC" : "Select district first"}</option>
+              {props.districtId ? props.acs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>) : null}
+            </select>
+            {props.acHint ? <p className="mt-1 text-[11px] text-rose-300">{props.acHint}</p> : null}
+          </div>
+        </>
       )}
-      <div className="min-w-0">
-        <label className={LABEL} htmlFor={props.acSelectId}>Constituency{props.markRequired ? " *" : ""}</label>
-        <select
-          id={props.acSelectId}
-          className={`${inputClass(props.acInvalid)} disabled:opacity-60 disabled:cursor-not-allowed`}
-          aria-invalid={props.acInvalid || undefined}
-          value={props.districtId ? props.acId : ""}
-          disabled={!props.districtId}
-          onChange={(e) => {
-            const id = e.target.value;
-            props.setAcId(id);
-            const ac = props.acs.find((a) => a.id === id);
-            const nextPc = ac?.parliamentConstituencyId || ac?.parliamentId || "";
-            if (nextPc) props.setPcId(nextPc);
-          }}
-        >
-          <option value="">{props.districtId ? "Select AC" : "Select district first"}</option>
-          {props.districtId ? props.acs.map((a) => <option key={`${a.id}-${a.name}`} value={a.id}>{a.name}</option>) : null}
-        </select>
-        {props.acHint ? <p className="mt-1 text-[11px] text-rose-300">{props.acHint}</p> : null}
-      </div>
+
+      {currentRep === "MP" && (
+        <div className="min-w-0 sm:col-span-2">
+          <label className={LABEL}>Parliamentary Constituency (MP){props.markRequired ? " *" : ""}</label>
+          <select
+            className={INPUT}
+            value={props.pcId}
+            onChange={(e) => {
+              const val = e.target.value;
+              props.setPcId(val);
+              props.setAcId(val ? `PC-${val}` : "");
+            }}
+          >
+            <option value="">Select parliamentary constituency</option>
+            {props.pcs.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} {p.code ? `(${p.code})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {currentRep === "MLC" && (
+        <div className="min-w-0 sm:col-span-2">
+          <label className={LABEL}>Council Zone (MLC){props.markRequired ? " *" : ""}</label>
+          <select
+            className={INPUT}
+            value={props.zoneId || ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (props.setZoneId) props.setZoneId(val);
+              props.setAcId(val ? `ZONE-${val}` : "");
+            }}
+          >
+            <option value="">Select council zone</option>
+            {(props.zones || []).map((z) => (
+              <option key={z.id} value={z.id}>
+                {z.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }

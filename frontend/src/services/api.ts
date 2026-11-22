@@ -2177,10 +2177,11 @@ export const politicalApiService = {
     }
   },
 
-  getPiDashboard(userId: string, stateId?: string, districtId?: string) {
+  getPiDashboard(userId: string, stateId?: string, districtId?: string, repType?: string) {
     const q = new URLSearchParams();
     if (stateId) q.set("stateId", stateId);
     if (districtId) q.set("districtId", districtId);
+    if (repType) q.set("repType", repType);
     const suffix = q.toString() ? `?${q.toString()}` : "";
     return this.piRequest(`/pi/dashboard${suffix}`, userId, {}, 30000);
   },
