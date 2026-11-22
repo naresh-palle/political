@@ -17,7 +17,9 @@ import {
   Bell,
   ClipboardList,
   Edit3,
-  BarChart3
+  BarChart3,
+  CheckCircle2,
+  FileSpreadsheet
 } from "lucide-react";
 
 interface NavbarProps {
@@ -359,6 +361,34 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {currentProfile.clearanceLevel}
                     </div>
                   </div>
+
+                  {isPiUser && (
+                    <div className="py-1 border-t border-[#1E3A5A] my-1">
+                      <div className="px-3 py-1 text-[10px] font-bold text-[#D4A24C] uppercase tracking-wider">
+                        Political Operations
+                      </div>
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          window.dispatchEvent(new CustomEvent("pi-tab-change", { detail: "verify" }));
+                        }}
+                        className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-[#D4A24C]" />
+                        <span>Verification Queue</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          window.dispatchEvent(new CustomEvent("pi-tab-change", { detail: "import" }));
+                        }}
+                        className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs font-semibold text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors text-left cursor-pointer"
+                      >
+                        <FileSpreadsheet className="w-4 h-4 text-[#D4A24C]" />
+                        <span>Import / Export</span>
+                      </button>
+                    </div>
+                  )}
 
                   {isPlatformAdmin && (
                     <button
