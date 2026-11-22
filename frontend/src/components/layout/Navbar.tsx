@@ -61,6 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
 
   const isPiUser = isPiOperatorUser(currentProfile);
+  const isSmM = isSmMUser(currentProfile);
   const primaryRole = currentProfile.primaryRole || (
     currentProfile.email === "admin" || currentProfile.email === "admin@leaderslens.ai" || currentProfile.roleId === "SUPER_ADMIN" || currentProfile.role === "super_admin" || currentProfile.isPlatformAdmin
       ? "SUPER_ADMIN"
@@ -362,7 +363,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   </div>
 
-                  {isPiUser && (
+                  {isSmM && (
                     <div className="py-1 border-t border-[#1E3A5A] my-1">
                       <div className="px-3 py-1 text-[10px] font-bold text-[#D4A24C] uppercase tracking-wider">
                         Political Operations
