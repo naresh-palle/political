@@ -258,18 +258,18 @@ async function runTests() {
     // Select PC for MP so leader slots render
     await page.evaluate(() => {
       const selects = Array.from(document.querySelectorAll('select'));
-      const pcSelect = selects.find(s => Array.from(s.options).some(o => o.text.includes('parliamentary constituency') || o.text.includes('Araku') || o.text.includes('Kadapa')));
+      const pcSelect = selects.find(s => s.previousElementSibling?.textContent?.includes('Parliamentary Constituency'));
       if (pcSelect && pcSelect.options.length > 1) {
-        pcSelect.selectedIndex = 1;
+        pcSelect.value = pcSelect.options[1].value;
         pcSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 1200));
 
     // Verify MP roles (currently on MP)
     const mpRoles = await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
-      return buttons.map(b => b.textContent?.trim() || '').filter(t => [
+      return buttons.map(b => (b.textContent?.trim() || '').replace(/\s+/g, '_')).filter(t => [
         'MLA', 'LOK_SABHA_MP', 'RAJYA_SABHA_MP', 'MLC', 'OTHER', 'MINISTER', 'CABINET_MINISTER', 'PARTY_LEADER'
       ].includes(t));
     });
@@ -290,26 +290,26 @@ async function runTests() {
     await new Promise(r => setTimeout(r, 800));
     await page.evaluate(() => {
       const selects = Array.from(document.querySelectorAll('select'));
-      const distSelect = selects.find(s => Array.from(s.options).some(o => o.text.includes('Select district')));
+      const distSelect = selects.find(s => s.previousElementSibling?.textContent?.includes('District'));
       if (distSelect && distSelect.options.length > 1) {
-        distSelect.selectedIndex = 1;
+        distSelect.value = distSelect.options[1].value;
         distSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
     await new Promise(r => setTimeout(r, 600));
     await page.evaluate(() => {
       const selects = Array.from(document.querySelectorAll('select'));
-      const acSelect = selects.find(s => Array.from(s.options).some(o => o.text.includes('Select AC')));
+      const acSelect = selects.find(s => s.previousElementSibling?.textContent?.includes('Constituency (MLA)'));
       if (acSelect && acSelect.options.length > 1) {
-        acSelect.selectedIndex = 1;
+        acSelect.value = acSelect.options[1].value;
         acSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 1200));
 
     const mlaRoles = await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
-      return buttons.map(b => b.textContent?.trim() || '').filter(t => [
+      return buttons.map(b => (b.textContent?.trim() || '').replace(/\s+/g, '_')).filter(t => [
         'MLA', 'LOK_SABHA_MP', 'RAJYA_SABHA_MP', 'MLC', 'OTHER', 'MINISTER', 'CABINET_MINISTER', 'PARTY_LEADER'
       ].includes(t));
     });
@@ -330,17 +330,17 @@ async function runTests() {
     await new Promise(r => setTimeout(r, 800));
     await page.evaluate(() => {
       const selects = Array.from(document.querySelectorAll('select'));
-      const zoneSelect = selects.find(s => Array.from(s.options).some(o => o.text.includes('Select council zone')));
+      const zoneSelect = selects.find(s => s.previousElementSibling?.textContent?.includes('Council Zone'));
       if (zoneSelect && zoneSelect.options.length > 1) {
-        zoneSelect.selectedIndex = 1;
+        zoneSelect.value = zoneSelect.options[1].value;
         zoneSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 1200));
 
     const mlcRoles = await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
-      return buttons.map(b => b.textContent?.trim() || '').filter(t => [
+      return buttons.map(b => (b.textContent?.trim() || '').replace(/\s+/g, '_')).filter(t => [
         'MLA', 'LOK_SABHA_MP', 'RAJYA_SABHA_MP', 'MLC', 'OTHER', 'MINISTER', 'CABINET_MINISTER', 'PARTY_LEADER'
       ].includes(t));
     });
