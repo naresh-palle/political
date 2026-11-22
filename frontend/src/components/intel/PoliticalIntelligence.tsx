@@ -4847,56 +4847,56 @@ interface RankedLeaderItem {
   verificationStatus: "VERIFIED" | "PENDING";
 }
 
-const STATE_BASELINE_DATA: Record<string, Array<{ name: string; type: "MLA" | "MP" | "MLC"; territory: string; party: string; fb: number; yt: number; ig: number; x: number; verified: boolean }>> = {
-  AP: [
-    { name: "N. Chandrababu Naidu", type: "MLA", territory: "Kuppam (AC-175)", party: "TDP", fb: 2450000, yt: 1120000, ig: 1680000, x: 2890000, verified: true },
-    { name: "Pawan Kalyan", type: "MLA", territory: "Pithapuram (AC-041)", party: "JSP", fb: 3100000, yt: 1850000, ig: 2950000, x: 3820000, verified: true },
-    { name: "Y. S. Jagan Mohan Reddy", type: "MLA", territory: "Pulivendula (AC-129)", party: "YSRCP", fb: 2890000, yt: 1420000, ig: 2150000, x: 2650000, verified: true },
-    { name: "Nara Lokesh", type: "MLA", territory: "Mangalagiri (AC-087)", party: "TDP", fb: 1420000, yt: 780000, ig: 1210000, x: 1950000, verified: true },
-    { name: "Kinjarapu Ram Mohan Naidu", type: "MP", territory: "Srikakulam (PC-02)", party: "TDP", fb: 980000, yt: 490000, ig: 810000, x: 1280000, verified: true },
-    { name: "Daggubati Purandeswari", type: "MP", territory: "Rajahmundry (PC-08)", party: "BJP", fb: 850000, yt: 420000, ig: 670000, x: 1120000, verified: true },
-    { name: "Dr. Chandra Sekhar Pemmasani", type: "MP", territory: "Guntur (PC-13)", party: "TDP", fb: 760000, yt: 380000, ig: 620000, x: 890000, verified: true },
-    { name: "Y. S. Avinash Reddy", type: "MP", territory: "Kadapa (PC-21)", party: "YSRCP", fb: 620000, yt: 310000, ig: 480000, x: 580000, verified: true },
-    { name: "V. Balasubrahmanyam", type: "MLC", territory: "Rayalaseema West (Graduates)", party: "IND", fb: 145000, yt: 92000, ig: 78000, x: 64000, verified: false },
-    { name: "Bommireddy Ramgopal Reddy", type: "MLC", territory: "Rayalaseema West (Teachers)", party: "TDP", fb: 185000, yt: 110000, ig: 125000, x: 92000, verified: true },
-    { name: "K. S. Lakshmana Rao", type: "MLC", territory: "Krishna - Guntur (Graduates)", party: "IND", fb: 210000, yt: 140000, ig: 160000, x: 115000, verified: true },
-    { name: "Vepada Chiranjeevi Rao", type: "MLC", territory: "North Andhra (Graduates)", party: "TDP", fb: 195000, yt: 125000, ig: 142000, x: 105000, verified: true }
-  ],
-  TS: [
-    { name: "A. Revanth Reddy", type: "MLA", territory: "Kodangal (AC-072)", party: "INC", fb: 1950000, yt: 980000, ig: 1540000, x: 2100000, verified: true },
-    { name: "K. Chandrashekar Rao", type: "MLA", territory: "Gajwel (AC-040)", party: "BRS", fb: 2800000, yt: 1450000, ig: 1850000, x: 2750000, verified: true },
-    { name: "K. T. Rama Rao", type: "MLA", territory: "Sircilla (AC-029)", party: "BRS", fb: 1850000, yt: 920000, ig: 1920000, x: 3450000, verified: true },
-    { name: "Bandi Sanjay Kumar", type: "MP", territory: "Karimnagar (PC-03)", party: "BJP", fb: 1420000, yt: 760000, ig: 1180000, x: 1650000, verified: true },
-    { name: "G. Kishan Reddy", type: "MP", territory: "Secunderabad (PC-08)", party: "BJP", fb: 1680000, yt: 890000, ig: 1350000, x: 2180000, verified: true },
-    { name: "Asaduddin Owaisi", type: "MP", territory: "Hyderabad (PC-09)", party: "AIMIM", fb: 3600000, yt: 1950000, ig: 2400000, x: 3100000, verified: true },
-    { name: "K. Kavitha", type: "MLC", territory: "Nizamabad (Local Authorities)", party: "BRS", fb: 980000, yt: 520000, ig: 840000, x: 1450000, verified: true },
-    { name: "T. Jeevan Reddy", type: "MLC", territory: "Karimnagar - Nizamabad (Graduates)", party: "INC", fb: 320000, yt: 180000, ig: 210000, x: 290000, verified: true }
-  ],
-  TG: [
-    { name: "A. Revanth Reddy", type: "MLA", territory: "Kodangal (AC-072)", party: "INC", fb: 1950000, yt: 980000, ig: 1540000, x: 2100000, verified: true },
-    { name: "K. Chandrashekar Rao", type: "MLA", territory: "Gajwel (AC-040)", party: "BRS", fb: 2800000, yt: 1450000, ig: 1850000, x: 2750000, verified: true },
-    { name: "K. T. Rama Rao", type: "MLA", territory: "Sircilla (AC-029)", party: "BRS", fb: 1850000, yt: 920000, ig: 1920000, x: 3450000, verified: true },
-    { name: "Bandi Sanjay Kumar", type: "MP", territory: "Karimnagar (PC-03)", party: "BJP", fb: 1420000, yt: 760000, ig: 1180000, x: 1650000, verified: true },
-    { name: "G. Kishan Reddy", type: "MP", territory: "Secunderabad (PC-08)", party: "BJP", fb: 1680000, yt: 890000, ig: 1350000, x: 2180000, verified: true },
-    { name: "Asaduddin Owaisi", type: "MP", territory: "Hyderabad (PC-09)", party: "AIMIM", fb: 3600000, yt: 1950000, ig: 2400000, x: 3100000, verified: true },
-    { name: "K. Kavitha", type: "MLC", territory: "Nizamabad (Local Authorities)", party: "BRS", fb: 980000, yt: 520000, ig: 840000, x: 1450000, verified: true }
-  ],
-  KA: [
-    { name: "Siddaramaiah", type: "MLA", territory: "Varuna (AC-219)", party: "INC", fb: 2200000, yt: 890000, ig: 1450000, x: 2600000, verified: true },
-    { name: "D. K. Shivakumar", type: "MLA", territory: "Kanakapura (AC-184)", party: "INC", fb: 1850000, yt: 820000, ig: 1620000, x: 2150000, verified: true },
-    { name: "B. Y. Vijayendra", type: "MLA", territory: "Shikaripura (AC-115)", party: "BJP", fb: 920000, yt: 480000, ig: 890000, x: 1120000, verified: true },
-    { name: "Tejasvi Surya", type: "MP", territory: "Bangalore South (PC-26)", party: "BJP", fb: 1450000, yt: 980000, ig: 1720000, x: 2450000, verified: true },
-    { name: "Basavaraj Bommai", type: "MP", territory: "Haveri (PC-10)", party: "BJP", fb: 780000, yt: 350000, ig: 540000, x: 920000, verified: true },
-    { name: "B. K. Hariprasad", type: "MLC", territory: "Elected by MLAs", party: "INC", fb: 280000, yt: 120000, ig: 180000, x: 410000, verified: true }
-  ],
-  MH: [
-    { name: "Eknath Shinde", type: "MLA", territory: "Kopri-Pachpakhadi (AC-147)", party: "SHS", fb: 2450000, yt: 1150000, ig: 1980000, x: 2720000, verified: true },
-    { name: "Devendra Fadnavis", type: "MLA", territory: "Nagpur South West (AC-052)", party: "BJP", fb: 3100000, yt: 1480000, ig: 2650000, x: 3850000, verified: true },
-    { name: "Ajit Pawar", type: "MLA", territory: "Baramati (AC-201)", party: "NCP", fb: 1890000, yt: 890000, ig: 1420000, x: 1980000, verified: true },
-    { name: "Nitin Gadkari", type: "MP", territory: "Nagpur (PC-10)", party: "BJP", fb: 3450000, yt: 1820000, ig: 2890000, x: 4200000, verified: true },
-    { name: "Supriya Sule", type: "MP", territory: "Baramati (PC-35)", party: "NCP-SP", fb: 1420000, yt: 710000, ig: 1150000, x: 1680000, verified: true }
-  ]
-};
+function getLeaderRepType(l: any): "MLA" | "MP" | "MLC" {
+  const raw = String(l.representativeType || l.repType || "").toUpperCase();
+  if (raw === "MP" || raw === "MLC" || raw === "MLA") return raw as any;
+  const roles: string[] = (l.roles || []).map((r: any) =>
+    typeof r === "string" ? r.toUpperCase() : String(r?.politicalRole || "").toUpperCase()
+  );
+  if (l.politicalRole) {
+    roles.push(...String(l.politicalRole).toUpperCase().split(",").map((s) => s.trim()));
+  }
+  if (roles.some((r) => r.includes("MP") || r === "LOK_SABHA_MP" || r === "RAJYA_SABHA_MP" || r === "FORMER_MP")) {
+    return "MP";
+  }
+  if (roles.some((r) => r.includes("MLC") || r === "FORMER_MLC")) {
+    return "MLC";
+  }
+  if (l.parliamentConstituencyId && !l.assemblyConstituencyId) {
+    return "MP";
+  }
+  if (l.zoneId && !l.assemblyConstituencyId) {
+    return "MLC";
+  }
+  if (l.leaderKind === "SITTING_MP") return "MP";
+  if (l.leaderKind === "SITTING_MLC") return "MLC";
+  return "MLA";
+}
+
+function getLeaderTerritory(l: any, repType: "MLA" | "MP" | "MLC", props: { assemblies: any[]; parliaments: ParliamentInfo[]; districts: any[] }): string {
+  if (repType === "MP") {
+    const pc = props.parliaments.find((p) => p.id === l.parliamentConstituencyId);
+    if (pc) return `${pc.name}${pc.code ? ` (${pc.code})` : ""}`;
+    if (l.parliamentName) return l.parliamentName;
+    if (l.parliamentConstituencyId) return l.parliamentConstituencyId;
+  }
+  if (repType === "MLC") {
+    if (l.zoneName) return l.zoneName;
+    if (l.zoneId) return l.zoneId;
+  }
+  if (l.assemblyName) return l.assemblyName;
+  if (l.assemblyConstituencyId) {
+    const ac = props.assemblies.find((a) => a.id === l.assemblyConstituencyId);
+    if (ac) return `${ac.name}${ac.code ? ` (${ac.code})` : ""}`;
+    return l.assemblyConstituencyId;
+  }
+  if (l.districtId) {
+    const d = props.districts.find((dist) => dist.id === l.districtId);
+    if (d) return d.name;
+    return l.districtId;
+  }
+  return "Statewide";
+}
 
 function StateRankingTab(props: {
   stateId: string;
@@ -4944,42 +4944,22 @@ function StateRankingTab(props: {
     const partyColorOf = (pid: string) => partyMap[pid?.toUpperCase()]?.primaryColor || "#D4A24C";
     const partyNameOf = (pid: string) => partyMap[pid?.toUpperCase()]?.abbreviation || partyMap[pid?.toUpperCase()]?.name || pid || "IND";
 
-    // 1. Immediately populate baseline data for instantaneous UI render
-    const baseline = STATE_BASELINE_DATA[stCode] || [];
-    const initialItems: RankedLeaderItem[] = baseline.map((base) => ({
-      id: `baseline-${base.name.replace(/\s+/g, "-").toLowerCase()}`,
-      name: base.name,
-      representativeType: base.type,
-      territoryName: base.territory,
-      partyId: base.party,
-      partyName: partyNameOf(base.party),
-      partyColor: partyColorOf(base.party),
-      stateId: rankingState,
-      followersFb: base.fb,
-      followersYt: base.yt,
-      followersIg: base.ig,
-      followersX: base.x,
-      totalReach: base.fb + base.yt + base.ig + base.x,
-      verificationStatus: base.verified ? "VERIFIED" : "PENDING"
-    }));
-
-    setLeaders(initialItems);
-    setLoading(false);
-
-    // 2. Fetch any real user-added DB leaders in background and merge seamlessly
     const loadDbData = async () => {
+      setLoading(true);
+      setLeaders([]);
       try {
-        const [leadersRes, accountsRes] = await Promise.all([
-          politicalApiService.getPiLeaders(props.userId, { stateId: rankingState, limit: 500 }).catch(() => ({ items: [] })),
-          politicalApiService.getPiAccounts(props.userId).catch(() => ({ items: [] }))
+        const [intelRes, leadersRes, accountsRes] = await Promise.all([
+          politicalApiService.getPiIntelligence(props.userId, { stateId: rankingState }).catch(() => ({ leaders: [] })),
+          politicalApiService.getPiLeaders(props.userId, { stateId: rankingState, limit: 1000 }).catch(() => ({ items: [] })),
+          politicalApiService.getPiAccounts(props.userId, { limit: 1000 }).catch(() => ({ items: [] }))
         ]);
 
         if (cancelled) return;
 
+        const intelLeaders = intelRes?.leaders || [];
         const dbLeaders = leadersRes?.items || [];
-        if (!dbLeaders.length) return;
-
         const dbAccounts = accountsRes?.items || [];
+
         const accountsByPersonId: Record<string, any[]> = {};
         for (const a of dbAccounts) {
           if (a.personId) {
@@ -4989,23 +4969,39 @@ function StateRankingTab(props: {
         }
 
         const items: RankedLeaderItem[] = [];
-        for (const l of dbLeaders) {
+        const processedIds = new Set<string>();
+
+        // 1. Process leaders from real Database Intelligence
+        for (const l of intelLeaders) {
           if (normStateCode(l.stateId) !== stCode) continue;
-          const userAccounts = accountsByPersonId[l.id] || [];
-          let fb = 0, yt = 0, ig = 0, x = 0;
-          let isVerified = false;
+          processedIds.add(l.id);
+
+          const repType = getLeaderRepType(l);
+          const territory = getLeaderTerritory(l, repType, props);
+
+          const userAccounts = accountsByPersonId[l.id] || l.accounts || [];
+          let fb = Number(l.platforms?.facebook?.followers || 0);
+          let yt = Number(l.platforms?.youtube?.followers || 0);
+          let ig = Number(l.platforms?.instagram?.followers || 0);
+          let x = Number(l.platforms?.x?.followers || 0);
+
+          let isVerified = Boolean(
+            l.verificationStatus === "VERIFIED" ||
+            l.platforms?.facebook?.verified ||
+            l.platforms?.instagram?.verified ||
+            l.platforms?.youtube?.verified ||
+            l.platforms?.x?.verified
+          );
+
           for (const acc of userAccounts) {
             const p = String(acc.platform || "").toLowerCase();
             const f = Number(acc.followers || 0);
-            if (p.includes("facebook") || p === "fb") fb += f;
-            else if (p.includes("youtube") || p === "yt") yt += f;
-            else if (p.includes("instagram") || p === "ig") ig += f;
-            else if (p.includes("twitter") || p === "x") x += f;
-            if (acc.verificationStatus === "VERIFIED") isVerified = true;
+            if (p.includes("facebook") || p === "fb") fb = Math.max(fb, f);
+            else if (p.includes("youtube") || p === "yt") yt = Math.max(yt, f);
+            else if (p.includes("instagram") || p === "ig") ig = Math.max(ig, f);
+            else if (p.includes("twitter") || p === "x") x = Math.max(x, f);
+            if (acc.verificationStatus === "VERIFIED" || acc.verified) isVerified = true;
           }
-
-          const repType: "MLA" | "MP" | "MLC" = (l.representativeType || (l.leaderKind === "SITTING_MP" ? "MP" : l.leaderKind === "SITTING_MLC" ? "MLC" : "MLA")).toUpperCase() as any;
-          const territory = l.assemblyName || l.assemblyConstituencyId || l.parliamentName || l.parliamentConstituencyId || l.zoneId || "Statewide";
 
           items.push({
             id: l.id,
@@ -5025,31 +5021,52 @@ function StateRankingTab(props: {
           });
         }
 
-        const existingNames = new Set(items.map((it) => it.name.toLowerCase()));
-        for (const base of baseline) {
-          if (!existingNames.has(base.name.toLowerCase())) {
-            items.push({
-              id: `baseline-${base.name.replace(/\s+/g, "-").toLowerCase()}`,
-              name: base.name,
-              representativeType: base.type,
-              territoryName: base.territory,
-              partyId: base.party,
-              partyName: partyNameOf(base.party),
-              partyColor: partyColorOf(base.party),
-              stateId: rankingState,
-              followersFb: base.fb,
-              followersYt: base.yt,
-              followersIg: base.ig,
-              followersX: base.x,
-              totalReach: base.fb + base.yt + base.ig + base.x,
-              verificationStatus: base.verified ? "VERIFIED" : "PENDING"
-            });
+        // 2. Process any remaining dbLeaders not in intelLeaders
+        for (const l of dbLeaders) {
+          if (processedIds.has(l.id)) continue;
+          if (normStateCode(l.stateId) !== stCode) continue;
+          processedIds.add(l.id);
+
+          const repType = getLeaderRepType(l);
+          const territory = getLeaderTerritory(l, repType, props);
+          const userAccounts = accountsByPersonId[l.id] || [];
+
+          let fb = 0, yt = 0, ig = 0, x = 0;
+          let isVerified = l.verificationStatus === "VERIFIED";
+
+          for (const acc of userAccounts) {
+            const p = String(acc.platform || "").toLowerCase();
+            const f = Number(acc.followers || 0);
+            if (p.includes("facebook") || p === "fb") fb = Math.max(fb, f);
+            else if (p.includes("youtube") || p === "yt") yt = Math.max(yt, f);
+            else if (p.includes("instagram") || p === "ig") ig = Math.max(ig, f);
+            else if (p.includes("twitter") || p === "x") x = Math.max(x, f);
+            if (acc.verificationStatus === "VERIFIED" || acc.verified) isVerified = true;
           }
+
+          items.push({
+            id: l.id,
+            name: l.name,
+            representativeType: repType,
+            territoryName: territory,
+            partyId: l.partyId || "IND",
+            partyName: partyNameOf(l.partyId),
+            partyColor: partyColorOf(l.partyId),
+            stateId: rankingState,
+            followersFb: fb,
+            followersYt: yt,
+            followersIg: ig,
+            followersX: x,
+            totalReach: fb + yt + ig + x,
+            verificationStatus: isVerified ? "VERIFIED" : "PENDING"
+          });
         }
 
         setLeaders(items);
       } catch (err) {
-        // Silently preserve initialItems
+        setLeaders([]);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -5266,8 +5283,14 @@ function StateRankingTab(props: {
             <Loader2 className="w-5 h-5 inline animate-spin mr-2" /> Loading rankings…
           </div>
         ) : !filteredAndSorted.length ? (
-          <div className="p-8 text-center text-[#B9AF95] text-xs">
-            No leaders found matching the selected filters.
+          <div className="p-12 text-center text-[#B9AF95] text-xs space-y-2">
+            <div className="text-2xl">📊</div>
+            <div className="font-bold text-[#F5EFE0]">No leader rankings found for {selectedStateName}</div>
+            <p className="max-w-md mx-auto text-[#B9AF95]">
+              {searchTerm || repFilter !== "ALL"
+                ? "No leaders match your current filter criteria. Try clearing the search or choosing 'All Representatives'."
+                : `No political leaders have been entered or recorded in the database for ${selectedStateName} yet. Leaders added via data entry or intelligence collection will automatically appear and be ranked here.`}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">

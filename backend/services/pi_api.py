@@ -2071,6 +2071,22 @@ def register_pi_routes(api_router) -> None:
                 "reach": total_reach,
             }
 
+            leader_rep_type = person.get("representativeType")
+            if not leader_rep_type:
+                p_roles = [str(r.get("politicalRole") if isinstance(r, dict) else r).upper() for r in (person.get("roles") or [])]
+                if person.get("politicalRole"):
+                    p_roles.extend([r.strip().upper() for r in str(person.get("politicalRole")).split(",")])
+                if any("MP" in r for r in p_roles):
+                    leader_rep_type = "MP"
+                elif any("MLC" in r for r in p_roles):
+                    leader_rep_type = "MLC"
+                elif person.get("parliamentConstituencyId") and not person.get("assemblyConstituencyId"):
+                    leader_rep_type = "MP"
+                elif person.get("zoneId") and not person.get("assemblyConstituencyId"):
+                    leader_rep_type = "MLC"
+                else:
+                    leader_rep_type = "MLA"
+
             leaders.append(
                 {
                     "id": person.get("id"),
@@ -2078,9 +2094,11 @@ def register_pi_routes(api_router) -> None:
                     "partyId": person.get("partyId"),
                     "partyName": party.get("name") or person.get("partyId"),
                     "partyColor": party.get("primaryColor") or "#D4A24C",
+                    "representativeType": leader_rep_type,
                     "assemblyConstituencyId": person.get("assemblyConstituencyId"),
                     "districtId": person.get("districtId"),
                     "parliamentConstituencyId": person.get("parliamentConstituencyId"),
+                    "zoneId": person.get("zoneId"),
                     "assemblyName": (assemblies_by_id.get(person.get("assemblyConstituencyId")) or {}).get("name") or person.get("assemblyConstituencyId"),
                     "leaderKind": person.get("leaderKind") or "SITTING_MLA",
                     "politicalRole": person.get("politicalRole"),
