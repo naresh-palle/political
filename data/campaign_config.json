@@ -1,0 +1,73 @@
+{
+  "candidateName": "Naresh Palle",
+  "tagline": "Integrity in Governance · Prosperity for Every Household",
+  "subheadline": "A dedicated vision for world-class drinking water, infrastructure, and youth empowerment in our constituency.",
+  "constituency": "Kadapa (132)",
+  "partyName": "Progressive Governance Alliance",
+  "heroImageUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+  "theme": "regal_navy",
+  "showManifesto": true,
+  "showTimeline": true,
+  "showVideoGallery": true,
+  "showVolunteerIntake": true,
+  "showGrievanceForm": true,
+  "showDonationBanner": false,
+  "manifestoPillars": [
+    {
+      "title": "24/7 Filtered Drinking Water",
+      "desc": "Complete underground pipeline grid connecting 100% of urban & rural households.",
+      "icon": "Droplets"
+    },
+    {
+      "title": "Youth Skill & IT Technology Hub",
+      "desc": "Incubation centre and 10,000 direct technology job placements for local graduates.",
+      "icon": "Laptop"
+    },
+    {
+      "title": "Farmer Solar Micro-Grid Irrigation",
+      "desc": "Free solar pump energization and zero-interest seasonal crop credit.",
+      "icon": "Sun"
+    },
+    {
+      "title": "Super-Speciality Healthcare Clinic",
+      "desc": "Free diagnostic wellness centers in all 28 municipal wards with digital records.",
+      "icon": "HeartPulse"
+    }
+  ],
+  "upcomingEvents": [
+    {
+      "date": "Sep 02, 2026 · 10:00 AM",
+      "title": "Janata Samvad & Public Grievance Darbar",
+      "location": "Municipal Community Centre, Chinna Chowk"
+    },
+    {
+      "date": "Sep 06, 2026 · 04:30 PM",
+      "title": "Youth Entrepreneurship & Skill Conclave",
+      "location": "Dr. YSR Memorial Convention Auditorium"
+    },
+    {
+      "date": "Sep 12, 2026 · 09:00 AM",
+      "title": "Mahila Shakthi Self-Help Group Mega Rally",
+      "location": "Gandhi Nagar Central Ground"
+    }
+  ],
+  "contactEmail": "campaign@nareshpalle.in",
+  "socialLinks": [
+    {
+      "platform": "x",
+      "url": "https://x.com/nareshpalle"
+    },
+    {
+      "platform": "facebook",
+      "url": "https://facebook.com/nareshpalle"
+    },
+    {
+      "platform": "instagram",
+      "url": "https://instagram.com/nareshpalle"
+    },
+    {
+      "platform": "youtube",
+      "url": "https://youtube.com/@nareshpalle"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "MDL-BNG-RUR",
+    "stateId": "AP",
+    "assemblyConstituencyId": "BNG-AC",
+    "name": "Banaganapalle Mandal",
+    "code": "M-01",
+    "totalVillages": 24,
+    "totalVoters": 68000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-KKL-RUR",
+    "stateId": "AP",
+    "assemblyConstituencyId": "BNG-AC",
+    "name": "Koilakuntla Mandal",
+    "code": "M-02",
+    "totalVillages": 18,
+    "totalVoters": 52000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-OWK-RUR",
+    "stateId": "AP",
+    "assemblyConstituencyId": "BNG-AC",
+    "name": "Owk Mandal",
+    "code": "M-03",
+    "totalVillages": 16,
+    "totalVoters": 46000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-SJM-RUR",
+    "stateId": "AP",
+    "assemblyConstituencyId": "BNG-AC",
+    "name": "Sanjamala Mandal",
+    "code": "M-04",
+    "totalVillages": 15,
+    "totalVoters": 41000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-KLM-RUR",
+    "stateId": "AP",
+    "assemblyConstituencyId": "BNG-AC",
+    "name": "Kolimigundla Mandal",
+    "code": "M-05",
+    "totalVillages": 17,
+    "totalVoters": 49000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-BNG-TWN",
+    "stateId": "AP",
+    "assemblyConstituencyId": "BNG-AC",
+    "name": "Banaganapalle Town",
+    "code": "T-01",
+    "totalVillages": 20,
+    "totalVoters": 44000,
+    "isActive": true
+  },
+  {
+    "id": "MDL-KKL-TWN",
+    "stateId": "AP",
+    "assemblyConstituencyId": "BNG-AC",
+    "name": "Koilakuntla Town",
+    "code": "T-02",
+    "totalVillages": 15,
+    "totalVoters": 32000,
+    "isActive": true
+  }
+]

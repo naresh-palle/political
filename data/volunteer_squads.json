@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sqd-1",
+    "name": "Sector Alpha · Urban Youth Wing",
+    "leaderName": "Ananya Sharma",
+    "wardZone": "Kadapa Central (Wards 1-12)",
+    "activeMembersCount": 42,
+    "targetVoterHouseholds": 3600,
+    "reachedHouseholds": 2840,
+    "dailyWhatsAppShares": 680,
+    "amplificationEfficiency": 88,
+    "status": "High Surge"
+  },
+  {
+    "id": "sqd-2",
+    "name": "Sector Beta · Farmers & Rural Outreach",
+    "leaderName": "M. Venkat Reddy",
+    "wardZone": "Kadapa Rural & Mandal Border",
+    "activeMembersCount": 35,
+    "targetVoterHouseholds": 4200,
+    "reachedHouseholds": 3150,
+    "dailyWhatsAppShares": 490,
+    "amplificationEfficiency": 82,
+    "status": "Operational"
+  },
+  {
+    "id": "sqd-3",
+    "name": "Sector Gamma · Women Empowerment Wing",
+    "leaderName": "P. Sunitha Rani",
+    "wardZone": "Industrial & Nagar Wards 13-25",
+    "activeMembersCount": 50,
+    "targetVoterHouseholds": 5000,
+    "reachedHouseholds": 4400,
+    "dailyWhatsAppShares": 820,
+    "amplificationEfficiency": 93,
+    "status": "High Surge"
+  },
+  {
+    "id": "sqd-4",
+    "name": "Sector Delta · Booth Panna Pramukhs",
+    "leaderName": "K. Srinivas Reddy",
+    "wardZone": "Booths 142 to 158",
+    "activeMembersCount": 28,
+    "targetVoterHouseholds": 2800,
+    "reachedHouseholds": 2650,
+    "dailyWhatsAppShares": 540,
+    "amplificationEfficiency": 95,
+    "status": "Operational"
+  }
+]

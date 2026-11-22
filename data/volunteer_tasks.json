@@ -1,0 +1,42 @@
+[
+  {
+    "id": "tsk-1",
+    "title": "Morning WhatsApp Video Bulletin Broadcast (Drinking Water Pipeline Scheme)",
+    "type": "WhatsApp Dispatch",
+    "assignedSquad": "Sector Alpha · Urban Youth Wing",
+    "deadline": "Today, 11:30 AM",
+    "targetCount": 1500,
+    "completedCount": 1320,
+    "priority": "Urgent"
+  },
+  {
+    "id": "tsk-2",
+    "title": "Panna Pramukh Door-to-Door Household Verification (Booths 148-152)",
+    "type": "Door-to-Door Canvassing",
+    "assignedSquad": "Sector Delta · Booth Panna Pramukhs",
+    "deadline": "Tomorrow, 5:00 PM",
+    "targetCount": 450,
+    "completedCount": 310,
+    "priority": "High"
+  },
+  {
+    "id": "tsk-3",
+    "title": "Countering Fake Video Misinformation on Pension Disbursal Cutoffs",
+    "type": "Misinformation Fact-Check",
+    "assignedSquad": "Sector Alpha · Urban Youth Wing",
+    "deadline": "Today, 2:00 PM",
+    "targetCount": 500,
+    "completedCount": 490,
+    "priority": "Urgent"
+  },
+  {
+    "id": "tsk-4",
+    "title": "Mega Public Townhall Mobilization & Entry Token Distribution",
+    "type": "Rally Mobilization",
+    "assignedSquad": "Sector Gamma · Women Empowerment Wing",
+    "deadline": "Sunday, 10:00 AM",
+    "targetCount": 2000,
+    "completedCount": 1100,
+    "priority": "High"
+  }
+]

@@ -1,0 +1,542 @@
+[
+  {
+    "id": "AP",
+    "countryId": "IND",
+    "name": "Andhra Pradesh",
+    "code": "AP",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 25,
+    "totalAssemblyConstituencies": 175,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AR",
+    "countryId": "IND",
+    "name": "Arunachal Pradesh",
+    "code": "AR",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 2,
+    "totalAssemblyConstituencies": 60,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AS",
+    "countryId": "IND",
+    "name": "Assam",
+    "code": "AS",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 14,
+    "totalAssemblyConstituencies": 126,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "BR",
+    "countryId": "IND",
+    "name": "Bihar",
+    "code": "BR",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 40,
+    "totalAssemblyConstituencies": 243,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CG",
+    "countryId": "IND",
+    "name": "Chhattisgarh",
+    "code": "CG",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 11,
+    "totalAssemblyConstituencies": 90,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GA",
+    "countryId": "IND",
+    "name": "Goa",
+    "code": "GA",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 2,
+    "totalAssemblyConstituencies": 40,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "GJ",
+    "countryId": "IND",
+    "name": "Gujarat",
+    "code": "GJ",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 26,
+    "totalAssemblyConstituencies": 182,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HR",
+    "countryId": "IND",
+    "name": "Haryana",
+    "code": "HR",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 10,
+    "totalAssemblyConstituencies": 90,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "HP",
+    "countryId": "IND",
+    "name": "Himachal Pradesh",
+    "code": "HP",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 4,
+    "totalAssemblyConstituencies": 68,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JH",
+    "countryId": "IND",
+    "name": "Jharkhand",
+    "code": "JH",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 14,
+    "totalAssemblyConstituencies": 81,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KA",
+    "countryId": "IND",
+    "name": "Karnataka",
+    "code": "KA",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 28,
+    "totalAssemblyConstituencies": 224,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "KL",
+    "countryId": "IND",
+    "name": "Kerala",
+    "code": "KL",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 20,
+    "totalAssemblyConstituencies": 140,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MP",
+    "countryId": "IND",
+    "name": "Madhya Pradesh",
+    "code": "MP",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 29,
+    "totalAssemblyConstituencies": 230,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MH",
+    "countryId": "IND",
+    "name": "Maharashtra",
+    "code": "MH",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 48,
+    "totalAssemblyConstituencies": 288,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MN",
+    "countryId": "IND",
+    "name": "Manipur",
+    "code": "MN",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 2,
+    "totalAssemblyConstituencies": 60,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "ML",
+    "countryId": "IND",
+    "name": "Meghalaya",
+    "code": "ML",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 2,
+    "totalAssemblyConstituencies": 60,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "MZ",
+    "countryId": "IND",
+    "name": "Mizoram",
+    "code": "MZ",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 40,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "NL",
+    "countryId": "IND",
+    "name": "Nagaland",
+    "code": "NL",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 60,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "OD",
+    "countryId": "IND",
+    "name": "Odisha",
+    "code": "OD",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 21,
+    "totalAssemblyConstituencies": 147,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PB",
+    "countryId": "IND",
+    "name": "Punjab",
+    "code": "PB",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 13,
+    "totalAssemblyConstituencies": 117,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "RJ",
+    "countryId": "IND",
+    "name": "Rajasthan",
+    "code": "RJ",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 25,
+    "totalAssemblyConstituencies": 200,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "SK",
+    "countryId": "IND",
+    "name": "Sikkim",
+    "code": "SK",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 32,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TN",
+    "countryId": "IND",
+    "name": "Tamil Nadu",
+    "code": "TN",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 39,
+    "totalAssemblyConstituencies": 234,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TS",
+    "countryId": "IND",
+    "name": "Telangana",
+    "code": "TS",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 17,
+    "totalAssemblyConstituencies": 119,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "TR",
+    "countryId": "IND",
+    "name": "Tripura",
+    "code": "TR",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 2,
+    "totalAssemblyConstituencies": 60,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UP",
+    "countryId": "IND",
+    "name": "Uttar Pradesh",
+    "code": "UP",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 80,
+    "totalAssemblyConstituencies": 403,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "UK",
+    "countryId": "IND",
+    "name": "Uttarakhand",
+    "code": "UK",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 5,
+    "totalAssemblyConstituencies": 70,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "WB",
+    "countryId": "IND",
+    "name": "West Bengal",
+    "code": "WB",
+    "type": "STATE",
+    "totalParliamentaryConstituencies": 42,
+    "totalAssemblyConstituencies": 294,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "AN",
+    "countryId": "IND",
+    "name": "Andaman and Nicobar Islands",
+    "code": "AN",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 0,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "CH",
+    "countryId": "IND",
+    "name": "Chandigarh",
+    "code": "CH",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 0,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DN",
+    "countryId": "IND",
+    "name": "Dadra and Nagar Haveli and Daman and Diu",
+    "code": "DN",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 2,
+    "totalAssemblyConstituencies": 0,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "DL",
+    "countryId": "IND",
+    "name": "Delhi (NCT)",
+    "code": "DL",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 7,
+    "totalAssemblyConstituencies": 70,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "JK",
+    "countryId": "IND",
+    "name": "Jammu and Kashmir",
+    "code": "JK",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 5,
+    "totalAssemblyConstituencies": 90,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "LA",
+    "countryId": "IND",
+    "name": "Ladakh",
+    "code": "LA",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 0,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "LD",
+    "countryId": "IND",
+    "name": "Lakshadweep",
+    "code": "LD",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 0,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  },
+  {
+    "id": "PY",
+    "countryId": "IND",
+    "name": "Puducherry",
+    "code": "PY",
+    "type": "UNION_TERRITORY",
+    "totalParliamentaryConstituencies": 1,
+    "totalAssemblyConstituencies": 30,
+    "isActive": true,
+    "sourceMetadata": {
+      "sourceName": "Election Commission of India (ECI) Delimitation & Electoral Rolls",
+      "sourceDate": "2024",
+      "lastVerifiedAt": "2026-08-28T00:00:00Z"
+    }
+  }
+]

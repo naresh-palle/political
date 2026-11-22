@@ -1,0 +1,98 @@
+[
+  {
+    "id": "VIL-BNG-TWN-01",
+    "mandalId": "MDL-BNG-TWN",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Banaganapalle Town Wards 1-10",
+    "code": "W-01",
+    "totalVoters": 22000,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  },
+  {
+    "id": "VIL-BNG-TWN-02",
+    "mandalId": "MDL-BNG-TWN",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Banaganapalle Town Wards 11-20",
+    "code": "W-02",
+    "totalVoters": 22000,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  },
+  {
+    "id": "VIL-BNG-YGT",
+    "mandalId": "MDL-BNG-RUR",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Yaganti Sector",
+    "code": "V-101",
+    "totalVoters": 14500,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  },
+  {
+    "id": "VIL-BNG-NDM",
+    "mandalId": "MDL-BNG-RUR",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Nandamukkapalli",
+    "code": "V-102",
+    "totalVoters": 11200,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  },
+  {
+    "id": "VIL-KKL-TWN-01",
+    "mandalId": "MDL-KKL-TWN",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Koilakuntla Town Wards 1-15",
+    "code": "W-03",
+    "totalVoters": 32000,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  },
+  {
+    "id": "VIL-OWK-RSV",
+    "mandalId": "MDL-OWK-RUR",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Owk Reservoir Sector",
+    "code": "V-103",
+    "totalVoters": 16800,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  },
+  {
+    "id": "VIL-SJM-AKM",
+    "mandalId": "MDL-SJM-RUR",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Akumalla",
+    "code": "V-104",
+    "totalVoters": 13400,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  },
+  {
+    "id": "VIL-KLM-BLM",
+    "mandalId": "MDL-KLM-RUR",
+    "assemblyConstituencyId": "BNG-AC",
+    "stateId": "AP",
+    "name": "Belum Caves Sector",
+    "code": "V-105",
+    "totalVoters": 15600,
+    "assignedVolunteerId": "usr-demo-volunteer",
+    "assignedVolunteerName": "Volunteer1",
+    "isActive": true
+  }
+]
