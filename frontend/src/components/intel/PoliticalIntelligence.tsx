@@ -21,7 +21,7 @@ import { UserProfile, PiDashboard, PiDistrictProgress, PiRecentCollection, State
 import { politicalApiService } from "../../services/api";
 import { UNIQUE_TICKET_SURFACE } from "../../utils/ticketKpi";
 import { canManagePoliticalIntelligence, isSmAUser, isSmMUser } from "../../utils/piAccess";
-import { cacheHasPiData, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
+import { cacheHasPiData, clearPiOperatorCache, readPiOperatorCache, writePiOperatorCache } from "../../utils/piOperatorCache";
 import { downloadPiCsvExport } from "../../utils/piExcelExport";
 
 type Tab = "dashboard" | "constituencies" | "verify" | "import" | "intelligence" | "ranking";
@@ -32,9 +32,9 @@ export type RepresentativeType = "MLA" | "MP" | "MLC";
 
 const LEADER_SLOTS: { kind: LeaderKind; label: string; defaultRole: string; defaultParty: string }[] = [
   { kind: "LEADER_1", label: "Leader 1", defaultRole: "MLA", defaultParty: "TDP" },
-  { kind: "LEADER_2", label: "Leader 2", defaultRole: "OTHER", defaultParty: "" },
-  { kind: "LEADER_3", label: "Leader 3", defaultRole: "OTHER", defaultParty: "" },
-  { kind: "LEADER_4", label: "Leader 4", defaultRole: "OTHER", defaultParty: "" }
+  { kind: "LEADER_2", label: "Leader 2", defaultRole: "CONTESTED_CANDIDATE", defaultParty: "" },
+  { kind: "LEADER_3", label: "Leader 3", defaultRole: "PROSPECTIVE_CANDIDATE", defaultParty: "" },
+  { kind: "LEADER_4", label: "Leader 4", defaultRole: "PARTY_LEADER", defaultParty: "" }
 ];
 
 function slotIndexForKind(kind?: string): number {
@@ -89,7 +89,6 @@ const SMA_TABS: { id: Tab; label: string }[] = [
 
 const SMM_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
-  { id: "constituencies", label: "Constituencies" },
   { id: "intelligence", label: "Intelligence" },
   { id: "ranking", label: "Ranking" }
 ];
@@ -590,25 +589,51 @@ const ENTRY_GROUPS: { id: EntryGroup; label: string }[] = [
   { id: "leaders", label: "Leaders" }
 ];
 
-const ROLES = [
-  "MLA",
-  "LOK_SABHA_MP",
-  "RAJYA_SABHA_MP",
-  "MLC",
-  "MINISTER",
-  "CHIEF_MINISTER",
-  "DEPUTY_CHIEF_MINISTER",
-  "CABINET_MINISTER",
-  "MINISTER_OF_STATE",
-  "FORMER_MLA",
-  "FORMER_MP",
-  "FORMER_MLC",
-  "PROSPECTIVE_CANDIDATE",
-  "CONTESTED_CANDIDATE",
-  "PARTY_LEADER",
-  "PARTY_PRESIDENT",
-  "OTHER"
-];
+export function getPoliticalRolesForRepType(repType?: RepresentativeType): string[] {
+  const current = repType || "MLA";
+  if (current === "MP") {
+    return [
+      "LOK_SABHA_MP",
+      "RAJYA_SABHA_MP",
+      "MINISTER",
+      "CABINET_MINISTER",
+      "MINISTER_OF_STATE",
+      "FORMER_MP",
+      "PROSPECTIVE_CANDIDATE",
+      "CONTESTED_CANDIDATE",
+      "PARTY_LEADER",
+      "PARTY_PRESIDENT"
+    ];
+  }
+  if (current === "MLC") {
+    return [
+      "MLC",
+      "MINISTER",
+      "CABINET_MINISTER",
+      "MINISTER_OF_STATE",
+      "FORMER_MLC",
+      "PROSPECTIVE_CANDIDATE",
+      "CONTESTED_CANDIDATE",
+      "PARTY_LEADER",
+      "PARTY_PRESIDENT"
+    ];
+  }
+  return [
+    "MLA",
+    "MINISTER",
+    "CHIEF_MINISTER",
+    "DEPUTY_CHIEF_MINISTER",
+    "CABINET_MINISTER",
+    "MINISTER_OF_STATE",
+    "FORMER_MLA",
+    "PROSPECTIVE_CANDIDATE",
+    "CONTESTED_CANDIDATE",
+    "PARTY_LEADER",
+    "PARTY_PRESIDENT"
+  ];
+}
+
+const ROLES = getPoliticalRolesForRepType("MLA");
 
 const PLATFORMS = ["facebook", "instagram", "x", "youtube"] as const;
 const PLATFORM_LABEL: Record<(typeof PLATFORMS)[number], string> = {
@@ -785,12 +810,15 @@ type LeaderSlotState = {
   activePlatform: (typeof PLATFORMS)[number];
 };
 
-function emptyLeaderSlot(slot: (typeof LEADER_SLOTS)[number]): LeaderSlotState {
+function emptyLeaderSlot(slot: (typeof LEADER_SLOTS)[number], repType?: RepresentativeType): LeaderSlotState {
+  const primaryRole = slot.kind === "LEADER_1"
+    ? (repType === "MP" ? "LOK_SABHA_MP" : repType === "MLC" ? "MLC" : "MLA")
+    : slot.defaultRole;
   return {
     name: "",
     partyId: slot.defaultParty,
-    politicalRole: slot.defaultRole,
-    politicalRoles: slot.defaultRole ? [slot.defaultRole] : [],
+    politicalRole: primaryRole,
+    politicalRoles: primaryRole ? [primaryRole] : [],
     leaderKind: slot.kind,
     platformDrafts: emptyPlatformDrafts(),
     activePlatform: "facebook"
@@ -855,12 +883,13 @@ function buildLeaderSlots(
   accountRows: any[],
   assemblyId: string,
   prev?: LeaderSlotState[],
-  mode: "replace" | "merge" = "replace"
+  mode: "replace" | "merge" = "replace",
+  repType?: RepresentativeType
 ) {
   const scoped = assemblyId ? (leaderRows || []).filter((row) => row.assemblyConstituencyId === assemblyId) : [];
   const used = new Set<string>();
   return LEADER_SLOTS.map((def, index) => {
-    const empty = emptyLeaderSlot(def);
+    const empty = emptyLeaderSlot(def, repType);
     const row = scoped.find((item) => slotIndexForKind(item.leaderKind) === index && item.id && !used.has(item.id));
     if (row?.id) used.add(row.id);
     const serverSlot: LeaderSlotState = row
@@ -1090,7 +1119,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const isSmM = isSmMUser(currentUser);
   const isAdminEditor = canManagePoliticalIntelligence(currentUser);
   const canVerify = isSmM || isAdminEditor;
-  const canEdit = isSmA || isAdminEditor || isSmM;
+  const canEdit = isSmA || isAdminEditor;
   const canDelete = isSmM || isAdminEditor;
   const visibleTabs = isAdminEditor ? ADMIN_TABS : isSmM ? SMM_TABS : SMA_TABS;
   const initialCache = readPiOperatorCache(userId);
@@ -1109,24 +1138,24 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const [saving, setSaving] = useState<SaveKind>(null);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
-  const [dashboard, setDashboard] = useState<PiDashboard | null>(initialCache?.dashboard || null);
+  const [dashboard, setDashboard] = useState<PiDashboard | null>(null);
   const [states, setStates] = useState<StateInfo[]>([]);
   const [parties, setParties] = useState<PoliticalParty[]>([]);
   const [parliaments, setParliaments] = useState<ParliamentInfo[]>([]);
   const [districts, setDistricts] = useState<any[]>([]);
   const [assemblies, setAssemblies] = useState<any[]>([]);
   const [stateTrends, setStateTrends] = useState<any[]>([]);
-  const [stateId, setStateId] = useState(initialCache?.stateId || ((currentUser.stateId && currentUser.stateId.length <= 5) ? currentUser.stateId : "AP"));
-  const [districtId, setDistrictId] = useState(initialCache?.districtId || "");
-  const [pcId, setPcId] = useState(initialCache?.pcId || "");
-  const [acId, setAcId] = useState(initialCache?.acId || "");
+  const [stateId, setStateId] = useState(((currentUser.stateId && currentUser.stateId.length <= 5) ? currentUser.stateId : "AP"));
+  const [districtId, setDistrictId] = useState("");
+  const [pcId, setPcId] = useState("");
+  const [acId, setAcId] = useState("");
   const [constForm, setConstForm] = useState<any>({
     enteredByName: currentUser.name || "",
     dataCollectionDate: todayIsoDate()
   });
   const [constRows, setConstRows] = useState<any[]>(initialCache?.constRows || []);
   const [leaderSlots, setLeaderSlots] = useState<LeaderSlotState[]>(() =>
-    buildLeaderSlots(initialCache?.leaders || [], initialCache?.accounts || [], initialCache?.acId || "")
+    buildLeaderSlots(initialCache?.leaders || [], initialCache?.accounts || [], initialCache?.acId || "", undefined, "replace", repType)
   );
   const [savingSlot, setSavingSlot] = useState<number | null>(null);
   const [leaderAlert, setLeaderAlert] = useState<LeaderFieldAlert | null>(null);
@@ -1391,6 +1420,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const refreshDashboard = async () => {
     const req = ++dashReqRef.current;
     const scopedDistrict = repType === "MLA" ? (districtId || undefined) : undefined;
+    setDashboard(null);
     setPageLoading(true);
     try {
       const data = await politicalApiService.getPiDashboard(userId, stateId, scopedDistrict, repType);
@@ -1482,6 +1512,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   useEffect(() => {
     refreshDashboard().catch(() => {});
   }, [userId, stateId, districtId, repType, pcId, zoneId]);
+
+  useEffect(() => {
+    setLeaderSlots(buildLeaderSlots([], [], acId, undefined, "replace", repType));
+  }, [repType]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1583,54 +1617,31 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     }
   };
   const loadLeaders = async () => {
-    const cache = readPiOperatorCache(userId);
-    const cachedAll = cache?.leaders || [];
-    const cachedScoped = cachedAll.filter((row) => !acId || row.assemblyConstituencyId === acId);
     try {
       const data = await politicalApiService.getPiLeaders(userId, { assemblyConstituencyId: acId || undefined, districtId, limit: 200 });
       const items = data.items || [];
-      if (!items.length && cachedScoped.length) {
-        setLeaders(cachedScoped);
-        return cachedScoped;
-      }
-      const others = acId ? cachedAll.filter((row) => row.assemblyConstituencyId !== acId) : [];
-      const mergedAll = mergeById(items, others);
-      if (mergedAll.length) persistOperatorCache({ leaders: mergedAll });
-      const scoped = acId ? mergedAll.filter((row) => row.assemblyConstituencyId === acId) : mergedAll;
+      const scoped = acId ? items.filter((row: any) => row.assemblyConstituencyId === acId) : items;
       setLeaders(scoped);
       return scoped;
     } catch {
-      setLeaders(cachedScoped);
-      return cachedScoped;
+      setLeaders([]);
+      return [];
     }
   };
   const loadAccounts = async () => {
-    const cache = readPiOperatorCache(userId);
-    const cachedAll = cache?.accounts || [];
-    const leaderIds = new Set((cache?.leaders || []).filter((row) => !acId || row.assemblyConstituencyId === acId).map((row) => row.id));
-    const cachedScoped = cachedAll.filter((row) => !acId || leaderIds.has(row.personId) || !row.personId);
     try {
       const data = await politicalApiService.getPiAccounts(userId, { assemblyConstituencyId: acId || undefined, limit: 200 });
       const items = data.items || [];
-      if (!items.length && cachedScoped.length) {
-        setAccounts(cachedScoped);
-        return cachedScoped;
-      }
-      const itemIds = new Set(items.map((row: any) => row.id));
-      const others = items.length ? cachedAll.filter((row) => !itemIds.has(row.id) && (!acId || !leaderIds.has(row.personId))) : cachedAll;
-      const mergedAll = mergeById(items, others);
-      if (mergedAll.length) persistOperatorCache({ accounts: mergedAll });
-      const scoped = acId ? mergedAll.filter((row) => leaderIds.has(row.personId) || items.some((item: any) => item.id === row.id)) : mergedAll;
-      setAccounts(scoped.length ? scoped : mergedAll);
-      return scoped.length ? scoped : mergedAll;
+      setAccounts(items);
+      return items;
     } catch {
-      setAccounts(cachedScoped);
-      return cachedScoped;
+      setAccounts([]);
+      return [];
     }
   };
 
   const hydrateLeaderSlots = (leaderRows: any[], accountRows: any[], mode: "replace" | "merge" = "replace") => {
-    setLeaderSlots((prev) => buildLeaderSlots(leaderRows, accountRows, acId, prev, mode));
+    setLeaderSlots((prev) => buildLeaderSlots(leaderRows, accountRows, acId, prev, mode, repType));
   };
   const loadQueue = async () => {
     const wanted = String(queueStatus || "PENDING").toUpperCase();
@@ -2340,6 +2351,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         <section className="space-y-4">
           {/* Top State and Representative Bar */}
           <StateDistrictBar
+            userId={userId}
             repType={repType}
             setRepType={(newRep) => {
               setRepType(newRep);
@@ -2770,6 +2782,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             })()}
             <div className="mt-3 space-y-2">
               <GeoFilters
+                userId={userId}
                 repType={repType} setRepType={setRepType}
                 stateId={stateId} setStateId={setStateId}
                 districtId={districtId} setDistrictId={setDistrictId}
@@ -2846,14 +2859,24 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
           {entryGroup === "leaders" && (
             <div className="space-y-4">
-              {!districtId || !acId ? (
+              {((repType === "MLA" && (!districtId || !acId)) || (repType === "MP" && !acId) || (repType === "MLC" && !acId)) ? (
                 <div className={`${CARD} p-8 text-center space-y-3 border border-[#D4A24C]/30 bg-[#071322]/80`}>
                   <div className="w-12 h-12 rounded-full bg-[#142B45] text-[#D4A24C] flex items-center justify-center mx-auto text-xl border border-[#D4A24C]/40">
                     🏛️
                   </div>
-                  <h3 className="text-base font-display font-bold text-[#F5EFE0]">Select District & Assembly Constituency</h3>
+                  <h3 className="text-base font-display font-bold text-[#F5EFE0]">
+                    {repType === "MP"
+                      ? "Select Parliamentary Constituency"
+                      : repType === "MLC"
+                      ? "Select Council Zone"
+                      : "Select District & Assembly Constituency"}
+                  </h3>
                   <p className="text-xs text-[#B9AF95] max-w-md mx-auto">
-                    Please select a District and an Assembly Constituency above to view, add, and manage political leaders for that area.
+                    {repType === "MP"
+                      ? "Please select a Parliamentary Constituency above to view, add, and manage political leaders."
+                      : repType === "MLC"
+                      ? "Please select a Council Zone above to view, add, and manage political leaders."
+                      : "Please select a District and an Assembly Constituency above to view, add, and manage political leaders for that area."}
                   </p>
                 </div>
               ) : (
@@ -3058,7 +3081,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         </span>
                       </div>
                       <div id={leaderFieldDomId(index, "role")} className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-[#071322] border border-[#22405E]/80">
-                        {ROLES.map((role) => {
+                        {getPoliticalRolesForRepType(repType).map((role) => {
                           const currentRoles = slot.politicalRoles || (slot.politicalRole ? [slot.politicalRole] : []);
                           const active = currentRoles.includes(role);
                           return (
@@ -5356,6 +5379,7 @@ function StateRankingTab(props: {
 }
 
 function StateDistrictBar(props: {
+  userId?: string;
   repType: RepresentativeType;
   setRepType: (v: RepresentativeType) => void;
   stateId: string;
@@ -5380,6 +5404,7 @@ function StateDistrictBar(props: {
           className={INPUT}
           value={props.repType}
           onChange={(e) => {
+            clearPiOperatorCache(props.userId);
             props.setRepType(e.target.value as RepresentativeType);
             props.setDistrictId("");
             props.setPcId("");
@@ -5398,6 +5423,7 @@ function StateDistrictBar(props: {
           className={INPUT}
           value={props.stateId}
           onChange={(e) => {
+            clearPiOperatorCache(props.userId);
             props.setStateId(e.target.value);
             props.setDistrictId("");
             props.setPcId("");
@@ -5416,6 +5442,7 @@ function StateDistrictBar(props: {
               className={INPUT}
               value={props.districtId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 props.setDistrictId(e.target.value);
                 props.setPcId("");
                 props.setAcId("");
@@ -5432,6 +5459,7 @@ function StateDistrictBar(props: {
               className={INPUT}
               value={props.pcId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 props.setPcId(e.target.value);
                 props.setAcId("");
               }}
@@ -5447,6 +5475,7 @@ function StateDistrictBar(props: {
               className={INPUT}
               value={props.zoneId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 props.setZoneId(e.target.value);
                 props.setAcId("");
               }}
@@ -5462,6 +5491,7 @@ function StateDistrictBar(props: {
 }
 
 function GeoFilters(props: {
+  userId?: string;
   repType?: RepresentativeType;
   setRepType?: (v: RepresentativeType) => void;
   stateId: string; setStateId: (v: string) => void;
@@ -5487,6 +5517,7 @@ function GeoFilters(props: {
             className={INPUT}
             value={currentRep}
             onChange={(e) => {
+              clearPiOperatorCache(props.userId);
               props.setRepType?.(e.target.value as RepresentativeType);
               props.setDistrictId("");
               props.setPcId("");
@@ -5506,6 +5537,7 @@ function GeoFilters(props: {
           className={INPUT}
           value={props.stateId}
           onChange={(e) => {
+            clearPiOperatorCache(props.userId);
             props.setStateId(e.target.value);
             props.setDistrictId("");
             props.setPcId("");
@@ -5525,6 +5557,7 @@ function GeoFilters(props: {
               className={INPUT}
               value={props.districtId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 props.setDistrictId(e.target.value);
                 props.setPcId("");
                 props.setAcId("");
@@ -5543,6 +5576,7 @@ function GeoFilters(props: {
               value={props.districtId ? props.acId : ""}
               disabled={!props.districtId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 const id = e.target.value;
                 props.setAcId(id);
                 const ac = props.acs.find((a) => a.id === id);
@@ -5566,6 +5600,7 @@ function GeoFilters(props: {
               className={INPUT}
               value={props.districtId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 props.setDistrictId(e.target.value);
                 props.setPcId("");
                 props.setAcId("");
@@ -5581,6 +5616,7 @@ function GeoFilters(props: {
               className={INPUT}
               value={props.pcId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 const val = e.target.value;
                 props.setPcId(val);
                 props.setAcId(val ? `PC-${val}` : "");
@@ -5613,6 +5649,7 @@ function GeoFilters(props: {
               className={INPUT}
               value={props.districtId}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 props.setDistrictId(e.target.value);
                 props.setAcId("");
               }}
@@ -5627,6 +5664,7 @@ function GeoFilters(props: {
               className={INPUT}
               value={props.zoneId || ""}
               onChange={(e) => {
+                clearPiOperatorCache(props.userId);
                 const val = e.target.value;
                 if (props.setZoneId) props.setZoneId(val);
                 props.setAcId(val ? `ZONE-${val}` : "");

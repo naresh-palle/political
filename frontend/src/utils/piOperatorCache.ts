@@ -56,6 +56,22 @@ export function writePiOperatorCache(userId: string, patch: Partial<PiOperatorCa
   }
 }
 
+export function clearPiOperatorCache(userId?: string) {
+  try {
+    if (userId) {
+      localStorage.removeItem(keyFor(userId));
+    }
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PREFIX)) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch {
+    // Ignore private mode
+  }
+}
+
 export function cacheHasPiData(cache: PiOperatorCache | null): boolean {
   if (!cache) return false;
   return Boolean(
