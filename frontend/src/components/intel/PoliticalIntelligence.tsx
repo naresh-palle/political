@@ -89,6 +89,7 @@ const SMA_TABS: { id: Tab; label: string }[] = [
 
 const SMM_TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
+  { id: "constituencies", label: "Constituencies" },
   { id: "intelligence", label: "Intelligence" },
   { id: "ranking", label: "Ranking" }
 ];
@@ -533,6 +534,56 @@ export function getMlcZonesForState(stateId?: string): MlcZoneInfo[] {
     { id: `${code}-MLC-MLA`, name: "Elected by MLAs / Nominated", type: "MLA_NOMINATED" }
   ];
 }
+
+export const DEFAULT_STATE_PCS: Record<string, ParliamentInfo[]> = {
+  AP: [
+    { id: "AP-PC-1", code: "ARAK-PC", name: "Araku (ST)", stateId: "AP" },
+    { id: "AP-PC-2", code: "SRIK-PC", name: "Srikakulam", stateId: "AP" },
+    { id: "AP-PC-3", code: "VIZI-PC", name: "Vizianagaram", stateId: "AP" },
+    { id: "AP-PC-4", code: "VSKP-PC", name: "Visakhapatnam", stateId: "AP" },
+    { id: "AP-PC-5", code: "ANAK-PC", name: "Anakapalle", stateId: "AP" },
+    { id: "AP-PC-6", code: "KAKI-PC", name: "Kakinada", stateId: "AP" },
+    { id: "AP-PC-7", code: "AMAL-PC", name: "Amalapuram (SC)", stateId: "AP" },
+    { id: "AP-PC-8", code: "RJMD-PC", name: "Rajahmundry", stateId: "AP" },
+    { id: "AP-PC-9", code: "NARS-PC", name: "Narsapuram", stateId: "AP" },
+    { id: "AP-PC-10", code: "ELUR-PC", name: "Eluru", stateId: "AP" },
+    { id: "AP-PC-11", code: "MACH-PC", name: "Machilipatnam", stateId: "AP" },
+    { id: "AP-PC-12", code: "VIJA-PC", name: "Vijayawada", stateId: "AP" },
+    { id: "AP-PC-13", code: "GNT-PC", name: "Guntur", stateId: "AP" },
+    { id: "AP-PC-14", code: "NRPT-PC", name: "Narasaraopet", stateId: "AP" },
+    { id: "AP-PC-15", code: "BAPT-PC", name: "Bapatla (SC)", stateId: "AP" },
+    { id: "AP-PC-16", code: "ONGL-PC", name: "Ongole", stateId: "AP" },
+    { id: "AP-PC-17", code: "NDYL-PC", name: "Nandyal", stateId: "AP" },
+    { id: "AP-PC-18", code: "KRNL-PC", name: "Kurnool", stateId: "AP" },
+    { id: "AP-PC-19", code: "ANNT-PC", name: "Anantapur", stateId: "AP" },
+    { id: "AP-PC-20", code: "HNDP-PC", name: "Hindupur", stateId: "AP" },
+    { id: "AP-PC-21", code: "KDP-PC", name: "Kadapa", stateId: "AP" },
+    { id: "AP-PC-22", code: "NELL-PC", name: "Nellore", stateId: "AP" },
+    { id: "AP-PC-23", code: "TPT-PC", name: "Tirupati (SC)", stateId: "AP" },
+    { id: "AP-PC-24", code: "RJP-PC", name: "Rajampet", stateId: "AP" },
+    { id: "AP-PC-25", code: "CHIT-PC", name: "Chittoor (SC)", stateId: "AP" }
+  ],
+  TS: [
+    { id: "TS-PC-1", code: "ADIL-PC", name: "Adilabad (ST)", stateId: "TS" },
+    { id: "TS-PC-2", code: "PDPL-PC", name: "Peddapalle (SC)", stateId: "TS" },
+    { id: "TS-PC-3", code: "KRMN-PC", name: "Karimnagar", stateId: "TS" },
+    { id: "TS-PC-4", code: "NZMB-PC", name: "Nizamabad", stateId: "TS" },
+    { id: "TS-PC-5", code: "ZHRB-PC", name: "Zahirabad", stateId: "TS" },
+    { id: "TS-PC-6", code: "MEDK-PC", name: "Medak", stateId: "TS" },
+    { id: "TS-PC-7", code: "MLKJ-PC", name: "Malkajgiri", stateId: "TS" },
+    { id: "TS-PC-8", code: "SCBD-PC", name: "Secunderabad", stateId: "TS" },
+    { id: "TS-PC-9", code: "HYBD-PC", name: "Hyderabad", stateId: "TS" },
+    { id: "TS-PC-10", code: "CHVL-PC", name: "Chevella", stateId: "TS" },
+    { id: "TS-PC-11", code: "MBBN-PC", name: "Mahbubnagar", stateId: "TS" },
+    { id: "TS-PC-12", code: "NGKN-PC", name: "Nagarkurnool (SC)", stateId: "TS" },
+    { id: "TS-PC-13", code: "NLGD-PC", name: "Nalgonda", stateId: "TS" },
+    { id: "TS-PC-14", code: "BHNG-PC", name: "Bhongir", stateId: "TS" },
+    { id: "TS-PC-15", code: "WRNG-PC", name: "Warangal (SC)", stateId: "TS" },
+    { id: "TS-PC-16", code: "MHBD-PC", name: "Mahabubabad (ST)", stateId: "TS" },
+    { id: "TS-PC-17", code: "KHMM-PC", name: "Khammam", stateId: "TS" }
+  ]
+};
+DEFAULT_STATE_PCS["TG"] = DEFAULT_STATE_PCS["TS"];
 
 const ENTRY_GROUPS: { id: EntryGroup; label: string }[] = [
   { id: "constituency", label: "Constituency" },
@@ -1039,7 +1090,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const isSmM = isSmMUser(currentUser);
   const isAdminEditor = canManagePoliticalIntelligence(currentUser);
   const canVerify = isSmM || isAdminEditor;
-  const canEdit = isSmA || isAdminEditor;
+  const canEdit = isSmA || isAdminEditor || isSmM;
   const canDelete = isSmM || isAdminEditor;
   const visibleTabs = isAdminEditor ? ADMIN_TABS : isSmM ? SMM_TABS : SMA_TABS;
   const initialCache = readPiOperatorCache(userId);
@@ -1460,20 +1511,40 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   }, [stateId, userId]);
 
   const filteredPcs = useMemo(() => {
-    if (!districtId) return [];
-    const inState = parliaments.filter((p) => !p.stateId || String(p.stateId).toUpperCase() === String(stateId).toUpperCase());
-    const district = districts.find((d) => d.id === districtId);
-    const pcIds = new Set<string>(district?.parliamentConstituencyIds || []);
-    if (!pcIds.size) {
-      const acIds = new Set(district?.assemblyConstituencyIds || []);
-      assemblies.forEach((a) => {
-        if (acIds.has(a.id) && (a.parliamentConstituencyId || a.parliamentId)) {
-          pcIds.add(a.parliamentConstituencyId || a.parliamentId);
-        }
-      });
+    const rawSt = String(stateId || "").toUpperCase();
+    const stCode = rawSt === "TG" || rawSt === "TELANGANA" ? "TS" : rawSt;
+    let statePcs = parliaments.filter((p) => {
+      const pState = String(p.stateId || "").toUpperCase();
+      return pState === stCode || pState === rawSt;
+    });
+    if (!statePcs.length && DEFAULT_STATE_PCS[stCode]) {
+      statePcs = DEFAULT_STATE_PCS[stCode];
     }
-    if (!pcIds.size) return [];
-    return inState.filter((p) => pcIds.has(p.id));
+    if (!districtId) return statePcs;
+
+    const district = districts.find((d) => d.id === districtId);
+    const distPcIds = new Set<string>((district?.parliamentConstituencyIds || []).map((x: string) => String(x).toLowerCase()));
+    const acIds = new Set(district?.assemblyConstituencyIds || []);
+    assemblies.forEach((a) => {
+      if (acIds.has(a.id) && (a.parliamentConstituencyId || a.parliamentId)) {
+        distPcIds.add(String(a.parliamentConstituencyId || a.parliamentId).toLowerCase());
+      }
+    });
+
+    const distNameClean = String(district?.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const distIdClean = String(districtId).toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    const matched = statePcs.filter((p) => {
+      const pId = String(p.id || "").toLowerCase();
+      const pCode = String(p.code || "").toLowerCase();
+      const pName = String(p.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (distPcIds.has(pId) || distPcIds.has(pCode)) return true;
+      if (distNameClean && (pName.includes(distNameClean) || distNameClean.includes(pName))) return true;
+      if (distIdClean && (distIdClean.includes(pName) || pId.includes(distIdClean))) return true;
+      return false;
+    });
+
+    return matched.length ? matched : statePcs;
   }, [assemblies, districts, districtId, parliaments, stateId]);
 
   const filteredAcs = useMemo(() => {
@@ -1750,7 +1821,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
     e.preventDefault();
     e.stopPropagation();
     if (saving) return;
-    if (!districtId || !acId) {
+    const effectiveAcId = acId || (repType === "MP" && pcId ? `PC-${pcId}` : repType === "MLC" && zoneId ? `ZONE-${zoneId}` : "");
+    const effectiveDistrictId = districtId || (repType === "MP" ? (districts.find(d => (d.parliamentConstituencyIds || []).includes(pcId))?.id || districts[0]?.id || "") : "");
+    if ((repType === "MLA" && (!districtId || !effectiveAcId)) || (!effectiveAcId)) {
       flash("Select district and constituency.", true);
       return;
     }
@@ -1764,10 +1837,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       await politicalApiService.savePiConstituency(userId, {
         ...constForm,
         stateId,
-        districtId,
+        districtId: effectiveDistrictId || districtId,
         parliamentConstituencyId: pcId,
-        assemblyConstituencyId: acId,
-        assemblyName: filteredAcs.find((a) => a.id === acId)?.name,
+        assemblyConstituencyId: effectiveAcId,
+        assemblyName: (repType === "MP" ? (filteredPcs.find(p => p.id === pcId)?.name || pcId) : repType === "MLC" ? (getMlcZonesForState(stateId).find(z => z.id === zoneId)?.name || zoneId) : filteredAcs.find((a) => a.id === effectiveAcId)?.name) || "",
         totalVoters: num(constForm.totalVoters),
         maleElectors: num(constForm.maleElectors),
         femaleElectors: num(constForm.femaleElectors),
@@ -2651,11 +2724,18 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             <h2 className="text-sm font-bold text-[#F5EFE0]">
               {repType === "MP" ? "Parliamentary Constituency (MP)" : repType === "MLC" ? "Council Zone (MLC)" : "Constituency (MLA)"}
             </h2>
-            {selectedAssemblyName ? (
-              <p className="text-[11px] text-[#B9AF95] mt-1">
-                {selectedAssemblyName}{selectedDistrictName ? ` · ${selectedDistrictName}` : ""}
-              </p>
-            ) : null}
+            {(() => {
+              const selectedTerritoryName = repType === "MP"
+                ? (filteredPcs.find((p) => p.id === pcId)?.name || pcId)
+                : repType === "MLC"
+                ? (getMlcZonesForState(stateId).find((z) => z.id === zoneId)?.name || zoneId)
+                : selectedAssemblyName;
+              return selectedTerritoryName ? (
+                <p className="text-[11px] text-[#B9AF95] mt-1">
+                  {selectedTerritoryName}{selectedDistrictName ? ` · ${selectedDistrictName}` : ""}
+                </p>
+              ) : null;
+            })()}
             <div className="mt-3 space-y-2">
               <GeoFilters
                 repType={repType} setRepType={setRepType}
@@ -2739,23 +2819,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   <Field id="pi-const-fb" label="Facebook account (URL / Page) *" value={constForm.facebookAccount || ""} onChange={(v) => setConstForm({ ...constForm, facebookAccount: v })} />
                   <Field id="pi-const-ig" label="Instagram account (URL / Handle) *" value={constForm.instagramAccount || ""} onChange={(v) => setConstForm({ ...constForm, instagramAccount: v })} />
                 </div>
-
-                {/* Auto-fetch weekly option */}
-                <label className="flex items-center gap-2.5 p-2 rounded-xl border border-[#22405E] bg-[#071322]/80 cursor-pointer hover:border-[#D4A24C]/60 transition-colors">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded text-[#D4A24C] focus:ring-[#D4A24C] border-[#22405E] bg-[#071322]"
-                    checked={constForm.autoFetchWeekly !== false}
-                    onChange={(e) => setConstForm({ ...constForm, autoFetchWeekly: e.target.checked })}
-                  />
-                  <div className="text-xs">
-                    <span className="font-bold text-[#F5EFE0] flex items-center gap-1.5">
-                      <RefreshCw className="w-3 h-3 text-[#D4A24C]" />
-                      Auto-fetch for every 1 week
-                    </span>
-                    <p className="text-[10px] text-[#B9AF95]">Automatically refresh social metrics and reach for this constituency every week</p>
-                  </div>
-                </label>
               </div>
 
               <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
@@ -5505,47 +5568,88 @@ function GeoFilters(props: {
       )}
 
       {currentRep === "MP" && (
-        <div className="min-w-0 sm:col-span-2">
-          <label className={LABEL}>Parliamentary Constituency (MP){props.markRequired ? " *" : ""}</label>
-          <select
-            className={INPUT}
-            value={props.pcId}
-            onChange={(e) => {
-              const val = e.target.value;
-              props.setPcId(val);
-              props.setAcId(val ? `PC-${val}` : "");
-            }}
-          >
-            <option value="">Select parliamentary constituency</option>
-            {props.pcs.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} {p.code ? `(${p.code})` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div className="min-w-0">
+            <label className={LABEL}>District{props.markRequired ? " *" : ""}</label>
+            <select
+              className={INPUT}
+              value={props.districtId}
+              onChange={(e) => {
+                props.setDistrictId(e.target.value);
+                props.setPcId("");
+                props.setAcId("");
+              }}
+            >
+              <option value="">{props.markRequired ? "Select district" : "All districts in this state"}</option>
+              {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
+          <div className="min-w-0">
+            <label className={LABEL}>Parliamentary Constituency (MP){props.markRequired ? " *" : ""}</label>
+            <select
+              className={INPUT}
+              value={props.pcId}
+              onChange={(e) => {
+                const val = e.target.value;
+                props.setPcId(val);
+                props.setAcId(val ? `PC-${val}` : "");
+                if (val && !props.districtId && props.districts.length > 0) {
+                  const valLower = val.toLowerCase();
+                  const matchedDist = props.districts.find((d) => {
+                    const pcIds = (d.parliamentConstituencyIds || []).map((x: string) => String(x).toLowerCase());
+                    return pcIds.includes(valLower) || String(d.name || "").toLowerCase().includes(valLower);
+                  });
+                  if (matchedDist) props.setDistrictId(matchedDist.id);
+                }
+              }}
+            >
+              <option value="">Select parliamentary constituency</option>
+              {props.pcs.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} {p.code ? `(${p.code})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
 
       {currentRep === "MLC" && (
-        <div className="min-w-0 sm:col-span-2">
-          <label className={LABEL}>Council Zone (MLC){props.markRequired ? " *" : ""}</label>
-          <select
-            className={INPUT}
-            value={props.zoneId || ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (props.setZoneId) props.setZoneId(val);
-              props.setAcId(val ? `ZONE-${val}` : "");
-            }}
-          >
-            <option value="">Select council zone</option>
-            {(props.zones || []).map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div className="min-w-0">
+            <label className={LABEL}>District (Optional)</label>
+            <select
+              className={INPUT}
+              value={props.districtId}
+              onChange={(e) => {
+                props.setDistrictId(e.target.value);
+                props.setAcId("");
+              }}
+            >
+              <option value="">All districts in this state</option>
+              {props.districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
+          <div className="min-w-0">
+            <label className={LABEL}>Council Zone (MLC){props.markRequired ? " *" : ""}</label>
+            <select
+              className={INPUT}
+              value={props.zoneId || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (props.setZoneId) props.setZoneId(val);
+                props.setAcId(val ? `ZONE-${val}` : "");
+              }}
+            >
+              <option value="">Select council zone</option>
+              {(props.zones || []).map((z) => (
+                <option key={z.id} value={z.id}>
+                  {z.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
       )}
     </div>
   );

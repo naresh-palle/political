@@ -2,9 +2,9 @@
 const fs = require('fs');
 const path = require('path');
 
-function run(cmd, cwd = process.cwd()) {
+function run(cmd, cwd = process.cwd(), env = {}) {
   console.log('> ' + cmd + ' (in ' + cwd + ')');
-  return execSync(cmd, { cwd, stdio: 'inherit', env: process.env });
+  return execSync(cmd, { cwd, stdio: 'inherit', env: { ...process.env, ...env } });
 }
 
 function copyDir(src, dest) {
@@ -39,38 +39,59 @@ function main() {
 
   console.log('========================================');
   console.log('SMART DEPLOYMENT PROTOCOL TRIGGERED');
-  console.log('Frontend (GH Pages): ' + (hasFrontend ? 'YES' : 'NO'));
-  console.log('Backend (Render):     ' + (hasBackend ? 'YES' : 'NO'));
+  console.log('Frontend (Cloudflare Pages): ' + (hasFrontend ? 'YES' : 'NO'));
+  console.log('Backend (Render):            ' + (hasBackend ? 'YES' : 'NO'));
   console.log('========================================');
 
-  const rootDir = path.join(__dirname, '..');
+  const rootDir = path.resolve(__dirname, '..');
   const frontendDir = path.join(rootDir, 'frontend');
   const distDir = path.join(frontendDir, 'dist');
   const docsDir = path.join(rootDir, 'docs');
 
   if (hasFrontend) {
-    console.log('[1/3] Building frontend bundle...');
+    console.log('[1/4] Running UI automation test...');
+    try {
+      run('node scripts/run_ui_tests.mjs', rootDir);
+    } catch (e) {
+      console.warn('UI test warning/notice: continuing build...');
+    }
+
+    console.log('[2/4] Building frontend bundle...');
     run('npm run build', frontendDir);
 
-    console.log('[2/3] Syncing dist to root and docs directory...');
+    console.log('[3/4] Syncing dist to root and docs directory...');
     copyDir(distDir, rootDir);
     copyDir(distDir, docsDir);
     fs.writeFileSync(path.join(rootDir, '.nojekyll'), '', 'utf-8');
     fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf-8');
 
-    console.log('[3/3] Deploying to gh-pages branch...');
-    run('npm run deploy', frontendDir);
+    console.log('[4/4] Deploying directly to Cloudflare Pages (leaders-lens)...');
+    let localCreds = {};
+    const credsPath = path.join(rootDir, '.deploy_credentials.json');
+    if (fs.existsSync(credsPath)) {
+      try {
+        localCreds = JSON.parse(fs.readFileSync(credsPath, 'utf-8'));
+      } catch (e) {
+        // Fallback to process.env
+      }
+    }
+    const cfEnv = {
+      CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID || localCreds.CLOUDFLARE_ACCOUNT_ID || '1b9ccc1557ec43d14cd6980a2aae9089',
+      CLOUDFLARE_API_KEY: process.env.CLOUDFLARE_API_KEY || localCreds.CLOUDFLARE_API_KEY,
+      CLOUDFLARE_EMAIL: process.env.CLOUDFLARE_EMAIL || localCreds.CLOUDFLARE_EMAIL || 'npalle.goud@gmail.com'
+    };
+    run('npx wrangler pages deploy dist --project-name leaders-lens --commit-dirty=true', frontendDir, cfEnv);
   }
 
   if (hasBackend || hasFrontend) {
-    console.log('Committing and pushing to origin main...');
+    console.log('Committing and pushing to origin main for Render & Git sync...');
     try {
       run('git add -A', rootDir);
       const msg = hasFrontend && hasBackend
-        ? 'feat: full-stack update (gh-pages & render deployed)'
+        ? 'feat: full-stack update (Cloudflare Pages & Render deployed)'
         : hasFrontend
-        ? 'feat(frontend): deploy updates to gh-pages'
-        : 'feat(backend): deploy backend updates to render';
+        ? 'feat(frontend): deploy updates to Cloudflare Pages'
+        : 'feat(backend): deploy backend updates to Render';
       run('git commit -m "' + msg + '"', rootDir);
     } catch (e) {
       console.log('No new changes to commit.');

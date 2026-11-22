@@ -1,19 +1,19 @@
 ---
 name: complete-commit-deploy
 description: >-
-  REQUIRED after every code change. Update skills if the workflow changed,
-  commit, push to git, deploy GitHub Pages, and deploy Render via origin/main.
+  REQUIRED after every code change. Run UI automation tests, update skills if the workflow changed,
+  commit, push to git, deploy Cloudflare Pages frontend immediately, and deploy Render via origin/main.
   Use whenever files change, and when the user asks to finish, ship, commit, or deploy.
 ---
 
-# Every code change → skills → git push → GitHub Pages → Render
+# Every code change → UI test → skills → Cloudflare Pages deploy → Render deploy → git push
 
 Do this in the **same turn** as the code change. Do not stop at “code is done.”
 Do not wait for the user to ask. Feature-branch-only work is not deployed.
 
 ## 0. Add / update skills
 
-If this change affects how we ship (git, Pages, Render, quality gates), update:
+If this change affects how we ship (git, Cloudflare Pages, Render, quality gates), update:
 
 - `.cursor/skills/complete-commit-deploy/SKILL.md` (canonical)
 - `.agent/skills/complete-commit-deploy/SKILL.md` (pointer)
@@ -27,43 +27,48 @@ Before implementing a **new** product, UI, role, routing, or data change, follow
 
 Keep those files in the same commit as the related code when the workflow itself changed.
 
-## 1. Quality gates
+## 1. Quality gates & UI Automation Testing
 
-- From `frontend/`: `npm run build` (TypeScript + Vite + `sync_build.js`). Fix errors before committing.
-- Confirm `.nojekyll` and `404.html` exist in repo root and `docs/`.
-- If `backend/` changed: `PYTHONPATH=<repo> python3 -m pytest backend/tests -n 0`.
-- **Every screen size.** Laptop, desktop, tablet, iPad, and mobile must show the **same alignment** and the **same information**. Do not hide fields on smaller viewports. Verify the changed flow at those widths before you call UI work done. Canonical rule: `.cursor/skills/cross-device-ui-parity/SKILL.md`.
+- **UI Automation Testing (REQUIRED on frontend/UI changes):**
+  Run `node scripts/run_ui_tests.mjs` (or `npm run test:ui`) to verify UI integrity, functional flows, zero mock/hardcoded values, and cross-device parity.
+- **Frontend Build:**
+  From `frontend/`: `npm run build` (TypeScript compilation + Vite bundle + `sync_build.js`). Fix any errors before committing.
+- Ensure `_redirects` exists in `frontend/public/` and `frontend/dist/` for Cloudflare Pages SPA routing.
+- **Backend Quality Gate (if `backend/` changed):**
+  Verify Python syntax and tests (`py -c "from services import pi_api; ..."` or `pytest`).
+- **Every screen size (required):**
+  Laptop, desktop, tablet, iPad, and mobile must show the **same alignment** and the **same information**. Do not hide fields on smaller viewports. Verified via UI automation tests.
 
-## 2. Commit and push git
+## 2. Deploy Cloudflare Pages (Frontend)
 
-- Stage source, tests, `docs/`, root Pages files (`index.html`, `404.html`, `assets/`, `.nojekyll`, `CNAME`), and skill/rule files.
-- Do not commit secrets, `.env`, or tokens.
-- Skip unrelated dirty files (for example unused `yarn.lock` churn) unless the change required them.
-- Commit with a short imperative message that states what shipped.
-- Push the working branch: `git push -u origin <branch-name>`.
-- Create or update the pull request for that branch.
+Production Site: **https://leaderslensconsulting.com** (Cloudflare Pages project: `leaders-lens` / `leaders-lens.pages.dev`).
 
-## 3. Deploy GitHub Pages (always when the turn produced a shippable commit)
+Whenever frontend files change, deploy immediately using local Wrangler with configured credentials:
+```powershell
+$env:CLOUDFLARE_ACCOUNT_ID="1b9ccc1557ec43d14cd6980a2aae9089"; $env:CLOUDFLARE_API_KEY="<CLOUDFLARE_API_KEY>"; $env:CLOUDFLARE_EMAIL="npalle.goud@gmail.com"; cd frontend; npx wrangler pages deploy dist --project-name leaders-lens --commit-dirty=true
+```
+This guarantees instant edge deployment in seconds without waiting for GitHub Actions or external token refresh.
 
-Site: https://leaderslensconsulting.com (GitHub Pages for `naresh-palle/political`). Production frontend stays on GitHub Pages until a Cloudflare DNS cutover is explicitly approved. `.github/workflows/cloudflare-pages.yml` deploys `frontend/` with Wrangler only when `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set; otherwise the job skips. Do not disable Pages, change apex/www DNS, or point the custom domain at Cloudflare without that approval. Never use palramai.in.
-
-1. `cd frontend && npm run build` (syncs `dist/` → `docs/` and repo root).
-2. `cd frontend && npm run deploy` (`gh-pages -d dist --dotfiles`).
-3. Commit and push any newly synced Pages files (`docs/`, root `index.html` / `assets/` / `404.html` / `.nojekyll`).
-
-## 4. Deploy Render (always ship `origin/main`)
+## 3. Deploy Render & Git Push (Backend / Full-Stack)
 
 Render auto-deploys **https://political-ddmj.onrender.com/** from **`origin/main`**.
 
-1. Fast-forward or merge the shipped commit onto `origin/main` (`git push origin <branch>:main` when the branch is based on current `main` and the user wants production, or merge the PR then confirm `main` has the commit).
-2. A feature-branch push is **not** a Render deploy. `origin/main` must move.
+1. Stage all changes: source, tests, `docs/`, root distribution files (`index.html`, `404.html`, `assets/`, `CNAME`), and skill/rule files.
+2. Commit with a clean imperative conventional commit message.
+3. Push to git: `git push origin main`.
+4. Render immediately pulls `origin/main` and updates the backend API and MongoDB connections.
 
-## 5. Report
+## 4. Single-Command Smart Deployment
+
+You can execute the entire verified pipeline automatically at any time by running:
+```bash
+node scripts/smart_deploy.js
+```
+
+## 5. Report to User
 
 Tell the user:
-
-- Commit SHA and branch
-- That git was pushed
-- GitHub Pages action (`npm run deploy` result)
-- Whether `origin/main` was updated for Render
-- Volunteer/officer clients must hard-refresh after Pages publish
+- UI Automation Test results (test pass count, viewports verified)
+- Cloudflare Pages deployment outcome and URL
+- Render backend deployment status via `origin/main`
+- Commit SHA and branch pushed to GitHub

@@ -900,8 +900,10 @@ export const politicalApiService = {
   },
 
   async getParliamentsByState(stateId: string): Promise<ParliamentInfo[]> {
+    const raw = String(stateId || "").toUpperCase();
+    const sId = raw === "TG" || raw === "TELANGANA" ? "TS" : raw;
     try {
-      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/states/${encodeURIComponent(stateId)}/parliament-constituencies`);
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/geography/states/${encodeURIComponent(sId)}/parliament-constituencies`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) return data;
@@ -911,7 +913,10 @@ export const politicalApiService = {
     }
     await loadStaticGeography();
     const list = cachedParliaments || MOCK_PARLIAMENTS;
-    return list.filter((p) => p.stateId.toUpperCase() === stateId.toUpperCase());
+    return list.filter((p) => {
+      const pState = String(p.stateId || "").toUpperCase();
+      return pState === sId || pState === raw;
+    });
   },
 
   async getAssemblies(stateId?: string): Promise<AssemblyInfo[]> {
