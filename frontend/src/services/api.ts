@@ -2311,6 +2311,9 @@ export const politicalApiService = {
   triggerWeeklyCron(userId: string) {
     return this.piRequest("/pi/trigger-weekly-cron", userId, { method: "POST" }, 60000);
   },
+  getStateTrends(userId: string, stateId: string = "AP") {
+    return this.piRequest(`/pi/state-trends?stateId=${encodeURIComponent(stateId)}`, userId, {}, 10000);
+  },
   getMonthlyAdsMetrics(userId: string, params: Record<string, string | undefined> = {}) {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
