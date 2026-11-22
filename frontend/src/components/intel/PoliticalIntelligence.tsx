@@ -9,6 +9,8 @@ import {
   ChevronsRight,
   Database,
   Download,
+  LayoutGrid,
+  List,
   Loader2,
   MapPin,
   RefreshCw,
@@ -3725,10 +3727,76 @@ function partyLabel(partyById: Record<string, PoliticalParty>, partyId?: string,
   return party?.shortName || party?.name || fallback || partyId || "";
 }
 
+function getTrendPlatforms(item: any): string[] {
+  if (Array.isArray(item.platforms) && item.platforms.length) {
+    return item.platforms;
+  }
+  if (item.platform) {
+    return [item.platform];
+  }
+  const h = String(item.hashtag || "").toLowerCase();
+  const c = String(item.category || "").toLowerCase();
+  if (h.includes("jobs") || h.includes("youth") || c.includes("youth")) {
+    return ["Instagram", "X"];
+  }
+  if (h.includes("polavaram") || h.includes("project") || c.includes("infra")) {
+    return ["YouTube", "X"];
+  }
+  if (h.includes("sankalpam") || h.includes("scheme") || c.includes("welfare") || c.includes("government")) {
+    return ["Facebook", "YouTube"];
+  }
+  return ["X", "Facebook"];
+}
+
+function renderTrendPlatformBadge(platform: string) {
+  const p = platform.toLowerCase();
+  if (p === "x" || p.includes("twitter")) {
+    return (
+      <span key={platform} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/70 border border-sky-400/50 text-sky-400 font-bold text-[10px] shadow-sm">
+        <span className="font-mono">𝕏</span>
+        <span>X</span>
+      </span>
+    );
+  }
+  if (p.includes("facebook") || p === "fb") {
+    return (
+      <span key={platform} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1877F2]/20 border border-[#1877F2]/60 text-[#4599FF] font-bold text-[10px] shadow-sm">
+        <span className="font-bold">f</span>
+        <span>Facebook</span>
+      </span>
+    );
+  }
+  if (p.includes("youtube") || p === "yt") {
+    return (
+      <span key={platform} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#FF0000]/20 border border-[#FF0000]/60 text-[#FF4D4D] font-bold text-[10px] shadow-sm">
+        <span>▶</span>
+        <span>YouTube</span>
+      </span>
+    );
+  }
+  if (p.includes("instagram") || p === "ig") {
+    return (
+      <span key={platform} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gradient-to-r from-purple-500/25 to-pink-500/25 border border-pink-500/50 text-pink-300 font-bold text-[10px] shadow-sm">
+        <span>📷</span>
+        <span>Instagram</span>
+      </span>
+    );
+  }
+  return (
+    <span key={platform} className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#142B45] text-[#B9AF95] font-semibold text-[10px]">
+      {platform}
+    </span>
+  );
+}
+
 function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: string }) {
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
   const defaultTrends = [
     {
       hashtag: "#APDevelopment",
+      platform: "X",
+      platforms: ["X", "Facebook"],
       tag: "AP Capital & Amaravati Tenders",
       category: "Governance",
       volume: "142.5K",
@@ -3739,6 +3807,8 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
     },
     {
       hashtag: "#KootamiSankalpam",
+      platform: "Facebook",
+      platforms: ["Facebook", "YouTube"],
       tag: "Alliance Welfare Schemes",
       category: "Government",
       volume: "98.2K",
@@ -3749,6 +3819,8 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
     },
     {
       hashtag: "#PolavaramProject",
+      platform: "YouTube",
+      platforms: ["YouTube", "X"],
       tag: "Irrigation & Diaphragm Wall",
       category: "Infrastructure",
       volume: "84.7K",
@@ -3759,6 +3831,8 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
     },
     {
       hashtag: "#YSRCPJanagalam",
+      platform: "X",
+      platforms: ["X", "YouTube"],
       tag: "Opposition Ground Campaign",
       category: "Opposition",
       volume: "76.4K",
@@ -3769,6 +3843,8 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
     },
     {
       hashtag: "#APYouthJobs",
+      platform: "Instagram",
+      platforms: ["Instagram", "X"],
       tag: "Mega DSC & IT Investments",
       category: "Youth & Jobs",
       volume: "62.1K",
@@ -3779,6 +3855,8 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
     },
     {
       hashtag: "#AmaravatiRebuild",
+      platform: "Facebook",
+      platforms: ["Facebook", "X"],
       tag: "Capital City Progress",
       category: "Urban Growth",
       volume: "54.8K",
@@ -3793,48 +3871,145 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
 
   return (
     <div className={`${CARD} p-4 border border-[#22405E] bg-[#0A1A2E]/90`}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <h2 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider">
-            Daily Political Pulse & Major Trends · {stateName || "Andhra Pradesh"}
-          </h2>
+          <div>
+            <h2 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider">
+              Daily Political Pulse & Major Trends · {stateName || "Andhra Pradesh"}
+            </h2>
+            <p className="text-[11px] text-[#B9AF95] mt-0.5">
+              Live political topic monitoring, cross-platform origin tracking & sentiment analysis
+            </p>
+          </div>
         </div>
-        <span className="text-[11px] text-[#B9AF95]">
-          Updated today · Live political topic monitoring & sentiment analysis
-        </span>
+
+        {/* View Switcher: Grid vs List */}
+        <div className="flex items-center gap-1 bg-[#071322] p-1 rounded-lg border border-[#22405E]/80 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-all ${
+              viewMode === "grid"
+                ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                : "text-[#B9AF95] hover:text-[#F5EFE0]"
+            }`}
+            title="Grid View (Cards)"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Grid</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-all ${
+              viewMode === "list"
+                ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                : "text-[#B9AF95] hover:text-[#F5EFE0]"
+            }`}
+            title="List View (Table)"
+          >
+            <List className="w-3.5 h-3.5" />
+            <span>List</span>
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {list.map((item: any) => (
-          <div
-            key={item.hashtag}
-            className="p-3 rounded-xl bg-[#071322] border border-[#22405E]/80 hover:border-[#D4A24C]/60 transition-all flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-bold text-[#D4A24C]">{item.hashtag}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#142B45] text-[#B9AF95] font-medium shrink-0">
-                  {item.category}
-                </span>
+      {viewMode === "grid" ? (
+        /* Grid View: Responsive cards */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {list.map((item: any) => {
+            const platforms = getTrendPlatforms(item);
+            return (
+              <div
+                key={item.hashtag}
+                className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E]/80 hover:border-[#D4A24C]/60 transition-all flex flex-col justify-between space-y-3"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-bold text-[#D4A24C]">{item.hashtag}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#142B45] text-[#B9AF95] font-medium shrink-0 border border-[#22405E]">
+                      {item.category}
+                    </span>
+                  </div>
+
+                  {/* Running Platforms Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-[10px] text-[#B9AF95] font-medium">Platforms:</span>
+                    {platforms.map((p) => renderTrendPlatformBadge(p))}
+                  </div>
+
+                  <p className="text-xs font-semibold text-[#F5EFE0] mt-2">{item.tag}</p>
+                  <p className="text-[11px] text-[#B9AF95] mt-1 line-clamp-2 leading-relaxed">{item.summary}</p>
+                </div>
+
+                <div className="pt-2 border-t border-[#142B45] flex items-center justify-between text-[11px]">
+                  <span className="text-[#F5EFE0] font-bold">
+                    {item.volume} posts <span className="text-emerald-400 font-semibold">{item.velocity}</span>
+                  </span>
+                  <span className="font-semibold text-xs" style={{ color: item.sentimentColor || "#10B981" }}>
+                    {item.sentiment}
+                  </span>
+                </div>
               </div>
-              <p className="text-xs font-semibold text-[#F5EFE0] mt-1">{item.tag}</p>
-              <p className="text-[11px] text-[#B9AF95] mt-1 line-clamp-2">{item.summary}</p>
-            </div>
-            <div className="mt-3 pt-2 border-t border-[#142B45] flex items-center justify-between text-[11px]">
-              <span className="text-[#F5EFE0] font-bold">
-                {item.volume} posts <span className="text-emerald-400 font-semibold">{item.velocity}</span>
-              </span>
-              <span className="font-semibold" style={{ color: item.sentimentColor || "#10B981" }}>
-                {item.sentiment}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* List View: High-density scannable table */
+        <div className="overflow-x-auto rounded-xl border border-[#22405E]/80 bg-[#071322]">
+          <table className="w-full text-left text-xs text-[#EADBBF]">
+            <thead>
+              <tr className="border-b border-[#22405E] text-[#B9AF95] uppercase tracking-wider text-[10px] bg-[#0A1A2E]">
+                <th className="py-2.5 px-3">Hashtag & Topic</th>
+                <th className="py-2.5 px-3">Running Platforms</th>
+                <th className="py-2.5 px-3">Category</th>
+                <th className="py-2.5 px-3 text-right">Volume & Velocity</th>
+                <th className="py-2.5 px-3 text-center">Sentiment</th>
+                <th className="py-2.5 px-3">Topic Summary</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#142B45]">
+              {list.map((item: any) => {
+                const platforms = getTrendPlatforms(item);
+                return (
+                  <tr key={item.hashtag} className="hover:bg-[#142B45]/50 transition-colors">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      <span className="font-bold text-[#D4A24C] block">{item.hashtag}</span>
+                      <span className="text-[11px] text-[#F5EFE0] font-medium">{item.tag}</span>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex flex-wrap gap-1">
+                        {platforms.map((p) => renderTrendPlatformBadge(p))}
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#142B45] text-[#B9AF95] font-medium border border-[#22405E]">
+                        {item.category}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                      <span className="font-bold text-[#F5EFE0]">{item.volume}</span>
+                      <span className="text-emerald-400 font-semibold text-[10px] block">{item.velocity}</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                      <span className="font-semibold text-xs" style={{ color: item.sentimentColor || "#10B981" }}>
+                        {item.sentiment}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-[11px] text-[#B9AF95] max-w-sm truncate" title={item.summary}>
+                      {item.summary}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
