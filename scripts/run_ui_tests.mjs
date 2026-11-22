@@ -110,15 +110,60 @@ async function runTests() {
     await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_04_dashboard_telangana_adilabad_zero_kpi.png') });
     console.log('✓ Telangana Adilabad verified with strict DB numbers');
 
-    // Test 2: SMM Intelligence Tab Clean-up & Back Navigation
+    // Test 2: SMM Intelligence Tab Clean-up & Dynamic District Penetration Leaderboard
     console.log('[5/6] Verifying SMM Intelligence tab clean view and Back button...');
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
       const intBtn = buttons.find(b => b.textContent?.trim() === 'Intelligence');
       if (intBtn) intBtn.click();
     });
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(r => setTimeout(r, 1500));
     await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_05_intelligence_tab_clean.png') });
+
+    // Verify initial AP district leaderboard
+    const apLbCheck = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return {
+        hasApTitle: text.includes('District Digital Penetration Leaderboard · Andhra Pradesh'),
+        hasVisakha: text.includes('Visakhapatnam'),
+        hasGuntur: text.includes('Guntur')
+      };
+    });
+    console.log('AP Intelligence Leaderboard check:', apLbCheck);
+
+    // Switch State to Telangana in Intelligence Tab Sidebar
+    console.log('Switching State to Telangana in Intelligence tab to verify dynamic District Penetration Leaderboard...');
+    await page.evaluate(() => {
+      const selects = Array.from(document.querySelectorAll('select'));
+      const stateSelect = selects.find(s => s.previousElementSibling?.textContent?.includes('State'));
+      if (stateSelect) {
+        const tgOpt = Array.from(stateSelect.options).find(o => o.text.includes('Telangana'));
+        if (tgOpt) {
+          stateSelect.value = tgOpt.value;
+          stateSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    });
+    await page.waitForFunction(() => document.body.innerText.includes('District Digital Penetration Leaderboard · Telangana'), { timeout: 15000 });
+    await new Promise(r => setTimeout(r, 1200));
+
+    // Verify Telangana Leaderboard displays Telangana districts and NOT AP districts
+    const tgLbCheck = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return {
+        hasTgTitle: text.includes('District Digital Penetration Leaderboard · Telangana'),
+        hasAdilabad: text.includes('Adilabad'),
+        hasHyderabad: text.includes('Hyderabad') || text.includes('Medchal') || text.includes('Warangal') || text.includes('Rangareddy'),
+        hasVisakhapatnamLeaked: text.includes('Visakhapatnam'),
+        hasGunturLeaked: text.includes('Guntur')
+      };
+    });
+    console.log('Telangana District Penetration Leaderboard check:', tgLbCheck);
+    if (!tgLbCheck.hasTgTitle) throw new Error('District Penetration Leaderboard title failed to update to Telangana!');
+    if (!tgLbCheck.hasAdilabad && !tgLbCheck.hasHyderabad) throw new Error('Telangana districts (Adilabad/Hyderabad) missing from leaderboard!');
+    if (tgLbCheck.hasVisakhapatnamLeaked || tgLbCheck.hasGunturLeaked) throw new Error('AP districts leaked into Telangana Leaderboard!');
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_05b_intelligence_telangana_leaderboard.png') });
+    console.log('✓ Verified: District Digital Penetration Leaderboard updates dynamically to Telangana districts');
 
     // Drill into a district and verify back button
     await page.evaluate(() => {

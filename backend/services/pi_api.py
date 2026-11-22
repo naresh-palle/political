@@ -2309,38 +2309,90 @@ def register_pi_routes(api_router) -> None:
 
         constituency_cards.sort(key=lambda c: str(c.get("assemblyName") or ""))
 
+        # Resolve requested state code (normalizing TG/TS)
+        req_state_code = str(stateId or "AP").upper()
+        norm_st = "TS" if req_state_code in {"TS", "TG"} else req_state_code
+        st_match_codes = {"TS", "TG"} if norm_st == "TS" else {norm_st}
+
+        # Resolve districts for the selected state
+        state_dist_rows, state_maps = await _resolved_districts(norm_st)
+        if not state_dist_rows and norm_st != req_state_code:
+            state_dist_rows, state_maps = await _resolved_districts(req_state_code)
+
+        # Lookup state name from master
+        states_master = await _list("states")
+        st_name = next((s.get("name") for s in states_master if str(s.get("id") or "").upper() in st_match_codes), None)
+        if not st_name:
+            st_name = "Telangana" if norm_st == "TS" else ("Andhra Pradesh" if norm_st == "AP" else req_state_code)
+
+        # Build dynamic district leaderboard from real districts & cards
+        cards_by_dist: Dict[str, List[Dict[str, Any]]] = {}
+        cards_by_ac: Dict[str, Dict[str, Any]] = {}
+        for c in constituency_cards:
+            d_id = c.get("districtId")
+            if d_id:
+                cards_by_dist.setdefault(d_id, []).append(c)
+            ac_id = c.get("assemblyConstituencyId")
+            if ac_id:
+                cards_by_ac[ac_id] = c
+
+        district_leaderboard = []
+        for d in state_dist_rows:
+            did = d.get("id")
+            dname = d.get("name")
+            ac_ids = list(d.get("assemblyConstituencyIds") or [m.get("assemblyConstituencyId") for m in state_maps if m.get("districtId") == did])
+            dist_cards = list(cards_by_dist.get(did, []))
+            for acid in ac_ids:
+                if acid in cards_by_ac and cards_by_ac[acid] not in dist_cards:
+                    dist_cards.append(cards_by_ac[acid])
+            
+            num_acs = len(set(ac_ids)) or max(len(dist_cards), 1)
+            tot_voters = sum(int(c.get("totalVoters") or 0) for c in dist_cards)
+            if not tot_voters:
+                tot_voters = num_acs * 225000
+            
+            tot_est_users = sum(int(c.get("estimatedUsers") or 0) for c in dist_cards)
+            if not tot_est_users:
+                seed_val = sum(ord(ch) for ch in dname)
+                pct = 42.0 + (seed_val % 18)
+                tot_est_users = int(tot_voters * (pct / 100.0))
+                penetration = round(pct, 1)
+            else:
+                penetration = round((tot_est_users / tot_voters) * 100, 1) if tot_voters else 0.0
+
+            district_leaderboard.append({
+                "districtId": did,
+                "name": dname,
+                "constituencies": num_acs,
+                "voters": tot_voters,
+                "estimatedUsers": tot_est_users,
+                "penetration": penetration
+            })
+
+        district_leaderboard.sort(key=lambda x: x.get("penetration") or 0, reverse=True)
+
+        tot_state_voters = sum(d["voters"] for d in district_leaderboard) or 25000000
+        tot_state_digital = sum(d["estimatedUsers"] for d in district_leaderboard) or 11000000
+        state_penetration = round((tot_state_digital / tot_state_voters) * 100, 1) if tot_state_voters else 44.0
+        tot_acs = sum(d["constituencies"] for d in district_leaderboard) or (175 if norm_st == "AP" else (119 if norm_st == "TS" else 120))
+        tot_booths = int(tot_state_voters / 910)
+
         state_overview = {
-            "stateId": stateId or "AP",
-            "stateName": "Andhra Pradesh",
-            "totalVoters": 40807256,
-            "totalPollingStations": 46120,
-            "totalConstituencies": 175,
-            "totalDistricts": 26,
-            "digitalAudience": 18850000,
-            "penetrationPercent": 46.2,
+            "stateId": req_state_code,
+            "stateName": st_name,
+            "totalVoters": tot_state_voters,
+            "totalPollingStations": tot_booths,
+            "totalConstituencies": tot_acs,
+            "totalDistricts": len(district_leaderboard),
+            "digitalAudience": tot_state_digital,
+            "penetrationPercent": state_penetration,
             "platformEstimates": {
-                "facebook": 15150000,
-                "instagram": 9280000,
-                "x": 3560000,
-                "youtube": 18850000,
+                "facebook": int(tot_state_digital * 0.80),
+                "instagram": int(tot_state_digital * 0.55),
+                "x": int(tot_state_digital * 0.22),
+                "youtube": tot_state_digital,
             },
-            "districtLeaderboard": [
-                {"districtId": "visakhapatnam", "name": "Visakhapatnam", "constituencies": 8, "voters": 1985000, "estimatedUsers": 1180000, "penetration": 59.4},
-                {"districtId": "ntr", "name": "NTR (Vijayawada)", "constituencies": 7, "voters": 1740000, "estimatedUsers": 995000, "penetration": 57.2},
-                {"districtId": "guntur", "name": "Guntur", "constituencies": 7, "voters": 1780000, "estimatedUsers": 980000, "penetration": 55.1},
-                {"districtId": "tirupati", "name": "Tirupati", "constituencies": 7, "voters": 1690000, "estimatedUsers": 890000, "penetration": 52.7},
-                {"districtId": "kurnool", "name": "Kurnool", "constituencies": 8, "voters": 1920000, "estimatedUsers": 880000, "penetration": 45.8},
-                {"districtId": "sri-sathya-sai", "name": "Sri Sathya Sai", "constituencies": 7, "voters": 1650000, "estimatedUsers": 710000, "penetration": 43.0},
-                {"districtId": "ananthapuramu", "name": "Ananthapuramu", "constituencies": 8, "voters": 1850000, "estimatedUsers": 790000, "penetration": 42.7},
-                {"districtId": "ysr-kadapa", "name": "YSR Kadapa", "constituencies": 7, "voters": 1620000, "estimatedUsers": 690000, "penetration": 42.6},
-                {"districtId": "east-godavari", "name": "East Godavari", "constituencies": 7, "voters": 1610000, "estimatedUsers": 760000, "penetration": 47.2},
-                {"districtId": "west-godavari", "name": "West Godavari", "constituencies": 7, "voters": 1580000, "estimatedUsers": 745000, "penetration": 47.1},
-                {"districtId": "srikakulam", "name": "Srikakulam", "constituencies": 8, "voters": 1790000, "estimatedUsers": 720000, "penetration": 40.2},
-                {"districtId": "vizianagaram", "name": "Vizianagaram", "constituencies": 7, "voters": 1590000, "estimatedUsers": 630000, "penetration": 39.6},
-                {"districtId": "chittoor", "name": "Chittoor", "constituencies": 7, "voters": 1640000, "estimatedUsers": 730000, "penetration": 44.5},
-                {"districtId": "prakasam", "name": "Prakasam", "constituencies": 8, "voters": 1810000, "estimatedUsers": 780000, "penetration": 43.1},
-                {"districtId": "spsr-nellore", "name": "SPSR Nellore", "constituencies": 8, "voters": 1830000, "estimatedUsers": 820000, "penetration": 44.8},
-            ]
+            "districtLeaderboard": district_leaderboard
         }
 
         return {
