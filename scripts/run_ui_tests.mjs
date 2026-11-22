@@ -372,8 +372,18 @@ async function runTests() {
     await page.waitForFunction(() => document.body.innerText.includes('POLITICAL INTELLIGENCE'), { timeout: 20000 });
     await new Promise(r => setTimeout(r, 1500));
 
+    // Ensure we are on Dashboard tab
+    await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const dashBtn = buttons.find(b => b.textContent?.trim() === 'Dashboard');
+      if (dashBtn) dashBtn.click();
+    });
+    await new Promise(r => setTimeout(r, 1200));
+
     // Test Trends Platform Badges & View Switcher on SMM Dashboard
     console.log('Testing Daily Political Pulse Platform Badges & Grid/List View Switcher...');
+    const bodySample = await page.evaluate(() => document.body.innerText.slice(0, 400));
+    console.log('Body sample after SMM login:', bodySample);
     const trendsStatus = await page.evaluate(() => {
       const text = document.body.innerText;
       return {
