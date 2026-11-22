@@ -1817,6 +1817,38 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
       .catch(() => undefined);
   }, [acId, tab, userId]);
 
+  const handleConstBlur = async () => {
+    if (!acId || !canEdit) return;
+    const effectiveAcId = acId || (repType === "MP" && pcId ? `PC-${pcId}` : repType === "MLC" && zoneId ? `ZONE-${zoneId}` : "");
+    const effectiveDistrictId = districtId || (repType === "MP" ? (districts.find((d) => (d.parliamentConstituencyIds || []).includes(pcId))?.id || districts[0]?.id || "") : "");
+    if (!effectiveAcId) return;
+    try {
+      const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
+      await politicalApiService.savePiConstituency(userId, {
+        ...constForm,
+        stateId,
+        districtId: effectiveDistrictId || districtId,
+        parliamentConstituencyId: pcId,
+        assemblyConstituencyId: effectiveAcId,
+        assemblyName: (repType === "MP" ? (filteredPcs.find((p) => p.id === pcId)?.name || pcId) : repType === "MLC" ? (getMlcZonesForState(stateId).find((z) => z.id === zoneId)?.name || zoneId) : filteredAcs.find((a) => a.id === effectiveAcId)?.name) || "",
+        totalVoters: num(constForm.totalVoters),
+        maleElectors: num(constForm.maleElectors),
+        femaleElectors: num(constForm.femaleElectors),
+        otherElectors: num(constForm.otherElectors),
+        pollingStations: num(constForm.pollingStations),
+        ruralPercent: num(constForm.ruralPercent),
+        estimatedFacebookUsers: num(constForm.estimatedFacebookUsers),
+        estimatedInstagramUsers: num(constForm.estimatedInstagramUsers),
+        estimatedXUsers: num(constForm.estimatedXUsers),
+        estimatedYouTubeUsers: num(constForm.estimatedYouTubeUsers),
+        enteredByName: String(constForm.enteredByName || "").trim() || "System Auto",
+        dataCollectionDate: todayIsoDate()
+      });
+    } catch {
+      // Auto-save silently
+    }
+  };
+
   const saveConstituency = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2777,7 +2809,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
           {entryGroup === "constituency" && (
           <>
-            <form noValidate onSubmit={saveConstituency} className={`${CARD} space-y-3`}>
+            <div onBlur={handleConstBlur} className={`${CARD} space-y-3`}>
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-[#F5EFE0]">Constituency entry</h2>
                 {constForm.id ? (
@@ -2808,48 +2840,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   <Field label="Est. YouTube users" type="number" value={constForm.estimatedYouTubeUsers || ""} onChange={(v) => setConstForm({ ...constForm, estimatedYouTubeUsers: v })} />
                 </div>
               </div>
-
-              {/* Constituency Official Social Accounts */}
-              <div className="pt-1 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] text-[#D4A24C] font-semibold">Constituency Social Media Accounts *</p>
-                  <span className="text-[10px] text-[#B9AF95]">Required to enable save</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Field id="pi-const-fb" label="Facebook account (URL / Page) *" value={constForm.facebookAccount || ""} onChange={(v) => setConstForm({ ...constForm, facebookAccount: v })} />
-                  <Field id="pi-const-ig" label="Instagram account (URL / Handle) *" value={constForm.instagramAccount || ""} onChange={(v) => setConstForm({ ...constForm, instagramAccount: v })} />
-                </div>
-              </div>
-
-              <Field label="Remarks" value={constForm.remarks || ""} onChange={(v) => setConstForm({ ...constForm, remarks: v })} />
-
-              {(() => {
-                const hasRequiredSocial = Boolean(
-                  String(constForm.facebookAccount || "").trim() &&
-                  String(constForm.instagramAccount || "").trim()
-                );
-                const isSaveDisabled = !!saving || !acId || !canEdit || !hasRequiredSocial;
-                return (
-                  <div>
-                    <button
-                      type="submit"
-                      className={`${BTN} ${isSaveDisabled ? "opacity-50 cursor-not-allowed bg-[#22405E] text-[#B9AF95] border-[#22405E]" : ""}`}
-                      disabled={isSaveDisabled}
-                    >
-                      {saving === "constituency" ? "Saving…" : constForm.id ? "Save changes" : "Save constituency"}
-                    </button>
-                    {!hasRequiredSocial && (
-                      <p className="text-[11px] text-amber-400 mt-1.5 flex items-center gap-1">
-                        <span>⚠️</span> Please add both Facebook account (URL / Page) and Instagram account (URL / Handle) to enable saving.
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
-              {ok && !error && ok.startsWith("Saved") && (
-                <p className="text-[11px] text-emerald-300">{ok}</p>
-              )}
-            </form>
+            </div>
           </>
           )}
 
