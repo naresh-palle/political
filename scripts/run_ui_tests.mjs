@@ -372,13 +372,14 @@ async function runTests() {
     await page.waitForFunction(() => document.body.innerText.includes('POLITICAL INTELLIGENCE'), { timeout: 20000 });
     await new Promise(r => setTimeout(r, 1500));
 
-    // Ensure we are on Dashboard tab
+    // Ensure we are on Dashboard tab and wait for dashboard to load
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
       const dashBtn = buttons.find(b => b.textContent?.trim() === 'Dashboard');
       if (dashBtn) dashBtn.click();
     });
-    await new Promise(r => setTimeout(r, 1200));
+    await page.waitForFunction(() => document.body.innerText.includes('Daily Political Pulse') || document.body.innerText.includes('DAILY POLITICAL PULSE'), { timeout: 20000 });
+    await new Promise(r => setTimeout(r, 1000));
 
     // Test Trends Platform Badges & View Switcher on SMM Dashboard
     console.log('Testing Daily Political Pulse Platform Badges & Grid/List View Switcher...');
