@@ -1706,7 +1706,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         <section className="space-y-4">
           {/* Executive State Political Intelligence Banner */}
           <div className={`${CARD} p-5 border border-[#D4A24C]/40 bg-gradient-to-br from-[#0F2238] via-[#071322] to-[#0A1A2E]`}>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[11px] font-bold uppercase tracking-wider mb-2">
                   <span>🏛️ Andhra Pradesh · Executive Political Intelligence</span>
@@ -1718,58 +1718,70 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   Overall state-level voter count, polling station density, and estimated active social audience across all 175 constituencies.
                 </p>
               </div>
-              <div className="text-right shrink-0">
+              <div className="text-left md:text-right shrink-0">
                 <span className="text-xs text-[#B9AF95] block">State Social Penetration</span>
-                <span className="text-3xl font-display font-bold text-[#D4A24C]">46.2%</span>
+                <span className="text-3xl md:text-4xl font-display font-bold text-[#D4A24C] block my-0.5">46.2%</span>
                 <span className="text-[10px] text-[#B9AF95] block">1.88 Cr unique voters reachable</span>
               </div>
             </div>
 
             {/* Core State Statistics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[#22405E]/80">
-              <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-                <span className="text-[11px] text-[#B9AF95] block">Total Registered Voters</span>
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                <span className="text-[11px] text-[#B9AF95] font-semibold block">Total Registered Voters</span>
                 <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">4.08 Cr</span>
-                <span className="text-[10px] text-emerald-400 font-medium">4,08,07,256 ECI electors</span>
+                <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">4,08,07,256 ECI electors</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-                <span className="text-[11px] text-[#B9AF95] block">Assembly Constituencies</span>
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                <span className="text-[11px] text-[#B9AF95] font-semibold block">Assembly Constituencies</span>
                 <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">175</span>
-                <span className="text-[10px] text-[#D4A24C] font-medium">25 Lok Sabha seats</span>
+                <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">25 Lok Sabha seats</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-                <span className="text-[11px] text-[#B9AF95] block">Polling Stations</span>
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                <span className="text-[11px] text-[#B9AF95] font-semibold block">Polling Stations</span>
                 <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">46,120</span>
-                <span className="text-[10px] text-[#B9AF95] font-medium">Average 885 voters/booth</span>
+                <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Average 885 voters/booth</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-                <span className="text-[11px] text-[#B9AF95] block">Statewide Social Audience</span>
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                <span className="text-[11px] text-[#B9AF95] font-semibold block">Statewide Social Audience</span>
                 <span className="text-xl md:text-2xl font-display font-bold text-[#D4A24C] mt-0.5 block">1.88 Cr</span>
-                <span className="text-[10px] text-[#B9AF95] font-medium">46.2% of voter base</span>
+                <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">46.2% of voter base</span>
               </div>
             </div>
 
-            {/* Platform Breakdown Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3">
-              <div className="p-2.5 rounded-lg bg-[#071322] border-l-2 border-l-[#1877F2] border border-[#22405E]/60 text-center">
-                <span className="text-[11px] text-[#B9AF95] font-bold block">Facebook</span>
-                <span className="text-lg font-display font-bold text-[#F5EFE0] block">1.51 Cr</span>
-                <span className="text-[10px] text-[#D4A24C]">37.1% state reach</span>
+            {/* Platform Breakdown Cards - Perfect Grid, Spacing, and Typography Alignment */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#1877F2] text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-[#B9AF95] font-bold">Facebook</span>
+                  <span className="w-2 h-2 rounded-full bg-[#1877F2] shrink-0"></span>
+                </div>
+                <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">1.51 Cr</span>
+                <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">37.1% state reach</span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#071322] border-l-2 border-l-[#E1306C] border border-[#22405E]/60 text-center">
-                <span className="text-[11px] text-[#B9AF95] font-bold block">Instagram</span>
-                <span className="text-lg font-display font-bold text-[#F5EFE0] block">92.8 Lakh</span>
-                <span className="text-[10px] text-[#D4A24C]">22.7% state reach</span>
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#E1306C] text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-[#B9AF95] font-bold">Instagram</span>
+                  <span className="w-2 h-2 rounded-full bg-[#E1306C] shrink-0"></span>
+                </div>
+                <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">92.8 Lakh</span>
+                <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">22.7% state reach</span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#071322] border-l-2 border-l-[#1DA1F2] border border-[#22405E]/60 text-center">
-                <span className="text-[11px] text-[#B9AF95] font-bold block">X (Twitter)</span>
-                <span className="text-lg font-display font-bold text-[#F5EFE0] block">35.6 Lakh</span>
-                <span className="text-[10px] text-[#D4A24C]">8.7% state reach</span>
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#1DA1F2] text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-[#B9AF95] font-bold">X (Twitter)</span>
+                  <span className="w-2 h-2 rounded-full bg-[#1DA1F2] shrink-0"></span>
+                </div>
+                <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">35.6 Lakh</span>
+                <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">8.7% state reach</span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#071322] border-l-2 border-l-[#FF0000] border border-[#22405E]/60 text-center">
-                <span className="text-[11px] text-[#B9AF95] font-bold block">YouTube</span>
-                <span className="text-lg font-display font-bold text-[#F5EFE0] block">1.88 Cr</span>
-                <span className="text-[10px] text-[#D4A24C]">46.2% state reach</span>
+              <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#FF0000] text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-[#B9AF95] font-bold">YouTube</span>
+                  <span className="w-2 h-2 rounded-full bg-[#FF0000] shrink-0"></span>
+                </div>
+                <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">1.88 Cr</span>
+                <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">46.2% state reach</span>
               </div>
             </div>
           </div>
@@ -3033,25 +3045,25 @@ function StateWideOverview({
 
         {/* 4 Core State KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[#22405E]/80">
-          <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-            <span className="text-[11px] text-[#B9AF95] block">Total Registered Voters</span>
+          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+            <span className="text-[11px] text-[#B9AF95] font-semibold block">Total Registered Voters</span>
             <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">4.08 Cr</span>
-            <span className="text-[10px] text-emerald-400 font-medium">4,08,07,256 ECI registered</span>
+            <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">4,08,07,256 ECI registered</span>
           </div>
-          <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-            <span className="text-[11px] text-[#B9AF95] block">Assembly Constituencies</span>
+          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+            <span className="text-[11px] text-[#B9AF95] font-semibold block">Assembly Constituencies</span>
             <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">175</span>
-            <span className="text-[10px] text-[#D4A24C] font-medium">25 Lok Sabha Seats</span>
+            <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">25 Lok Sabha Seats</span>
           </div>
-          <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-            <span className="text-[11px] text-[#B9AF95] block">Polling Stations (Booths)</span>
+          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+            <span className="text-[11px] text-[#B9AF95] font-semibold block">Polling Stations (Booths)</span>
             <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">46,120</span>
-            <span className="text-[10px] text-[#B9AF95] font-medium">Average 885 voters/booth</span>
+            <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Average 885 voters/booth</span>
           </div>
-          <div className="p-3 rounded-xl bg-[#071322]/80 border border-[#22405E]">
-            <span className="text-[11px] text-[#B9AF95] block">Total Districts</span>
+          <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+            <span className="text-[11px] text-[#B9AF95] font-semibold block">Total Districts</span>
             <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">26</span>
-            <span className="text-[10px] text-[#B9AF95] font-medium">Reorganized administrative units</span>
+            <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Reorganized administrative units</span>
           </div>
         </div>
       </div>
@@ -3061,27 +3073,39 @@ function StateWideOverview({
         <h3 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider mb-2">
           Statewide Platform Audience (Andhra Pradesh)
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className={`${CARD} p-4 text-center border-l-4 border-l-[#1877F2]`}>
-            <span className="text-xs text-[#B9AF95] font-bold block">Facebook Audience</span>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#1877F2]`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#B9AF95] font-bold">Facebook Audience</span>
+              <span className="w-2 h-2 rounded-full bg-[#1877F2] shrink-0"></span>
+            </div>
             <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">1.51 Cr</span>
             <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">37.1% of electors</span>
             <span className="text-[10px] text-[#B9AF95] block mt-1">1,51,50,000 active users (Meta baseline)</span>
           </div>
-          <div className={`${CARD} p-4 text-center border-l-4 border-l-[#E1306C]`}>
-            <span className="text-xs text-[#B9AF95] font-bold block">Instagram Audience</span>
+          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#E1306C]`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#B9AF95] font-bold">Instagram Audience</span>
+              <span className="w-2 h-2 rounded-full bg-[#E1306C] shrink-0"></span>
+            </div>
             <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">92.8 Lakh</span>
             <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">22.7% of electors</span>
             <span className="text-[10px] text-[#B9AF95] block mt-1">92,80,000 active users (High youth velocity)</span>
           </div>
-          <div className={`${CARD} p-4 text-center border-l-4 border-l-[#1DA1F2]`}>
-            <span className="text-xs text-[#B9AF95] font-bold block">X (Twitter) Audience</span>
+          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#1DA1F2]`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#B9AF95] font-bold">X (Twitter) Audience</span>
+              <span className="w-2 h-2 rounded-full bg-[#1DA1F2] shrink-0"></span>
+            </div>
             <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">35.6 Lakh</span>
             <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">8.7% of electors</span>
             <span className="text-[10px] text-[#B9AF95] block mt-1">35,60,000 opinion leaders & buzz</span>
           </div>
-          <div className={`${CARD} p-4 text-center border-l-4 border-l-[#FF0000]`}>
-            <span className="text-xs text-[#B9AF95] font-bold block">YouTube Audience</span>
+          <div className={`${CARD} p-4 text-left border-l-4 border-l-[#FF0000]`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#B9AF95] font-bold">YouTube Audience</span>
+              <span className="w-2 h-2 rounded-full bg-[#FF0000] shrink-0"></span>
+            </div>
             <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-1 block">1.88 Cr</span>
             <span className="text-[11px] text-[#D4A24C] font-semibold block mt-0.5">46.2% of electors</span>
             <span className="text-[10px] text-[#B9AF95] block mt-1">1,88,50,000 video reach across all tiers</span>
