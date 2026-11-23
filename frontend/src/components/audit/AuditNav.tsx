@@ -54,7 +54,7 @@ export const AuditNav: React.FC = () => {
   };
 
   return (
-    <div data-testid="audit-nav" className="sticky top-[64px] z-30 bg-[#FBFBF9]/92 backdrop-blur-xl border-b border-[#E5E3D8] no-print">
+    <div data-testid="audit-nav" className="sticky top-[64px] z-30 bg-[#050B12]/95 backdrop-blur-xl border-b border-[#C99436]/25 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-1 overflow-x-auto py-1 no-scrollbar">
           {SECTIONS.map((section) => {
@@ -66,14 +66,14 @@ export const AuditNav: React.FC = () => {
                 data-testid={`nav-${section.id}`}
                 className={`relative whitespace-nowrap px-3 py-3.5 text-[12.5px] transition-colors cursor-pointer ${
                   isActive
-                    ? "text-[#112233] font-semibold"
-                    : "text-[#676B78] hover:text-[#112233] font-medium"
+                    ? "text-[#C99436] font-semibold"
+                    : "text-[#B9AF95] hover:text-[#F5EFE0] font-medium"
                 }`}
               >
                 {section.label}
                 <span
                   className={`absolute left-3 right-3 -bottom-px h-[2px] rounded-full transition-all ${
-                    isActive ? "bg-[#112233] opacity-100" : "bg-transparent opacity-0"
+                    isActive ? "bg-[#C99436] opacity-100" : "bg-transparent opacity-0"
                   }`}
                   aria-hidden
                 />

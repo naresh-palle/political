@@ -12,37 +12,37 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
   const { client, candidates, voterStats, digitalStats, headline, keyObservations } = audit;
 
   return (
-    <section id="section-overview" data-testid="section-overview" className="py-14 lg:py-16 border-b border-[#E7E5DB]">
+    <section id="section-overview" data-testid="section-overview" className="py-14 lg:py-16 border-b border-[rgba(201,148,54,0.25)]">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
         <div className="space-y-3 max-w-2xl">
           <div className="flex items-center gap-3">
-            <span className="h-px w-6 bg-[#B45309]" aria-hidden />
-            <div className="eyebrow text-[#B45309]">Executive summary</div>
+            <span className="h-px w-6 bg-[#C99436]" aria-hidden />
+            <div className="eyebrow text-[#C99436]">Executive summary</div>
           </div>
-          <h2 className="font-display text-[44px] sm:text-[54px] leading-[1.02] text-[#112233] tracking-[-0.02em]">
+          <h2 className="font-display text-[44px] sm:text-[54px] leading-[1.02] text-[#F5EFE0] tracking-[-0.02em]">
             Constituency at a glance
           </h2>
-          <p className="text-sm text-[#5A5E6B] max-w-lg leading-relaxed">
+          <p className="text-sm text-[#A3B1C2] max-w-lg leading-relaxed">
             A high-level view of the client's competitive and digital position across {audit.assembly.name} AC.
           </p>
         </div>
-        <div className="eyebrow text-[#8A8E9B] tabular">Updated {audit.generatedAt}</div>
+        <div className="eyebrow text-[#A3B1C2] tabular">Updated {audit.generatedAt}</div>
       </div>
 
       {/* Editorial KPI strip — no floating cards, just vertical rules */}
-      <div className="mb-14 border-y border-[#DDDBD1]">
-        <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-[#E5E3D8]">
+      <div className="mb-14 border-y border-[rgba(201,148,54,0.25)]">
+        <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-[rgba(201,148,54,0.25)]">
           {/* KPI 1 */}
           <div className="px-2 sm:px-6 py-6">
-            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#797D8B] mb-1">
+            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2] mb-1">
               <span>Client Social Strength</span>
               <Tooltip content="Composite social score out of 100 based on verified footprint, reach, and active engagement." />
             </div>
             <div className="flex items-baseline space-x-1.5">
-              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#112233]">
+              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#F5EFE0]">
                 {client.socialStrengthScore}
               </span>
-              <span className="text-xs text-[#8A8E9B] font-mono-data">/ 100</span>
+              <span className="text-xs text-[#A3B1C2] font-mono-data">/ 100</span>
             </div>
             <div className="text-[11px] text-emerald-700 font-medium mt-1 flex items-center">
               <TrendingUp className="w-3 h-3 mr-1" />
@@ -52,16 +52,16 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
 
           {/* KPI 2 */}
           <div className="px-2 sm:px-6 py-6">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] mb-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2] mb-1">
               Position
             </div>
             <div className="flex items-baseline space-x-1.5">
-              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#112233]">
+              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#F5EFE0]">
                 1st
               </span>
-              <span className="text-xs text-[#8A8E9B] font-mono-data">/ {candidates.length}</span>
+              <span className="text-xs text-[#A3B1C2] font-mono-data">/ {candidates.length}</span>
             </div>
-            <div className="text-[11px] text-[#555966] font-medium mt-1 flex items-center">
+            <div className="text-[11px] text-[#A3B1C2] font-medium mt-1 flex items-center">
               <Trophy className="w-3 h-3 mr-1 text-amber-600" />
               Category Leader
             </div>
@@ -69,48 +69,48 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
 
           {/* KPI 3 */}
           <div className="px-2 sm:px-6 py-6">
-            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#797D8B] mb-1">
+            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2] mb-1">
               <span>Est. Voter Coverage</span>
               <Tooltip content="Estimated unique client reach (98K) as a proportion of total registered voters (2.85L)." />
             </div>
             <div className="flex items-baseline space-x-1.5">
-              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#112233]">
+              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#F5EFE0]">
                 {formatPercentage(voterStats.voterCoveragePercentage)}
               </span>
             </div>
-            <div className="text-[11px] text-[#696D7A] mt-1 font-mono-data">
+            <div className="text-[11px] text-[#A3B1C2] mt-1 font-mono-data">
               {formatLakhs(voterStats.estimatedUniqueClientReach)} of {formatLakhs(voterStats.totalVoters, true)} voters
             </div>
           </div>
 
           {/* KPI 4 */}
           <div className="px-2 sm:px-6 py-6">
-            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#797D8B] mb-1">
+            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2] mb-1">
               <span>Est. Digital Coverage</span>
               <Tooltip content="Proportion of the constituency's estimated digital audience reached by client channels." />
             </div>
             <div className="flex items-baseline space-x-1.5">
-              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#112233]">
+              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#F5EFE0]">
                 {formatPercentage(digitalStats.clientDigitalCoveragePercentage)}
               </span>
             </div>
-            <div className="text-[11px] text-[#696D7A] mt-1 font-mono-data">
+            <div className="text-[11px] text-[#A3B1C2] mt-1 font-mono-data">
               of {formatLakhs(digitalStats.totalDigitalAudience, true)} digital users
             </div>
           </div>
 
           {/* KPI 5 */}
           <div className="px-2 sm:px-6 py-6 col-span-2 md:col-span-1">
-            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#797D8B] mb-1">
+            <div className="flex items-center text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2] mb-1">
               <span>Reach Gap</span>
               <Tooltip content="Number of registered constituency voters not currently reached by digital communication." />
             </div>
             <div className="flex items-baseline space-x-1.5">
-              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#B45309]">
+              <span className="font-editorial text-3xl sm:text-4xl font-semibold text-[#C99436]">
                 {formatLakhs(voterStats.voterReachGap, true)}
               </span>
             </div>
-            <div className="text-[11px] text-[#B45309] font-medium mt-1">
+            <div className="text-[11px] text-[#C99436] font-medium mt-1">
               Untapped Electorate
             </div>
           </div>
@@ -121,17 +121,17 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Narrative Headline & Observations */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-[#7C808D]">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-[#A3B1C2]">
             The Core Finding
           </div>
-          <h3 className="font-editorial text-2xl sm:text-3xl text-[#112233] leading-snug font-normal">
+          <h3 className="font-editorial text-2xl sm:text-3xl text-[#F5EFE0] leading-snug font-normal">
             "{headline}"
           </h3>
 
           <div className="space-y-3 pt-2">
             {keyObservations.map((obs, idx) => (
-              <div key={idx} className="flex items-start space-x-3 text-sm text-[#414552] leading-relaxed">
-                <span className="font-mono-data text-xs font-bold text-[#112233] mt-0.5 px-1.5 py-0.5 bg-[#EFEFE8] rounded">
+              <div key={idx} className="flex items-start space-x-3 text-sm text-[#A3B1C2] leading-relaxed">
+                <span className="font-mono-data text-xs font-bold text-[#F5EFE0] mt-0.5 px-1.5 py-0.5 bg-[#0C1524] rounded">
                   0{idx + 1}
                 </span>
                 <span>{obs}</span>
@@ -141,13 +141,13 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
         </div>
 
         {/* Right Column: Comparative Horizontal Social Strength Bars */}
-        <div className="lg:col-span-5 bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-5">
+        <div className="lg:col-span-5 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 shadow-xs space-y-5">
           <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A8E9B]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2]">
                 Competitive Score
               </span>
-              <h4 className="text-sm font-semibold text-[#112233]">
+              <h4 className="text-sm font-semibold text-[#F5EFE0]">
                 Client Social Strength
               </h4>
             </div>
@@ -168,7 +168,7 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
                       />
                       <span
                         className={`font-medium ${
-                          isClient ? "text-[#112233] font-bold" : "text-[#555966]"
+                          isClient ? "text-[#F5EFE0] font-bold" : "text-[#A3B1C2]"
                         }`}
                       >
                         {cand.name}
@@ -184,7 +184,7 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
                     </div>
                     <span
                       className={`font-mono-data font-semibold ${
-                        isClient ? "text-base text-[#112233]" : "text-sm text-[#6C707D]"
+                        isClient ? "text-base text-[#F5EFE0]" : "text-sm text-[#6C707D]"
                       }`}
                     >
                       {cand.socialStrengthScore}
@@ -196,7 +196,7 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({ audit }) => {
                     <div
                       className={`h-full rounded-xs transition-all duration-700 ${
                         isClient
-                          ? "bg-[#112233] shadow-xs"
+                          ? "bg-[#050B12] shadow-xs"
                           : "bg-[#B0B4C0]"
                       }`}
                       style={{ width: `${cand.socialStrengthScore}%` }}

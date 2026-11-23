@@ -42,16 +42,16 @@ const DEPARTMENTS = [
 ];
 
 const ASSIGN_FILTER_CLASS =
-  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[#223348] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none [color-scheme:dark]";
+  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[rgba(201,148,54,0.25)] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none [color-scheme:dark]";
 const ASSIGN_TABLE_CLASS =
   "w-full max-w-full table-fixed text-left text-xs border-collapse [&_select]:min-w-0 [&_select]:max-w-full";
 const ASSIGN_TH =
-  "py-2 px-2 min-w-0 text-[#8E9CAE] font-semibold uppercase tracking-wider text-[10px] border-b border-[#223348] whitespace-normal break-words";
+  "py-2 px-2 min-w-0 text-[#8E9CAE] font-semibold uppercase tracking-wider text-[10px] border-b border-[rgba(201,148,54,0.25)] whitespace-normal break-words";
 const ASSIGN_TD =
-  "py-2.5 px-2 align-top min-w-0 whitespace-normal break-words [overflow-wrap:anywhere] border-b border-[#223348]";
-const ASSIGN_TR = "cursor-pointer hover:bg-[#0E1724]/50";
+  "py-2.5 px-2 align-top min-w-0 whitespace-normal break-words [overflow-wrap:anywhere] border-b border-[rgba(201,148,54,0.25)]";
+const ASSIGN_TR = "cursor-pointer hover:bg-[#080E18]/50";
 const ASSIGN_GRID_CLASS = "grid grid-cols-3 gap-4 overflow-visible";
-const ASSIGN_OPTION_CLASS = "bg-[#0B131E] text-[#F5EFE0]";
+const ASSIGN_OPTION_CLASS = "bg-[#060A10] text-[#F5EFE0]";
 
 export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
   currentUser,
@@ -839,7 +839,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
       {!isAssignTicketsMode && (
       <>
       {/* Manager Command Strip */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-[#080E18] border border-[#D4A24C]/40 shadow-2xl">
         <div className="flex items-center gap-4 min-w-0 w-full">
           <div className="min-w-0 w-full">
             <div className="flex items-center gap-2">
@@ -888,7 +888,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
 
       {!isAssignTicketsMode && (
       <>
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] shadow-xl">
         {(
           [
             { label: "Total Tickets", hint: "All", value: kpiCounts.total, status: "ALL" },
@@ -946,7 +946,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                 placeholder="Search ID, title, village, citizen, phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 bg-transparent border-0 border-b border-[#223348] focus:border-[#D4A24C] pl-6 pr-6 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className="w-full h-9 bg-transparent border-0 border-b border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] pl-6 pr-6 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
               />
               {searchQuery ? (
                 <button
@@ -963,14 +963,14 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
               >
-                <option value="NEWEST" className="bg-[#0B131E]">Newest first</option>
-                <option value="OLDEST" className="bg-[#0B131E]">Oldest first</option>
-                <option value="DUE_DATE" className="bg-[#0B131E]">Earliest due</option>
-                <option value="PRIORITY" className="bg-[#0B131E]">Highest priority</option>
-                <option value="STATUS" className="bg-[#0B131E]">By status</option>
-                <option value="TITLE" className="bg-[#0B131E]">Title A–Z</option>
+                <option value="NEWEST" className="bg-[#060A10]">Newest first</option>
+                <option value="OLDEST" className="bg-[#060A10]">Oldest first</option>
+                <option value="DUE_DATE" className="bg-[#060A10]">Earliest due</option>
+                <option value="PRIORITY" className="bg-[#060A10]">Highest priority</option>
+                <option value="STATUS" className="bg-[#060A10]">By status</option>
+                <option value="TITLE" className="bg-[#060A10]">Title A–Z</option>
               </select>
             </label>
             <label className="inline-flex items-center gap-1.5 text-[#8E9CAE] shrink-0">
@@ -978,12 +978,12 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
               >
-                <option value={10} className="bg-[#0B131E]">10 / page</option>
-                <option value={25} className="bg-[#0B131E]">25 / page</option>
-                <option value={50} className="bg-[#0B131E]">50 / page</option>
-                <option value={100} className="bg-[#0B131E]">100 / page</option>
+                <option value={10} className="bg-[#060A10]">10 / page</option>
+                <option value={25} className="bg-[#060A10]">25 / page</option>
+                <option value={50} className="bg-[#060A10]">50 / page</option>
+                <option value={100} className="bg-[#060A10]">100 / page</option>
               </select>
             </label>
             <div className="inline-flex items-center gap-3 text-[#8E9CAE] shrink-0">
@@ -1195,7 +1195,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                             <select
                               value={resolveDeptValue(issue.department)}
                               onChange={(e) => handleAssignDepartment(issue.id, e.target.value)}
-                              className="w-full min-w-0 bg-[#0B131E] text-[#F5EFE0] text-[11px] border-0 rounded-none px-1 py-1 outline-none cursor-pointer [color-scheme:dark]"
+                              className="w-full min-w-0 bg-[#060A10] text-[#F5EFE0] text-[11px] border-0 rounded-none px-1 py-1 outline-none cursor-pointer [color-scheme:dark]"
                             >
                               <option value="" className={ASSIGN_OPTION_CLASS}>-- Select Department --</option>
                               {DEPARTMENTS.map((dept) => (

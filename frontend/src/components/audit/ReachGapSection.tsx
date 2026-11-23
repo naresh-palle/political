@@ -14,25 +14,25 @@ export const ReachGapSection: React.FC<ReachGapSectionProps> = ({ audit }) => {
   const maxGap = sortedGaps[0]?.reachGap || 106000;
 
   return (
-    <section id="section-reach-gap" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-reach-gap" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#B45309] font-bold">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#C99436] font-bold">
           Primary Opportunity Matrix
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           Where is the opportunity?
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           Funnel analysis isolating actionable electorate deficits across channels for targeted campaign allocation.
         </p>
       </div>
 
       {/* Hero Funnel Grid */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 sm:p-8 shadow-xs mb-10">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 sm:p-8 shadow-xs mb-10">
         <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-4 mb-8">
           <div className="flex items-center space-x-2">
-            <Target className="w-4 h-4 text-[#112233]" />
-            <h3 className="text-sm font-semibold text-[#112233]">
+            <Target className="w-4 h-4 text-[#F5EFE0]" />
+            <h3 className="text-sm font-semibold text-[#F5EFE0]">
               Constituency Conversion Funnel
             </h3>
           </div>
@@ -42,11 +42,11 @@ export const ReachGapSection: React.FC<ReachGapSectionProps> = ({ audit }) => {
         {/* Funnel Stages */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
           {/* Stage 1 */}
-          <div className="bg-[#FAF9F5] border border-[#E2E0D6] rounded-lg p-4 text-center space-y-1 relative">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B]">
+          <div className="bg-[#080E18] border border-[#E2E0D6] rounded-lg p-4 text-center space-y-1 relative">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2]">
               Stage 1 · Total Voters
             </span>
-            <div className="font-editorial text-3xl sm:text-4xl font-bold text-[#112233]">
+            <div className="font-editorial text-3xl sm:text-4xl font-bold text-[#F5EFE0]">
               {formatLakhs(voterStats.totalVoters, true)}
             </div>
             <span className="text-[11px] text-[#787B88] block">Registered Electorate</span>
@@ -80,14 +80,14 @@ export const ReachGapSection: React.FC<ReachGapSectionProps> = ({ audit }) => {
 
           {/* Stage 4: Hero Gap */}
           <div className="bg-[#FFFBEB] border-2 border-[#F59E0B] rounded-lg p-4 text-center space-y-1 relative shadow-xs">
-            <div className="flex items-center justify-center space-x-1 text-[10px] font-bold uppercase tracking-wider text-[#B45309]">
+            <div className="flex items-center justify-center space-x-1 text-[10px] font-bold uppercase tracking-wider text-[#C99436]">
               <Flame className="w-3 h-3 text-amber-600" />
               <span>Stage 4 · Reach Gap</span>
             </div>
-            <div className="font-editorial text-3xl sm:text-4xl font-bold text-[#B45309]">
+            <div className="font-editorial text-3xl sm:text-4xl font-bold text-[#C99436]">
               {formatLakhs(voterStats.voterReachGap, true)}
             </div>
-            <span className="text-[11px] text-[#B45309] font-medium block">
+            <span className="text-[11px] text-[#C99436] font-medium block">
               Direct Opportunity Deficit
             </span>
           </div>
@@ -95,10 +95,10 @@ export const ReachGapSection: React.FC<ReachGapSectionProps> = ({ audit }) => {
       </div>
 
       {/* Platform Reach Gap Bars */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 sm:p-8 shadow-xs space-y-6">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 sm:p-8 shadow-xs space-y-6">
         <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
           <div>
-            <h3 className="text-sm font-semibold text-[#112233]">
+            <h3 className="text-sm font-semibold text-[#F5EFE0]">
               Addressable Gap by Platform
             </h3>
             <span className="text-xs text-[#7B7F8E]">
@@ -117,10 +117,10 @@ export const ReachGapSection: React.FC<ReachGapSectionProps> = ({ audit }) => {
               <div key={item.platform} className="space-y-2">
                 <div className="flex items-center justify-between text-xs sm:text-sm">
                   <div className="flex items-center space-x-2.5">
-                    <span className="font-mono-data text-xs font-bold px-1.5 py-0.5 bg-[#F2F1EA] text-[#112233] rounded">
+                    <span className="font-mono-data text-xs font-bold px-1.5 py-0.5 bg-[#F2F1EA] text-[#F5EFE0] rounded">
                       0{idx + 1}
                     </span>
-                    <span className={`font-semibold ${isHero ? "text-[#112233] text-base" : "text-[#3D404C]"}`}>
+                    <span className={`font-semibold ${isHero ? "text-[#F5EFE0] text-base" : "text-[#3D404C]"}`}>
                       {item.displayName}
                     </span>
                     {isHero && (
@@ -131,7 +131,7 @@ export const ReachGapSection: React.FC<ReachGapSectionProps> = ({ audit }) => {
                     )}
                   </div>
                   <div className="flex items-baseline space-x-1.5 font-mono-data">
-                    <span className={`font-bold ${isHero ? "text-lg text-[#B45309]" : "text-sm text-[#4E515E]"}`}>
+                    <span className={`font-bold ${isHero ? "text-lg text-[#C99436]" : "text-sm text-[#4E515E]"}`}>
                       {formatLakhs(item.reachGap, true)}
                     </span>
                     <span className="text-xs text-[#878B98]">gap</span>

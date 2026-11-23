@@ -217,11 +217,11 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative bg-[#0B131E] border border-[#D4A24C]/40 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto"
+        className="relative bg-[#060A10] border border-[#D4A24C]/40 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] overflow-hidden text-[#F5EFE0] my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Compact Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-[#223348] bg-[#0E1724] flex items-start justify-between gap-3 shrink-0">
+        <div className="p-4 sm:p-5 border-b border-[rgba(201,148,54,0.25)] bg-[#080E18] flex items-start justify-between gap-3 shrink-0">
           <div className="space-y-1.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
@@ -283,7 +283,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-xl bg-[#0C1524] hover:bg-rose-950/80 border border-[#223348] hover:border-rose-500 text-[#CBD5E1] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+              className="w-8 h-8 rounded-xl bg-[#0C1524] hover:bg-rose-950/80 border border-[rgba(201,148,54,0.25)] hover:border-rose-500 text-[#CBD5E1] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
@@ -292,7 +292,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         </div>
 
         {/* Quick Highlights Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:px-5 bg-[#070D15] border-b border-[#223348] text-xs shrink-0">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:px-5 bg-[#070D15] border-b border-[rgba(201,148,54,0.25)] text-xs shrink-0">
           <div className="min-w-0">
             <span className="text-[10px] uppercase text-[#8E9CAE] block font-semibold">Category / Dept</span>
             <span className="font-medium text-[#F5EFE0] truncate block mt-0.5">
@@ -338,7 +338,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             {/* Left Column (7/12): Description, Location details, Proofs */}
             <div className="md:col-span-7 space-y-4 min-w-0">
               {/* Description Block */}
-              <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-2">
+              <div className="p-4 rounded-xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] space-y-2">
                 <span className="text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold block">
                   Issue Scope & Ground Description
                 </span>
@@ -346,7 +346,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   {issue.description || "No detailed description provided."}
                 </p>
                 {issue.placeName && (
-                  <div className="pt-2 border-t border-[#223348]/60 flex items-center gap-1.5 text-[11px] text-[#8E9CAE]">
+                  <div className="pt-2 border-t border-[rgba(201,148,54,0.25)]/60 flex items-center gap-1.5 text-[11px] text-[#8E9CAE]">
                     <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
                     <span>Landmark / Specific Spot: <strong className="text-[#F5EFE0]">{issue.placeName}</strong></span>
                   </div>
@@ -355,14 +355,14 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
               {/* Reporter Contact Strip */}
               {issue.reporterPhone && (
-                <div className="p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] flex items-center justify-between text-xs">
+                <div className="p-3 rounded-xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] flex items-center justify-between text-xs">
                   <div>
                     <span className="text-[10px] uppercase text-[#8E9CAE] block">Reporter Contact Number</span>
                     <strong className="text-[#F5EFE0]">{issue.reportedBy} ({issue.reporterDesignation || "Citizen"})</strong>
                   </div>
                   <a
                     href={`tel:${issue.reporterPhone}`}
-                    className="px-3 py-1.5 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#D4A24C]/30 text-[#D4A24C] font-mono text-xs flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] border border-[#D4A24C]/30 text-[#D4A24C] font-mono text-xs flex items-center gap-1.5"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     {issue.reporterPhone}
@@ -384,7 +384,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                         href={url}
                         target="_blank"
                         rel="noreferrer"
-                        className="group relative rounded-xl overflow-hidden border border-[#223348] bg-[#070D15] aspect-video block"
+                        className="group relative rounded-xl overflow-hidden border border-[rgba(201,148,54,0.25)] bg-[#070D15] aspect-video block"
                       >
                         <img
                           src={url}
@@ -404,7 +404,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             {/* Right Column (5/12): Field Responsibility */}
             <div className="md:col-span-5 min-w-0">
               {/* Responsibility Card & Action CTA */}
-              <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-3 h-fit">
+              <div className="p-4 rounded-xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] space-y-3 h-fit">
                 <div className="flex items-center justify-between">
                   <span className="text-[10.5px] uppercase tracking-wider text-[#D4A24C] font-semibold">
                     Field Assignment
@@ -447,8 +447,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           </div>
 
               {/* Status & Activity Timeline */}
-              <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-3">
-                <div className="flex items-center justify-between border-b border-[#223348]/60 pb-2">
+              <div className="p-4 rounded-xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] space-y-3">
+                <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)]/60 pb-2">
                   <h4 className="text-xs font-semibold text-[#F5EFE0] flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-[#D4A24C]" />
                     Activity & Audit Timeline
@@ -469,7 +469,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     {history.map((record) => (
                       <div
                         key={record.id}
-                        className="p-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-xs space-y-1"
+                        className="p-2.5 rounded-lg bg-[#060A10] border border-[rgba(201,148,54,0.25)] text-xs space-y-1"
                       >
                         <div className="flex items-center justify-between gap-1">
                           <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${getStatusBadge(record.newStatus)}`}>
@@ -479,7 +479,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                         </div>
                         <p className="text-[11px] text-[#CBD5E1] leading-relaxed">{record.remarks}</p>
                         {record.volunteerName && (
-                          <div className="text-[9.5px] text-[#8E9CAE] pt-1 border-t border-[#223348]/40">
+                          <div className="text-[9.5px] text-[#8E9CAE] pt-1 border-t border-[rgba(201,148,54,0.25)]/40">
                             Logged by: <span className="text-[#D4A24C]">{record.volunteerName}</span>
                           </div>
                         )}
@@ -490,8 +490,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               </div>
 
               {/* WhatsApp Notification Audit History */}
-              <div className="p-4 rounded-xl bg-[#0E1724]/90 border border-[#223348] space-y-3">
-                <div className="flex items-center justify-between border-b border-[#223348]/60 pb-2">
+              <div className="p-4 rounded-xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] space-y-3">
+                <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)]/60 pb-2">
                   <h4 className="text-xs font-semibold text-[#F5EFE0] flex items-center gap-1.5">
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
                     WhatsApp Cloud API History
@@ -512,7 +512,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     {notificationAudits.map((audit) => (
                       <div
                         key={audit.id}
-                        className="p-2.5 rounded-lg bg-[#0B131E] border border-[#223348] text-xs space-y-1.5"
+                        className="p-2.5 rounded-lg bg-[#060A10] border border-[rgba(201,148,54,0.25)] text-xs space-y-1.5"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-emerald-300 text-[11px] flex items-center gap-1">
@@ -562,10 +562,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
           onClick={() => setIsUpdateModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
+            className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#080E18] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#050B12]/60">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[rgba(201,148,54,0.25)] bg-[#050B12]/60">
               <h3 className="min-w-0 font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
                 <Camera className="w-4 h-4 text-[#D4A24C] shrink-0" />
                 <span className="truncate">Update Status & Proof</span>
@@ -594,7 +594,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   <select
                     value={updateStatus}
                     onChange={(e) => setUpdateStatus(e.target.value as IssueStatus)}
-                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    className="w-full min-w-0 h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                   >
                     <option value="IN_PROGRESS">IN_PROGRESS (Work Active on Site)</option>
                     <option value="COMPLETED">COMPLETED (Work Finished & Verified)</option>
@@ -612,7 +612,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     type="date"
                     value={updateDate}
                     onChange={(e) => setUpdateDate(e.target.value)}
-                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    className="w-full min-w-0 h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                   />
                 </div>
 
@@ -625,7 +625,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     value={updateRemarks}
                     onChange={(e) => setUpdateRemarks(e.target.value)}
                     placeholder="Describe actions taken, coordination, or site completion notes..."
-                    className="w-full min-w-0 bg-[#0B131E] border border-[#223348] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed resize-y"
+                    className="w-full min-w-0 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed resize-y"
                   />
                 </div>
 
@@ -638,12 +638,12 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                     value={updateProofUrl}
                     onChange={(e) => setUpdateProofUrl(e.target.value)}
                     placeholder="https://images.unsplash.com/... or image URL"
-                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    className="w-full min-w-0 h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#050B12]/40">
+              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[rgba(201,148,54,0.25)] bg-[#050B12]/40">
                 <button
                   type="button"
                   onClick={() => setIsUpdateModalOpen(false)}

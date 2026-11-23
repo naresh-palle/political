@@ -31,7 +31,7 @@ export const AuditHeader: React.FC<AuditHeaderProps> = ({
           <div className="flex items-center space-x-2 text-[11px] font-semibold uppercase tracking-widest text-[#797C88]">
             <span>Leaders Lens</span>
             <span>/</span>
-            <span className="text-[#112233]">Constituency Strength Audit</span>
+            <span className="text-[#F5EFE0]">Constituency Strength Audit</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] font-normal text-[#080E18] tracking-[-0.02em] leading-[0.98]">
@@ -53,16 +53,16 @@ export const AuditHeader: React.FC<AuditHeaderProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6 border-t lg:border-t-0 border-[#E8E6DE] pt-4 lg:pt-0">
           <div className="flex items-center space-x-4 text-xs text-[#6A6E7C]">
             <div>
-              <span className="block text-[10px] uppercase tracking-wider text-[#8A8E9B]">
+              <span className="block text-[10px] uppercase tracking-wider text-[#A3B1C2]">
                 Audit Generated
               </span>
-              <span className="font-medium text-[#112233] font-mono-data">
+              <span className="font-medium text-[#F5EFE0] font-mono-data">
                 {audit.generatedAt}
               </span>
             </div>
 
-            <div className="border-l border-[#E5E3D8] pl-4">
-              <span className="block text-[10px] uppercase tracking-wider text-[#8A8E9B] mb-0.5">
+            <div className="border-l border-[rgba(201,148,54,0.25)] pl-4">
+              <span className="block text-[10px] uppercase tracking-wider text-[#A3B1C2] mb-0.5">
                 Data Provenance
               </span>
               <ConfidenceBadge level={audit.freshness} />
@@ -73,10 +73,10 @@ export const AuditHeader: React.FC<AuditHeaderProps> = ({
           <div className="flex items-center space-x-2 no-print">
             <button
               onClick={onEnterPresentationMode}
-              className="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-lg bg-white border border-[#D5D3C8] text-[#112233] hover:bg-[#F2F1EB] transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-lg bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] hover:bg-[#F2F1EB] transition-colors shadow-2xs cursor-pointer"
               title="Open distraction-free executive presentation"
             >
-              <Presentation className="w-3.5 h-3.5 mr-1.5 text-[#112233]" />
+              <Presentation className="w-3.5 h-3.5 mr-1.5 text-[#F5EFE0]" />
               Presentation Mode
             </button>
 
@@ -91,7 +91,7 @@ export const AuditHeader: React.FC<AuditHeaderProps> = ({
 
             <button
               onClick={handleShare}
-              className="p-2 text-[#5E626E] hover:text-[#112233] bg-white border border-[#D5D3C8] rounded-lg hover:bg-[#F2F1EB] transition-colors cursor-pointer"
+              className="p-2 text-[#5E626E] hover:text-[#F5EFE0] bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg hover:bg-[#F2F1EB] transition-colors cursor-pointer"
               title="Copy share link"
             >
               {copied ? (

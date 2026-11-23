@@ -119,7 +119,7 @@ const EMPTY_CONTACT: Partial<ContactRecord> = {
 };
 
 const FIELD_CLASS =
-  "w-full min-w-0 bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none";
+  "w-full min-w-0 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none";
 
 const ROLE_TOKEN = (user: UserProfile) =>
   String(user.primaryRole || user.roleId || user.role || "")
@@ -498,7 +498,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-3 animate-fadeIn">
       {/* 1. Header Banner & Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#080E18]/90 backdrop-blur-xl border border-[#D4A24C]/40 shadow-xl">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-display text-xl sm:text-2xl font-bold text-[#F5EFE0] tracking-wide">
@@ -522,13 +522,13 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
           <button
             type="button"
             onClick={handleExportExcel}
-            className="px-3.5 py-2 rounded-xl bg-[#0B131E] border border-[#223348] hover:border-[#D4A24C]/50 text-[#CBD5E1] hover:text-[#F5EFE0] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+            className="px-3.5 py-2 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/50 text-[#CBD5E1] hover:text-[#F5EFE0] text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-[#D4A24C]" />
             <span>Export Excel</span>
           </button>
 
-          <div className="inline-flex flex-wrap items-center gap-1.5 rounded-xl border border-[#223348] bg-[#0B131E] p-1">
+          <div className="inline-flex flex-wrap items-center gap-1.5 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#060A10] p-1">
             <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-[#CBD5E1]">
               <FileDown className="w-3.5 h-3.5 text-[#D4A24C]" />
               Export PDF
@@ -566,7 +566,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       ) : null}
 
       {/* 2. Directory KPI Metrics — same gold surface as Manager landing */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 rounded-2xl bg-[#091422] border border-[#22354D]">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-3 rounded-2xl bg-[#060A10] border border-[rgba(201,148,54,0.25)]">
         {(
           [
             { label: "Total", hint: "Directory", value: stats.total },
@@ -591,7 +591,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       </div>
 
       {/* 3. Filter & Search Master Toolbar */}
-      <div className="p-3 sm:p-4 rounded-2xl bg-[#0E1724]/90 backdrop-blur-xl border border-[#223348] shadow-lg space-y-3">
+      <div className="p-3 sm:p-4 rounded-2xl bg-[#080E18]/90 backdrop-blur-xl border border-[rgba(201,148,54,0.25)] shadow-lg space-y-3">
         {showManagerVolunteers ? (
           <h2 className="font-display text-lg text-[#F5EFE0]">Constituency Directory</h2>
         ) : null}
@@ -604,7 +604,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               placeholder={hidePhone ? "Search by name, village, department, designation..." : "Search by name, phone, village, designation..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
+              className="w-full bg-[#060A10] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-xl pl-9 pr-8 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none transition-all"
             />
             {searchQuery && (
               <button
@@ -622,7 +622,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             </span>
 
             {/* View Mode */}
-            <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs">
+            <div className="flex items-center p-1 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] text-xs">
               <button
                 onClick={() => setViewMode("GRID")}
                 className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer ${
@@ -649,7 +649,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Category: All Types</option>
               <option value="GOVT_OFFICIAL">Govt Officer</option>
@@ -662,7 +662,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             <select
               value={filterMandal}
               onChange={(e) => setFilterMandal(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Mandal: All Sectors</option>
               {mandalsList.map((m) => (
@@ -677,7 +677,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             <select
               value={filterGender}
               onChange={(e) => setFilterGender(e.target.value)}
-              className="w-full bg-[#0B131E] border border-[#223348] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+              className="w-full bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-2.5 py-2 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
             >
               <option value="ALL">Gender: All</option>
               <option value="Male">Male</option>
@@ -689,7 +689,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
       {/* 4. Main Contact Grid / Table List */}
       {filteredContacts.length === 0 ? (
-        <div className="p-10 rounded-2xl bg-[#0E1724]/90 border border-[#223348] text-center space-y-2">
+        <div className="p-10 rounded-2xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] text-center space-y-2">
           <p className="text-sm font-semibold text-[#F5EFE0]">No contacts in this directory yet</p>
           <p className="text-xs text-[#8E9CAE]">
             Add a contact with name, phone, category, designation, mandal, and village.
@@ -700,7 +700,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
           {filteredContacts.map((contact) => (
             <div
               key={contact.id}
-              className="h-full p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2 group"
+              className="h-full p-3 rounded-xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2 group"
             >
               {/* Top: Avatar, Name & Category */}
               <div>
@@ -738,14 +738,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
                 {/* Notes if any */}
                 {contact.notes && (
-                  <p className="text-[11px] text-[#8E9CAE] italic line-clamp-2 mt-2 pt-2 border-t border-[#223348]/60">
+                  <p className="text-[11px] text-[#8E9CAE] italic line-clamp-2 mt-2 pt-2 border-t border-[rgba(201,148,54,0.25)]/60">
                     &ldquo;{contact.notes}&rdquo;
                   </p>
                 )}
               </div>
 
               {/* Bottom: Action Buttons */}
-              <div className="pt-2 border-t border-[#223348]/70 flex items-center justify-between gap-2">
+              <div className="pt-2 border-t border-[rgba(201,148,54,0.25)]/70 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   {!hidePhone && (
                     <>
@@ -761,7 +761,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   </a>
                   <a
                     href={`tel:${contact.phone}`}
-                    className="p-2 rounded-xl bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
+                    className="p-2 rounded-xl bg-[#0C1524] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
                     title="Direct Phone Call"
                   >
                     <Phone className="w-3.5 h-3.5" />
@@ -777,7 +777,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                       <button
                         type="button"
                         onClick={() => openEdit(contact)}
-                        className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-xs transition-all cursor-pointer"
+                        className="p-2 px-2.5 rounded-xl bg-[#060A10] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-xs transition-all cursor-pointer"
                         title="Edit contact"
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -785,7 +785,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                       <button
                         type="button"
                         onClick={() => handleDeleteContact(contact)}
-                        className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-rose-950/60 border border-[#223348] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-200 text-xs transition-all cursor-pointer"
+                        className="p-2 px-2.5 rounded-xl bg-[#060A10] hover:bg-rose-950/60 border border-[rgba(201,148,54,0.25)] hover:border-rose-500/50 text-[#CBD5E1] hover:text-rose-200 text-xs transition-all cursor-pointer"
                         title="Delete contact"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -795,7 +795,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   <button
                     type="button"
                     onClick={() => setSelectedContact(contact)}
-                    className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#0C1524] border border-[#223348] text-[#CBD5E1] hover:text-[#F5EFE0] text-xs transition-all cursor-pointer"
+                    className="p-2 px-2.5 rounded-xl bg-[#060A10] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] text-[#CBD5E1] hover:text-[#F5EFE0] text-xs transition-all cursor-pointer"
                     title="View Full Profile"
                   >
                     <Eye className="w-3.5 h-3.5" />
@@ -807,9 +807,9 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
         </div>
       ) : (
         /* Table View */
-        <div className="overflow-x-auto rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg">
+        <div className="overflow-x-auto rounded-2xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] shadow-lg">
           <table className="w-full text-left text-xs text-[#CBD5E1]">
-            <thead className="bg-[#0B131E] text-[#8E9CAE] uppercase font-semibold border-b border-[#223348] text-[10.5px]">
+            <thead className="bg-[#060A10] text-[#8E9CAE] uppercase font-semibold border-b border-[rgba(201,148,54,0.25)] text-[10.5px]">
               <tr>
                 <th className="p-3.5">Contact Name</th>
                 <th className="p-3.5">Category</th>
@@ -819,7 +819,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 <th className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#223348]/60">
+            <tbody className="divide-y divide-[rgba(201,148,54,0.25)]/60">
               {filteredContacts.map((c) => (
                 <tr key={c.id} className="hover:bg-[#0C1524]/60 transition-colors">
                   <td className="p-3.5">
@@ -859,14 +859,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                           <button
                             type="button"
                             onClick={() => openEdit(c)}
-                            className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteContact(c)}
-                            className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-[11px] font-semibold cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-rose-950/50 border border-[rgba(201,148,54,0.25)] text-[#CBD5E1] hover:text-rose-200 text-[11px] font-semibold cursor-pointer"
                           >
                             Delete
                           </button>
@@ -875,7 +875,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                       <button
                         type="button"
                         onClick={() => setSelectedContact(c)}
-                        className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
                       >
                         Details
                       </button>
@@ -892,8 +892,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       {isAddModalOpen &&
         createPortal(
         <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-3 sm:p-6 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-xl mt-2 sm:mt-4 mb-8 bg-[#0E1724] border border-[#D4A24C]/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-4 sm:p-5 border-b border-[#223348] flex items-center justify-between bg-[#0B131E]">
+          <div className="w-full max-w-xl mt-2 sm:mt-4 mb-8 bg-[#080E18] border border-[#D4A24C]/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 sm:p-5 border-b border-[rgba(201,148,54,0.25)] flex items-center justify-between bg-[#060A10]">
               <div className="flex items-center gap-2.5">
                 <UserPlus className="w-5 h-5 text-[#D4A24C]" />
                 <h3 className="font-display text-lg text-[#F5EFE0] font-bold">
@@ -921,7 +921,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                     placeholder="e.g. K. Subba Rayudu"
                     value={newContact.name}
                     onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                    className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
+                    className="w-full bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none"
                   />
                 </div>
 
@@ -1128,18 +1128,18 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   placeholder="Key influence details, family ties, past voting patterns or grievance history..."
                   value={newContact.notes}
                   onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
-                  className="w-full bg-[#0B131E] border border-[#223348] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none resize-none"
+                  className="w-full bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl p-2.5 text-[#F5EFE0] focus:border-[#D4A24C] outline-none resize-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-[#223348] flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-[rgba(201,148,54,0.25)] flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAddModalOpen(false);
                     resetForm();
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#0B131E] border border-[#223348] text-[#CBD5E1] text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] text-[#CBD5E1] text-xs font-semibold"
                 >
                   Cancel
                 </button>
@@ -1160,8 +1160,8 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
       {selectedContact &&
         createPortal(
         <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-3 sm:p-6 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-lg mt-2 sm:mt-4 mb-8 bg-[#0E1724] border border-[#D4A24C]/40 rounded-2xl shadow-2xl p-5 space-y-4">
-            <div className="flex items-start justify-between border-b border-[#223348] pb-3">
+          <div className="w-full max-w-lg mt-2 sm:mt-4 mb-8 bg-[#080E18] border border-[#D4A24C]/40 rounded-2xl shadow-2xl p-5 space-y-4">
+            <div className="flex items-start justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
               <div>
                 <h3 className="font-display text-lg font-bold text-[#F5EFE0]">{selectedContact.name}</h3>
                 <p className="text-xs text-[#CBD5E1]">{selectedContact.designation}</p>
@@ -1177,23 +1177,23 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               {!hidePhone && (
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+              <div className="p-2.5 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)]">
                 <span className="text-[10px] text-[#8E9CAE] block">Phone</span>
                 <strong className="text-[#F5EFE0] font-mono whitespace-normal break-words">{selectedContact.phone}</strong>
               </div>
               )}
               {!hidePhone && selectedContact.email ? (
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+              <div className="p-2.5 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)]">
                 <span className="text-[10px] text-[#8E9CAE] block">Email</span>
                 <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.email}</strong>
               </div>
               ) : null}
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+              <div className="p-2.5 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)]">
                 <span className="text-[10px] text-[#8E9CAE] block">Gender</span>
                 <strong className="text-[#F5EFE0]">{selectedContact.gender}</strong>
               </div>
               {selectedContact.department ? (
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348] col-span-2">
+              <div className="p-2.5 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] col-span-2">
                 <span className="text-[10px] text-[#8E9CAE] block">Department / Sub-department</span>
                 <strong className="text-[#F5EFE0] whitespace-normal break-words">
                   {selectedContact.department}
@@ -1201,11 +1201,11 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </strong>
               </div>
               ) : null}
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+              <div className="p-2.5 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)]">
                 <span className="text-[10px] text-[#8E9CAE] block">Mandal</span>
                 <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.mandalName}</strong>
               </div>
-              <div className="p-2.5 rounded-xl bg-[#0B131E] border border-[#223348]">
+              <div className="p-2.5 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)]">
                 <span className="text-[10px] text-[#8E9CAE] block">Village / Ward</span>
                 <strong className="text-[#F5EFE0] whitespace-normal break-words">{selectedContact.villageName}</strong>
               </div>
@@ -1218,13 +1218,13 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               </div>
             )}
 
-            <div className="pt-2 border-t border-[#223348] flex flex-wrap items-center justify-end gap-2">
+            <div className="pt-2 border-t border-[rgba(201,148,54,0.25)] flex flex-wrap items-center justify-end gap-2">
               {canManageContacts && (
                 <>
                   <button
                     type="button"
                     onClick={() => openEdit(selectedContact)}
-                    className="px-4 py-2 rounded-xl bg-[#0C1524] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#0C1524] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                   >
                     <Pencil className="w-4 h-4" />
                     Edit
@@ -1232,7 +1232,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   <button
                     type="button"
                     onClick={() => handleDeleteContact(selectedContact)}
-                    className="px-4 py-2 rounded-xl bg-[#0C1524] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#0C1524] hover:bg-rose-950/50 border border-[rgba(201,148,54,0.25)] text-[#CBD5E1] hover:text-rose-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete

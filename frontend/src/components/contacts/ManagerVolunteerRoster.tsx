@@ -166,10 +166,10 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search volunteers…"
-              className="w-full bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-xl pl-9 pr-3 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+              className="w-full bg-[#060A10] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-xl pl-9 pr-3 py-2.5 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
             />
           </div>
-          <div className="flex items-center p-1 rounded-xl bg-[#0B131E] border border-[#223348] text-xs self-end sm:self-auto">
+          <div className="flex items-center p-1 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] text-xs self-end sm:self-auto">
             <button
               type="button"
               onClick={() => setViewMode("GRID")}
@@ -193,11 +193,11 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
       </div>
 
       {loading ? (
-        <div className="p-6 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
+        <div className="p-6 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#080E18] text-sm text-[#8E9CAE]">
           Loading volunteers…
         </div>
       ) : rows.length === 0 ? (
-        <div className="p-6 rounded-xl border border-[#223348] bg-[#0E1724] text-sm text-[#8E9CAE]">
+        <div className="p-6 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#080E18] text-sm text-[#8E9CAE]">
           {query.trim() ? "No volunteers match this search." : "No volunteers are assigned to this manager."}
         </div>
       ) : viewMode === "GRID" ? (
@@ -214,7 +214,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") openAssignTickets(vol.id);
                 }}
-                className="h-full p-3 rounded-xl bg-[#0E1724]/90 border border-[#223348] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2 cursor-pointer"
+                className="h-full p-3 rounded-xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60 transition-all shadow-md backdrop-blur-xl flex flex-col justify-between space-y-2 cursor-pointer"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3">
@@ -250,7 +250,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-1 pt-2 border-t border-[#223348]/60 text-center text-[10px]">
+                <div className="grid grid-cols-4 gap-1 pt-2 border-t border-[rgba(201,148,54,0.25)]/60 text-center text-[10px]">
                   {(
                     [
                       ["Assigned", assignedCount],
@@ -266,7 +266,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                   ))}
                 </div>
 
-                <div className="pt-2 border-t border-[#223348]/70 flex flex-wrap items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="pt-2 border-t border-[rgba(201,148,54,0.25)]/70 flex flex-wrap items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                   {phone ? (
                     <>
                       {wa ? (
@@ -283,7 +283,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                       ) : null}
                       <a
                         href={tel}
-                        className="p-2 rounded-xl bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
+                        className="p-2 rounded-xl bg-[#0C1524] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
                         title="Direct Phone Call"
                       >
                         <Phone className="w-3.5 h-3.5" />
@@ -299,9 +299,9 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
           })}
         </div>
       ) : (
-        <div className="rounded-2xl bg-[#0E1724]/90 border border-[#223348] shadow-lg">
+        <div className="rounded-2xl bg-[#080E18]/90 border border-[rgba(201,148,54,0.25)] shadow-lg">
           <table className="w-full table-fixed text-left text-xs text-[#CBD5E1]">
-            <thead className="bg-[#0B131E] text-[#8E9CAE] uppercase font-semibold border-b border-[#223348] text-[10.5px]">
+            <thead className="bg-[#060A10] text-[#8E9CAE] uppercase font-semibold border-b border-[rgba(201,148,54,0.25)] text-[10.5px]">
               <tr>
                 <th className="px-2 py-2 w-[16%] whitespace-normal break-words">Volunteer</th>
                 <th className="px-2 py-2 w-[8%] whitespace-normal break-words">Status</th>
@@ -316,7 +316,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                 <th className="px-2 py-2 w-[8%] whitespace-normal break-words">Contact</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#223348]/60">
+            <tbody className="divide-y divide-[rgba(201,148,54,0.25)]/60">
               {rows.map(({ vol, assignedCount, pendingCount, overdueCount, doneCount, phone, email, area, villages }) => {
                 const wa = waHref(phone, vol.name);
                 const tel = phone ? `tel:+91${phone.slice(-10)}` : "";
@@ -361,7 +361,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                         {tel ? (
                           <a
                             href={tel}
-                            className="px-1.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[10.5px] font-semibold inline-flex items-center gap-1"
+                            className="px-1.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] text-[#D4A24C] text-[10.5px] font-semibold inline-flex items-center gap-1"
                           >
                             <Phone className="w-3.5 h-3.5 shrink-0" />
                             <span className="whitespace-normal break-words">Call</span>

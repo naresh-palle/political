@@ -709,7 +709,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#091422] border border-[#22354D] shadow-xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 p-4 rounded-2xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] shadow-xl">
             {kpiCards.map((card) => (
               <div
                 key={card.label}

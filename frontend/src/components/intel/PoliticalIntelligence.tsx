@@ -2521,55 +2521,27 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             <div className="p-8 text-center text-[#D4A24C] text-xs"><Loader2 className="w-4 h-4 inline animate-spin" /> Loading live metrics…</div>
           ) : (
             <>
-              {/* 7 Core Summary KPI Cards - Dynamically updated for selected state, repType & sub-territory */}
+              {/* 7 Core Summary KPI Cards - Dynamically updated from real DB metrics without hardcoding */}
               {(() => {
-                const activeSt = getStateElectorateInfo(stateId, states.find((s) => s.id === stateId)?.name);
-                const stCode = normStateCode(stateId);
+                const repMetrics = (dashboard as any)?.repMetrics || null;
 
-                // 1. MLA stats for selected state / district
-                const mlaTotal = districtId
-                  ? (filteredAcs.length || (districts.find(d => d.id === districtId)?.assemblyConstituencyIds?.length) || 7)
-                  : (dashboard.totalConstituencies && dashboard.totalConstituencies > 0 ? dashboard.totalConstituencies : activeSt.totalConstituencies);
+                // Real counts directly from database without hardcoding
+                const mlaPending = repMetrics?.MLA?.pending ?? (repType === "MLA" ? Number(dashboard.pendingVerification || 0) : 0);
+                const mlaCompleted = repMetrics?.MLA?.completed ?? (repType === "MLA" ? Number(dashboard.verifiedAccounts || 0) : 0);
+                const mlaLeaders = repMetrics?.MLA?.total ?? (repType === "MLA" ? Number(dashboard.totalLeaders || 0) : 0);
 
-                const stateMlaLeaders = leaders.filter((l) => {
-                  const r = (l.representativeType || "MLA").toUpperCase();
-                  const s = normStateCode(l.stateId);
-                  const matchState = s === stCode;
-                  const matchDist = districtId ? l.districtId === districtId : true;
-                  return matchState && matchDist && r === "MLA";
-                });
-                const mlaEnteredSet = new Set(stateMlaLeaders.map((l) => l.assemblyConstituencyId).filter(Boolean));
-                const mlaCompleted = mlaEnteredSet.size;
-                const mlaPending = Math.max(0, mlaTotal - mlaCompleted);
+                const mlcPending = repMetrics?.MLC?.pending ?? (repType === "MLC" ? Number(dashboard.pendingVerification || 0) : 0);
+                const mlcCompleted = repMetrics?.MLC?.completed ?? (repType === "MLC" ? Number(dashboard.verifiedAccounts || 0) : 0);
+                const mlcLeaders = repMetrics?.MLC?.total ?? (repType === "MLC" ? Number(dashboard.totalLeaders || 0) : 0);
 
-                // 2. MLC stats for selected state
-                const stateMlcZones = getMlcZonesForState(stateId);
-                const mlcTotal = zoneId ? 1 : (stateMlcZones.length || (stCode === "AP" ? 15 : stCode === "TG" || stCode === "TS" ? 12 : 10));
-                const stateMlcLeaders = leaders.filter((l) => {
-                  const r = (l.representativeType || "").toUpperCase();
-                  const s = normStateCode(l.stateId);
-                  return s === stCode && r === "MLC";
-                });
-                const mlcEnteredSet = new Set(stateMlcLeaders.map((l) => l.zoneId || l.assemblyConstituencyId).filter(Boolean));
-                const mlcCompleted = mlcEnteredSet.size;
-                const mlcPending = Math.max(0, mlcTotal - mlcCompleted);
+                const mpPending = repMetrics?.MP?.pending ?? (repType === "MP" ? Number(dashboard.pendingVerification || 0) : 0);
+                const mpCompleted = repMetrics?.MP?.completed ?? (repType === "MP" ? Number(dashboard.verifiedAccounts || 0) : 0);
+                const mpLeaders = repMetrics?.MP?.total ?? (repType === "MP" ? Number(dashboard.totalLeaders || 0) : 0);
 
-                // 3. MP stats for selected state
-                const statePcs = parliaments.filter((p) => normStateCode(p.stateId) === stCode);
-                const mpTotal = pcId ? 1 : (statePcs.length || (stCode === "AP" ? 25 : stCode === "TG" || stCode === "TS" ? 17 : 25));
-                const stateMpLeaders = leaders.filter((l) => {
-                  const r = (l.representativeType || "").toUpperCase();
-                  const s = normStateCode(l.stateId);
-                  return s === stCode && r === "MP";
-                });
-                const mpEnteredSet = new Set(stateMpLeaders.map((l) => l.parliamentConstituencyId || l.assemblyConstituencyId).filter(Boolean));
-                const mpCompleted = mpEnteredSet.size;
-                const mpPending = Math.max(0, mpTotal - mpCompleted);
-
-                // Grand Totals
-                const grandTotal = mlaTotal + mpTotal + mlcTotal;
-                const grandCompleted = mlaCompleted + mpCompleted + mlcCompleted;
-                const grandPending = mlaPending + mpPending + mlcPending;
+                // Grand Totals directly from DB
+                const grandTotal = repMetrics?.total ?? Number(dashboard.totalLeaders || 0);
+                const grandCompleted = repMetrics?.completed ?? Number(dashboard.verifiedAccounts || 0);
+                const grandPending = repMetrics?.pending ?? Number(dashboard.pendingVerification || 0);
 
                 return (
                   <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2">
@@ -2582,37 +2554,37 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     <Kpi
                       label="MLA Pending"
                       value={mlaPending}
-                      hint={`of ${mlaTotal} ACs`}
+                      hint={`${mlaLeaders} Leaders`}
                       onClick={() => { setRepType("MLA"); }}
                     />
                     <Kpi
                       label="MLA Completed"
                       value={mlaCompleted}
-                      hint={`of ${mlaTotal} ACs`}
+                      hint={`${mlaLeaders} Leaders`}
                       onClick={() => { setRepType("MLA"); }}
                     />
                     <Kpi
                       label="MLC Pending"
                       value={mlcPending}
-                      hint={`of ${mlcTotal} Zones`}
+                      hint={`${mlcLeaders} Leaders`}
                       onClick={() => { setRepType("MLC"); }}
                     />
                     <Kpi
                       label="MLC Completed"
                       value={mlcCompleted}
-                      hint={`of ${mlcTotal} Zones`}
+                      hint={`${mlcLeaders} Leaders`}
                       onClick={() => { setRepType("MLC"); }}
                     />
                     <Kpi
                       label="MP Pending"
                       value={mpPending}
-                      hint={`of ${mpTotal} PCs`}
+                      hint={`${mpLeaders} Leaders`}
                       onClick={() => { setRepType("MP"); }}
                     />
                     <Kpi
                       label="MP Completed"
                       value={mpCompleted}
-                      hint={`of ${mpTotal} PCs`}
+                      hint={`${mpLeaders} Leaders`}
                       onClick={() => { setRepType("MP"); }}
                     />
                   </div>
@@ -4734,7 +4706,27 @@ function AiCampaignIntelligence({
         <div style="text-align: center; color: #B9AF95; font-size: 11px; margin-top: 30px;">
           Confidential · Prepared exclusively by Leaders Lens Political Intelligence System
         </div>
-        <script>window.onload = function() { window.print(); };</script>
+        <div style="margin-top: 24px; text-align: center;" class="no-print">
+          <button onclick="window.close()" style="background: #C99436; color: #050B12; font-weight: bold; border: none; padding: 10px 22px; border-radius: 8px; font-size: 13px; cursor: pointer;">
+            ← Return to Leaders Lens
+          </button>
+        </div>
+        <script>
+          window.addEventListener('afterprint', function() {
+            setTimeout(function() {
+              window.close();
+            }, 150);
+          });
+          window.onload = function() {
+            setTimeout(function() {
+              try {
+                window.print();
+              } catch (e) {
+                console.error(e);
+              }
+            }, 300);
+          };
+        </script>
       </body>
       </html>
     `;

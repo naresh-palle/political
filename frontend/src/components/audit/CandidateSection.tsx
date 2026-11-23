@@ -9,15 +9,15 @@ interface CandidateSectionProps {
 
 export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }) => {
   return (
-    <section id="section-candidates" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-candidates" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Candidate Field Analysis
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           Who is in the race?
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           Comparative evaluation of nominated candidates across verified digital reach and campaign momentum.
         </p>
       </div>
@@ -31,13 +31,13 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
               key={cand.id}
               className={`rounded-xl transition-all relative flex flex-col justify-between ${
                 isClient
-                  ? "bg-white border-2 border-[#112233] shadow-md ring-1 ring-[#112233]/10"
-                  : "bg-white/80 border border-[#E0DED5] shadow-2xs hover:border-[#CDCBC0]"
+                  ? "bg-[#080E18] border-2 border-[#C99436]/40 shadow-md ring-1 ring-[#112233]/10"
+                  : "bg-[#080E18]/80 border border-[rgba(201,148,54,0.25)] shadow-2xs hover:border-[rgba(201,148,54,0.25)]"
               }`}
             >
               {/* Header Badge */}
               {isClient && (
-                <div className="bg-[#112233] text-[#FBFBF9] px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-t-lg flex items-center justify-between">
+                <div className="bg-[#050B12] text-[#FBFBF9] px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-t-lg flex items-center justify-between">
                   <span>Client Profile</span>
                   <span className="flex items-center">
                     <Award className="w-3 h-3 mr-1 text-amber-300" />
@@ -55,7 +55,7 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
                         src={cand.avatarUrl}
                         alt={cand.name}
                         className={`w-13 h-13 rounded-full object-cover border-2 ${
-                          isClient ? "border-[#112233]" : "border-[#D5D3C8]"
+                          isClient ? "border-[#C99436]/40" : "border-[rgba(201,148,54,0.25)]"
                         }`}
                       />
                       {cand.verifiedPlatformsCount > 0 && (
@@ -71,7 +71,7 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
                     <div>
                       <h3
                         className={`font-editorial text-lg leading-tight ${
-                          isClient ? "font-bold text-[#112233]" : "font-medium text-[#2E313B]"
+                          isClient ? "font-bold text-[#F5EFE0]" : "font-medium text-[#2E313B]"
                         }`}
                       >
                         {cand.name}
@@ -92,7 +92,7 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
                     }`}
                   >
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B]">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2]">
                         Social Strength
                       </span>
                       <div className="text-[11px] text-[#555866]">
@@ -102,7 +102,7 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
                     <div className="text-right">
                       <span
                         className={`font-mono-data text-2xl font-bold ${
-                          isClient ? "text-[#112233]" : "text-[#555966]"
+                          isClient ? "text-[#F5EFE0]" : "text-[#A3B1C2]"
                         }`}
                       >
                         {cand.socialStrengthScore}
@@ -116,7 +116,7 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
                 <div className="space-y-2 pt-2 border-t border-[#ECEAE2] text-xs text-[#525663]">
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] text-[#7A7E8C]">Combined Following:</span>
-                    <span className="font-mono-data font-semibold text-[#112233]">
+                    <span className="font-mono-data font-semibold text-[#F5EFE0]">
                       {formatLakhs(cand.combinedFollowing)}
                     </span>
                   </div>
@@ -137,7 +137,7 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
 
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] text-[#7A7E8C]">Est. Voter Reach:</span>
-                    <span className="font-mono-data font-semibold text-[#112233]">
+                    <span className="font-mono-data font-semibold text-[#F5EFE0]">
                       {formatLakhs(cand.estimatedReach)}
                     </span>
                   </div>
@@ -148,7 +148,7 @@ export const CandidateSection: React.FC<CandidateSectionProps> = ({ candidates }
               <div
                 className={`px-4 py-2 text-[10px] font-medium border-t flex items-center justify-between rounded-b-lg ${
                   isClient
-                    ? "bg-[#FAF9F5] border-[#E8E6DC] text-[#0F766E]"
+                    ? "bg-[#080E18] border-[#E8E6DC] text-[#0F766E]"
                     : "bg-[#FCFBF8] border-[#ECEAE2] text-[#848896]"
                 }`}
               >

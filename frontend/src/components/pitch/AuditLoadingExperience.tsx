@@ -45,17 +45,17 @@ export const AuditLoadingExperience: React.FC<AuditLoadingExperienceProps> = ({
       <div className="bg-white border border-[#E0DED5] rounded-xl shadow-sm p-8 sm:p-10 space-y-8">
         <div className="text-center space-y-3">
           <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#F4F3ED] border border-[#DDDCD3] rounded-full text-xs font-semibold uppercase tracking-widest text-[#5E626E]">
-            <Sparkles className="w-3.5 h-3.5 text-[#112233]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#C99436]" />
             <span>Intelligence Pipeline</span>
           </div>
 
-          <h2 className="font-editorial text-3xl sm:text-4xl font-normal text-[#112233]">
+          <h2 className="font-editorial text-3xl sm:text-4xl font-normal text-[#C99436]">
             Building Constituency Audit
           </h2>
 
           <p className="text-sm text-[#747885]">
             Synthesizing multi-source intelligence for{" "}
-            <span className="font-medium text-[#112233]">{assemblyName} Assembly Constituency</span>
+            <span className="font-medium text-[#C99436]">{assemblyName} Assembly Constituency</span>
           </p>
         </div>
 
@@ -72,14 +72,14 @@ export const AuditLoadingExperience: React.FC<AuditLoadingExperienceProps> = ({
                   isFinished
                     ? "text-[#1C2028] bg-[#F7FBF8]"
                     : isCurrent
-                    ? "text-[#112233] font-medium bg-[#FAF9F5] scale-[1.01]"
+                    ? "text-[#C99436] font-medium bg-[#FAF9F5] scale-[1.01]"
                     : "text-[#9DA1AE] opacity-50"
                 }`}
               >
                 {isFinished ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                 ) : isCurrent ? (
-                  <Loader2 className="w-4 h-4 text-[#112233] animate-spin flex-shrink-0" />
+                  <Loader2 className="w-4 h-4 text-[#C99436] animate-spin flex-shrink-0" />
                 ) : (
                   <div className="w-4 h-4 rounded-full border border-[#D5D4CB] flex-shrink-0" />
                 )}

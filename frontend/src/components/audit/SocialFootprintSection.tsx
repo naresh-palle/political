@@ -26,27 +26,27 @@ export const SocialFootprintSection: React.FC<SocialFootprintSectionProps> = ({ 
   };
 
   return (
-    <section id="section-footprint" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-footprint" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Channel Architecture
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           Client's digital footprint
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           Granular breakdown of audience scale, engagement depth, and active posting cadence across official channels.
         </p>
       </div>
 
       {/* Combined Following Hero Banner */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 shadow-xs mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2]">
             Aggregated Reach Metric
           </span>
           <div className="flex items-baseline space-x-2 mt-1">
-            <span className="font-editorial text-4xl sm:text-5xl font-bold text-[#112233]">
+            <span className="font-editorial text-4xl sm:text-5xl font-bold text-[#F5EFE0]">
               {formatLakhs(client.combinedFollowing, true)}
             </span>
             <span className="text-sm text-[#5C606E] font-medium">
@@ -67,7 +67,7 @@ export const SocialFootprintSection: React.FC<SocialFootprintSectionProps> = ({ 
           </div>
           <div className="border-l border-[#ECEAE2] pl-6">
             <div className="text-[10px] uppercase text-[#8C909E] font-bold">Monthly Activity</div>
-            <div className="text-sm font-semibold text-[#112233] mt-0.5 font-mono-data">
+            <div className="text-sm font-semibold text-[#F5EFE0] mt-0.5 font-mono-data">
               {client.postingFrequencyMonthly} Dispatches
             </div>
           </div>
@@ -75,11 +75,11 @@ export const SocialFootprintSection: React.FC<SocialFootprintSectionProps> = ({ 
       </div>
 
       {/* Clean Editorial Platform Table */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl overflow-hidden shadow-xs">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-[#FAF9F5] border-b border-[#E6E4DA] text-[10px] font-bold uppercase tracking-wider text-[#6F7380]">
+              <tr className="bg-[#080E18] border-b border-[#E6E4DA] text-[10px] font-bold uppercase tracking-wider text-[#6F7380]">
                 <th className="py-3.5 px-5">Platform</th>
                 <th className="py-3.5 px-4">Handle</th>
                 <th className="py-3.5 px-4">Audience</th>
@@ -91,11 +91,11 @@ export const SocialFootprintSection: React.FC<SocialFootprintSectionProps> = ({ 
             </thead>
             <tbody className="divide-y divide-[#EFEFE8]">
               {client.socials.map((acc) => (
-                <tr key={acc.platform} className="hover:bg-[#FAF9F5]/70 transition-colors">
+                <tr key={acc.platform} className="hover:bg-[#080E18]/70 transition-colors">
                   <td className="py-4 px-5">
                     <div className="flex items-center space-x-3">
                       {getPlatformIcon(acc.platform)}
-                      <span className="font-semibold text-sm capitalize text-[#112233]">
+                      <span className="font-semibold text-sm capitalize text-[#F5EFE0]">
                         {acc.platform === "x" ? "X (Twitter)" : acc.platform}
                       </span>
                     </div>
@@ -103,7 +103,7 @@ export const SocialFootprintSection: React.FC<SocialFootprintSectionProps> = ({ 
                   <td className="py-4 px-4 font-mono-data text-[#595D6A]">
                     {acc.handle}
                   </td>
-                  <td className="py-4 px-4 font-mono-data font-semibold text-sm text-[#112233]">
+                  <td className="py-4 px-4 font-mono-data font-semibold text-sm text-[#F5EFE0]">
                     {formatLakhs(acc.audience)}
                   </td>
                   <td className="py-4 px-4 font-mono-data font-semibold text-sm text-[#0F766E]">
@@ -116,7 +116,7 @@ export const SocialFootprintSection: React.FC<SocialFootprintSectionProps> = ({ 
                         Verified
                       </span>
                     ) : (
-                      <span className="text-xs text-[#8A8E9B]">—</span>
+                      <span className="text-xs text-[#A3B1C2]">—</span>
                     )}
                   </td>
                   <td className="py-4 px-4">

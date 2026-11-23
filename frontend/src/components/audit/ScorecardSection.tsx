@@ -17,23 +17,23 @@ export const ScorecardSection: React.FC<ScorecardSectionProps> = ({
   const strokeDashoffset = circumference - (overallScore / 100) * (circumference * 0.75);
 
   return (
-    <section id="section-scorecard" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-scorecard" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Composite Index
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           Strength Scorecard
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           Multi-dimensional index weighted across presence, engagement depth, verified footprint, and competitive dominance.
         </p>
       </div>
 
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 sm:p-8 shadow-xs">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 sm:p-8 shadow-xs">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Left: Restrained Arc / Radial Score Display */}
-          <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-[#FAF9F5] border border-[#E5E3D8] rounded-xl text-center">
+          <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl text-center">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#797D8A] mb-3">
               Overall Strength Rating
             </span>
@@ -69,7 +69,7 @@ export const ScorecardSection: React.FC<ScorecardSectionProps> = ({
 
               {/* Center Content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-editorial text-5xl font-bold text-[#112233]">
+                <span className="font-editorial text-5xl font-bold text-[#F5EFE0]">
                   {overallScore}
                 </span>
                 <span className="text-xs font-mono-data text-[#787B88] mt-0.5">
@@ -90,7 +90,7 @@ export const ScorecardSection: React.FC<ScorecardSectionProps> = ({
               <div key={dim.id} className="space-y-1.5 border-b border-[#F0EFEB] pb-3 last:border-0 last:pb-0">
                 <div className="flex items-center justify-between text-xs sm:text-sm">
                   <div>
-                    <span className="font-semibold text-[#112233]">
+                    <span className="font-semibold text-[#F5EFE0]">
                       {dim.name}
                     </span>
                     <span className="hidden sm:inline text-xs text-[#7A7E8C] ml-2">
@@ -101,7 +101,7 @@ export const ScorecardSection: React.FC<ScorecardSectionProps> = ({
                     <span className="text-[11px] text-[#868A98]">
                       Bench: {dim.benchmark}
                     </span>
-                    <span className="font-mono-data font-bold text-base text-[#112233]">
+                    <span className="font-mono-data font-bold text-base text-[#F5EFE0]">
                       {dim.score}
                     </span>
                   </div>
@@ -110,7 +110,7 @@ export const ScorecardSection: React.FC<ScorecardSectionProps> = ({
                 {/* Progress bar */}
                 <div className="w-full h-2.5 bg-[#F2F1EA] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#112233] rounded-full transition-all duration-700"
+                    className="h-full bg-[#050B12] rounded-full transition-all duration-700"
                     style={{ width: `${dim.score}%` }}
                   />
                 </div>

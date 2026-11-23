@@ -21,15 +21,15 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
   };
 
   return (
-    <section id="section-recommendations" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-recommendations" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Strategic Directives
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           Strategic recommendations
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           Actionable campaign maneuvers derived strictly from empirical constituency metrics and competitive deficits.
         </p>
       </div>
@@ -38,12 +38,12 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
         {recommendations.map((rec) => (
           <div
             key={rec.id}
-            className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs flex flex-col justify-between space-y-5 hover:border-[#CDC9BC] transition-all"
+            className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 shadow-xs flex flex-col justify-between space-y-5 hover:border-[#CDC9BC] transition-all"
           >
             {/* Header */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono-data text-xs font-bold px-2 py-0.5 bg-[#112233] text-[#FBFBF9] rounded">
+                <span className="font-mono-data text-xs font-bold px-2 py-0.5 bg-[#050B12] text-[#FBFBF9] rounded">
                   {rec.num}
                 </span>
                 <span
@@ -55,7 +55,7 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
                 </span>
               </div>
 
-              <h3 className="font-editorial text-xl font-medium text-[#112233] leading-snug">
+              <h3 className="font-editorial text-xl font-medium text-[#F5EFE0] leading-snug">
                 {rec.title}
               </h3>
             </div>
@@ -63,7 +63,7 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
             {/* Tripartite Breakdown: Observation -> Implication -> Opportunity */}
             <div className="space-y-3.5 text-xs">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2] block">
                   Observation
                 </span>
                 <p className="text-[#3B3E4B] leading-relaxed">
@@ -72,7 +72,7 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
               </div>
 
               <div className="space-y-1 border-t border-[#F2F1EA] pt-2.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B] block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2] block">
                   Implication
                 </span>
                 <p className="text-[#3B3E4B] leading-relaxed">
@@ -92,7 +92,7 @@ export const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
             </div>
 
             {/* Expected Impact Footer */}
-            <div className="pt-3 border-t border-[#ECEAE2] flex items-center justify-between text-[11px] text-[#5A5E6B]">
+            <div className="pt-3 border-t border-[#ECEAE2] flex items-center justify-between text-[11px] text-[#A3B1C2]">
               <span className="flex items-center text-[#0F766E] font-medium">
                 <Zap className="w-3.5 h-3.5 mr-1" />
                 {rec.expectedImpact}

@@ -276,10 +276,10 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
     >
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
       <div
-        className="relative w-full max-w-lg max-h-[min(90vh,40rem)] flex flex-col overflow-hidden rounded-2xl bg-[#0E1724] border border-[#223348] text-[#F5EFE0] shadow-2xl"
+        className="relative w-full max-w-lg max-h-[min(90vh,40rem)] flex flex-col overflow-hidden rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="shrink-0 px-4 py-3 border-b border-[#223348] flex items-start justify-between gap-3">
+        <div className="shrink-0 px-4 py-3 border-b border-[rgba(201,148,54,0.25)] flex items-start justify-between gap-3">
           <div className="min-w-0">
             <span className="text-[10px] font-mono font-semibold text-[#D4A24C] uppercase tracking-wider block">
               {isResend ? "Resend to officer" : "Assign complaint"}
@@ -294,7 +294,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
               window.location.hash = returnHash;
               onClose();
             }}
-            className="w-8 h-8 rounded-lg bg-[#0C1524] hover:bg-[#1C2C42] border border-[#223348] text-[#8E9CAE] hover:text-white flex items-center justify-center cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-lg bg-[#0C1524] hover:bg-[#1C2C42] border border-[rgba(201,148,54,0.25)] text-[#8E9CAE] hover:text-white flex items-center justify-center cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -325,7 +325,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                     setTokenInput(e.target.value);
                     localStorage.setItem("WHATSAPP_ACCESS_TOKEN", e.target.value.trim());
                   }}
-                  className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg px-3 text-xs font-mono text-[#F5EFE0] outline-none"
+                  className="w-full h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-lg px-3 text-xs font-mono text-[#F5EFE0] outline-none"
                 />
                 <input
                   type="text"
@@ -335,7 +335,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                     setPhoneIdInput(e.target.value);
                     localStorage.setItem("WHATSAPP_PHONE_NUMBER_ID", e.target.value.trim());
                   }}
-                  className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg px-3 text-xs font-mono text-[#F5EFE0] outline-none"
+                  className="w-full h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-lg px-3 text-xs font-mono text-[#F5EFE0] outline-none"
                 />
               </div>
             )}
@@ -348,7 +348,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg px-3 text-sm text-[#F5EFE0] outline-none cursor-pointer"
+              className="w-full h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-lg px-3 text-sm text-[#F5EFE0] outline-none cursor-pointer"
             >
               {PGRS_DEPARTMENTS_LIST.map((dept) => (
                 <option key={dept.id} value={dept.name}>
@@ -369,7 +369,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                 placeholder="Search by name or role..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 bg-[#0B131E] border border-[#223348] focus:border-[#D4A24C] rounded-lg pl-9 pr-3 text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className="w-full h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-lg pl-9 pr-3 text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
               />
             </div>
             <p className="text-[11px] text-[#8E9CAE]">
@@ -393,7 +393,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                     className={`w-full text-left px-3 py-2 rounded-lg border cursor-pointer ${
                       isSelected
                         ? "bg-[#0C1524] border-[#D4A24C]/50"
-                        : "bg-[#0B131E] border-[#223348] hover:border-[#D4A24C]/30"
+                        : "bg-[#060A10] border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/30"
                     }`}
                   >
                     <div className="font-semibold text-sm text-[#F5EFE0] flex items-center gap-1.5">
@@ -413,7 +413,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
           </div>
         </div>
 
-        <div className="shrink-0 p-3 border-t border-[#223348]">
+        <div className="shrink-0 p-3 border-t border-[rgba(201,148,54,0.25)]">
           <button
             type="button"
             disabled={isSending || filteredContacts.length === 0}

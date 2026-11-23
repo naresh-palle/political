@@ -12,23 +12,23 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <section id="section-opposition" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-opposition" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Benchmarking
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           Competitive position
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           How the client compares with other candidates across verified reach, volume, and narrative resonance.
         </p>
       </div>
 
       {/* Primary Comparative Visual Card */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs mb-8">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 shadow-xs mb-8">
         <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3 mb-6">
-          <h3 className="text-sm font-semibold text-[#112233]">
+          <h3 className="text-sm font-semibold text-[#F5EFE0]">
             Social Strength Index Differential
           </h3>
           <span className="text-xs text-[#787B88] font-mono-data">Target Baseline: 100</span>
@@ -43,20 +43,20 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
                   <div className="flex items-center space-x-2.5">
                     <span
                       className={`font-semibold ${
-                        isClient ? "text-[#112233] text-base" : "text-[#454854]"
+                        isClient ? "text-[#F5EFE0] text-base" : "text-[#454854]"
                       }`}
                     >
                       {cand.name}
                     </span>
                     <span className="text-xs text-[#7B7E8C]">({cand.partyAbbr})</span>
                     {isClient && (
-                      <span className="px-2 py-0.5 bg-[#112233] text-white text-[9px] font-bold rounded uppercase">
+                      <span className="px-2 py-0.5 bg-[#050B12] text-white text-[9px] font-bold rounded uppercase">
                         Client
                       </span>
                     )}
                   </div>
                   <div className="flex items-baseline space-x-1 font-mono-data font-bold">
-                    <span className={isClient ? "text-lg text-[#112233]" : "text-sm text-[#626573]"}>
+                    <span className={isClient ? "text-lg text-[#F5EFE0]" : "text-sm text-[#626573]"}>
                       {cand.socialStrengthScore}
                     </span>
                     <span className="text-xs text-[#8F93A0]">/ 100</span>
@@ -66,7 +66,7 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
                 <div className="w-full h-4 bg-[#F2F1EA] rounded overflow-hidden p-0.5">
                   <div
                     className={`h-full rounded-xs transition-all duration-700 ${
-                      isClient ? "bg-[#112233]" : "bg-[#A7ABB8]"
+                      isClient ? "bg-[#050B12]" : "bg-[#A7ABB8]"
                     }`}
                     style={{ width: `${cand.socialStrengthScore}%` }}
                   />
@@ -78,10 +78,10 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
       </div>
 
       {/* Compact / Expandable Comparison Matrix */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl overflow-hidden shadow-xs">
-        <div className="p-4 bg-[#FAF9F5] border-b border-[#ECEAE2] flex items-center justify-between">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl overflow-hidden shadow-xs">
+        <div className="p-4 bg-[#080E18] border-b border-[#ECEAE2] flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-[#112233]">
+            <h3 className="text-sm font-semibold text-[#F5EFE0]">
               Competitive Matrix
             </h3>
             <span className="text-xs text-[#787C8A]">Side-by-side metric comparison</span>
@@ -89,7 +89,7 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="inline-flex items-center text-xs font-semibold text-[#112233] hover:text-[#091522] py-1 px-3 bg-white border border-[#D5D3C8] rounded-md transition-colors cursor-pointer"
+            className="inline-flex items-center text-xs font-semibold text-[#F5EFE0] hover:text-[#091522] py-1 px-3 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-md transition-colors cursor-pointer"
           >
             <span>{isExpanded ? "Collapse Matrix" : "View Detailed Comparison →"}</span>
             {isExpanded ? (
@@ -109,7 +109,7 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
                   <th
                     key={c.id}
                     className={`py-3 px-4 ${
-                      c.isClient ? "bg-[#F5F4ED] text-[#112233] font-bold" : ""
+                      c.isClient ? "bg-[#F5F4ED] text-[#F5EFE0] font-bold" : ""
                     }`}
                   >
                     {c.name} {c.isClient && "(Client)"}
@@ -124,7 +124,7 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
                   <td
                     key={c.id}
                     className={`py-3 px-4 font-mono-data font-bold ${
-                      c.isClient ? "bg-[#FAF9F4] text-base text-[#112233]" : "text-[#555866]"
+                      c.isClient ? "bg-[#FAF9F4] text-base text-[#F5EFE0]" : "text-[#555866]"
                     }`}
                   >
                     {c.socialStrengthScore}/100
@@ -138,7 +138,7 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
                   <td
                     key={c.id}
                     className={`py-3 px-4 font-mono-data font-semibold ${
-                      c.isClient ? "bg-[#FAF9F4] text-[#112233]" : "text-[#555866]"
+                      c.isClient ? "bg-[#FAF9F4] text-[#F5EFE0]" : "text-[#555866]"
                     }`}
                   >
                     {formatLakhs(c.combinedFollowing)}
@@ -166,7 +166,7 @@ export const OppositionSection: React.FC<OppositionSectionProps> = ({ candidates
                   <td
                     key={c.id}
                     className={`py-3 px-4 font-mono-data font-semibold ${
-                      c.isClient ? "bg-[#FAF9F4] text-[#112233]" : "text-[#555866]"
+                      c.isClient ? "bg-[#FAF9F4] text-[#F5EFE0]" : "text-[#555866]"
                     }`}
                   >
                     {formatLakhs(c.estimatedReach)}

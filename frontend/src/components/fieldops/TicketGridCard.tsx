@@ -62,7 +62,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       onClick={onOpen}
       className={
         plain
-          ? "h-full min-w-0 p-3 rounded-lg bg-[#0B131E] ring-1 ring-[#223348] hover:bg-[#0E1724] transition-colors cursor-pointer flex flex-col gap-1.5 group overflow-visible"
+          ? "h-full min-w-0 p-3 rounded-lg bg-[#060A10] ring-1 ring-[rgba(201,148,54,0.25)] hover:bg-[#080E18] transition-colors cursor-pointer flex flex-col gap-1.5 group overflow-visible"
           : `h-full min-w-0 p-2.5 rounded-xl border hover:bg-opacity-90 transition-all cursor-pointer flex flex-col gap-1.5 shadow-md group ${surface.card}`
       }
     >
@@ -82,7 +82,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
               : `shrink-0 text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
                   issue.priority === "URGENT" || issue.priority === "HIGH"
                     ? "bg-rose-950/80 text-rose-300 border border-rose-600/40"
-                    : "bg-[#0B131E] text-[#B9AF95] border border-[#223348]"
+                    : "bg-[#060A10] text-[#B9AF95] border border-[rgba(201,148,54,0.25)]"
                 }`
           }
         >
@@ -104,7 +104,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           </span>
           {issue.department && (
             <span
-              className="max-w-[min(100%,14rem)] truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#0B131E] text-[#8E9CAE] border border-[#223348]"
+              className="max-w-[min(100%,14rem)] truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#060A10] text-[#8E9CAE] border border-[rgba(201,148,54,0.25)]"
               title={departmentLabel}
             >
               {departmentLabel}
@@ -136,7 +136,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       {plain ? (
         <div className="min-w-0 text-[11px] text-[#8E9CAE] font-mono">
           <span>Reg {timing.registeredTimeFormatted}</span>
-          <span className="mx-1.5 text-[#223348]">·</span>
+          <span className="mx-1.5 text-[rgba(201,148,54,0.25)]">·</span>
           <span>
             {timing.isClosed
               ? `Done ${timing.closedTimeFormatted} · Closed in ${timing.durationText}`
@@ -144,7 +144,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           </span>
         </div>
       ) : (
-        <div className="p-1.5 rounded bg-[#070D15] border border-[#223348] flex items-center justify-between gap-2 min-w-0 text-[10px] font-mono">
+        <div className="p-1.5 rounded bg-[#070D15] border border-[rgba(201,148,54,0.25)] flex items-center justify-between gap-2 min-w-0 text-[10px] font-mono">
           <div className="min-w-0">
             <span className="text-[#8E9CAE] block text-[9.5px] truncate">Reg: {timing.registeredTimeFormatted}</span>
             {timing.isClosed ? (
@@ -221,7 +221,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       ) : null}
 
       <div
-        className={`mt-auto pt-1.5 space-y-1 min-w-0 overflow-visible ${plain ? "" : "border-t border-[#223348]/60"}`}
+        className={`mt-auto pt-1.5 space-y-1 min-w-0 overflow-visible ${plain ? "" : "border-t border-[rgba(201,148,54,0.25)]/60"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2 text-[11px] min-w-0">
@@ -249,15 +249,15 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
               onChange={(e) => onAssignDepartment?.(issue.id, e.target.value)}
               className={
                 plain
-                  ? "w-full min-w-0 bg-[#0B131E] text-[#F5EFE0] text-[11px] border-0 rounded-none px-1 py-1 outline-none cursor-pointer [color-scheme:dark]"
-                  : "w-full min-w-0 bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[#223348] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer [color-scheme:dark]"
+                  ? "w-full min-w-0 bg-[#060A10] text-[#F5EFE0] text-[11px] border-0 rounded-none px-1 py-1 outline-none cursor-pointer [color-scheme:dark]"
+                  : "w-full min-w-0 bg-[#070D15] text-[#F5EFE0] text-[11px] font-medium border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-lg px-2 py-1 outline-none cursor-pointer [color-scheme:dark]"
               }
             >
-              <option value="" className="bg-[#0B131E] text-[#F5EFE0]">
+              <option value="" className="bg-[#060A10] text-[#F5EFE0]">
                 -- Select Department --
               </option>
               {departments.map((dept) => (
-                <option key={dept} value={dept} className="bg-[#0B131E] text-[#F5EFE0]">
+                <option key={dept} value={dept} className="bg-[#060A10] text-[#F5EFE0]">
                   {dept}
                 </option>
               ))}
@@ -272,7 +272,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
               className={
                 plain
                   ? "w-full min-w-0 text-[11px] text-[#F5EFE0] truncate"
-                  : "w-full min-w-0 text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[#223348] rounded-lg px-2 py-1 truncate"
+                  : "w-full min-w-0 text-[11px] font-semibold text-[#F5EFE0] bg-[#070D15] border border-[rgba(201,148,54,0.25)] rounded-lg px-2 py-1 truncate"
               }
               title={issue.department || "General Administration"}
             >

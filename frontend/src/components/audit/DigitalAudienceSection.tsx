@@ -13,25 +13,25 @@ export const DigitalAudienceSection: React.FC<DigitalAudienceSectionProps> = ({ 
   const { voterStats, digitalStats, platformBreakdown } = audit;
 
   return (
-    <section id="section-digital-audience" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-digital-audience" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Audience Universe
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           The digital constituency
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           How much of the constituency's available digital audience is currently captured by the client.
         </p>
       </div>
 
       {/* Layered Universe Breakdown */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 sm:p-8 shadow-xs space-y-8 mb-10">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 sm:p-8 shadow-xs space-y-8 mb-10">
         <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-4">
           <div className="flex items-center space-x-2">
-            <Layers className="w-4 h-4 text-[#112233]" />
-            <h3 className="text-sm font-semibold text-[#112233]">
+            <Layers className="w-4 h-4 text-[#F5EFE0]" />
+            <h3 className="text-sm font-semibold text-[#F5EFE0]">
               Constituency Scale Hierarchy
             </h3>
           </div>
@@ -41,14 +41,14 @@ export const DigitalAudienceSection: React.FC<DigitalAudienceSectionProps> = ({ 
         {/* 3 Layered Visual Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Layer 1 */}
-          <div className="bg-[#FAF9F5] border border-[#E2E0D6] rounded-xl p-5 space-y-2">
+          <div className="bg-[#080E18] border border-[#E2E0D6] rounded-xl p-5 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#797D8B]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A3B1C2]">
                 Total Registered Voters
               </span>
               <span className="text-xs font-mono-data text-[#888C98]">Base Electorate</span>
             </div>
-            <div className="font-editorial text-3xl sm:text-4xl font-bold text-[#112233]">
+            <div className="font-editorial text-3xl sm:text-4xl font-bold text-[#F5EFE0]">
               {formatLakhs(voterStats.totalVoters, true)}
             </div>
             <p className="text-xs text-[#636674] leading-relaxed">
@@ -93,10 +93,10 @@ export const DigitalAudienceSection: React.FC<DigitalAudienceSectionProps> = ({ 
       {/* Platform-by-Platform Comparison Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-[#112233]">
+          <h3 className="text-sm font-semibold text-[#F5EFE0]">
             Estimated Platform Audience Breakdown
           </h3>
-          <span className="text-xs text-[#8A8E9B] italic">
+          <span className="text-xs text-[#A3B1C2] italic">
             * Audiences not unique across channels
           </span>
         </div>
@@ -105,11 +105,11 @@ export const DigitalAudienceSection: React.FC<DigitalAudienceSectionProps> = ({ 
           {platformBreakdown.map((item) => (
             <div
               key={item.platform}
-              className="bg-white border border-[#E0DED5] rounded-xl p-5 shadow-xs space-y-4 flex flex-col justify-between"
+              className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-5 shadow-xs space-y-4 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3">
-                  <span className="font-semibold text-sm text-[#112233]">
+                  <span className="font-semibold text-sm text-[#F5EFE0]">
                     {item.displayName}
                   </span>
                   <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-[#F2F1EA] text-[#555866] rounded">
@@ -122,7 +122,7 @@ export const DigitalAudienceSection: React.FC<DigitalAudienceSectionProps> = ({ 
                     <span className="text-[10px] uppercase text-[#888C9A] font-bold block">
                       Estimated Audience
                     </span>
-                    <span className="font-mono-data text-2xl font-bold text-[#112233]">
+                    <span className="font-mono-data text-2xl font-bold text-[#F5EFE0]">
                       {formatLakhs(item.estimatedAudience, true)}
                     </span>
                   </div>
@@ -136,7 +136,7 @@ export const DigitalAudienceSection: React.FC<DigitalAudienceSectionProps> = ({ 
 
                   <div className="flex justify-between text-xs">
                     <span className="text-[#6D717E]">Addressable Gap:</span>
-                    <span className="font-mono-data font-semibold text-[#B45309]">
+                    <span className="font-mono-data font-semibold text-[#C99436]">
                       {formatLakhs(item.reachGap)}
                     </span>
                   </div>
@@ -147,7 +147,7 @@ export const DigitalAudienceSection: React.FC<DigitalAudienceSectionProps> = ({ 
               <div className="pt-2">
                 <div className="w-full h-2 bg-[#F2F1EA] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#112233] rounded-full"
+                    className="h-full bg-[#050B12] rounded-full"
                     style={{ width: `${item.coveragePercentage}%` }}
                   />
                 </div>

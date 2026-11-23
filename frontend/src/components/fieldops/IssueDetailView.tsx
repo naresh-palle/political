@@ -27,10 +27,10 @@ import { exportTicketPdf, TicketPdfLang } from "../../utils/exportTicketPdf";
 import { ExportPdfLangButtons } from "./ExportPdfLangButtons";
 
 const CHIP =
-  "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#D4A24C]/35 bg-[#0B131E] text-[#D4A24C]";
-const SECTION = "p-4 rounded-xl bg-[#0E1724] border border-[#223348] space-y-2";
+  "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#D4A24C]/35 bg-[#060A10] text-[#D4A24C]";
+const SECTION = "p-4 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-2";
 const BTN =
-  "h-9 px-3 rounded-lg bg-[#0C1524] hover:bg-[#1C2C42] text-[#D4A24C] border border-[#223348] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer";
+  "h-9 px-3 rounded-lg bg-[#0C1524] hover:bg-[#1C2C42] text-[#D4A24C] border border-[rgba(201,148,54,0.25)] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer";
 
 const DetailField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="min-w-0">
@@ -517,7 +517,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           ) : (
             <div className={`space-y-2 ${history.length > 6 ? "max-h-[50vh] overflow-y-auto pr-1" : ""}`}>
               {history.map((record) => (
-                <div key={record.id} className="text-xs space-y-1 py-2 border-t border-[#223348] first:border-t-0 first:pt-0">
+                <div key={record.id} className="text-xs space-y-1 py-2 border-t border-[rgba(201,148,54,0.25)] first:border-t-0 first:pt-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className={CHIP}>{formatIssueStatus(record.newStatus)}</span>
                     <span className="text-[11px] text-[#8E9CAE] font-mono">{record.updateDate}</span>
@@ -536,7 +536,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
       </div>
 
       {issue.attachments && issue.attachments.length > 0 && (
-        <div className="p-4 rounded-xl bg-[#0E1724] border border-[#223348] space-y-3">
+        <div className="p-4 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-2">
             <Camera className="w-4 h-4" />
             Uploaded Proof Documents & Photos ({issue.attachments.length})
@@ -546,7 +546,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
             {issue.attachments.map((url, idx) => (
               <div
                 key={idx}
-                className="group rounded-2xl overflow-hidden border border-[#223348] bg-[#0B131E] relative aspect-video"
+                className="group rounded-2xl overflow-hidden border border-[rgba(201,148,54,0.25)] bg-[#060A10] relative aspect-video"
               >
                 <img
                   src={url}
@@ -574,10 +574,10 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
           onClick={() => setIsUpdateModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
+            className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#080E18] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#050B12]/60">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[rgba(201,148,54,0.25)] bg-[#050B12]/60">
               <h3 className="min-w-0 font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
                 <Camera className="w-4 h-4 text-[#D4A24C] shrink-0" />
                 <span className="truncate">Update Work Status & Ground Proof</span>
@@ -606,7 +606,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                   <select
                     value={updateStatus}
                     onChange={(e) => setUpdateStatus(e.target.value as IssueStatus)}
-                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    className="w-full min-w-0 h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                   >
                     <option value="IN_PROGRESS">IN_PROGRESS (Work Active on Site)</option>
                     <option value="COMPLETED">COMPLETED (Work Finished & Verified)</option>
@@ -624,7 +624,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     type="date"
                     value={updateDate}
                     onChange={(e) => setUpdateDate(e.target.value)}
-                    className="w-full min-w-0 h-10 bg-[#0B131E] border border-[#223348] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
+                    className="w-full min-w-0 h-10 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl px-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none"
                   />
                 </div>
 
@@ -637,7 +637,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     value={updateRemarks}
                     onChange={(e) => setUpdateRemarks(e.target.value)}
                     placeholder="Describe actions taken, coordination, or site completion notes..."
-                    className="w-full min-w-0 bg-[#0B131E] border border-[#223348] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed resize-y"
+                    className="w-full min-w-0 bg-[#060A10] border border-[rgba(201,148,54,0.25)] rounded-xl p-3 text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed resize-y"
                   />
                 </div>
 
@@ -645,7 +645,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                   <label className="block text-[11px] uppercase tracking-wider text-[#BCA37F] font-semibold">
                     Proof Attachments (Photos & PDF Documents)
                   </label>
-                  <div className="p-3.5 rounded-xl bg-[#0B131E] border border-[#223348] space-y-2">
+                  <div className="p-3.5 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <label
                         htmlFor="issue-detail-file-input"
@@ -672,7 +672,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     {updateProofFiles.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 pt-1">
                         {updateProofFiles.map((file, idx) => (
-                          <div key={idx} className="relative group rounded-lg overflow-hidden border border-[#223348] bg-[#050B12] aspect-square flex flex-col items-center justify-center p-1">
+                          <div key={idx} className="relative group rounded-lg overflow-hidden border border-[rgba(201,148,54,0.25)] bg-[#050B12] aspect-square flex flex-col items-center justify-center p-1">
                             {file.type === "pdf" ? (
                               <div className="flex flex-col items-center justify-center text-center p-1">
                                 <FileText className="w-6 h-6 text-rose-400 mb-0.5" />
@@ -696,7 +696,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                 </div>
               </div>
 
-              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#050B12]/40">
+              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[rgba(201,148,54,0.25)] bg-[#050B12]/40">
                 <button
                   type="button"
                   onClick={() => setIsUpdateModalOpen(false)}

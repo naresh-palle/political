@@ -1023,6 +1023,72 @@ def register_pi_routes(api_router) -> None:
         )
         last_dates = [row.get("collectedAt") for row in recent if row.get("collectedAt")]
         last_dates.sort()
+        # Multi-tier progress calculation directly from DB persons & accounts without hardcoding
+        all_state_persons = [p for p in await _list("political_persons") if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
+        if stateId:
+            all_state_persons = [p for p in all_state_persons if str(p.get("stateId") or "").upper() == stateId.upper()]
+        if wanted_district:
+            all_state_persons = [
+                p for p in all_state_persons
+                if p.get("districtId") == wanted_district
+                or p.get("assemblyConstituencyId") in ac_ids
+                or ac_to_district.get(str(p.get("assemblyConstituencyId") or "")) == wanted_district
+            ]
+        
+        all_state_accounts = await _list("social_media_accounts")
+        all_person_ids = {p.get("id") for p in all_state_persons}
+        all_state_accounts = [a for a in all_state_accounts if a.get("personId") in all_person_ids]
+        
+        def resolve_p_rep(p):
+            rt = str(p.get("representativeType") or "").strip().upper()
+            if rt in ("MP", "MLC", "MLA"):
+                return rt
+            roles = p.get("roles") or []
+            for r in roles:
+                pr = str(r.get("politicalRole") or "").strip().upper()
+                if "MP" in pr:
+                    return "MP"
+                if "MLC" in pr:
+                    return "MLC"
+                if "MLA" in pr or "MINISTER" in pr or "CANDIDATE" in pr:
+                    return "MLA"
+            return "MLA"
+
+        person_rep_map = {p.get("id"): resolve_p_rep(p) for p in all_state_persons}
+        
+        mla_p_ids = {pid for pid, r in person_rep_map.items() if r == "MLA"}
+        mp_p_ids = {pid for pid, r in person_rep_map.items() if r == "MP"}
+        mlc_p_ids = {pid for pid, r in person_rep_map.items() if r == "MLC"}
+        
+        mla_accs = [a for a in all_state_accounts if a.get("personId") in mla_p_ids]
+        mp_accs = [a for a in all_state_accounts if a.get("personId") in mp_p_ids]
+        mlc_accs = [a for a in all_state_accounts if a.get("personId") in mlc_p_ids]
+        
+        rep_metrics = {
+            "MLA": {
+                "total": len(mla_p_ids),
+                "completed": len([a for a in mla_accs if a.get("verificationStatus") == "VERIFIED"]),
+                "pending": len([a for a in mla_accs if a.get("verificationStatus") in ("PENDING", "NO_ACCOUNT") or not a.get("verificationStatus")]),
+                "totalAccounts": len(mla_accs),
+            },
+            "MP": {
+                "total": len(mp_p_ids),
+                "completed": len([a for a in mp_accs if a.get("verificationStatus") == "VERIFIED"]),
+                "pending": len([a for a in mp_accs if a.get("verificationStatus") in ("PENDING", "NO_ACCOUNT") or not a.get("verificationStatus")]),
+                "totalAccounts": len(mp_accs),
+            },
+            "MLC": {
+                "total": len(mlc_p_ids),
+                "completed": len([a for a in mlc_accs if a.get("verificationStatus") == "VERIFIED"]),
+                "pending": len([a for a in mlc_accs if a.get("verificationStatus") in ("PENDING", "NO_ACCOUNT") or not a.get("verificationStatus")]),
+                "totalAccounts": len(mlc_accs),
+            },
+            "total": len(all_state_persons),
+            "completed": len([a for a in all_state_accounts if a.get("verificationStatus") == "VERIFIED"]),
+            "pending": len([a for a in all_state_accounts if a.get("verificationStatus") in ("PENDING", "NO_ACCOUNT") or not a.get("verificationStatus")]),
+            "totalAccounts": len(all_state_accounts),
+        }
+
         return {
             "totalConstituencies": total_ac,
             "constituenciesEntered": entered,
@@ -1038,6 +1104,7 @@ def register_pi_routes(api_router) -> None:
             "recentCollections": recent,
             "stateId": stateId,
             "districtId": wanted_district or districtId,
+            "repMetrics": rep_metrics,
         }
 
     async def _district_progress_rows(caps, state_id=None):

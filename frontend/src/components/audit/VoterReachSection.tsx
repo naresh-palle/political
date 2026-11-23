@@ -15,21 +15,21 @@ export const VoterReachSection: React.FC<VoterReachSectionProps> = ({ audit }) =
   const gapPercent = 100 - reachedPercent;
 
   return (
-    <section id="section-voters" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-voters" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Electorate Penetration
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           How much of the electorate can we currently reach?
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           Relationship between the total registered assembly electorate and the client's estimated digital touchpoints.
         </p>
       </div>
 
       {/* Main Population Reach Story Card */}
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 sm:p-8 shadow-xs space-y-8">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 sm:p-8 shadow-xs space-y-8">
         {/* Top Numbers */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 border-b border-[#ECEAE2] pb-6">
           <div>
@@ -37,7 +37,7 @@ export const VoterReachSection: React.FC<VoterReachSectionProps> = ({ audit }) =
               <span>Total Registered Electorate</span>
               <Tooltip content={`Official registered voter count from ECI final electoral rolls for ${audit.assembly.name} AC.`} />
             </div>
-            <div className="font-editorial text-4xl sm:text-5xl font-bold text-[#112233]">
+            <div className="font-editorial text-4xl sm:text-5xl font-bold text-[#F5EFE0]">
               {formatLakhs(voterStats.totalVoters, true)}
             </div>
             <div className="text-xs text-[#7B7F8D] mt-1">100% of voting base</div>
@@ -61,10 +61,10 @@ export const VoterReachSection: React.FC<VoterReachSectionProps> = ({ audit }) =
               <span>Estimated Reach Gap</span>
               <Tooltip content="Constituency voters not currently accessible through the candidate's existing digital distribution channels." />
             </div>
-            <div className="font-editorial text-4xl sm:text-5xl font-bold text-[#B45309]">
+            <div className="font-editorial text-4xl sm:text-5xl font-bold text-[#C99436]">
               {formatLakhs(voterStats.voterReachGap, true)}
             </div>
-            <div className="text-xs text-[#B45309] font-medium mt-1">
+            <div className="text-xs text-[#C99436] font-medium mt-1">
               {formatPercentage(gapPercent)} unreached electorate
             </div>
           </div>
@@ -77,7 +77,7 @@ export const VoterReachSection: React.FC<VoterReachSectionProps> = ({ audit }) =
               <span className="w-2.5 h-2.5 rounded bg-[#0F766E] mr-1.5" />
               Estimated Client Reach ({formatPercentage(reachedPercent)})
             </span>
-            <span className="flex items-center text-[#B45309]">
+            <span className="flex items-center text-[#C99436]">
               <span className="w-2.5 h-2.5 rounded bg-[#D97706] mr-1.5" />
               Remaining Gap ({formatPercentage(gapPercent)})
             </span>
@@ -111,7 +111,7 @@ export const VoterReachSection: React.FC<VoterReachSectionProps> = ({ audit }) =
         <div className="bg-[#FAF9F4] border border-[#E7E5DA] rounded-lg p-3.5 flex items-start space-x-3 text-xs text-[#525663]">
           <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="leading-relaxed">
-            <span className="font-semibold text-[#112233]">Methodology Note: </span>
+            <span className="font-semibold text-[#F5EFE0]">Methodology Note: </span>
             Digital reach is an estimated audience model based on platform user signals and deduplicated follower clusters. It must not be interpreted as individually identified or registered physical voters.
           </div>
         </div>

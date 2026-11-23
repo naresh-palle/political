@@ -48,7 +48,7 @@ export const OfficerStatusComments: React.FC<OfficerStatusCommentsProps> = ({
   const end = Math.min(page * PAGE_SIZE, items.length);
 
   return (
-    <div className="p-3 sm:p-4 rounded-2xl bg-[#0E1724] border border-[#D4A24C]/40 space-y-2">
+    <div className="p-3 sm:p-4 rounded-2xl bg-[#080E18] border border-[#D4A24C]/40 space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[11px] font-bold uppercase tracking-widest text-[#D4A24C]">
           Officer status comments
@@ -111,7 +111,7 @@ export const OfficerStatusComments: React.FC<OfficerStatusCommentsProps> = ({
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="p-1.5 px-2 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="p-1.5 px-2 rounded-lg bg-[#060A10] border border-[rgba(201,148,54,0.25)] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -122,7 +122,7 @@ export const OfficerStatusComments: React.FC<OfficerStatusCommentsProps> = ({
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="p-1.5 px-2 rounded-lg bg-[#0B131E] border border-[#223348] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="p-1.5 px-2 rounded-lg bg-[#060A10] border border-[rgba(201,148,54,0.25)] text-[#CBD5E1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>

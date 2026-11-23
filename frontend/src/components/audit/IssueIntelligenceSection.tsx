@@ -10,25 +10,25 @@ interface IssueIntelligenceSectionProps {
 
 export const IssueIntelligenceSection: React.FC<IssueIntelligenceSectionProps> = ({ issues }) => {
   return (
-    <section id="section-issues" className="py-10 border-b border-[#E7E5DB]">
+    <section id="section-issues" className="py-10 border-b border-[rgba(201,148,54,0.25)]">
       <div className="space-y-2 mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#7C808D]">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-[#A3B1C2]">
           Narrative Association
         </div>
-        <h2 className="font-editorial text-3xl sm:text-4xl text-[#112233] font-normal">
+        <h2 className="font-editorial text-3xl sm:text-4xl text-[#F5EFE0] font-normal">
           What is the candidate associated with?
         </h2>
-        <p className="text-sm text-[#666A78]">
+        <p className="text-sm text-[#A3B1C2]">
           Constituency agenda prioritization ranked by tracked mentions, constituent resonance, and candidate ownership.
         </p>
       </div>
 
-      <div className="bg-white border border-[#E0DED5] rounded-xl p-6 shadow-xs space-y-6">
+      <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-6 shadow-xs space-y-6">
         <div className="flex items-center justify-between border-b border-[#ECEAE2] pb-3 text-xs text-[#787C8A]">
           <span className="text-[10px] font-bold uppercase tracking-wider">
             Ranked Issue Landscape
           </span>
-          <span className="flex items-center text-[11px] font-medium text-[#112233]">
+          <span className="flex items-center text-[11px] font-medium text-[#F5EFE0]">
             <Sparkles className="w-3.5 h-3.5 mr-1 text-[#0F766E]" />
             NLP Narrative Extraction
           </span>
@@ -39,11 +39,11 @@ export const IssueIntelligenceSection: React.FC<IssueIntelligenceSectionProps> =
             <div key={issue.id} className="space-y-2 border-b border-[#F4F3ED] pb-4 last:border-0 last:pb-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center space-x-3">
-                  <span className="font-mono-data text-xs font-bold px-2 py-0.5 bg-[#F2F1EA] text-[#112233] rounded">
+                  <span className="font-mono-data text-xs font-bold px-2 py-0.5 bg-[#F2F1EA] text-[#F5EFE0] rounded">
                     0{issue.rank}
                   </span>
                   <div>
-                    <h3 className="text-sm font-semibold text-[#112233]">
+                    <h3 className="text-sm font-semibold text-[#F5EFE0]">
                       {issue.name}
                     </h3>
                     <span className="text-[11px] text-[#7A7E8B]">
@@ -55,7 +55,7 @@ export const IssueIntelligenceSection: React.FC<IssueIntelligenceSectionProps> =
                 <div className="flex items-center space-x-4 text-xs">
                   <div className="text-right">
                     <span className="text-[10px] uppercase text-[#8E929E] block">Candidate Ownership</span>
-                    <span className="font-mono-data font-semibold text-[#112233]">
+                    <span className="font-mono-data font-semibold text-[#F5EFE0]">
                       {issue.relativeStrength}/100
                     </span>
                   </div>
@@ -76,7 +76,7 @@ export const IssueIntelligenceSection: React.FC<IssueIntelligenceSectionProps> =
                 {issue.topHashtags.map((tag, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center text-[10px] text-[#5C606E] bg-[#FAF9F5] px-2 py-0.5 rounded border border-[#E7E5DB]"
+                    className="inline-flex items-center text-[10px] text-[#5C606E] bg-[#080E18] px-2 py-0.5 rounded border border-[rgba(201,148,54,0.25)]"
                   >
                     <Hash className="w-2.5 h-2.5 mr-0.5 text-[#9A9EA9]" />
                     {tag.replace("#", "")}

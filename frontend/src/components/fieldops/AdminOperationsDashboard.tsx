@@ -52,8 +52,8 @@ interface AdminDashboardProps {
 }
 
 const ASSIGN_FILTER_CLASS =
-  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[#223348] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none [color-scheme:dark]";
-const ASSIGN_OPTION_CLASS = "bg-[#0B131E] text-[#F5EFE0]";
+  "min-w-0 w-full h-9 bg-transparent border-0 border-b border-[rgba(201,148,54,0.25)] rounded-none px-0.5 text-xs text-[#F5EFE0] focus:border-[#D4A24C] outline-none [color-scheme:dark]";
+const ASSIGN_OPTION_CLASS = "bg-[#060A10] text-[#F5EFE0]";
 const ASSIGN_GRID_CLASS = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-visible";
 const HIERARCHY_CHIP =
   "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#050B12] text-[#D4A24C] border border-[#D4A24C]/70";
@@ -686,7 +686,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       )}
 
       {/* KPI Overview Strip — compact so million-scale counts stay on one line */}
-      <div className="space-y-1.5 p-2 rounded-xl bg-[#091422] border border-[#22354D] shadow-xl">
+      <div className="space-y-1.5 p-2 rounded-xl bg-[#060A10] border border-[rgba(201,148,54,0.25)] shadow-xl">
         <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-1.5">
           <DashboardKpi
             label="Total Tickets"
@@ -774,7 +774,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
       {viewMode === "DRILLDOWN" && (
         <div className="space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#0E1724] border border-[#D4A24C]/40">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-[#080E18] border border-[#D4A24C]/40">
             <div>
               <h2 className="font-display text-base text-[#F5EFE0] flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#D4A24C]" />
@@ -810,7 +810,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 return (
                   <div
                     key={mandal.mandalId}
-                    className="rounded-xl bg-[#0E1724] border border-[#D4A24C]/40 overflow-hidden"
+                    className="rounded-xl bg-[#080E18] border border-[#D4A24C]/40 overflow-hidden"
                   >
                     {/* Mandal Node Header */}
                     <div
@@ -867,7 +867,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                           return (
                             <div
                               key={village.villageId}
-                              className="rounded-lg bg-[#0B131E] border border-[#D4A24C]/30 overflow-hidden"
+                              className="rounded-lg bg-[#060A10] border border-[#D4A24C]/30 overflow-hidden"
                             >
                               {/* Village Node Row */}
                               <div
@@ -951,7 +951,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                         <div
                                           key={iss.id}
                                           onClick={() => setSelectedIssue(iss)}
-                                          className="p-2.5 rounded-lg bg-[#0E1724] border border-[#D4A24C]/35 hover:border-[#D4A24C]/80 transition-all cursor-pointer space-y-1"
+                                          className="p-2.5 rounded-lg bg-[#080E18] border border-[#D4A24C]/35 hover:border-[#D4A24C]/80 transition-all cursor-pointer space-y-1"
                                         >
                                           <div className="flex items-center justify-between gap-2 text-[10px]">
                                             <span className="font-mono text-[#D4A24C]">{formatTicketDisplay(iss)}</span>
@@ -1009,7 +1009,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 placeholder="Search ID, title, village, citizen, phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 bg-transparent border-0 border-b border-[#223348] focus:border-[#D4A24C] pl-6 pr-6 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className="w-full h-9 bg-transparent border-0 border-b border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] pl-6 pr-6 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
               />
               {searchQuery ? (
                 <button
@@ -1026,7 +1026,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
               >
                 <option value="NEWEST" className={ASSIGN_OPTION_CLASS}>Newest first</option>
                 <option value="OLDEST" className={ASSIGN_OPTION_CLASS}>Oldest first</option>
@@ -1041,7 +1041,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[#223348] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
+                className="bg-transparent text-[#F5EFE0] text-xs focus:outline-none cursor-pointer border-0 border-b border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] h-9 [color-scheme:dark]"
               >
                 <option value={10} className={ASSIGN_OPTION_CLASS}>10 / page</option>
                 <option value={25} className={ASSIGN_OPTION_CLASS}>25 / page</option>
@@ -1257,7 +1257,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                               e.stopPropagation();
                               setSelectedIssue(iss);
                             }}
-                            className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-nowrap shrink-0"
+                            className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-nowrap shrink-0"
                             title="View ticket"
                           >
                             <Eye className="w-3 h-3 shrink-0" />
