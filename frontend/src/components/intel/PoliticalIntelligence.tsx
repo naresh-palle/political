@@ -4733,6 +4733,76 @@ function IntelligenceConstituency({
     { ...rankInPool(allLeaders, focus.id, (row) => row.stateId && row.stateId === focus.stateId, metricOf), caption: `All ${stateName || "state"} constituencies` }
   ] : [];
 
+  // Comparative Leaders Pool in this constituency
+  const constituencyLeadersPool = useMemo(() => {
+    return [...leaders].sort((a: any, b: any) => {
+      const mA = metricOf(a);
+      const mB = metricOf(b);
+      return (mB == null ? -1 : Number(mB)) - (mA == null ? -1 : Number(mA));
+    });
+  }, [leaders, platform, rankBy]);
+
+  // Party comparison computed from inConstituency leaders
+  const partyCompareRows = useMemo(() => {
+    if (Array.isArray(intel?.partyCompare) && intel.partyCompare.length > 0) {
+      return intel.partyCompare;
+    }
+    const map: Record<string, any> = {};
+    for (const l of inConstituency) {
+      const pid = l.partyId || "IND";
+      if (!map[pid]) {
+        map[pid] = {
+          partyId: pid,
+          partyName: partyLabel(partyById, pid, l.partyName) || pid,
+          partyColor: l.partyColor || partyById[pid]?.primaryColor || "#D4A24C",
+          leaders: 0,
+          followers: 0,
+          accounts: 0
+        };
+      }
+      map[pid].leaders += 1;
+      map[pid].followers += Number(l.followers || 0);
+      map[pid].accounts += (l.accounts || []).length;
+    }
+    return Object.values(map).sort((a: any, b: any) => b.followers - a.followers);
+  }, [intel?.partyCompare, inConstituency, partyById]);
+
+  // Platform comparison computed from inConstituency
+  const platformCompareRows = useMemo(() => {
+    if (Array.isArray(intel?.platformCompare) && intel.platformCompare.length > 0) {
+      return intel.platformCompare;
+    }
+    return PLATFORMS.map((plat) => {
+      let accounts = 0;
+      let followers = 0;
+      for (const l of inConstituency) {
+        const detail = platformDetail(l, plat);
+        if (detail && !detail.noAccount && detail.followers != null) {
+          accounts += 1;
+          followers += Number(detail.followers || 0);
+        }
+      }
+      return { platform: plat, accounts, followers };
+    });
+  }, [intel?.platformCompare, inConstituency]);
+
+  const biggestGap = useMemo(() => {
+    if (intel?.biggestGap) return intel.biggestGap;
+    const sorted = [...inConstituency].sort((a: any, b: any) => (Number(b.followers || 0)) - (Number(a.followers || 0)));
+    if (sorted.length >= 2) {
+      const top = sorted[0];
+      const second = sorted[1];
+      const f1 = Number(top.followers || 0);
+      const f2 = Number(second.followers || 0);
+      return {
+        leader: top.name,
+        opponent: second.name,
+        followersDelta: Math.abs(f1 - f2)
+      };
+    }
+    return null;
+  }, [intel?.biggestGap, inConstituency]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -4866,6 +4936,164 @@ function IntelligenceConstituency({
           </div>
         </>
       ) : null}
+
+      {/* Comparative Leader Intelligence Table */}
+      <div className={CARD}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div>
+            <h3 className="text-base font-display font-bold text-[#F5EFE0]">
+              Comparative Leader Intelligence Table · {acName}
+            </h3>
+            <p className="text-xs text-[#B9AF95]">
+              Side-by-side benchmarking of all candidates in this constituency across followers, engagement, growth, and multi-tier rankings.
+            </p>
+          </div>
+          <span className="text-xs text-[#D4A24C] font-semibold bg-[#D4A24C]/10 border border-[#D4A24C]/30 px-2.5 py-1 rounded-lg">
+            Sorted by: {rankLabel} ({platformLabel})
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left min-w-[54rem]">
+            <thead>
+              <tr className="border-b border-[#22405E] text-[#D4A24C] uppercase tracking-wider text-[10px]">
+                <th className="py-2.5 px-3">Leader</th>
+                <th className="py-2.5 px-3">Party</th>
+                <th className="py-2.5 px-3 text-right">Followers</th>
+                <th className="py-2.5 px-3 text-right">Engagement</th>
+                <th className="py-2.5 px-3 text-right">30d Growth</th>
+                <th className="py-2.5 px-3 text-right">Social Score</th>
+                <th className="py-2.5 px-3 text-center">AC Rank</th>
+                <th className="py-2.5 px-3 text-center">District</th>
+                <th className="py-2.5 px-3 text-center">PC</th>
+                <th className="py-2.5 px-3 text-center">Party Rank</th>
+                <th className="py-2.5 px-3 text-center">State Rank</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#142B45]">
+              {constituencyLeadersPool.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-6 text-center text-[#B9AF95]">
+                    No leaders recorded for this constituency yet.
+                  </td>
+                </tr>
+              ) : (
+                constituencyLeadersPool.map((row: any) => {
+                  const isFocus = focus && row.id === focus.id;
+                  const fMetric = metricOf(row);
+                  const eng = row.engagementPercent != null ? `${Number(row.engagementPercent).toFixed(1)}%` : "—";
+                  const g30 = row.growth30 != null ? `${Number(row.growth30) > 0 ? "+" : ""}${Number(row.growth30).toFixed(1)}%` : "—";
+                  const score = row.socialScore != null ? `${Math.round(Number(row.socialScore))}/100` : "—";
+                  const pColor = row.partyColor || partyById[row.partyId]?.primaryColor || "#D4A24C";
+                  return (
+                    <tr
+                      key={row.id}
+                      onClick={() => setSelectedFocusLeaderId(row.id)}
+                      className={`cursor-pointer transition-colors ${
+                        isFocus ? "bg-[#D4A24C]/15 border-l-4 border-l-[#D4A24C]" : "hover:bg-[#142B45]/50"
+                      }`}
+                    >
+                      <td className="py-2.5 px-3 font-bold text-[#F5EFE0]">
+                        <div className="flex items-center gap-1.5">
+                          <span>{row.name}</span>
+                          {isFocus && <span className="text-[10px] bg-[#D4A24C] text-[#071322] font-bold px-1.5 py-0.2 rounded">FOCUS</span>}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <span
+                          className="text-[10px] font-bold uppercase px-2 py-0.5 rounded border"
+                          style={{
+                            color: pColor,
+                            borderColor: `${pColor}50`,
+                            backgroundColor: `${pColor}15`
+                          }}
+                        >
+                          {partyLabel(partyById, row.partyId, row.partyName) || row.partyId || "—"}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-medium text-[#F5EFE0]">
+                        {formatCompactCount(fMetric ?? row.followers ?? 0)}
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-[#B9AF95]">{eng}</td>
+                      <td className={`py-2.5 px-3 text-right font-medium ${Number(row.growth30) > 0 ? "text-emerald-400" : "text-[#B9AF95]"}`}>
+                        {g30}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-[#D4A24C]">{score}</td>
+                      <td className="py-2.5 px-3 text-center font-bold text-[#F5EFE0]">
+                        {row.rankInConstituency ? `#${row.rankInConstituency}` : "—"}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-[#B9AF95]">
+                        {row.rankInDistrict ? `#${row.rankInDistrict}` : "—"}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-[#B9AF95]">
+                        {row.rankInParliament ? `#${row.rankInParliament}` : "—"}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-[#B9AF95]">
+                        {row.rankInParty ? `#${row.rankInParty}` : "—"}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-[#B9AF95]">
+                        {row.rankInState ? `#${row.rankInState}` : "—"}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Party & Platform Comparison Panels */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Party Comparison */}
+        <div className={CARD}>
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#22405E]/80">
+            <h3 className="text-sm font-bold text-[#F5EFE0]">Party Comparison</h3>
+            <span className="text-[10px] text-[#B9AF95] uppercase tracking-wider font-semibold">Total Leaders & Reach</span>
+          </div>
+          <div className="space-y-2">
+            {partyCompareRows.length === 0 ? (
+              <p className="text-xs text-[#B9AF95] py-2">No party data available.</p>
+            ) : (
+              partyCompareRows.map((p: any) => (
+                <div key={p.partyId} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#071322]/60 border border-[#22405E]/40">
+                  <span className="font-bold flex items-center gap-1.5" style={{ color: p.partyColor || "#D4A24C" }}>
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.partyColor || "#D4A24C" }} />
+                    {p.partyName || p.partyId}
+                  </span>
+                  <span className="text-[#B9AF95]">
+                    <strong className="text-[#F5EFE0]">{p.leaders}</strong> {p.leaders === 1 ? "leader" : "leaders"} · <strong className="text-[#D4A24C]">{formatCompactCount(p.followers)}</strong> followers
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Platform Comparison */}
+        <div className={CARD}>
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#22405E]/80">
+            <h3 className="text-sm font-bold text-[#F5EFE0]">Platform Comparison & Gap</h3>
+            <span className="text-[10px] text-[#B9AF95] uppercase tracking-wider font-semibold">Presence</span>
+          </div>
+          <div className="space-y-2">
+            {platformCompareRows.map((p: any) => (
+              <div key={p.platform} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#071322]/60 border border-[#22405E]/40">
+                <span className="font-bold uppercase tracking-wider text-[#D4A24C]">{PLATFORM_LABEL[p.platform as (typeof PLATFORMS)[number]] || p.platform}</span>
+                <span className="text-[#B9AF95]">
+                  <strong className="text-[#F5EFE0]">{p.accounts}</strong> accounts · <strong className="text-[#F5EFE0]">{formatCompactCount(p.followers)}</strong> followers
+                </span>
+              </div>
+            ))}
+            {biggestGap && (
+              <div className="mt-2.5 p-2 rounded-lg bg-[#D4A24C]/10 border border-[#D4A24C]/30 text-[11px] text-[#D4A24C] flex items-center gap-1.5">
+                <span>⚡</span>
+                <span><strong>Largest follower gap:</strong> {biggestGap.leader} vs {biggestGap.opponent} ({formatCompactCount(biggestGap.followersDelta)} delta)</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {leaders.length ? leaders.map((leader: any) => {
           const sitting = isSittingMlaKind(leader.leaderKind);

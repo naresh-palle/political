@@ -165,7 +165,7 @@ async function runTests() {
     await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_05b_intelligence_telangana_leaderboard.png') });
     console.log('✓ Verified: District Digital Penetration Leaderboard updates dynamically to Telangana districts');
 
-    // Drill into a district and verify back button
+    // Drill into a district and verify constituency drilldown with Comparative Intelligence Table
     await page.evaluate(() => {
       const btns = Array.from(document.querySelectorAll('button'));
       const inspectBtn = btns.find(b => b.textContent?.includes('Inspect District'));
@@ -173,6 +173,33 @@ async function runTests() {
     });
     await new Promise(r => setTimeout(r, 1000));
     await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_06_district_drilldown_with_back_btn.png') });
+
+    // Open first constituency to verify Comparative Leader Intelligence Table & Comparisons
+    await page.evaluate(() => {
+      const acBtns = Array.from(document.querySelectorAll('button')).filter(b => b.textContent?.includes('MLA Penetration') || b.textContent?.includes('Digital Electorate'));
+      if (acBtns.length > 0) acBtns[0].click();
+    });
+    await new Promise(r => setTimeout(r, 1200));
+
+    // Verify Comparative Leader Intelligence Table, Party Comparison, Platform Comparison
+    const intelTableStatus = await page.evaluate(() => {
+      const body = document.body.innerText;
+      return {
+        hasCompTableTitle: body.includes('Comparative Leader Intelligence Table'),
+        hasPartyCompare: body.includes('Party Comparison'),
+        hasPlatformCompare: body.includes('Platform Comparison & Gap'),
+        hasRankHeaders: body.includes('AC Rank') && body.includes('District') && body.includes('Party Rank')
+      };
+    });
+    console.log('Constituency Intelligence Table & Comparisons status:', intelTableStatus);
+    if (!intelTableStatus.hasCompTableTitle) {
+      throw new Error('Comparative Leader Intelligence Table is missing in Constituency Intelligence view!');
+    }
+    if (!intelTableStatus.hasPartyCompare || !intelTableStatus.hasPlatformCompare) {
+      throw new Error('Party or Platform Comparison panel is missing in Constituency Intelligence view!');
+    }
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_06b_constituency_intel_table_and_comparisons.png') });
+    console.log('✓ Verified: Comparative Leader Intelligence Table, Party Comparison & Platform Comparison are fully restored');
 
     // Click Back to Intelligence
     await page.evaluate(() => {
