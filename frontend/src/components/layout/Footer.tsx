@@ -4,7 +4,7 @@ import { LeadersLogo } from "../common/LeadersLogo";
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="border-t border-[#D4A24C]/20 bg-[#071322] py-8 text-xs text-[#B9AF95] mt-auto no-print">
+    <footer className="border-t border-[#C99436]/20 bg-[#050B12] py-8 text-xs text-[#B9AF95] mt-auto no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Brand */}
@@ -13,10 +13,10 @@ export const Footer: React.FC = () => {
               <LeadersLogo size={28} />
             </div>
             <div className="flex flex-col">
-              <span className="font-display text-base tracking-[-0.01em] text-[#D4A24C] leading-none">
+              <span className="font-mark text-base tracking-[0.14em] text-[#C99436] leading-none uppercase">
                 Leaders Lens
               </span>
-              <span className="text-[9px] uppercase tracking-[0.18em] text-[#D4A24C] font-semibold mt-0.5">
+              <span className="text-[9px] uppercase tracking-[0.18em] text-[#C99436] font-semibold mt-0.5">
                 Political Intelligence System
               </span>
             </div>
@@ -33,7 +33,7 @@ export const Footer: React.FC = () => {
                 href="https://palramai.in"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[#D4A24C] hover:underline font-semibold"
+                className="text-[#C99436] hover:underline font-semibold"
               >
                 palramai.in
               </a>

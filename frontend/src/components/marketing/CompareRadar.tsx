@@ -72,12 +72,12 @@ export const CompareRadar: React.FC<CompareRadarProps> = ({ left, right, size = 
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
         <defs>
           <radialGradient id="radar-fill-a" cx="50%" cy="50%" r="70%">
-            <stop offset="0%" stopColor="#E07A1F" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#D4A24C" stopOpacity="0.25" />
+            <stop offset="0%" stopColor="#C99436" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#C99436" stopOpacity="0.25" />
           </radialGradient>
           <radialGradient id="radar-fill-b" cx="50%" cy="50%" r="70%">
             <stop offset="0%" stopColor="#5B8BC0" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#3A5170" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#4A3F2A" stopOpacity="0.15" />
           </radialGradient>
         </defs>
 
@@ -92,7 +92,7 @@ export const CompareRadar: React.FC<CompareRadarProps> = ({ left, right, size = 
               })
               .join(" ")}
             fill="none"
-            stroke="#22405E"
+            stroke="#2E291F"
             strokeOpacity={0.55}
             strokeDasharray={lvl === 1 ? "0" : "2 3"}
           />
@@ -108,7 +108,7 @@ export const CompareRadar: React.FC<CompareRadarProps> = ({ left, right, size = 
               y1={cy}
               x2={x}
               y2={y}
-              stroke="#22405E"
+              stroke="#2E291F"
               strokeOpacity={0.5}
             />
           );
@@ -117,16 +117,16 @@ export const CompareRadar: React.FC<CompareRadarProps> = ({ left, right, size = 
         {/* B first (behind) */}
         <path d={buildPath(values(right))} fill="url(#radar-fill-b)" stroke="#8AA6C7" strokeWidth={1.5} strokeOpacity={0.9} />
         {/* A on top */}
-        <path d={buildPath(values(left))} fill="url(#radar-fill-a)" stroke="#E07A1F" strokeWidth={1.8} strokeOpacity={0.95} />
+        <path d={buildPath(values(left))} fill="url(#radar-fill-a)" stroke="#C99436" strokeWidth={1.8} strokeOpacity={0.95} />
 
         {/* Value dots */}
         {values(left).map((v, i) => {
           const [x, y] = point(i, v * radius);
-          return <circle key={`a-${i}`} cx={x} cy={y} r={3.5} fill="#F0D08A" stroke="#0B1A2C" strokeWidth={1.5} />;
+          return <circle key={`a-${i}`} cx={x} cy={y} r={3.5} fill="#F9E29C" stroke="#080C12" strokeWidth={1.5} />;
         })}
         {values(right).map((v, i) => {
           const [x, y] = point(i, v * radius);
-          return <circle key={`b-${i}`} cx={x} cy={y} r={3} fill="#B7CEE8" stroke="#0B1A2C" strokeWidth={1.5} />;
+          return <circle key={`b-${i}`} cx={x} cy={y} r={3} fill="#B7CEE8" stroke="#080C12" strokeWidth={1.5} />;
         })}
 
         {/* Axis labels */}
@@ -156,7 +156,7 @@ export const CompareRadar: React.FC<CompareRadarProps> = ({ left, right, size = 
       {/* Legend */}
       <div className="flex items-center justify-center gap-5 pt-1">
         <span className="inline-flex items-center gap-2 text-[11px] text-[#D8CFB8]">
-          <span className="w-3 h-3 rounded-sm bg-gradient-to-r from-[#E07A1F] to-[#D4A24C]" />
+          <span className="w-3 h-3 rounded-sm bg-gradient-to-r from-[#9C6B1C] to-[#F9E29C]" />
           {left.name}
         </span>
         <span className="inline-flex items-center gap-2 text-[11px] text-[#B9AF95]">

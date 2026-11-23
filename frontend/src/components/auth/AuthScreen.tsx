@@ -54,7 +54,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 
   return (
     <div
-      className="hero-dark min-h-screen w-full flex flex-col lg:flex-row items-stretch relative overflow-x-hidden bg-[#071322]"
+      className="hero-dark min-h-screen w-full flex flex-col lg:flex-row items-stretch relative overflow-x-hidden bg-[#050B12]"
       style={{
         backgroundImage: "url(./images/india_parliament_bg.jpg)",
         backgroundSize: "cover",
@@ -65,7 +65,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
     >
       {/* Light subtle gradient overlay only on the background */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0 bg-black/40" 
+        className="fixed inset-0 pointer-events-none z-0 bg-[#050B12]/70" 
         aria-hidden="true" 
       />
 
@@ -73,7 +73,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
       <div className="flex-1 hidden lg:flex flex-col justify-between p-10 xl:p-14 relative z-10">
         <div />
         {/* Minimal subtle badge at bottom-left corner */}
-        <div className="p-3.5 rounded-xl bg-[#071322]/60 backdrop-blur-md border border-[#D4A24C]/25 max-w-sm">
+        <div className="p-3.5 rounded-xl bg-[#050B12]/60 backdrop-blur-md border border-[#C99436]/25 max-w-sm">
           <p className="text-xs text-[#EADBBF] font-medium tracking-wide">
             National Political Intelligence & Strategic Governance System
           </p>
@@ -81,16 +81,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
       </div>
 
       {/* Right Side Dedicated Sign In Panel (Transparent Glassmorphic with Parliament visible through) */}
-      <div className="w-full lg:w-[420px] xl:w-[460px] min-h-screen bg-[#071322]/45 backdrop-blur-xl border-l border-[#D4A24C]/30 flex flex-col justify-between p-6 sm:p-10 z-20 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] shrink-0 animate-fadeIn">
+      <div className="w-full lg:w-[420px] xl:w-[460px] min-h-screen bg-[#050B12]/45 backdrop-blur-xl border-l border-[#C99436]/30 flex flex-col justify-between p-6 sm:p-10 z-20 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] shrink-0 animate-fadeIn">
         {/* Top Official Branding */}
         <div className="flex flex-col items-center text-center pt-2 sm:pt-4">
-          <div className="p-2 rounded-2xl bg-[#071322]/60 backdrop-blur-md border border-[#D4A24C]/40 shadow-xl mb-2.5">
+          <div className="p-2 rounded-2xl bg-[#050B12]/60 backdrop-blur-md border border-[#C99436]/40 shadow-xl mb-2.5">
             <LeadersLogo size={46} />
           </div>
-          <h1 className="font-display text-2xl tracking-[-0.01em] text-[#D4A24C] font-semibold drop-shadow-md">
+          <h1 className="font-mark text-2xl tracking-[0.14em] text-[#C99436] font-semibold drop-shadow-md uppercase">
             Leaders Lens
           </h1>
-          <p className="text-[10px] tracking-[0.3em] uppercase text-[#D4A24C] font-semibold mt-1 font-mono drop-shadow">
+          <p className="text-[10px] tracking-[0.3em] uppercase text-[#C99436] font-semibold mt-1 font-mono drop-shadow">
             CONSULTING
           </p>
         </div>
@@ -131,7 +131,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#D4A24C] hover:text-white transition-colors p-1 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#C99436] hover:text-white transition-colors p-1 cursor-pointer"
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -149,7 +149,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
               type="submit"
               data-testid="auth-submit-btn"
               disabled={isLoading}
-              className="group w-full inline-flex items-center justify-center px-5 py-3.5 bg-gradient-to-r from-[#D97724] to-[#C99738] hover:brightness-110 text-[#0B131E] text-sm font-bold rounded-xl transition-all shadow-[0_4px_25px_-5px_rgba(217,119,36,0.6)] cursor-pointer disabled:opacity-50 mt-2"
+              className="group w-full inline-flex items-center justify-center px-5 py-3.5 bg-gradient-to-r from-[#9C6B1C] to-[#F9E29C] hover:brightness-110 text-[#080C12] text-sm font-bold rounded-xl transition-all shadow-[0_4px_25px_-5px_rgba(201,148,54,0.5)] cursor-pointer disabled:opacity-50 mt-2"
             >
               <span>{isLoading ? "Signing in..." : "Sign In"}</span>
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
@@ -158,9 +158,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
         </div>
 
         {/* Bottom Footer */}
-        <div className="text-center pt-4 border-t border-[#D4A24C]/20 space-y-1.5">
+        <div className="text-center pt-4 border-t border-[#C99436]/20 space-y-1.5">
           <p className="text-[11px] text-[#D8CFB8] font-medium flex items-center justify-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#D4A24C]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#C99436]" />
             AI-Powered Intelligence Platform
           </p>
           <p className="text-[11px] text-[#8E9CAE]">
@@ -169,7 +169,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
               href="https://palramai.in/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#D4A24C] font-semibold hover:underline"
+              className="text-[#C99436] font-semibold hover:underline"
             >
               palramai.in
             </a>
@@ -181,7 +181,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 };
 
 const darkInput =
-  "w-full bg-[#0B131E] border border-[#223348] hover:border-[#D4A24C]/60 focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]/50 rounded-xl px-3.5 py-3 text-sm text-[#F5EFE0] placeholder:text-[#8E9CAE] outline-none transition-all";
+  "w-full bg-[#080C12] border border-[#2E291F] hover:border-[#C99436]/60 focus:border-[#C99436] focus:ring-1 focus:ring-[#C99436]/50 rounded-xl px-3.5 py-3 text-sm text-[#F5EFE0] placeholder:text-[#8E9CAE] outline-none transition-all";
 
 const Field: React.FC<{ label: string; icon?: React.ReactNode; children: React.ReactNode }> = ({ label, icon, children }) => (
   <div className="space-y-1.5">

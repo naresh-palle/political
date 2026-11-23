@@ -42,8 +42,8 @@ const tone = (level: string) => {
   switch (level) {
     case "Verified": return { fg: "text-emerald-300", dot: "bg-emerald-400" };
     case "Live":     return { fg: "text-emerald-300", dot: "bg-emerald-400" };
-    case "Estimated":return { fg: "gold-text",        dot: "bg-[#D4A24C]" };
-    case "Derived":  return { fg: "text-[#E9C77A]",   dot: "bg-[#B45309]" };
+    case "Estimated":return { fg: "gold-text",        dot: "bg-[#C99436]" };
+    case "Derived":  return { fg: "text-[#F9E29C]",   dot: "bg-[#9C6B1C]" };
     default:         return { fg: "text-[#B9AF95]",   dot: "bg-[#6C707D]" };
   }
 };
@@ -74,7 +74,7 @@ export const VerifiedFeed: React.FC<{ stateId: string; stateName?: string }> = (
   return (
     <div
       data-testid="verified-feed"
-      className="rounded-xl border border-[#D4A24C]/25 bg-[#0F2338]/70 backdrop-blur px-4 pt-3 pb-2 overflow-hidden"
+      className="rounded-xl border border-[#C99436]/25 bg-[#10151C]/70 backdrop-blur px-4 pt-3 pb-2 overflow-hidden"
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export const VerifiedFeed: React.FC<{ stateId: string; stateName?: string }> = (
         </span>
       </div>
 
-      <ul className="divide-y divide-[#22405E]/60">
+      <ul className="divide-y divide-[#2E291F]/60">
         {windowItems.map((it, i) => {
           const t = tone(it.eyebrow);
           return (
@@ -98,7 +98,7 @@ export const VerifiedFeed: React.FC<{ stateId: string; stateName?: string }> = (
               className={`flex items-start gap-3 py-2 ${i === 0 ? "animate-rise" : "opacity-70"}`}
               style={{ animationDelay: `${i * 60}ms` }}
             >
-              <span className="w-7 h-7 shrink-0 rounded-md bg-[#0B1A2C] border border-[#22405E] inline-flex items-center justify-center text-[#D4A24C]">
+              <span className="w-7 h-7 shrink-0 rounded-md bg-[#080C12] border border-[#2E291F] inline-flex items-center justify-center text-[#C99436]">
                 {it.icon}
               </span>
               <div className="min-w-0 flex-1">

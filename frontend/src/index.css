@@ -10,24 +10,25 @@
     --font-serif: "IBM Plex Serif", "Fraunces", Georgia, serif;
     --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-mark: "Cinzel", "IBM Plex Serif", Georgia, serif;
 
-    /* Leaders Lens — richer editorial palette */
+    /* Leaders Lens — black gold editorial palette */
     --ll-ivory: #FBFBF9;
     --ll-paper: #F5F4EE;
     --ll-linen: #EFEFE8;
-    --ll-cream: #F4E9D0;
+    --ll-cream: #F5EFE0;
     --ll-rule: #E5E3D8;
     --ll-rule-strong: #D5D3C8;
 
-    --ll-ink: #071322;         /* deep, executive prestige navy */
-    --ll-ink-2: #0E2137;       /* dark panel surface */
-    --ll-ink-soft: #1E3A5A;
-    --ll-muted: #94A3B8;       /* high-contrast slate text */
-    --ll-muted-soft: #CBD5E1;  /* crisp readable subtitle text */
+    --ll-ink: #050B12;
+    --ll-ink-2: #0C1016;
+    --ll-ink-soft: #1A1610;
+    --ll-muted: #9A8F7A;
+    --ll-muted-soft: #D4C4A0;
 
-    --ll-gold: #F1CA74;        /* high-luminance radiant gold */
-    --ll-saffron: #E07A1F;     /* dominant energetic saffron */
-    --ll-saffron-soft: #FBE7CE;
+    --ll-gold: #F9E29C;
+    --ll-saffron: #C99436;
+    --ll-saffron-soft: #F4E9D0;
     --ll-crimson: #E11D48;     /* vibrant crisp crimson */
     --ll-emerald: #059669;
     --ll-emerald-bright: #10B981;
@@ -35,15 +36,15 @@
     --ll-critical: #DC2626;
 
     /* Dynamic Party Design Tokens (Default Neutral Fallbacks) */
-    --party-primary: #D4A24C;
-    --party-secondary: #B45309;
-    --party-accent: #E07A1F;
+    --party-primary: #C99436;
+    --party-secondary: #9C6B1C;
+    --party-accent: #F9E29C;
     --party-light-bg: #FAF9F5;
-    --party-dark-bg: #071322;
+    --party-dark-bg: #050B12;
     --party-text: #0F172A;
     --party-muted: #64748B;
-    --party-gradient-start: #D4A24C;
-    --party-gradient-end: #E07A1F;
+    --party-gradient-start: #C99436;
+    --party-gradient-end: #F9E29C;
   }
 
   html { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; box-sizing: border-box; }
@@ -56,7 +57,7 @@
   }
   select option,
   select optgroup {
-    background-color: #0B131E;
+    background-color: #080C12;
     color: #F5EFE0;
   }
 
@@ -70,7 +71,7 @@
   .ll-dark-input:-webkit-autofill:active {
     -webkit-text-fill-color: #F5EFE0 !important;
     caret-color: #F5EFE0;
-    box-shadow: 0 0 0 1000px #071322 inset !important;
+    box-shadow: 0 0 0 1000px #050B12 inset !important;
     transition: background-color 99999s ease-out 0s;
   }
 
@@ -86,6 +87,10 @@
     font-feature-settings: "cv02","cv03","cv04","cv11";
   }
 
+  .font-mark {
+    font-family: var(--font-mark);
+    letter-spacing: 0.14em;
+  }
   h1, h2, .font-display {
     font-family: var(--font-display);
     font-weight: 500;
@@ -104,10 +109,10 @@
     letter-spacing: -0.01em;
   }
   .eyebrow {
-    font-family: var(--font-sans);
+    font-family: var(--font-mark);
     font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
   }
 }
@@ -115,9 +120,9 @@
 /* ------------------ Dark editorial hero surface ------------------ */
 .hero-dark {
   background:
-    radial-gradient(ellipse 90% 60% at 15% 0%, color-mix(in srgb, var(--party-primary, #E07A1F) 28%, transparent), transparent 55%),
-    radial-gradient(ellipse 60% 70% at 100% 20%, color-mix(in srgb, var(--party-secondary, #D4A24C) 22%, transparent), transparent 60%),
-    linear-gradient(180deg, #0B1A2C 0%, #0E2137 45%, #0B1A2C 100%);
+    radial-gradient(ellipse 90% 60% at 15% 0%, color-mix(in srgb, var(--party-primary, #C99436) 22%, transparent), transparent 55%),
+    radial-gradient(ellipse 60% 70% at 100% 20%, color-mix(in srgb, var(--party-accent, #F9E29C) 14%, transparent), transparent 60%),
+    linear-gradient(180deg, #050B12 0%, #0A0E14 45%, #050B12 100%);
   color: #F5EFE0;
   position: relative;
   isolation: isolate;
@@ -146,14 +151,14 @@
 }
 .hero-dark > * { position: relative; z-index: 1; }
 
-.gold-text { color: var(--party-primary, #F1CA74); text-shadow: 0 0 16px rgba(241, 202, 116, 0.2); }
-.cream-text { color: #F8FAFC; }
+.gold-text { color: var(--party-accent, #F9E29C); text-shadow: 0 0 18px rgba(249, 226, 156, 0.22); }
+.cream-text { color: #F5EFE0; }
 
 /* Bright metric chips */
 .chip-saffron { background: #FFF4E2; color: #7A3A08; border: 1px solid #F1CB98; }
 .chip-emerald { background: #E4F6EC; color: #0B5C3A; border: 1px solid #A8D9BE; }
 .chip-crimson { background: #FCE7EC; color: #7A0F24; border: 1px solid #F0B6C1; }
-.chip-ink     { background: #0B1A2C; color: #F5EFE0; }
+.chip-ink     { background: #050B12; color: #F5EFE0; }
 
 /* ------------------ Scrollbar + focus ------------------ */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -192,7 +197,7 @@
 
 /* Shimmer underline for CTAs on dark backgrounds */
 .gold-shimmer {
-  background: linear-gradient(90deg, #D4A24C 0%, #F0D08A 45%, #D4A24C 100%);
+  background: linear-gradient(90deg, #9C6B1C 0%, #F9E29C 45%, #C99436 100%);
   background-size: 200% 100%;
   animation: shimmer-gold 3.6s linear infinite;
 }
