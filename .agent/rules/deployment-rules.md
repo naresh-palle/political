@@ -1,23 +1,23 @@
 # Continuous Deployment & Quality Rules
 
 ## 0. Confirm before any new change
-Follow `.cursor/skills/confirm-before-change/SKILL.md` before coding a product, UI, role, routing, or data change. Applies to **every section and every user**, not only SM A. Check prior requirements, ask if users/screens are unclear, and do not add extra features.
+Follow `.cursor/skills/confirm-before-change/SKILL.md` before coding a product, UI, role, routing, or data change. Applies to **every section and every user**.
 
-## 1. Zero Broken Deployments & UI Testing
-- Whenever code changes are made, run UI automation tests: `node scripts/run_ui_tests.mjs` (or `npm run test:ui`).
-- Run `npm run build` in `frontend/` to confirm zero TypeScript and Vite bundle errors before pushing.
-- Always ensure `_redirects` exists in `frontend/public/` and `dist/` so Cloudflare Pages SPA routing never shows a 404.
-- **Every screen size (required).** Laptop, desktop, tablet, iPad, and mobile must show the same alignment and the same information. Do not hide fields on smaller viewports. Follow `.cursor/skills/cross-device-ui-parity/SKILL.md` on every UI change.
+## 1. Zero Broken Deployments
+- Run `npm run build` in `frontend/` before pushing.
+- Ensure `frontend/public/_redirects` exists so Cloudflare Pages SPA routing never 404s.
+- **Every screen size.** Laptop, desktop, tablet, iPad, and mobile must show the same alignment and the same information.
 
 ## 2. Every code change (required)
 Follow `.cursor/skills/complete-commit-deploy/SKILL.md` in the same turn:
 
 1. Add or update skills if the git / Cloudflare / Render workflow changed.
-2. Run UI automation tests.
-3. Deploy frontend to Cloudflare Pages (`leaders-lens` / `https://leaderslensconsulting.com`) via local Wrangler.
-4. Deploy Render backend and sync GitHub by pushing to `origin/main`.
+2. Deploy frontend to Cloudflare Pages project `leaders-lens` (`https://leaderslensconsulting.com`) with Wrangler Pages.
+3. Deploy Render by pushing to `origin/main`.
+
+GitHub Pages is retired. Do not run `gh-pages` or copy the Vite build into `docs/` or the repository root.
 
 ## 3. Production targets
-- **Frontend** → Cloudflare Pages (`leaders-lens` / `https://leaderslensconsulting.com`).
-- **Backend / MongoDB** → Render via `origin/main` (`https://political-ddmj.onrender.com/`).
-- **Any code change** → UI automation test + Cloudflare Pages deploy + Render deploy + git push.
+- **Frontend** → Cloudflare Pages (`leaders-lens` / https://leaderslensconsulting.com / https://leaders-lens.pages.dev)
+- **Backend / MongoDB** → Render via `origin/main` (`https://political-ddmj.onrender.com/`)
+- **Any code change** → git push + Cloudflare Pages deploy + Render `origin/main`

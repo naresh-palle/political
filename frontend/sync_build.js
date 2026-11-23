@@ -6,69 +6,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const frontendDir = __dirname;
-const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(frontendDir, 'dist');
-const docsDir = path.join(rootDir, 'docs');
-
-function copyDir(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDir(srcPath, destPath);
-    } else {
-      fs.copyFileSync(srcPath, destPath);
-    }
-  }
-}
-
-// 1. Create 404.html, CNAME, and .nojekyll in dist & public
+const publicDir = path.join(frontendDir, 'public');
 const distIndex = path.join(distDir, 'index.html');
 const dist404 = path.join(distDir, '404.html');
-const distCname = path.join(distDir, 'CNAME');
-const distNojekyll = path.join(distDir, '.nojekyll');
 const distRedirects = path.join(distDir, '_redirects');
-const publicDir = path.join(frontendDir, 'public');
 const public404 = path.join(publicDir, '404.html');
-const domainName = 'leaderslensconsulting.com';
+const publicRedirects = path.join(publicDir, '_redirects');
 
-if (fs.existsSync(distIndex)) {
-  fs.copyFileSync(distIndex, dist404);
+if (!fs.existsSync(distIndex)) {
+  console.warn('sync_build: frontend/dist/index.html missing; skip Cloudflare SPA files.');
+  process.exit(0);
+}
+
+fs.copyFileSync(distIndex, dist404);
+if (fs.existsSync(publicDir)) {
   fs.copyFileSync(distIndex, public404);
 }
-fs.writeFileSync(distCname, domainName, 'utf-8');
-fs.writeFileSync(distNojekyll, '', 'utf-8');
-fs.writeFileSync(distRedirects, '/*    /index.html   200\n', 'utf-8');
 
-// 2. Sync dist to docs/
-if (fs.existsSync(distDir)) {
-  copyDir(distDir, docsDir);
-  fs.writeFileSync(path.join(docsDir, '.nojekyll'), '', 'utf-8');
-  fs.writeFileSync(path.join(docsDir, 'CNAME'), domainName, 'utf-8');
-  console.log('✓ Synced dist to docs/ with .nojekyll, 404.html, and CNAME (leaderslensconsulting.com)');
-}
+const redirects = fs.existsSync(publicRedirects)
+  ? fs.readFileSync(publicRedirects, 'utf-8')
+  : '/*    /index.html   200\n';
+fs.writeFileSync(distRedirects, redirects.endsWith('\n') ? redirects : `${redirects}\n`, 'utf-8');
 
-// 3. Sync dist critical assets to root . (index.html, 404.html, CNAME, assets, images)
-if (fs.existsSync(distDir)) {
-  fs.copyFileSync(distIndex, path.join(rootDir, 'index.html'));
-  fs.copyFileSync(distIndex, path.join(rootDir, '404.html'));
-  fs.writeFileSync(path.join(rootDir, '.nojekyll'), '', 'utf-8');
-  fs.writeFileSync(path.join(rootDir, 'CNAME'), domainName, 'utf-8');
-  
-  const distAssets = path.join(distDir, 'assets');
-  const rootAssets = path.join(rootDir, 'assets');
-  if (fs.existsSync(distAssets)) {
-    if (fs.existsSync(rootAssets)) {
-      fs.rmSync(rootAssets, { recursive: true, force: true });
-    }
-    copyDir(distAssets, rootAssets);
-  }
-
-  const distImages = path.join(distDir, 'images');
-  const rootImages = path.join(rootDir, 'images');
-  if (fs.existsSync(distImages)) {
-    copyDir(distImages, rootImages);
-  }
-  console.log('✓ Synced dist to root . with updated index.html, CNAME, assets, and images');
-}
+console.log('✓ Prepared frontend/dist for Cloudflare Pages (404.html + _redirects). GitHub Pages copies are not written.');
