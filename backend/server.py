@@ -538,7 +538,7 @@ async def root():
         "database": db_name,
         "mongo": "offline-fallback" if _mongo_circuit_open else "configured",
         "status": "healthy",
-        "version": "v2.1-fix-intel",
+        "version": "v2.2-fix-social-extract",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 

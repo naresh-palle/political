@@ -32,6 +32,15 @@ CRAWLER_HEADERS = {
 }
 
 
+IGNORED_SUBPATHS = {
+    "followers", "following", "about", "about_overview", "about_contact_and_basic_info",
+    "about_profile_transparency", "about_work_and_education", "about_places",
+    "photos", "videos", "reels", "posts", "reviews", "mentions", "community",
+    "channel", "featured", "streams", "playlists", "status", "with_replies",
+    "highlights", "media", "likes", "tagged", "saved", "shorts"
+}
+
+
 def parse_count(val_str: str) -> int:
     """Parse numeric strings like '72,556', '72.5K', '1.2M', '500' into integer."""
     if not val_str:
@@ -55,16 +64,23 @@ def parse_count(val_str: str) -> int:
 
 
 def extract_username(url: str, platform: str) -> str:
-    """Extract clean username/handle from profile URL."""
+    """Extract clean username/handle from profile URL, ignoring subpaths like /followers, /about, /videos."""
     url = (url or "").strip().rstrip("/")
     if not url:
         return ""
     
     # Handle Facebook profile.php?id=123
-    if platform == "facebook" and "profile.php" in url and "id=" in url:
-        match = re.search(r"id=([a-zA-Z0-9_\.]+)", url)
-        if match:
-            return match.group(1)
+    if platform == "facebook":
+        if "profile.php" in url and "id=" in url:
+            match = re.search(r"id=([a-zA-Z0-9_\.]+)", url)
+            if match:
+                return match.group(1)
+        p_match = re.search(r"/p/([a-zA-Z0-9_\-\.]+)", url)
+        if p_match:
+            return p_match.group(1)
+        people_match = re.search(r"/people/[^/]+/([a-zA-Z0-9_\-\.]+)", url)
+        if people_match:
+            return people_match.group(1)
 
     # Remove query string & hash
     clean_url = url.split("?")[0].split("#")[0].rstrip("/")
@@ -79,10 +95,13 @@ def extract_username(url: str, platform: str) -> str:
         match = re.search(r"/(?:c|user)/([a-zA-Z0-9_\-]+)", clean_url)
         if match:
             return match.group(1)
-        return clean_url.split("/")[-1].lstrip("@")
+        parts = [p for p in clean_url.split("/") if p and not p.startswith("http") and not any(p.endswith(d) for d in [".com", ".in", ".org", ".be"])]
+        parts = [p for p in parts if p.lower() not in IGNORED_SUBPATHS]
+        return parts[-1].lstrip("@") if parts else ""
     
     # For instagram, x/twitter, facebook
-    parts = [p for p in clean_url.split("/") if p and not p.startswith("http") and not p.endswith(".com") and not p.endswith(".in") and not p.endswith(".org")]
+    parts = [p for p in clean_url.split("/") if p and not p.startswith("http") and not any(p.endswith(d) for d in [".com", ".in", ".org", ".net"])]
+    parts = [p for p in parts if p.lower() not in IGNORED_SUBPATHS and not (platform == "x" and p.isdigit())]
     if parts:
         return parts[-1].lstrip("@")
     return ""
@@ -143,28 +162,40 @@ async def fetch_facebook_metrics(url: str, username: str, rapidapi_key: str = ""
                     res = await client.get(loc)
             if res.status_code == 200:
                 raw_text = html.unescape(res.text)
-                desc_match = re.search(r'content="([^"]*followers[^"]*)"', raw_text, re.IGNORECASE)
+                desc_match = re.search(r'content="([^"]*(?:followers|likes)[^"]*)"', raw_text, re.IGNORECASE)
                 desc = desc_match.group(1) if desc_match else raw_text
                 
                 f_match = re.search(r'([\d.,]+[kKmMbB]?)\s+followers', desc, re.IGNORECASE)
-                if f_match:
-                    followers = parse_count(f_match.group(1))
-                    if followers > 0:
-                        reach = 0
-                        reach_match = re.search(r'([\d.,]+[kKmMbB]?)\s+talking about this', desc, re.IGNORECASE)
-                        if reach_match:
-                            reach = parse_count(reach_match.group(1))
-                        
-                        verified = "verified" in raw_text.lower() or "blue tick" in raw_text.lower()
-                        return {
-                            "success": True,
-                            "platform": "facebook",
-                            "username": username,
-                            "followers": followers,
-                            "avgViewsLast10": reach if reach > 0 else round(followers * 0.08),
-                            "avgLikesLast10": round(followers * 0.015),
-                            "verified": verified
-                        }
+                followers = parse_count(f_match.group(1)) if f_match else 0
+
+                # Fallback to likes if followers not explicitly found (e.g. classic FB page)
+                if followers == 0:
+                    l_match = re.search(r'([\d.,]+[kKmMbB]?)\s+likes', desc, re.IGNORECASE)
+                    if l_match:
+                        followers = parse_count(l_match.group(1))
+
+                # Check JSON-LD userInteractionCount
+                if followers == 0:
+                    ld_matches = re.findall(r'"userInteractionCount":\s*"?(\d+)"?', raw_text)
+                    if ld_matches:
+                        followers = int(ld_matches[0])
+
+                if followers > 0:
+                    reach = 0
+                    reach_match = re.search(r'([\d.,]+[kKmMbB]?)\s+talking about this', desc, re.IGNORECASE)
+                    if reach_match:
+                        reach = parse_count(reach_match.group(1))
+                    
+                    verified = "verified" in raw_text.lower() or "blue tick" in raw_text.lower()
+                    return {
+                        "success": True,
+                        "platform": "facebook",
+                        "username": username,
+                        "followers": followers,
+                        "avgViewsLast10": reach if reach > 0 else round(followers * 0.08),
+                        "avgLikesLast10": round(followers * 0.015),
+                        "verified": verified
+                    }
     except Exception as ex:
         logger.warning("Facebook crawler extraction notice for %s: %s", username, ex)
 

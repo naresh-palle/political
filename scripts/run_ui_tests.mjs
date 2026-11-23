@@ -221,10 +221,17 @@ async function runTests() {
     // Test specific Raptadu & Sri Sathya Sai leaders: Paritala Sunitha & Thopudurthi Prakash Reddy
     console.log('Verifying Sri Sathya Sai -> Raptadu leaders (Paritala Sunitha & Thopudurthi Prakash Reddy)...');
     const asideSelects = await page.$$('aside select');
+    console.log(`Found ${asideSelects.length} aside select elements`);
     if (asideSelects.length >= 3) {
-      // 1. Select State = AP
-      await asideSelects[0].select('AP');
-      await new Promise(r => setTimeout(r, 1200));
+      // 1. Select State = Andhra Pradesh (AP)
+      const apOptVal = await page.evaluate(() => {
+        const selects = document.querySelectorAll('aside select');
+        const opt = Array.from(selects[0]?.options || []).find(o => o.text.includes('Andhra Pradesh') || o.value === 'AP');
+        return opt ? opt.value : 'AP';
+      });
+      console.log('State option value for AP:', apOptVal);
+      await asideSelects[0].select(apOptVal);
+      await new Promise(r => setTimeout(r, 1500));
 
       // 2. Select District = Sri Sathya Sai
       const distValue = await page.evaluate(() => {
@@ -233,10 +240,11 @@ async function runTests() {
         const opt = Array.from(distSel?.options || []).find(o => o.text.includes('Sri Sathya Sai'));
         return opt ? opt.value : '';
       });
+      console.log('District option value for Sri Sathya Sai:', distValue);
       if (distValue) {
         const currentAside = await page.$$('aside select');
         if (currentAside[1]) await currentAside[1].select(distValue);
-        await new Promise(r => setTimeout(r, 1200));
+        await new Promise(r => setTimeout(r, 1500));
       }
 
       // 3. Select Constituency = Raptadu
@@ -246,10 +254,19 @@ async function runTests() {
         const opt = Array.from(acSel?.options || []).find(o => o.text.includes('Raptadu'));
         return opt ? opt.value : '';
       });
+      console.log('Constituency option value for Raptadu:', acValue);
       if (acValue) {
         const currentAside = await page.$$('aside select');
         if (currentAside[2]) await currentAside[2].select(acValue);
-        await new Promise(r => setTimeout(r, 2000));
+        // Wait up to 12s for Render network response & React render
+        try {
+          await page.waitForFunction(
+            () => document.body.innerText.includes('Paritala Sunitha') || document.body.innerText.includes('Prakash Reddy'),
+            { timeout: 12000 }
+          );
+        } catch {
+          await new Promise(r => setTimeout(r, 4000));
+        }
       }
     }
 
