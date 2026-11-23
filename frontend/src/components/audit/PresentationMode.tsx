@@ -134,13 +134,13 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
                     <div className="text-[11px] text-[#8A8E9B]">{cand.party}</div>
                   </div>
                   {client && (
-                    <span className="px-2 py-0.5 bg-[#D4A24C] text-[#0B1A2C] text-[10px] font-bold rounded tracking-wide">
+                    <span className="px-2 py-0.5 bg-[#D4A24C] text-[#080E18] text-[10px] font-bold rounded tracking-wide">
                       CLIENT
                     </span>
                   )}
                 </div>
 
-                <div className="col-span-7 h-2.5 bg-[#142B45] rounded-full overflow-hidden">
+                <div className="col-span-7 h-2.5 bg-[#0C1524] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-[width] duration-700 ${
                       client ? "bg-gradient-to-r from-[#E07A1F] to-[#D4A24C]" : "bg-[#3A5170]"
@@ -193,7 +193,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
                     {formatLakhs(item.reachGap, true)}
                   </div>
                 </div>
-                <div className="h-3 bg-[#142B45] rounded-full overflow-hidden">
+                <div className="h-3 bg-[#0C1524] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-[width] duration-700 ${
                       idx === 0 ? "bg-gradient-to-r from-[#E07A1F] to-[#D4A24C]" : "bg-[#3A5170]"
@@ -225,10 +225,10 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
           {audit.recommendations.slice(0, 4).map((rec) => (
             <div
               key={rec.id}
-              className="p-6 rounded-xl bg-[#0F2338]/70 border border-[#22405E] hover:border-[#D4A24C]/60 transition-colors space-y-3"
+              className="p-6 rounded-xl bg-[#080E18]/70 border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60 transition-colors space-y-3"
             >
               <div className="flex items-center gap-2">
-                <span className="font-mono-data text-xs font-bold px-2 py-0.5 bg-[#D4A24C] text-[#0B1A2C] rounded">
+                <span className="font-mono-data text-xs font-bold px-2 py-0.5 bg-[#D4A24C] text-[#080E18] rounded">
                   {rec.num}
                 </span>
                 <span className="text-[10.5px] font-bold text-[#E9C77A] uppercase tracking-[0.14em]">
@@ -307,7 +307,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       className="fixed inset-0 z-50 hero-dark flex flex-col select-none overflow-hidden"
     >
       {/* Top progress rail */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#142B45]">
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#0C1524]">
         <div
           className="h-full bg-gradient-to-r from-[#E07A1F] via-[#D4A24C] to-[#10B981] transition-all duration-500"
           style={{ width: `${progress}%` }}
@@ -338,8 +338,8 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
             onClick={() => setNotesOpen((v) => !v)}
             className={`p-2 rounded-lg border transition-colors ${
               notesOpen
-                ? "bg-[#D4A24C] border-[#D4A24C] text-[#0B1A2C]"
-                : "bg-[#0F2338] border-[#22405E] text-[#D4A24C] hover:border-[#D4A24C]/60"
+                ? "bg-[#D4A24C] border-[#D4A24C] text-[#080E18]"
+                : "bg-[#080E18] border-[rgba(201,148,54,0.25)] text-[#D4A24C] hover:border-[#D4A24C]/60"
             }`}
             title="Toggle speaker notes (N)"
           >
@@ -348,7 +348,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
           <button
             data-testid="fullscreen-toggle"
             onClick={toggleFullscreen}
-            className="p-2 bg-[#0F2338] border border-[#22405E] rounded-lg text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors"
+            className="p-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-[#D4A24C] hover:border-[#D4A24C]/60 transition-colors"
             title="Toggle fullscreen (F)"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -356,7 +356,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
           <button
             data-testid="presentation-exit"
             onClick={onExit}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C]/60 rounded-lg text-xs font-semibold text-[#F5EFE0] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60 rounded-lg text-xs font-semibold text-[#F5EFE0] transition-colors"
           >
             <X className="w-3.5 h-3.5" />
             Exit · Esc
@@ -388,7 +388,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
         {notesOpen && (
           <aside
             data-testid="speaker-notes-panel"
-            className={`hidden lg:flex flex-col w-[300px] shrink-0 rounded-xl border border-[#D4A24C]/25 bg-[#0F2338]/70 backdrop-blur p-4 animate-fadeIn`}
+            className={`hidden lg:flex flex-col w-[300px] shrink-0 rounded-xl border border-[#D4A24C]/25 bg-[#080E18]/70 backdrop-blur p-4 animate-fadeIn`}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
@@ -412,8 +412,8 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
                 </li>
               ))}
             </ul>
-            <div className="mt-auto pt-4 border-t border-[#22405E]/60 flex items-center justify-between text-[10px] text-[#8A8E9B]">
-              <span>Press <kbd className="px-1 py-0.5 bg-[#0B1A2C] border border-[#22405E] rounded text-[9px] gold-text">N</kbd> to toggle</span>
+            <div className="mt-auto pt-4 border-t border-[rgba(201,148,54,0.25)]/60 flex items-center justify-between text-[10px] text-[#8A8E9B]">
+              <span>Press <kbd className="px-1 py-0.5 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded text-[9px] gold-text">N</kbd> to toggle</span>
               <span>Only you see this</span>
             </div>
           </aside>
@@ -421,7 +421,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
       </div>
 
       {/* Bottom stepper */}
-      <div className="flex items-center justify-between px-6 sm:px-10 pb-6 pt-4 border-t border-[#22405E]/60">
+      <div className="flex items-center justify-between px-6 sm:px-10 pb-6 pt-4 border-t border-[rgba(201,148,54,0.25)]/60">
         <div className="text-[11px] text-[#B9AF95] tabular">
           Slide <span className="cream-text font-semibold">{String(slideIndex + 1).padStart(2, "0")}</span> / {String(slides.length).padStart(2, "0")}
         </div>
@@ -445,7 +445,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
             data-testid="slide-prev"
             disabled={slideIndex === 0}
             onClick={prevSlide}
-            className="p-2 bg-[#0F2338] border border-[#22405E] rounded-lg text-[#D4A24C] disabled:opacity-30 hover:border-[#D4A24C]/60 transition-colors"
+            className="p-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-[#D4A24C] disabled:opacity-30 hover:border-[#D4A24C]/60 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -453,7 +453,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ audit, onExi
             data-testid="slide-next"
             disabled={slideIndex === slides.length - 1}
             onClick={nextSlide}
-            className="p-2 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] disabled:opacity-30 rounded-lg text-[#0B1A2C] transition-colors"
+            className="p-2 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] disabled:opacity-30 rounded-lg text-[#080E18] transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

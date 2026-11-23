@@ -34,7 +34,7 @@ export const AuditHeader: React.FC<AuditHeaderProps> = ({
             <span className="text-[#112233]">Constituency Strength Audit</span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] font-normal text-[#0B1A2C] tracking-[-0.02em] leading-[0.98]">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] font-normal text-[#080E18] tracking-[-0.02em] leading-[0.98]">
             {audit.assembly.name} <span className="italic" style={{ color: "#B45309" }}>Assembly</span> Constituency
           </h1>
 
@@ -83,7 +83,7 @@ export const AuditHeader: React.FC<AuditHeaderProps> = ({
             <button
               onClick={onOpenExportModal}
               data-testid="export-report-btn"
-              className="inline-flex items-center px-4 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] hover:brightness-110 transition-all cursor-pointer shadow-[0_6px_20px_-6px_rgba(224,122,31,0.5)]"
+              className="inline-flex items-center px-4 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#080E18] hover:brightness-110 transition-all cursor-pointer shadow-[0_6px_20px_-6px_rgba(224,122,31,0.5)]"
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />
               Export Report

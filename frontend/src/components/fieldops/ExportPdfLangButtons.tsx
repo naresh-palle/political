@@ -20,7 +20,7 @@ export const ExportPdfLangButtons: React.FC<ExportPdfLangButtonsProps> = ({
       type="button"
       onClick={() => onExport("en")}
       disabled={exporting !== null}
-      className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
+      className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
     >
       {exporting === "en" ? "Exporting…" : "English"}
     </button>
@@ -28,7 +28,7 @@ export const ExportPdfLangButtons: React.FC<ExportPdfLangButtonsProps> = ({
       type="button"
       onClick={() => onExport("te")}
       disabled={exporting !== null}
-      className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
+      className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
     >
       {exporting === "te" ? "Exporting…" : "Telugu"}
     </button>

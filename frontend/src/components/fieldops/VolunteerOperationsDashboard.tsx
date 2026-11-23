@@ -279,7 +279,7 @@ export const resolveDeptValue = (deptStr?: string) => {
 };
 
 const FORM_CONTROL =
-  "w-full h-11 min-w-0 bg-[#0B1A2C] border border-[#22405E] rounded-lg px-3 text-xs text-[#F5EFE0] outline-none focus:border-[#D4A24C] box-border";
+  "w-full h-11 min-w-0 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg px-3 text-xs text-[#F5EFE0] outline-none focus:border-[#D4A24C] box-border";
 
 const PhoneField: React.FC<{
   value: string;
@@ -288,7 +288,7 @@ const PhoneField: React.FC<{
   placeholder?: string;
 }> = ({ value, onChange, required, placeholder = "10 Digits..." }) => (
   <div className="flex h-11 min-w-0 w-full">
-    <span className="inline-flex items-center justify-center px-3 h-11 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-lg select-none shrink-0">
+    <span className="inline-flex items-center justify-center px-3 h-11 bg-[#0C1524] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[rgba(201,148,54,0.25)] rounded-l-lg select-none shrink-0">
       +91
     </span>
     <input
@@ -298,7 +298,7 @@ const PhoneField: React.FC<{
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
-      className="w-full h-11 min-w-0 bg-[#0B1A2C] border border-[#22405E] rounded-r-lg px-3 text-xs text-[#F5EFE0] outline-none focus:border-[#D4A24C] box-border font-mono"
+      className="w-full h-11 min-w-0 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-r-lg px-3 text-xs text-[#F5EFE0] outline-none focus:border-[#D4A24C] box-border font-mono"
     />
   </div>
 );
@@ -651,15 +651,15 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
     <div className="w-full max-w-7xl mx-auto py-5 sm:py-7 px-3 sm:px-4 lg:px-6 space-y-5 text-[#F5EFE0] overflow-x-hidden">
       <div className="space-y-5">
           {/* Volunteer home: identity strip with name and assignment details */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-[#050B12]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl space-y-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
               <div className="flex items-start sm:items-center gap-4">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#050B12]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                       FIELD VOLUNTEER
                     </span>
-                    <span className="text-xs font-semibold text-[#D4A24C] bg-[#142B45]/70 px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
+                    <span className="text-xs font-semibold text-[#D4A24C] bg-[#0C1524]/70 px-2.5 py-0.5 rounded-full border border-[#D4A24C]/25">
                       {currentUser.assignedConstituency || "Banaganapalle AC (AC-140) · Nandyala PC"}
                     </span>
                   </div>
@@ -678,7 +678,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               <button
                 onClick={() => setIsAddModalOpen(true)}
                 data-testid="add-complaint-btn"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start lg:self-center"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#050B12] font-bold text-xs sm:text-sm hover:brightness-110 transition-all shadow-[0_6px_25px_-5px_rgba(224,122,31,0.6)] cursor-pointer self-start lg:self-center"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>Add Complaint / Requirement</span>
@@ -686,14 +686,14 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             </div>
 
             {/* Assigned Details integrated directly at the top */}
-            <div className="pt-3 border-t border-[#22405E]/60 flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
+            <div className="pt-3 border-t border-[rgba(201,148,54,0.25)]/60 flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#050B12]/60 border border-[rgba(201,148,54,0.25)] text-[#D8CFB8]">
                 <Building2 className="w-3.5 h-3.5 text-[#D4A24C]" />
                 <span>Mandal / Town:</span>
                 <strong className="text-[#F5EFE0]">{currentUser.assignedMandalName || "Banaganapalle Town"}</strong>
               </div>
 
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#050B12]/60 border border-[rgba(201,148,54,0.25)] text-[#D8CFB8]">
                 <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
                 <span>Assigned Wards / Villages:</span>
                 <strong className="text-[#F5EFE0]">
@@ -701,7 +701,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 </strong>
               </div>
 
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#22405E] text-[#D8CFB8]">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#050B12]/60 border border-[rgba(201,148,54,0.25)] text-[#D8CFB8]">
                 <User className="w-3.5 h-3.5 text-[#D4A24C]" />
                 <span>Supervising Manager:</span>
                 <strong className="text-[#D4A24C]">{currentUser.directorName?.replace("Director", "Manager") || "Manager1"}</strong>
@@ -736,13 +736,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="relative bg-[#0B1A2C] border border-[#D4A24C]/50 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] text-[#F5EFE0] overflow-hidden"
+            className="relative bg-[#080E18] border border-[#D4A24C]/50 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-[0_25px_80px_rgba(0,0,0,0.95)] text-[#F5EFE0] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Sticky Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-[#22405E] bg-[#0F2338] flex items-center justify-between shrink-0">
+            <div className="p-4 sm:p-5 border-b border-[rgba(201,148,54,0.25)] bg-[#080E18] flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C] shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[#0C1524] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C] shrink-0">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
@@ -757,7 +757,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="w-9 h-9 rounded-full bg-[#142B45] hover:bg-rose-950/80 border border-[#22405E] hover:border-rose-500 text-[#D8CFB8] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0 ml-2"
+                className="w-9 h-9 rounded-full bg-[#0C1524] hover:bg-rose-950/80 border border-[rgba(201,148,54,0.25)] hover:border-rose-500 text-[#D8CFB8] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-md shrink-0 ml-2"
                 title="Close (Esc)"
               >
                 <X className="w-5 h-5" />
@@ -768,7 +768,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
             <form onSubmit={handleCreateComplaint} className="flex-1 flex flex-col min-h-0 overflow-hidden">
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
                 {/* Immutability Notice */}
-                <div className="p-3 rounded-xl bg-[#071322] border border-[#D4A24C]/30 flex items-center gap-2.5 text-[11.5px] text-[#D8CFB8]">
+                <div className="p-3 rounded-xl bg-[#050B12] border border-[#D4A24C]/30 flex items-center gap-2.5 text-[11.5px] text-[#D8CFB8]">
                   <Lock className="w-4 h-4 text-[#D4A24C] shrink-0" />
                   <span>
                     <strong>Important:</strong> Once submitted, the original complaint details become permanently locked to maintain audit integrity.
@@ -812,7 +812,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 </div>
 
                 {/* 2. Department Selection (PGRS 17 Departments + Other) */}
-                <div className="space-y-3 p-4 rounded-xl bg-[#071322]/80 border border-[#22405E]">
+                <div className="space-y-3 p-4 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)]">
                   <div>
                     <label className="block text-[11px] uppercase tracking-wider text-[#D4A24C] font-semibold mb-1">
                       Department / శాఖ (PGRS 17 Departments) *
@@ -929,8 +929,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 </div>
 
                 {/* 5, 6, 7 & 8. Location */}
-                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
+                <div className="p-4 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5" />
                       Location
@@ -1004,13 +1004,13 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     placeholder="Enter issue details in English or Telugu (తెలుగులో వివరాలు నమోదు చేయండి)..."
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full bg-[#071322] border border-[#22405E] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed"
+                    className="w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] focus:border-[#D4A24C] focus:outline-none leading-relaxed"
                   />
                 </div>
 
                 {/* 9 & 10. Personal Details (Citizen / Cadre / Leader) */}
-                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
+                <div className="p-4 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" />
                       Complainant Personal Details / ఫిర్యాదుదారు వివరాలు
@@ -1037,8 +1037,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                           onClick={() => setReporterType(item.id)}
                           className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                             reporterType === item.id
-                              ? "bg-[#D4A24C] text-[#071322] border-[#D4A24C] font-bold shadow-sm"
-                              : "bg-[#0B1A2C] text-[#B9AF95] border-[#22405E] hover:border-[#D4A24C]/40"
+                              ? "bg-[#D4A24C] text-[#050B12] border-[#D4A24C] font-bold shadow-sm"
+                              : "bg-[#080E18] text-[#B9AF95] border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/40"
                           }`}
                         >
                           {item.label}
@@ -1137,9 +1137,9 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                         onChange={(e) => setCitizenGender(e.target.value)}
                         className={`${FORM_CONTROL} cursor-pointer`}
                       >
-                        <option value="Male" className="bg-[#0B1A2C] text-[#F5EFE0]">Male</option>
-                        <option value="Female" className="bg-[#0B1A2C] text-[#F5EFE0]">Female</option>
-                        <option value="Other" className="bg-[#0B1A2C] text-[#F5EFE0]">Other</option>
+                        <option value="Male" className="bg-[#080E18] text-[#F5EFE0]">Male</option>
+                        <option value="Female" className="bg-[#080E18] text-[#F5EFE0]">Female</option>
+                        <option value="Other" className="bg-[#080E18] text-[#F5EFE0]">Other</option>
                       </select>
                     </div>
                     <div className="min-w-0">
@@ -1159,8 +1159,8 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 </div>
 
                 {/* 11. Multi-Proof (Photos & Documents) Upload (Not Mandatory) */}
-                <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#22405E] pb-2">
+                <div className="p-4 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <Camera className="w-3.5 h-3.5" />
                       Proof Photos & Documents (Not Mandatory)
@@ -1173,7 +1173,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center justify-center px-4 py-2.5 bg-[#142B45] hover:bg-[#1E3A5A] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                      className="inline-flex items-center justify-center px-4 py-2.5 bg-[#0C1524] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold rounded-xl transition-colors cursor-pointer"
                     >
                       <Upload className="w-4 h-4 mr-1.5" />
                       Upload Photos / Document Files
@@ -1194,7 +1194,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                       {proofFiles.map((proof, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 text-xs text-[#F5EFE0]"
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0C1524] border border-[#D4A24C]/40 text-xs text-[#F5EFE0]"
                         >
                           {proof.type === "image" ? (
                             <img src={proof.url} alt="Proof" className="w-5 h-5 rounded object-cover" />
@@ -1217,7 +1217,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
               </div>
 
               {/* Sticky Modal Footer with Cancel & Submit Buttons */}
-              <div className="p-3.5 sm:p-4 border-t border-[#22405E] bg-[#071322] flex items-center justify-between gap-3 shrink-0">
+              <div className="p-3.5 sm:p-4 border-t border-[rgba(201,148,54,0.25)] bg-[#050B12] flex items-center justify-between gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -1228,7 +1228,7 @@ export const VolunteerOperationsDashboard: React.FC<VolunteerDashboardProps> = (
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-xs sm:text-sm font-bold hover:brightness-110 flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all"
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#050B12] text-xs sm:text-sm font-bold hover:brightness-110 flex items-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all"
                 >
                   <Send className="w-4 h-4" />
                   {submitting ? "Submitting & Locking..." : "Submit Complaint (Locked)"}

@@ -16,8 +16,8 @@ type ContactExportRow = {
   notes?: string;
 };
 
-const NAVY = "#071322";
-const NAVY_MID = "#0B1A2C";
+const NAVY = "#050B12";
+const NAVY_MID = "#080E18";
 const GOLD = "#D4A24C";
 const CREAM = "#F5EFE0";
 const ROW_ALT = "#F3E6C8";

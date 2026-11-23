@@ -30,7 +30,7 @@ const CHIP =
   "text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded border border-[#D4A24C]/35 bg-[#0B131E] text-[#D4A24C]";
 const SECTION = "p-4 rounded-xl bg-[#0E1724] border border-[#223348] space-y-2";
 const BTN =
-  "h-9 px-3 rounded-lg bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] border border-[#223348] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer";
+  "h-9 px-3 rounded-lg bg-[#0C1524] hover:bg-[#1C2C42] text-[#D4A24C] border border-[#223348] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer";
 
 const DetailField: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="min-w-0">
@@ -570,14 +570,14 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
       {/* Submodal: Submit Work Update & Upload Proof */}
       {isUpdateModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md animate-fadeIn"
+          className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#050B12]/85 backdrop-blur-md animate-fadeIn"
           onClick={() => setIsUpdateModalOpen(false)}
         >
           <div
             className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#071322]/60">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#050B12]/60">
               <h3 className="min-w-0 font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
                 <Camera className="w-4 h-4 text-[#D4A24C] shrink-0" />
                 <span className="truncate">Update Work Status & Ground Proof</span>
@@ -585,7 +585,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsUpdateModalOpen(false)}
-                className="w-8 h-8 shrink-0 rounded-xl bg-[#131E2D] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
+                className="w-8 h-8 shrink-0 rounded-xl bg-[#0C1524] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -649,7 +649,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     <div className="flex flex-wrap items-center gap-2">
                       <label
                         htmlFor="issue-detail-file-input"
-                        className="inline-flex items-center gap-2 h-10 px-3 rounded-xl bg-[#142B45] hover:bg-[#1C3B5E] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all"
+                        className="inline-flex items-center gap-2 h-10 px-3 rounded-xl bg-[#0C1524] hover:bg-[#1C3B5E] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all"
                       >
                         <Upload className="w-3.5 h-3.5" />
                         <span>Select Photos / PDFs</span>
@@ -672,7 +672,7 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                     {updateProofFiles.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 pt-1">
                         {updateProofFiles.map((file, idx) => (
-                          <div key={idx} className="relative group rounded-lg overflow-hidden border border-[#223348] bg-[#071322] aspect-square flex flex-col items-center justify-center p-1">
+                          <div key={idx} className="relative group rounded-lg overflow-hidden border border-[#223348] bg-[#050B12] aspect-square flex flex-col items-center justify-center p-1">
                             {file.type === "pdf" ? (
                               <div className="flex flex-col items-center justify-center text-center p-1">
                                 <FileText className="w-6 h-6 text-rose-400 mb-0.5" />
@@ -696,18 +696,18 @@ export const IssueDetailView: React.FC<IssueDetailViewProps> = ({
                 </div>
               </div>
 
-              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#071322]/40">
+              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#050B12]/40">
                 <button
                   type="button"
                   onClick={() => setIsUpdateModalOpen(false)}
-                  className="h-10 px-4 rounded-xl bg-[#131E2D] text-[#CBD5E1] hover:text-white cursor-pointer"
+                  className="h-10 px-4 rounded-xl bg-[#0C1524] text-[#CBD5E1] hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingUpdate}
-                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#050B12] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {submittingUpdate ? "Saving..." : "Submit Update"}

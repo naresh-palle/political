@@ -8,9 +8,9 @@ import {
   MessageCircle
 } from "lucide-react";
 
-const PANEL = "bg-[#0F2338] border border-[#D4A24C]/30 rounded-xl";
+const PANEL = "bg-[#080E18] border border-[#D4A24C]/30 rounded-xl";
 const LABEL = "text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]";
-const INPUT = "w-full px-3 py-2 bg-[#071322] border border-[#22405E] rounded-lg text-xs text-[#F5EFE0] placeholder:text-[#8E9CAE]";
+const INPUT = "w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs text-[#F5EFE0] placeholder:text-[#8E9CAE]";
 
 export const VolunteerMonitoring: React.FC = () => {
   const [squads, setSquads] = useState<VolunteerSquad[]>(MOCK_VOLUNTEER_SQUADS);
@@ -73,7 +73,7 @@ export const VolunteerMonitoring: React.FC = () => {
 
         <button
           onClick={() => setIsNewTaskModalOpen(true)}
-          className="inline-flex items-center px-4 py-2.5 bg-[#D4A24C] text-[#071322] text-xs font-bold rounded-lg hover:brightness-110 transition-all cursor-pointer shrink-0"
+          className="inline-flex items-center px-4 py-2.5 bg-[#D4A24C] text-[#050B12] text-xs font-bold rounded-lg hover:brightness-110 transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           Dispatch Campaign Task
@@ -157,7 +157,7 @@ export const VolunteerMonitoring: React.FC = () => {
                   Zone: <span className="font-medium text-[#F5EFE0]">{sq.wardZone}</span> · Lead: <span className="font-medium text-[#F5EFE0]">{sq.leaderName}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-2 text-xs border-t border-[#22405E]">
+                <div className="grid grid-cols-2 gap-2 pt-2 text-xs border-t border-[rgba(201,148,54,0.25)]">
                   <div>
                     <span className="text-[10px] uppercase text-[#8E9CAE] block">Members</span>
                     <span className="font-mono-data font-bold text-[#F5EFE0]">{sq.activeMembersCount} Cadres</span>
@@ -169,14 +169,14 @@ export const VolunteerMonitoring: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-1 pt-2 border-t border-[#22405E]">
+              <div className="space-y-1 pt-2 border-t border-[rgba(201,148,54,0.25)]">
                 <div className="flex justify-between text-[11px] text-[#CBD5E1]">
                   <span>Voter Reach Progress</span>
                   <span className="font-mono-data font-semibold text-[#D4A24C]">
                     {Math.round((sq.reachedHouseholds / sq.targetVoterHouseholds) * 100)}%
                   </span>
                 </div>
-                <div className="w-full h-2 bg-[#071322] rounded-full overflow-hidden border border-[#22405E]">
+                <div className="w-full h-2 bg-[#050B12] rounded-full overflow-hidden border border-[rgba(201,148,54,0.25)]">
                   <div
                     className="h-full bg-[#D4A24C] rounded-full"
                     style={{ width: `${(sq.reachedHouseholds / sq.targetVoterHouseholds) * 100}%` }}
@@ -188,7 +188,7 @@ export const VolunteerMonitoring: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-[#0F2338] border border-rose-400/40 rounded-xl p-6 space-y-4">
+      <div className="bg-[#080E18] border border-rose-400/40 rounded-xl p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-rose-400/20 pb-3">
           <div className="flex items-center space-x-2 text-rose-200 font-bold text-xs uppercase tracking-wider">
             <ShieldAlert className="w-4 h-4 text-rose-300 shrink-0" />
@@ -199,7 +199,7 @@ export const VolunteerMonitoring: React.FC = () => {
           </span>
         </div>
 
-        <div className="bg-[#071322] border border-rose-400/25 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-[#050B12] border border-rose-400/25 rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] uppercase font-bold bg-rose-600 text-white px-2 py-0.5 rounded">
@@ -217,7 +217,7 @@ export const VolunteerMonitoring: React.FC = () => {
 
           <button
             onClick={() => handleShareOnWhatsApp("FACT CHECK: Claims about water canal diversion are completely false. Official government work order confirms 100% water allocation to Kadapa AC. Verified details: https://candidatea.in/water-factcheck", "fact-1")}
-            className="inline-flex items-center px-4 py-2 bg-[#D4A24C] text-[#071322] text-xs font-bold rounded-lg hover:brightness-110 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            className="inline-flex items-center px-4 py-2 bg-[#D4A24C] text-[#050B12] text-xs font-bold rounded-lg hover:brightness-110 transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
             <MessageCircle className="w-4 h-4 mr-1.5" />
             <span>{copiedTask === "fact-1" ? "Opening WhatsApp..." : "1-Click Squad Counter Blast"}</span>
@@ -226,7 +226,7 @@ export const VolunteerMonitoring: React.FC = () => {
       </div>
 
       <div className={`${PANEL} p-6 space-y-4`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#22405E] pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[rgba(201,148,54,0.25)] pb-3">
           <div>
             <h3 className="text-sm font-semibold text-[#F5EFE0]">
               Active Campaign Directives
@@ -240,10 +240,10 @@ export const VolunteerMonitoring: React.FC = () => {
           {tasks.map((tsk) => {
             const percent = Math.min(Math.round((tsk.completedCount / tsk.targetCount) * 100), 100);
             return (
-              <div key={tsk.id} className="p-4 bg-[#071322] border border-[#22405E] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div key={tsk.id} className="p-4 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-[#D4A24C] text-[#071322] rounded">
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 bg-[#D4A24C] text-[#050B12] rounded">
                       {tsk.type}
                     </span>
                     <span className="text-xs text-[#CBD5E1]">Assigned to: {tsk.assignedSquad}</span>
@@ -259,14 +259,14 @@ export const VolunteerMonitoring: React.FC = () => {
                     <span className="text-xs font-mono-data font-bold text-[#F5EFE0]">
                       {tsk.completedCount} / {tsk.targetCount}
                     </span>
-                    <div className="w-full h-2 bg-[#0F2338] rounded-full overflow-hidden mt-1 border border-[#22405E]">
+                    <div className="w-full h-2 bg-[#080E18] rounded-full overflow-hidden mt-1 border border-[rgba(201,148,54,0.25)]">
                       <div className="h-full bg-[#D4A24C] rounded-full" style={{ width: `${percent}%` }} />
                     </div>
                   </div>
 
                   <button
                     onClick={() => handleShareOnWhatsApp(`Campaign Action Directive: ${tsk.title}. Please broadcast to your ward groups immediately!`, tsk.id)}
-                    className="p-2 bg-[#0F2338] border border-[#D4A24C]/40 rounded-lg hover:border-[#D4A24C] text-[#D4A24C] cursor-pointer shrink-0"
+                    className="p-2 bg-[#080E18] border border-[#D4A24C]/40 rounded-lg hover:border-[#D4A24C] text-[#D4A24C] cursor-pointer shrink-0"
                     title="Share task to WhatsApp"
                   >
                     <Share2 className="w-3.5 h-3.5" />
@@ -280,8 +280,8 @@ export const VolunteerMonitoring: React.FC = () => {
 
       {isNewTaskModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-[#0F2338] border border-[#D4A24C]/40 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl text-[#F5EFE0]">
-            <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+          <div className="bg-[#080E18] border border-[#D4A24C]/40 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl text-[#F5EFE0]">
+            <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
               <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
                 Dispatch Volunteer Directive
               </h3>
@@ -340,7 +340,7 @@ export const VolunteerMonitoring: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-3 border-t border-[#22405E]">
+              <div className="flex justify-end space-x-2 pt-3 border-t border-[rgba(201,148,54,0.25)]">
                 <button
                   type="button"
                   onClick={() => setIsNewTaskModalOpen(false)}
@@ -350,7 +350,7 @@ export const VolunteerMonitoring: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#D4A24C] text-[#071322] text-xs font-bold rounded-lg hover:brightness-110"
+                  className="px-4 py-2 bg-[#D4A24C] text-[#050B12] text-xs font-bold rounded-lg hover:brightness-110"
                 >
                   Dispatch Now
                 </button>

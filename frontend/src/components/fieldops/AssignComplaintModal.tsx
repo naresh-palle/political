@@ -294,7 +294,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
               window.location.hash = returnHash;
               onClose();
             }}
-            className="w-8 h-8 rounded-lg bg-[#131E2D] hover:bg-[#1C2C42] border border-[#223348] text-[#8E9CAE] hover:text-white flex items-center justify-center cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-lg bg-[#0C1524] hover:bg-[#1C2C42] border border-[#223348] text-[#8E9CAE] hover:text-white flex items-center justify-center cursor-pointer shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -392,7 +392,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
                     onClick={() => setSelectedContactId(contact.id)}
                     className={`w-full text-left px-3 py-2 rounded-lg border cursor-pointer ${
                       isSelected
-                        ? "bg-[#131E2D] border-[#D4A24C]/50"
+                        ? "bg-[#0C1524] border-[#D4A24C]/50"
                         : "bg-[#0B131E] border-[#223348] hover:border-[#D4A24C]/30"
                     }`}
                   >
@@ -418,7 +418,7 @@ export const AssignComplaintModal: React.FC<AssignComplaintModalProps> = ({
             type="button"
             disabled={isSending || filteredContacts.length === 0}
             onClick={handleAssignAndNotify}
-            className="w-full h-11 px-4 rounded-xl bg-[#131E2D] hover:bg-[#1C2C42] text-[#D4A24C] font-semibold text-sm border border-[#D4A24C]/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full h-11 px-4 rounded-xl bg-[#0C1524] hover:bg-[#1C2C42] text-[#D4A24C] font-semibold text-sm border border-[#D4A24C]/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isSending ? (
               <>

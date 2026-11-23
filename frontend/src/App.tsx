@@ -683,19 +683,19 @@ function AppCanvas({
 
   return (
     <div
-      className="min-h-screen flex flex-col font-sans transition-all duration-500 relative overflow-x-hidden bg-[#071322] text-[#F8FAFC] selection:bg-[#D4A24C] selection:text-[#071322]"
+      className="min-h-screen flex flex-col font-sans transition-all duration-500 relative overflow-x-hidden bg-[#050B12] text-[#F8FAFC] selection:bg-[#C99436] selection:text-[#050B12]"
       style={{
         backgroundImage: `url(${bgImg})`,
         backgroundSize: "cover",
         backgroundPosition: "center center",
         backgroundRepeat: "no-repeat",
         backgroundAttachment: "fixed",
-        backgroundColor: "#071322",
+        backgroundColor: "#050B12",
         color: "#F8FAFC"
       }}
     >
       <div
-        className="fixed inset-0 pointer-events-none z-0 bg-[#060D17]/92 backdrop-blur-md"
+        className="fixed inset-0 pointer-events-none z-0 bg-[#050B12]/95 backdrop-blur-md"
         aria-hidden="true"
       />
       <div className="relative z-10 flex-1 flex flex-col">

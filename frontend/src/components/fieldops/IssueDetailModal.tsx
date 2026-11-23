@@ -224,7 +224,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         <div className="p-4 sm:p-5 border-b border-[#223348] bg-[#0E1724] flex items-start justify-between gap-3 shrink-0">
           <div className="space-y-1.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/30">
+              <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
                 {formatTicketDisplay(issue)}
               </span>
               <span
@@ -283,7 +283,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-xl bg-[#131E2D] hover:bg-rose-950/80 border border-[#223348] hover:border-rose-500 text-[#CBD5E1] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+              className="w-8 h-8 rounded-xl bg-[#0C1524] hover:bg-rose-950/80 border border-[#223348] hover:border-rose-500 text-[#CBD5E1] hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
@@ -362,7 +362,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   </div>
                   <a
                     href={`tel:${issue.reporterPhone}`}
-                    className="px-3 py-1.5 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/30 text-[#D4A24C] font-mono text-xs flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#D4A24C]/30 text-[#D4A24C] font-mono text-xs flex items-center gap-1.5"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     {issue.reporterPhone}
@@ -436,7 +436,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 {canUpdateProof && (
                   <button
                     onClick={() => setIsUpdateModalOpen(true)}
-                    className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer mt-1"
+                    className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#050B12] font-bold text-xs hover:brightness-110 transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer mt-1"
                   >
                     <Camera className="w-4 h-4" />
                     Update Status & Proof
@@ -558,14 +558,14 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       {/* Submodal: Submit Work Update & Upload Proof */}
       {isUpdateModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md animate-fadeIn"
+          className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#050B12]/85 backdrop-blur-md animate-fadeIn"
           onClick={() => setIsUpdateModalOpen(false)}
         >
           <div
             className="relative w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden bg-[#0E1724] border border-[#D4A24C]/60 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] text-[#F5EFE0] animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#071322]/60">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-[#223348] bg-[#050B12]/60">
               <h3 className="min-w-0 font-display text-base font-semibold text-[#F5EFE0] flex items-center gap-2">
                 <Camera className="w-4 h-4 text-[#D4A24C] shrink-0" />
                 <span className="truncate">Update Status & Proof</span>
@@ -573,7 +573,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() => setIsUpdateModalOpen(false)}
-                className="w-8 h-8 shrink-0 rounded-xl bg-[#131E2D] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
+                className="w-8 h-8 shrink-0 rounded-xl bg-[#0C1524] hover:bg-rose-950 text-[#CBD5E1] hover:text-white flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -643,18 +643,18 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 </div>
               </div>
 
-              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#071322]/40">
+              <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-[#223348] bg-[#050B12]/40">
                 <button
                   type="button"
                   onClick={() => setIsUpdateModalOpen(false)}
-                  className="h-10 px-4 rounded-xl bg-[#131E2D] text-[#CBD5E1] hover:text-white cursor-pointer"
+                  className="h-10 px-4 rounded-xl bg-[#0C1524] text-[#CBD5E1] hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingUpdate}
-                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#050B12] font-bold hover:brightness-110 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {submittingUpdate ? "Saving..." : "Submit Update"}

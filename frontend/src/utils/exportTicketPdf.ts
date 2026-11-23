@@ -240,10 +240,10 @@ export async function exportTicketPdf(
     `font-family:${fontFamily}`,
     "padding:0",
     "box-sizing:border-box",
-    "border:1px solid #071322"
+    "border:1px solid #050B12"
   ].join(";");
   host.innerHTML = `
-    <div style="background:#071322;color:#D4A24C;padding:6px 8px;border-bottom:1px solid #071322;">
+    <div style="background:#050B12;color:#D4A24C;padding:6px 8px;border-bottom:1px solid #050B12;">
       <div style="font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;line-height:1.2;">${escapeHtml(copy.brand)}</div>
       <div style="font-size:13px;font-weight:700;color:#F5EFE0;margin-top:1px;line-height:1.25;">${escapeHtml(ticketId)}</div>
       <div style="font-size:9px;color:#F5EFE0;margin-top:1px;line-height:1.2;">${escapeHtml(copy.heading)}</div>
@@ -257,11 +257,11 @@ export async function exportTicketPdf(
       [data-ticket-pdf] table { width:100%; border-collapse:collapse; font-size:9.5px; line-height:1.3; }
       [data-ticket-pdf] th, [data-ticket-pdf] td {
         padding: 3px 6px;
-        border: 1px solid #071322;
+        border: 1px solid #050B12;
         vertical-align: top;
         word-break: break-word;
       }
-      [data-ticket-pdf] th { width:28%; text-align:left; color:#071322; background:#F8F1DE; font-weight:700; }
+      [data-ticket-pdf] th { width:28%; text-align:left; color:#050B12; background:#F8F1DE; font-weight:700; }
     </style>
   `;
   document.body.appendChild(host);

@@ -242,7 +242,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       case "NORMAL":
         return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-900/60 text-blue-300 border border-blue-600/40">NORMAL</span>;
       default:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#142B45] text-[#D8CFB8] border border-[#22405E]">STANDARD</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#0C1524] text-[#D8CFB8] border border-[rgba(201,148,54,0.25)]">STANDARD</span>;
     }
   };
 
@@ -254,9 +254,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           if (e.target === e.currentTarget) onClose();
         }}
       >
-        <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[calc(100vh-1.5rem)] text-[#F5EFE0] animate-slideInRight overflow-hidden">
+        <div className="bg-[#080E18] border border-[#D4A24C]/40 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[calc(100vh-1.5rem)] text-[#F5EFE0] animate-slideInRight overflow-hidden">
           {/* Header */}
-          <div className="p-4 border-b border-[#22405E] bg-[#0F2338] flex items-center justify-between">
+          <div className="p-4 border-b border-[rgba(201,148,54,0.25)] bg-[#080E18] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-[#D4A24C]" />
               <h3 className="font-display text-base font-medium text-[#F5EFE0]">
@@ -289,13 +289,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           </div>
 
           {/* Filter Pills */}
-          <div className="px-4 py-2 bg-[#071322] border-b border-[#22405E] flex gap-2 text-[11px]">
+          <div className="px-4 py-2 bg-[#050B12] border-b border-[rgba(201,148,54,0.25)] flex gap-2 text-[11px]">
             <button
               onClick={() => setFilter("ALL")}
               className={`px-3 py-1 rounded-full font-semibold transition-colors cursor-pointer ${
                 filter === "ALL"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-sm"
-                  : "bg-[#0F2338] text-[#D8CFB8] hover:text-white"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-sm"
+                  : "bg-[#080E18] text-[#D8CFB8] hover:text-white"
               }`}
             >
               All ({notifications.length})
@@ -304,8 +304,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               onClick={() => setFilter("UNREAD")}
               className={`px-3 py-1 rounded-full font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
                 filter === "UNREAD"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-sm"
-                  : "bg-[#0F2338] text-[#D8CFB8] hover:text-white"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-sm"
+                  : "bg-[#080E18] text-[#D8CFB8] hover:text-white"
               }`}
             >
               Unread ({unreadCount})
@@ -332,8 +332,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   tabIndex={0}
                   className={`p-3 rounded-xl border transition-all cursor-pointer group text-left ${
                     item.isRead
-                      ? "bg-[#0F2338]/40 border-[#22405E] opacity-75 hover:opacity-100 hover:border-[#D4A24C]/40 hover:bg-[#142B45]/70"
-                      : "bg-gradient-to-r from-[#122A44] to-[#0F2338] border-[#D4A24C]/60 shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:border-[#D4A24C] hover:brightness-105 ring-1 ring-[#D4A24C]/20"
+                      ? "bg-[#080E18]/40 border-[rgba(201,148,54,0.25)] opacity-75 hover:opacity-100 hover:border-[#D4A24C]/40 hover:bg-[#0C1524]/70"
+                      : "bg-gradient-to-r from-[#0A121E] to-[#080E18] border-[#D4A24C]/60 shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:border-[#D4A24C] hover:brightness-105 ring-1 ring-[#D4A24C]/20"
                   }`}
                 >
                   <div className="flex items-start gap-2.5">
@@ -362,7 +362,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         {item.message}
                       </p>
 
-                      <div className="mt-2 pt-1.5 border-t border-[#22405E]/40 flex items-center justify-between gap-2 text-[10.5px]">
+                      <div className="mt-2 pt-1.5 border-t border-[rgba(201,148,54,0.25)]/40 flex items-center justify-between gap-2 text-[10.5px]">
                         <span className="text-[#D4A24C] group-hover:underline font-semibold inline-flex items-center gap-1">
                           View details <ArrowRight className="w-3 h-3" />
                         </span>
@@ -373,7 +373,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                           className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors flex items-center gap-1 ${
                             item.isRead
                               ? "text-emerald-400 bg-emerald-950/40 border border-emerald-500/30"
-                              : "text-[#D4A24C] hover:text-white bg-[#142B45] hover:bg-[#1E3A5A] border border-[#D4A24C]/30"
+                              : "text-[#D4A24C] hover:text-white bg-[#0C1524] hover:bg-[#0C1524] border border-[#D4A24C]/30"
                           }`}
                         >
                           {item.isRead ? (
@@ -402,17 +402,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             if (e.target === e.currentTarget) setSelectedNotification(null);
           }}
         >
-          <div className="bg-[#0B1A2C] border-2 border-[#D4A24C] rounded-2xl w-full max-w-xl max-h-[90vh] shadow-2xl flex flex-col text-[#F5EFE0] overflow-hidden">
+          <div className="bg-[#080E18] border-2 border-[#D4A24C] rounded-2xl w-full max-w-xl max-h-[90vh] shadow-2xl flex flex-col text-[#F5EFE0] overflow-hidden">
             {/* Modal Header */}
-            <div className="shrink-0 p-4 sm:p-5 bg-gradient-to-r from-[#0F2338] to-[#142B45] border-b border-[#22405E] flex items-start justify-between gap-3">
+            <div className="shrink-0 p-4 sm:p-5 bg-gradient-to-r from-[#080E18] to-[#0C1524] border-b border-[rgba(201,148,54,0.25)] flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
-                <div className="p-2.5 rounded-xl bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] shrink-0 mt-0.5">
+                <div className="p-2.5 rounded-xl bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C] shrink-0 mt-0.5">
                   {getPriorityIcon(selectedNotification.priority, selectedNotification.type)}
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     {getPriorityBadge(selectedNotification.priority)}
-                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
                       {selectedNotification.type || "OPERATIONAL_ALERT"}
                     </span>
                     <span className="px-2 py-0.5 rounded text-[10.5px] font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
@@ -428,7 +428,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               <button
                 onClick={() => setSelectedNotification(null)}
                 title="Close (Esc)"
-                className="text-[#9BA3AF] hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors shrink-0 cursor-pointer border border-[#22405E]"
+                className="text-[#9BA3AF] hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors shrink-0 cursor-pointer border border-[rgba(201,148,54,0.25)]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -437,7 +437,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {/* Metadata Box */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs">
                 <div className="flex items-center gap-2 text-[#8E9CAE]">
                   <Calendar className="w-4 h-4 text-[#D4A24C] shrink-0" />
                   <div>
@@ -467,14 +467,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-[#D4A24C] mb-1.5 flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5" /> Full Notification Description
                 </label>
-                <div className="p-4 bg-[#0F2338] border border-[#22405E] rounded-xl text-[13px] text-[#F5EFE0] leading-relaxed whitespace-pre-wrap">
+                <div className="p-4 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl text-[13px] text-[#F5EFE0] leading-relaxed whitespace-pre-wrap">
                   {selectedNotification.message}
                 </div>
               </div>
 
               {/* Linked Issue Card (if available) */}
               {(extractLinkedIssueId(selectedNotification) || (selectedNotification as any).resourceId || selectedNotification.issueId) && (
-                <div className="p-4 bg-gradient-to-r from-[#122A44] to-[#0F2338] border border-[#D4A24C]/60 rounded-xl flex flex-col gap-3 shadow-md">
+                <div className="p-4 bg-gradient-to-r from-[#0A121E] to-[#080E18] border border-[#D4A24C]/60 rounded-xl flex flex-col gap-3 shadow-md">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 text-xs text-[#D4A24C] font-bold">
                       <Tag className="w-3.5 h-3.5" /> Associated Ground Issue
@@ -496,7 +496,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     type="button"
                     disabled={loadingIssue}
                     onClick={(e) => handleInspectIssue(selectedNotification, e)}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:from-[#D26A0F] hover:to-[#C99640] text-[#0B1A2C] text-xs font-bold rounded-lg transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow whitespace-nowrap"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:from-[#D26A0F] hover:to-[#C99640] text-[#080E18] text-xs font-bold rounded-lg transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow whitespace-nowrap"
                   >
                     {loadingIssue ? "Opening ticket..." : "Inspect Ground Issue"}
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
@@ -506,15 +506,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </div>
 
             {/* Modal Footer */}
-            <div className="shrink-0 p-4 bg-[#071322] border-t border-[#22405E] flex items-center justify-between gap-3">
+            <div className="shrink-0 p-4 bg-[#050B12] border-t border-[rgba(201,148,54,0.25)] flex items-center justify-between gap-3">
               <span className="text-[11px] text-[#8E9CAE]">
-                Press <kbd className="px-1.5 py-0.5 bg-[#142B45] border border-[#22405E] rounded text-[10px] font-mono text-[#D4A24C]">Esc</kbd> to close
+                Press <kbd className="px-1.5 py-0.5 bg-[#0C1524] border border-[rgba(201,148,54,0.25)] rounded text-[10px] font-mono text-[#D4A24C]">Esc</kbd> to close
               </span>
 
               <button
                 type="button"
                 onClick={() => setSelectedNotification(null)}
-                className="px-5 py-2 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#F5EFE0] hover:text-white text-xs font-bold border border-[#22405E] transition-colors cursor-pointer"
+                className="px-5 py-2 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] text-[#F5EFE0] hover:text-white text-xs font-bold border border-[rgba(201,148,54,0.25)] transition-colors cursor-pointer"
               >
                 Close
               </button>

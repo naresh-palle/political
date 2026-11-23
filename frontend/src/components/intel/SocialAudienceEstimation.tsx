@@ -23,7 +23,7 @@ interface SocialAudienceEstimationProps {
   userId: string;
 }
 
-const CARD = "rounded-2xl border border-[#22405E] bg-[#0B1A2C]/90 p-4 sm:p-5 shadow-xl transition-all";
+const CARD = "rounded-2xl border border-[rgba(201,148,54,0.25)] bg-[#080E18]/90 p-4 sm:p-5 shadow-xl transition-all";
 const METHOD_BADGES: Record<string, { bg: string; text: string; border: string }> = {
   "Platform Estimate": { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/30" },
   "Geographical Approximation": { bg: "bg-sky-500/10", text: "text-sky-400", border: "border-sky-500/30" },
@@ -125,7 +125,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
           <button
             type="button"
             onClick={() => setShowApiModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] hover:bg-[#131E2D] text-xs font-semibold text-[#B9AF95] hover:text-[#F5EFE0] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] hover:bg-[#0C1524] text-xs font-semibold text-[#B9AF95] hover:text-[#F5EFE0] transition-colors cursor-pointer"
             title="View API Connectivity & Eligibility"
           >
             <ShieldCheck className="w-4 h-4 text-[#D4A24C]" />
@@ -136,7 +136,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
             type="button"
             onClick={handleManualRefresh}
             disabled={refreshing || loading}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D4A24C] hover:bg-[#c4923c] text-[#071322] text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D4A24C] hover:bg-[#c4923c] text-[#050B12] text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer disabled:opacity-50"
             title="Recalculate live platform estimates"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
@@ -163,13 +163,13 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
           </div>
 
           {/* Dual Geographical View Toggle */}
-          <div className="inline-flex p-1 rounded-xl bg-[#071322] border border-[#22405E]">
+          <div className="inline-flex p-1 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
             <button
               type="button"
               onClick={() => setGeoView("constituency")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 geoView === "constituency"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-sm"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0]"
               }`}
             >
@@ -180,7 +180,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
               onClick={() => setGeoView("radius")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 geoView === "radius"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-sm"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-sm"
                   : "text-[#B9AF95] hover:text-[#F5EFE0]"
               }`}
             >
@@ -189,7 +189,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
           </div>
         </div>
 
-        <p className="text-[11px] text-[#8E9CAE] flex items-center gap-1.5 pt-1 border-t border-[#22405E]/40">
+        <p className="text-[11px] text-[#8E9CAE] flex items-center gap-1.5 pt-1 border-t border-[rgba(201,148,54,0.25)]/40">
           <Info className="w-3.5 h-3.5 text-[#D4A24C] shrink-0" />
           <span>
             {geoView === "constituency"
@@ -246,7 +246,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
                   </p>
                 </div>
 
-                <div className="mt-3 p-2.5 rounded-xl bg-[#071322] border border-[#22405E]/80 space-y-1.5 text-[11px]">
+                <div className="mt-3 p-2.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]/80 space-y-1.5 text-[11px]">
                   <div className="flex justify-between text-[#B9AF95]">
                     <span>Constituency (40 km):</span>
                     <span className="font-semibold text-[#F5EFE0]">{formatAudienceCount(detail.constituencyAudience)}</span>
@@ -255,14 +255,14 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
                     <span>Surrounding (40 km):</span>
                     <span className="font-semibold">+{formatAudienceCount(detail.surroundingAudience)}</span>
                   </div>
-                  <div className="flex justify-between text-[#D4A24C] pt-1 border-t border-[#22405E]/50 font-bold">
+                  <div className="flex justify-between text-[#D4A24C] pt-1 border-t border-[rgba(201,148,54,0.25)]/50 font-bold">
                     <span>Total Combined:</span>
                     <span>{formatAudienceCount(detail.totalRadiusAudience)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#22405E]/60 space-y-1.5 text-[10px] text-[#8E9CAE]">
+              <div className="pt-3 border-t border-[rgba(201,148,54,0.25)]/60 space-y-1.5 text-[10px] text-[#8E9CAE]">
                 <div className="flex justify-between">
                   <span className="text-[#B9AF95]">Data Source:</span>
                   <span className="text-right truncate max-w-[150px] font-medium text-[#F5EFE0]" title={detail.dataSource}>
@@ -285,7 +285,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
 
       {/* PLATFORM AUDIENCE COMPARISON TABLE */}
       <div className={`${CARD} space-y-3 overflow-hidden`}>
-        <div className="flex items-center justify-between border-b border-[#22405E]/60 pb-3">
+        <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)]/60 pb-3">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-[#D4A24C]" />
             <h3 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wide">
@@ -300,7 +300,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-[#22405E] text-[#8E9CAE] text-[10px] uppercase font-bold tracking-wider">
+              <tr className="border-b border-[rgba(201,148,54,0.25)] text-[#8E9CAE] text-[10px] uppercase font-bold tracking-wider">
                 <th className="py-2.5 px-3">Platform</th>
                 <th className="py-2.5 px-3">Estimated Audience</th>
                 <th className="py-2.5 px-3">Constituency Core (40 km)</th>
@@ -310,11 +310,11 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
                 <th className="py-2.5 px-3">Data Source</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#22405E]/40 text-[#F5EFE0]">
+            <tbody className="divide-y divide-[rgba(201,148,54,0.25)]/40 text-[#F5EFE0]">
               {(report?.comparisonTable || []).map((row) => {
                 const currentAudience = geoView === "constituency" ? row.constituencyOnlyAudience : row.estimatedAudience;
                 return (
-                  <tr key={row.platform} className="hover:bg-[#131E2D]/60 transition-colors">
+                  <tr key={row.platform} className="hover:bg-[#0C1524]/60 transition-colors">
                     <td className="py-3 px-3 font-bold text-[#F5EFE0] flex items-center gap-1.5">
                       <span>
                         {row.platform.includes("Facebook") ? "📘" : row.platform.includes("Instagram") ? "📸" : row.platform.includes("X") ? "𝕏" : "▶️"}
@@ -351,7 +351,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
           </table>
         </div>
 
-        <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]/60 text-[11px] text-[#8E9CAE] flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]/60 text-[11px] text-[#8E9CAE] flex items-center gap-2">
           <Info className="w-4 h-4 text-[#D4A24C] shrink-0" />
           <span>
             <strong>Note on Unique Reach:</strong> Platform audiences must not be added together as a combined total because individual citizens use multiple platforms concurrently.
@@ -362,8 +362,8 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
       {/* API MANAGEMENT MODAL */}
       {showApiModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-2xl rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/40 p-5 sm:p-6 shadow-2xl space-y-4">
-            <div className="flex items-start justify-between border-b border-[#22405E] pb-3">
+          <div className="w-full max-w-2xl rounded-2xl bg-[#080E18] border border-[#D4A24C]/40 p-5 sm:p-6 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
               <div>
                 <h3 className="text-base font-display font-bold text-[#F5EFE0] flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-[#D4A24C]" />
@@ -413,7 +413,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
                   envVars: "GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CUSTOMER_ID"
                 }
               ].map((item) => (
-                <div key={item.name} className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-1.5">
+                <div key={item.name} className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs text-[#F5EFE0]">{item.name}</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -433,7 +433,7 @@ export const SocialAudienceEstimation: React.FC<SocialAudienceEstimationProps> =
               <button
                 type="button"
                 onClick={() => setShowApiModal(false)}
-                className="px-4 py-2 rounded-xl bg-[#D4A24C] hover:bg-[#c4923c] text-[#071322] text-xs font-bold uppercase tracking-wider"
+                className="px-4 py-2 rounded-xl bg-[#D4A24C] hover:bg-[#c4923c] text-[#050B12] text-xs font-bold uppercase tracking-wider"
               >
                 Close
               </button>

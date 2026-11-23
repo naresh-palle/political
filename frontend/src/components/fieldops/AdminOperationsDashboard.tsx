@@ -56,7 +56,7 @@ const ASSIGN_FILTER_CLASS =
 const ASSIGN_OPTION_CLASS = "bg-[#0B131E] text-[#F5EFE0]";
 const ASSIGN_GRID_CLASS = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-visible";
 const HIERARCHY_CHIP =
-  "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/70";
+  "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#050B12] text-[#D4A24C] border border-[#D4A24C]/70";
 
 const DashboardKpi = ({
   label,
@@ -506,7 +506,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       {/* Executive Command Header */}
       {isPlatformSuperAdmin ? (
         /* LEVEL 1: SUPER ADMIN MASTER BANNER */
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-[#050B12]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
           <div className="flex items-center gap-4">
             <div
               className="relative group cursor-pointer flex-shrink-0"
@@ -524,14 +524,14 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#050B12]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                   Level 1: Platform Super Admin
                 </span>
                 <span className="text-xs text-[#D8CFB8]">{currentUser.assignedConstituency || "National Command Center"}</span>
                 <button
                   type="button"
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10.5px] font-semibold transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#0C1524] hover:bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40 text-[10.5px] font-semibold transition-all cursor-pointer"
                   title="Edit Profile"
                 >
                   <Edit3 className="w-3 h-3" />
@@ -555,8 +555,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("POLITICAL_ADMINS")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "POLITICAL_ADMINS"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-md font-bold"
+                  : "bg-[#050B12]/60 text-[#D8CFB8] hover:text-white border border-[rgba(201,148,54,0.25)]"
               }`}
             >
               Constituency Admins (MLAs)
@@ -565,15 +565,15 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("DRILLDOWN")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "DRILLDOWN"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-md font-bold"
+                  : "bg-[#050B12]/60 text-[#D8CFB8] hover:text-white border border-[rgba(201,148,54,0.25)]"
               }`}
             >
               Geographic Tree
             </button>
             <button
               onClick={() => goAssignTickets("ALL")}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer bg-[#050B12]/60 text-[#D8CFB8] hover:text-white border border-[rgba(201,148,54,0.25)]"
             >
               Master Issues ({totalIssues})
             </button>
@@ -581,8 +581,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("DIRECTORS")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "DIRECTORS"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-md font-bold"
+                  : "bg-[#050B12]/60 text-[#D8CFB8] hover:text-white border border-[rgba(201,148,54,0.25)]"
               }`}
             >
               Managers ({directors.length})
@@ -591,8 +591,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
               onClick={() => setViewMode("VOLUNTEERS")}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold tracking-wider transition-all cursor-pointer ${
                 viewMode === "VOLUNTEERS"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-md font-bold"
-                  : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-md font-bold"
+                  : "bg-[#050B12]/60 text-[#D8CFB8] hover:text-white border border-[rgba(201,148,54,0.25)]"
               }`}
             >
               Volunteers ({volunteers.length})
@@ -601,7 +601,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       ) : (
         /* LEVEL 2: POLITICAL ADMIN (MLA) MASTER BANNER */
-        <div className="p-3.5 rounded-2xl bg-[#071322]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
+        <div className="p-3.5 rounded-2xl bg-[#050B12]/45 backdrop-blur-xl border border-[#D4A24C]/40 shadow-2xl">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
               <div
@@ -614,14 +614,14 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   alt={currentUser.name}
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border-2 border-[#D4A24C] shadow-lg hover:brightness-90 transition-all"
                 />
-                <span className="absolute -bottom-1 -right-1 z-10 px-1 py-0.5 rounded-full bg-[#071322] border border-[#D4A24C] text-[10px] font-mono leading-none">
+                <span className="absolute -bottom-1 -right-1 z-10 px-1 py-0.5 rounded-full bg-[#050B12] border border-[#D4A24C] text-[10px] font-mono leading-none">
                   {currentUser.partyEmoji || "🏛️"}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsEditProfileOpen(true)}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
                 title="Edit profile photo"
               >
                 <Camera className="w-3 h-3" />
@@ -631,24 +631,24 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
             <div className="min-w-0 space-y-1">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#050B12]/70 text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                   POLITICAL ADMIN
                 </span>
                 {currentUser.partyName && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#071322]/70 text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#050B12]/70 text-[#D4A24C] border border-[#D4A24C]/30 flex items-center gap-1">
                     <span>{currentUser.partyEmoji}</span>
                     <span>{currentUser.partyName} ({currentUser.partyAbbr})</span>
                   </span>
                 )}
                 {currentUser.assignedConstituency && (
-                <span className="text-[10px] font-medium text-[#8E9CAE] bg-[#071322]/70 px-2 py-0.5 rounded-full border border-[#22405E]">
+                <span className="text-[10px] font-medium text-[#8E9CAE] bg-[#050B12]/70 px-2 py-0.5 rounded-full border border-[rgba(201,148,54,0.25)]">
                   {currentUser.assignedConstituency}
                 </span>
                 )}
                 <button
                   type="button"
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#142B45] hover:bg-[#1E3A5A] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0C1524] hover:bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40 text-[10px] font-semibold transition-all cursor-pointer"
                   title="Edit Profile Details"
                 >
                   <Edit3 className="w-3 h-3" />
@@ -659,8 +659,8 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   onClick={() => setViewMode("DRILLDOWN")}
                   className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider transition-all cursor-pointer ${
                     viewMode === "DRILLDOWN"
-                      ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
-                      : "bg-[#071322]/60 text-[#D8CFB8] hover:text-white border border-[#22405E]"
+                      ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
+                      : "bg-[#050B12]/60 text-[#D8CFB8] hover:text-white border border-[rgba(201,148,54,0.25)]"
                   }`}
                 >
                   Constituency Tree
@@ -815,10 +815,10 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     {/* Mandal Node Header */}
                     <div
                       onClick={() => toggleMandal(mandal.mandalId)}
-                      className="p-3 hover:bg-[#131E2D] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-2 border-b border-[#D4A24C]/25"
+                      className="p-3 hover:bg-[#0C1524] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-2 border-b border-[#D4A24C]/25"
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="p-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C]">
+                        <div className="p-1.5 rounded-lg bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C]">
                           {isMandalExpanded ? (
                             <ChevronDown className="w-5 h-5" />
                           ) : (
@@ -827,7 +827,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/35">
+                            <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#050B12] text-[#D4A24C] border border-[#D4A24C]/35">
                               {mandal.code}
                             </span>
                             <span className="text-xs text-[#8E9CAE]">
@@ -861,7 +861,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
                     {/* Village Nodes List */}
                     {isMandalExpanded && (
-                      <div className="p-2.5 space-y-2 bg-[#071322]/40">
+                      <div className="p-2.5 space-y-2 bg-[#050B12]/40">
                         {mandal.villages.map((village: any) => {
                           const isVillageExpanded = !!expandedVillages[village.villageId];
                           return (
@@ -872,7 +872,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                               {/* Village Node Row */}
                               <div
                                 onClick={() => toggleVillage(village.villageId)}
-                                className="p-2.5 hover:bg-[#131E2D] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-2"
+                                className="p-2.5 hover:bg-[#0C1524] transition-colors cursor-pointer flex flex-wrap items-center justify-between gap-2"
                               >
                                 <div className="flex items-center gap-3">
                                   <div className="text-[#D4A24C]">
@@ -902,13 +902,13 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                                     const assigned = findVolunteerForVillage(scopedUsers, village.villageId);
                                     if (!assigned) {
                                       return (
-                                        <div className="px-2.5 py-1 rounded-lg bg-[#071322] border border-dashed border-[#D4A24C]/30 text-[11px] text-[#8E9CAE]">
+                                        <div className="px-2.5 py-1 rounded-lg bg-[#050B12] border border-dashed border-[#D4A24C]/30 text-[11px] text-[#8E9CAE]">
                                           No volunteer assigned
                                         </div>
                                       );
                                     }
                                     return (
-                                      <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#071322] border border-[#D4A24C]/35 text-[11px]">
+                                      <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#050B12] border border-[#D4A24C]/35 text-[11px]">
                                         <span>
                                           Volunteer: <strong className="text-[#D4A24C]">{assigned.name}</strong>
                                         </span>
@@ -940,7 +940,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
 
                               {/* Village Issues Drilldown */}
                               {isVillageExpanded && (
-                                <div className="p-2 border-t border-[#D4A24C]/25 bg-[#071322] space-y-1.5">
+                                <div className="p-2 border-t border-[#D4A24C]/25 bg-[#050B12] space-y-1.5">
                                   {village.issues.length === 0 ? (
                                     <div className="p-2.5 text-center text-xs text-[#8E9CAE]">
                                       No issues logged in {village.villageName}. Ground reports clear.
@@ -1257,7 +1257,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                               e.stopPropagation();
                               setSelectedIssue(iss);
                             }}
-                            className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-nowrap shrink-0"
+                            className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] text-[#D4A24C] text-[10px] font-semibold border border-[#D4A24C]/30 cursor-pointer whitespace-nowrap shrink-0"
                             title="View ticket"
                           >
                             <Eye className="w-3 h-3 shrink-0" />
@@ -1305,7 +1305,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
       {/* VIEW 0: POLITICAL ADMINS / CONSTITUENCIES HUB (PLATFORM SUPER ADMIN ONLY) */}
       {viewMode === "POLITICAL_ADMINS" && isPlatformSuperAdmin && (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-[#0F2338]/80 border border-[#22405E]">
+          <div className="p-4 rounded-xl bg-[#080E18]/80 border border-[rgba(201,148,54,0.25)]">
             <h2 className="font-display text-base text-[#F5EFE0] flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#D4A24C]" />
               Level 2 Constituency Political Admins (MLAs & PAs)
@@ -1336,7 +1336,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 return (
                   <div
                     key={polAdmin.id}
-                    className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 transition-all space-y-4 shadow-sm"
+                    className="p-5 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60 transition-all space-y-4 shadow-sm"
                   >
                     <div className="flex items-center gap-3.5">
                       <img
@@ -1346,7 +1346,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#071322] text-[#D4A24C]">
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-[#050B12] text-[#D4A24C]">
                             {polAdmin.partyEmoji || "🏛️"} {polAdmin.partyAbbr || "PARTY"}
                           </span>
                           <span className="text-[10px] text-emerald-400 font-semibold">Active Tenant</span>
@@ -1361,19 +1361,19 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                      <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                      <div className="p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                         <span className="text-[#8E9CAE] block uppercase">Directors</span>
                         <strong className="text-base text-[#F5EFE0] font-display">
                           {polAdminDirectors.length}
                         </strong>
                       </div>
-                      <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                      <div className="p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                         <span className="text-[#8E9CAE] block uppercase">Volunteers</span>
                         <strong className="text-base text-[#D4A24C] font-display">
                           {polAdminVolunteers.length}
                         </strong>
                       </div>
-                      <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                      <div className="p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                         <span className="text-[#8E9CAE] block uppercase">Field Issues</span>
                         <strong className="text-base text-blue-400 font-display">
                           {polAdminIssues.length}
@@ -1381,7 +1381,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#22405E] text-xs text-[#8E9CAE] flex items-center justify-between">
+                    <div className="pt-2 border-t border-[rgba(201,148,54,0.25)] text-xs text-[#8E9CAE] flex items-center justify-between">
                       <span>Contact: {polAdmin.phone || "Official Office"}</span>
                       <span className="text-[#D4A24C] text-[10px] font-mono">{polAdmin.email}</span>
                     </div>
@@ -1404,7 +1404,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             return (
               <div
                 key={dir.id}
-                className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-4"
+                className="p-5 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-4"
               >
                 <div className="flex items-center gap-3.5">
                   <img
@@ -1424,15 +1424,15 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-                  <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                  <div className="p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                     <span className="text-[#8E9CAE] block text-[10px] uppercase">Volunteers</span>
                     <strong className="text-base text-[#F5EFE0] font-display">{dirVolunteers.length}</strong>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                  <div className="p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                     <span className="text-emerald-300 block text-[10px] uppercase">Resolved</span>
                     <strong className="text-base text-emerald-400 font-display">{dirCompleted}</strong>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#071322] border border-[#22405E]">
+                  <div className="p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                     <span className="text-rose-300 block text-[10px] uppercase">Overdue</span>
                     <strong className={`text-base font-display ${dirOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}`}>
                       {dirOverdue}
@@ -1440,7 +1440,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#22405E] text-xs text-[#8E9CAE] flex items-center justify-between">
+                <div className="pt-2 border-t border-[rgba(201,148,54,0.25)] text-xs text-[#8E9CAE] flex items-center justify-between">
                   <span>Contact: {dir.phone}</span>
                   <a href={`mailto:${dir.email}`} className="text-[#D4A24C] hover:underline">
                     {dir.email}
@@ -1462,7 +1462,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             <span className="text-xs text-[#CBD5E1]">{volunteers.length} in constituency</span>
           </div>
           {volunteers.length === 0 ? (
-            <div className="p-4 rounded-xl border border-[#22405E] bg-[#0F2338] text-sm text-[#8E9CAE]">
+            <div className="p-4 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#080E18] text-sm text-[#8E9CAE]">
               No volunteers are assigned in this constituency.
             </div>
           ) : (
@@ -1478,7 +1478,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                     type="button"
                     key={vol.id}
                     onClick={() => goAssignTickets("ALL", vol.id)}
-                    className="p-4 rounded-2xl bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C]/60 space-y-3 text-left cursor-pointer"
+                    className="p-4 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60 space-y-3 text-left cursor-pointer"
                   >
                     <div className="min-w-0">
                       <h4 className="font-semibold text-sm text-[#F5EFE0] truncate">{vol.name}</h4>
@@ -1489,23 +1489,23 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                         {vol.assignedVillageNames?.join(", ") || ""}
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] pt-2 border-t border-[#22405E]">
-                      <div className="p-1.5 rounded bg-[#071322]">
+                    <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] pt-2 border-t border-[rgba(201,148,54,0.25)]">
+                      <div className="p-1.5 rounded bg-[#050B12]">
                         <span className="text-[#8E9CAE] block">Assigned</span>
                         <strong className="text-xs text-[#F5EFE0]">{volIssues.length}</strong>
                       </div>
-                      <div className="p-1.5 rounded bg-[#071322]">
+                      <div className="p-1.5 rounded bg-[#050B12]">
                         <span className="text-emerald-300 block">Done</span>
                         <strong className="text-xs text-emerald-400">{volCompleted}</strong>
                       </div>
-                      <div className="p-1.5 rounded bg-[#071322]">
+                      <div className="p-1.5 rounded bg-[#050B12]">
                         <span className="text-rose-300 block">Overdue</span>
                         <strong className={`text-xs ${volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}`}>
                           {volOverdue}
                         </strong>
                       </div>
                     </div>
-                    <div className="pt-2 border-t border-[#22405E] flex items-center justify-between text-[11px] text-[#8E9CAE]">
+                    <div className="pt-2 border-t border-[rgba(201,148,54,0.25)] flex items-center justify-between text-[11px] text-[#8E9CAE]">
                       <span>{vol.phone || "No phone"}</span>
                       <span className="text-[#D8CFB8] text-[10px]">Supervisor: {vol.directorName || "Director"}</span>
                     </div>
@@ -1527,7 +1527,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
             return (
               <div
                 key={vol.id}
-                className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-3"
+                className="p-5 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-3"
               >
                 <div className="flex items-center gap-3">
                   <img
@@ -1548,16 +1548,16 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] pt-2 border-t border-[#22405E]">
-                  <div className="p-1.5 rounded bg-[#071322]">
+                <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] pt-2 border-t border-[rgba(201,148,54,0.25)]">
+                  <div className="p-1.5 rounded bg-[#050B12]">
                     <span className="text-[#8E9CAE] block">Total</span>
                     <strong className="text-xs text-[#F5EFE0]">{volIssues.length}</strong>
                   </div>
-                  <div className="p-1.5 rounded bg-[#071322]">
+                  <div className="p-1.5 rounded bg-[#050B12]">
                     <span className="text-emerald-300 block">Done</span>
                     <strong className="text-xs text-emerald-400">{volCompleted}</strong>
                   </div>
-                  <div className="p-1.5 rounded bg-[#071322]">
+                  <div className="p-1.5 rounded bg-[#050B12]">
                     <span className="text-rose-300 block">Overdue</span>
                     <strong className={`text-xs ${volOverdue > 0 ? "text-rose-400" : "text-[#8E9CAE]"}`}>
                       {volOverdue}
@@ -1565,7 +1565,7 @@ export const AdminOperationsDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#22405E] flex items-center justify-between text-[11px] text-[#8E9CAE]">
+                <div className="pt-2 border-t border-[rgba(201,148,54,0.25)] flex items-center justify-between text-[11px] text-[#8E9CAE]">
                   <span>{vol.phone}</span>
                   <span className="text-[#D8CFB8] text-[10px]">Supervisor: {vol.directorName || "Director"}</span>
                 </div>

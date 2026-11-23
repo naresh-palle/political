@@ -395,7 +395,7 @@ export const OfficerTicketPortal: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#071322] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#050B12] flex items-center justify-center p-4">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-4 border-[#D4A24C] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-xs uppercase tracking-widest text-[#D8CFB8] font-mono">
@@ -407,12 +407,12 @@ export const OfficerTicketPortal: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#071322] text-[#F5EFE0] selection:bg-[#D4A24C] selection:text-[#071322]">
+    <div className="min-h-screen bg-[#050B12] text-[#F5EFE0] selection:bg-[#D4A24C] selection:text-[#050B12]">
       {/* Top Banner Header */}
-      <header className="border-b border-[#22405E] bg-[#0B1A2C] sticky top-0 z-30 shadow-lg">
+      <header className="border-b border-[rgba(201,148,54,0.25)] bg-[#080E18] sticky top-0 z-30 shadow-lg">
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C] shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#0C1524] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C] shrink-0">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -447,9 +447,9 @@ export const OfficerTicketPortal: React.FC = () => {
 
         {/* STEP 1: WhatsApp OTP Verification (If not verified yet) */}
         {!isVerified ? (
-          <div className="p-6 sm:p-8 rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/40 shadow-2xl space-y-6 animate-fadeIn">
+          <div className="p-6 sm:p-8 rounded-2xl bg-[#080E18] border border-[#D4A24C]/40 shadow-2xl space-y-6 animate-fadeIn">
             <div className="text-center max-w-md mx-auto space-y-2">
-              <div className="w-14 h-14 rounded-2xl bg-[#142B45] border border-[#D4A24C]/50 flex items-center justify-center text-[#D4A24C] mx-auto shadow-inner">
+              <div className="w-14 h-14 rounded-2xl bg-[#0C1524] border border-[#D4A24C]/50 flex items-center justify-center text-[#D4A24C] mx-auto shadow-inner">
                 <Lock className="w-7 h-7" />
               </div>
               <h2 className="text-xl font-bold text-[#F5EFE0]">
@@ -462,7 +462,7 @@ export const OfficerTicketPortal: React.FC = () => {
 
             {/* Ticket Preview Card */}
             {issue && (
-              <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="p-4 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
                   <span className="text-[10px] font-mono font-bold text-[#D4A24C] uppercase tracking-wider block mb-0.5">
                     ASSIGNED TICKET {formatTicketDisplay(issue)}
@@ -490,7 +490,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     Officer WhatsApp Mobile Number *
                   </label>
                   <div className="flex items-center">
-                    <span className="px-3.5 py-2.5 bg-[#142B45] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[#22405E] rounded-l-xl select-none shrink-0">
+                    <span className="px-3.5 py-2.5 bg-[#0C1524] text-[#D4A24C] font-mono font-bold text-xs border border-r-0 border-[rgba(201,148,54,0.25)] rounded-l-xl select-none shrink-0">
                       +91
                     </span>
                     <input
@@ -500,7 +500,7 @@ export const OfficerTicketPortal: React.FC = () => {
                       placeholder="Enter 10-digit WhatsApp phone number..."
                       value={phoneInput}
                       onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-r-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] outline-none font-mono tracking-wider"
+                      className="w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-r-xl px-3.5 py-2.5 text-sm text-[#F5EFE0] outline-none font-mono tracking-wider"
                     />
                   </div>
                   <p className="text-[11px] text-[#B9AF95] mt-1.5 flex items-center gap-1">
@@ -512,7 +512,7 @@ export const OfficerTicketPortal: React.FC = () => {
                 <button
                   type="submit"
                   disabled={verifying}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-sm hover:brightness-110 flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#050B12] font-bold text-sm hover:brightness-110 flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all"
                 >
                   <Smartphone className="w-4 h-4" />
                   {verifying ? "Dispatching WhatsApp OTP..." : "Send WhatsApp OTP Code"}
@@ -537,7 +537,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     placeholder="Enter 6-digit code from WhatsApp"
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.4em] text-[#F5EFE0] outline-none"
+                    className="w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-xl px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.4em] text-[#F5EFE0] outline-none"
                   />
                   <div className="flex items-center justify-between text-[11px] text-[#B9AF95] mt-2">
                     <span>Sent to: +91 {phoneInput.slice(-10)}</span>
@@ -566,7 +566,7 @@ export const OfficerTicketPortal: React.FC = () => {
                   <button
                     type="submit"
                     disabled={verifying}
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-sm hover:brightness-110 flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all"
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#050B12] font-bold text-sm hover:brightness-110 flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50 transition-all"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     {verifying ? "Verifying..." : "Verify OTP & Unlock Ticket"}
@@ -580,9 +580,9 @@ export const OfficerTicketPortal: React.FC = () => {
           <div className="space-y-6 animate-fadeIn">
             {/* Officer Identification Badge */}
             {officerInfo && (
-              <div className="p-4 rounded-xl bg-[#0B1A2C] border border-[#D4A24C]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-4 rounded-xl bg-[#080E18] border border-[#D4A24C]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C] shrink-0 font-bold font-mono">
+                  <div className="w-10 h-10 rounded-xl bg-[#0C1524] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C] shrink-0 font-bold font-mono">
                     {officerInfo.name.charAt(0)}
                   </div>
                   <div>
@@ -602,8 +602,8 @@ export const OfficerTicketPortal: React.FC = () => {
 
             {/* Grievance Ticket Unlocked Details */}
             {issue && (
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-5 shadow-xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#22405E] pb-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-5 shadow-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[rgba(201,148,54,0.25)] pb-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-mono font-bold text-[#D4A24C] uppercase tracking-wider">
@@ -642,26 +642,26 @@ export const OfficerTicketPortal: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                  <div className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Type</span>
                     <p className="font-semibold text-[#F5EFE0] mt-1">{issue.issueType === "GRIEVANCE" ? "Grievance Petition" : "Field Issue"}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                  <div className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Due Date</span>
                     <p className="font-semibold text-[#F5EFE0] mt-1">{issue.dueDate || "Within 72 Hours"}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                  <div className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Constituency</span>
                     <p className="font-semibold text-[#F5EFE0] mt-1 truncate">{issue.assemblyConstituencyName || "Banaganapalle AC"}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E]">
+                  <div className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">Category</span>
                     <p className="font-semibold text-[#F5EFE0] mt-1 truncate">{issue.category || issue.department || "General"}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
+                  <div className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-2">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
                       DEPARTMENT & LOCATION
                     </span>
@@ -672,7 +672,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2">
+                  <div className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-2">
                     <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
                       FIELD ASSIGNMENT
                     </span>
@@ -687,7 +687,7 @@ export const OfficerTicketPortal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] space-y-2 text-xs">
+                <div className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-2 text-xs">
                   <span className="text-[10px] uppercase font-bold text-[#D4A24C] tracking-wider block">
                     LATEST OFFICER COMMENT
                   </span>
@@ -700,8 +700,8 @@ export const OfficerTicketPortal: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] space-y-3">
-                    <div className="flex items-start justify-between gap-3 border-b border-[#22405E] pb-2">
+                  <div className="p-4 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-3">
+                    <div className="flex items-start justify-between gap-3 border-b border-[rgba(201,148,54,0.25)] pb-2">
                       <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C]">
                         Issue Scope & Ground Description
                       </h3>
@@ -712,7 +712,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     <p className="text-sm text-[#D8CFB8] leading-relaxed whitespace-pre-wrap">
                       {issue.description || "No specific detailed description recorded during ground intake."}
                     </p>
-                    <div className="p-3 rounded-xl bg-[#0B1A2C] border border-[#22405E] text-xs text-[#8E9CAE] space-y-1.5">
+                    <div className="p-3 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-xs text-[#8E9CAE] space-y-1.5">
                       <p className="flex items-start gap-2">
                         <MapPin className="w-3.5 h-3.5 text-[#D4A24C] shrink-0 mt-0.5" />
                         <span>
@@ -732,8 +732,8 @@ export const OfficerTicketPortal: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] space-y-3">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[#22405E] pb-2">
+                  <div className="p-4 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-3">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-[#D4A24C] border-b border-[rgba(201,148,54,0.25)] pb-2">
                       Reported Person Details
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -753,7 +753,7 @@ export const OfficerTicketPortal: React.FC = () => {
                         {issue.reporterPhone ? (
                           <a
                             href={`tel:${issue.reporterPhone}`}
-                            className="inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-xl bg-[#0B1A2C] hover:bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold"
+                            className="inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-xl bg-[#080E18] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold"
                           >
                             <Phone className="w-3.5 h-3.5 shrink-0" />
                             {issue.reporterPhone}
@@ -777,7 +777,7 @@ export const OfficerTicketPortal: React.FC = () => {
                           </span>
                           <a
                             href={`tel:${issue.secondaryContactPhone}`}
-                            className="inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-xl bg-[#0B1A2C] hover:bg-[#142B45] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold"
+                            className="inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-xl bg-[#080E18] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] font-mono text-xs font-bold"
                           >
                             <Phone className="w-3.5 h-3.5 shrink-0" />
                             {issue.secondaryContactPhone}
@@ -817,7 +817,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     </span>
                     <div className="space-y-2">
                       {history.slice(-8).map((record: any) => (
-                        <div key={record.id || `${record.updateDate}-${record.newStatus}`} className="p-3 rounded-xl bg-[#071322] border border-[#22405E] text-xs space-y-1">
+                        <div key={record.id || `${record.updateDate}-${record.newStatus}`} className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-xs space-y-1">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[10px] font-bold uppercase text-[#D4A24C]">{formatIssueStatus(record.newStatus || record.status)}</span>
                             <span className="text-[11px] font-mono text-zinc-500">{record.updateDate || record.createdAt}</span>
@@ -844,7 +844,7 @@ export const OfficerTicketPortal: React.FC = () => {
                             href={att}
                             target="_blank"
                             rel="noreferrer"
-                            className="rounded-xl overflow-hidden border border-[#D4A24C]/40 bg-[#142B45] min-h-24 flex items-center justify-center"
+                            className="rounded-xl overflow-hidden border border-[#D4A24C]/40 bg-[#0C1524] min-h-24 flex items-center justify-center"
                           >
                             {isImage && !isPdf ? (
                               <img src={att} alt={`Proof ${idx + 1}`} className="w-full h-24 object-cover" />
@@ -865,7 +865,7 @@ export const OfficerTicketPortal: React.FC = () => {
             )}
 
             {statusLocked && !submitSuccess && (
-              <div className="p-5 rounded-2xl bg-[#0B1A2C] border border-emerald-500/40 text-center space-y-2">
+              <div className="p-5 rounded-2xl bg-[#080E18] border border-emerald-500/40 text-center space-y-2">
                 <p className="text-sm font-bold text-emerald-300">
                   Status locked: {formatIssueStatus(issue?.status)}
                 </p>
@@ -876,7 +876,7 @@ export const OfficerTicketPortal: React.FC = () => {
             )}
 
             {!statusLocked && !showStatusForm && !submitSuccess && (
-              <div className="p-5 rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/50 text-center space-y-3">
+              <div className="p-5 rounded-2xl bg-[#080E18] border border-[#D4A24C]/50 text-center space-y-3">
                 <p className="text-xs text-[#D8CFB8]">
                   Review the full ticket above, then proceed to record the official status update.
                 </p>
@@ -886,7 +886,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     setNewStatus(defaultOfficerActionStatus(issue?.status));
                     setShowStatusForm(true);
                   }}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-sm hover:brightness-110 inline-flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#050B12] font-bold text-sm hover:brightness-110 inline-flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                 >
                   <ArrowRight className="w-4 h-4" />
                   Proceed to Status Update
@@ -895,9 +895,9 @@ export const OfficerTicketPortal: React.FC = () => {
             )}
 
             {((showStatusForm && !statusLocked) || submitSuccess) && (
-            <div className="p-5 sm:p-6 rounded-2xl bg-[#0B1A2C] border border-[#D4A24C]/50 space-y-5 shadow-2xl">
-              <div className="flex items-center gap-3 border-b border-[#22405E] pb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
+            <div className="p-5 sm:p-6 rounded-2xl bg-[#080E18] border border-[#D4A24C]/50 space-y-5 shadow-2xl">
+              <div className="flex items-center gap-3 border-b border-[rgba(201,148,54,0.25)] pb-3">
+                <div className="w-8 h-8 rounded-lg bg-[#0C1524] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
                   <Send className="w-4 h-4" />
                 </div>
                 <div>
@@ -928,7 +928,7 @@ export const OfficerTicketPortal: React.FC = () => {
                       href={complainantWaLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4A24C] text-[#071322] text-xs font-bold cursor-pointer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4A24C] text-[#050B12] text-xs font-bold cursor-pointer"
                     >
                       <ExternalLink className="w-4 h-4" />
                       Send complainant WhatsApp
@@ -973,7 +973,7 @@ export const OfficerTicketPortal: React.FC = () => {
                     <select
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value as IssueStatus)}
-                      className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] outline-none font-semibold cursor-pointer"
+                      className="w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] outline-none font-semibold cursor-pointer"
                     >
                       {nextStatuses.map((status) => (
                         <option key={status} value={status}>
@@ -1005,7 +1005,7 @@ export const OfficerTicketPortal: React.FC = () => {
                       placeholder="Describe action taken, department repair unit dispatched, timeline, or completion notes..."
                       value={remarks}
                       onChange={(e) => setRemarks(e.target.value)}
-                      className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] rounded-xl p-3 text-xs text-[#F5EFE0] outline-none leading-relaxed"
+                      className="w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] rounded-xl p-3 text-xs text-[#F5EFE0] outline-none leading-relaxed"
                     />
                   </div>
 
@@ -1014,11 +1014,11 @@ export const OfficerTicketPortal: React.FC = () => {
                     <label className="block text-xs uppercase tracking-wider text-[#D4A24C] font-semibold">
                       Attach Resolution Proof Files (Photos & PDF Documents Allowed)
                     </label>
-                    <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] space-y-3">
+                    <div className="p-4 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-3">
                       <div className="flex flex-wrap items-center gap-3">
                         <label
                           htmlFor="officer-proof-file-input"
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#142B45] hover:bg-[#1C3B5E] border border-[#D4A24C]/50 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all shadow-md"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0C1524] hover:bg-[#1C3B5E] border border-[#D4A24C]/50 text-[#D4A24C] text-xs font-bold cursor-pointer transition-all shadow-md"
                         >
                           <Upload className="w-4 h-4" />
                           <span>Upload Photos / PDF Reports</span>
@@ -1042,7 +1042,7 @@ export const OfficerTicketPortal: React.FC = () => {
                       {proofFiles.length > 0 && (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                           {proofFiles.map((file, idx) => (
-                            <div key={idx} className="relative group rounded-xl overflow-hidden border border-[#D4A24C]/40 bg-[#0B1A2C] aspect-square flex flex-col items-center justify-center p-2">
+                            <div key={idx} className="relative group rounded-xl overflow-hidden border border-[#D4A24C]/40 bg-[#080E18] aspect-square flex flex-col items-center justify-center p-2">
                               {file.type === "pdf" ? (
                                 <div className="flex flex-col items-center justify-center p-2 text-center">
                                   <FileText className="w-8 h-8 text-rose-400 mb-1" />
@@ -1082,7 +1082,7 @@ export const OfficerTicketPortal: React.FC = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] font-bold text-xs sm:text-sm hover:brightness-110 flex items-center justify-center gap-2 shadow-xl cursor-pointer disabled:opacity-50 transition-all"
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#050B12] font-bold text-xs sm:text-sm hover:brightness-110 flex items-center justify-center gap-2 shadow-xl cursor-pointer disabled:opacity-50 transition-all"
                   >
                     <Send className="w-4 h-4" />
                     {submitting ? "Submitting Resolution Update..." : "Submit Official Resolution & Sync to Command Center"}

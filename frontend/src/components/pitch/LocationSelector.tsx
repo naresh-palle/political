@@ -216,7 +216,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
 
   const fieldClass = isPartyThemeActive
     ? "w-full appearance-none bg-white border-2 border-slate-300 hover:border-black rounded-lg px-3.5 py-3 pr-9 text-[14px] font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-colors cursor-pointer shadow-sm"
-    : "w-full appearance-none bg-[#0F2338] border border-[#22405E] hover:border-[#D4A24C] rounded-md px-3.5 py-3 pr-9 text-[13.5px] font-medium text-[#F5EFE0] focus:outline-none focus:ring-2 focus:ring-[#D4A24C] focus:border-transparent transition-colors cursor-pointer";
+    : "w-full appearance-none bg-[#080E18] border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C] rounded-md px-3.5 py-3 pr-9 text-[13.5px] font-medium text-[#F5EFE0] focus:outline-none focus:ring-2 focus:ring-[#D4A24C] focus:border-transparent transition-colors cursor-pointer";
 
   return (
     <div
@@ -295,11 +295,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
           className={`${
             isPartyThemeActive
               ? "bg-white/95 text-slate-900 border-2 border-black/15 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.35)]"
-              : "bg-[#0E2137]/80 backdrop-blur border border-[#22405E] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.55)]"
+              : "bg-[#0E2137]/80 backdrop-blur border border-[rgba(201,148,54,0.25)] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.55)]"
           } rounded-2xl overflow-hidden animate-rise-slow`}
         >
           <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 sm:px-8 pt-6 sm:pt-7 pb-5 border-b ${
-            isPartyThemeActive ? "border-gray-200" : "border-[#22405E]"
+            isPartyThemeActive ? "border-gray-200" : "border-[rgba(201,148,54,0.25)]"
           }`}>
             <div>
               <span className={`eyebrow ${isPartyThemeActive ? "text-amber-700 font-bold" : "gold-text"}`}>
@@ -329,7 +329,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                     className={fieldClass}
                   >
                     {states.map((st) => (
-                      <option key={st.id} value={st.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
+                      <option key={st.id} value={st.id} className="bg-[#080E18] text-[#F5EFE0]">
                         {st.name} ({st.code})
                       </option>
                     ))}
@@ -346,9 +346,9 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                     onChange={(e) => handleDistrictChange(e.target.value)}
                     className={`${fieldClass} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">Select district</option>
+                    <option value="" className="bg-[#080E18] text-[#F5EFE0]">Select district</option>
                     {districts.map((d) => (
-                      <option key={d.id} value={d.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
+                      <option key={d.id} value={d.id} className="bg-[#080E18] text-[#F5EFE0]">
                         {d.name}
                       </option>
                     ))}
@@ -365,11 +365,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                     onChange={(e) => handleParliamentChange(e.target.value)}
                     className={`${fieldClass} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">
+                    <option value="" className="bg-[#080E18] text-[#F5EFE0]">
                       {selectedDistrict ? "Select PC" : "Select district first"}
                     </option>
                     {selectedDistrict ? parliaments.map((pc) => (
-                      <option key={pc.id} value={pc.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
+                      <option key={pc.id} value={pc.id} className="bg-[#080E18] text-[#F5EFE0]">
                         {pc.name} ({pc.code})
                       </option>
                     )) : null}
@@ -386,11 +386,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                     onChange={(e) => handleAssemblyChange(e.target.value)}
                     className={`${fieldClass} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    <option value="" className="bg-[#0B1A2C] text-[#F5EFE0]">
+                    <option value="" className="bg-[#080E18] text-[#F5EFE0]">
                       {selectedDistrict ? "Select AC" : "Select district first"}
                     </option>
                     {selectedDistrict ? assemblies.map((ac) => (
-                      <option key={ac.id} value={ac.id} className="bg-[#0B1A2C] text-[#F5EFE0]">
+                      <option key={ac.id} value={ac.id} className="bg-[#080E18] text-[#F5EFE0]">
                         {ac.name} ({ac.code})
                       </option>
                     )) : null}
@@ -408,7 +408,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   placeholder={`Search ${assemblies.length} assembly segments...`}
-                  className="w-full bg-[#0B1A2C] border border-[#22405E] rounded-md pl-9 pr-4 py-2 text-xs text-[#F5EFE0] placeholder-[#8A8E9B] focus:outline-none focus:ring-1 focus:ring-[#D4A24C]"
+                  className="w-full bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-md pl-9 pr-4 py-2 text-xs text-[#F5EFE0] placeholder-[#8A8E9B] focus:outline-none focus:ring-1 focus:ring-[#D4A24C]"
                 />
               </div>
             )}
@@ -416,7 +416,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
             {currentAssemblyDetails && (
               <div
                 data-testid="constituency-preview"
-                className="rounded-xl border border-[#D4A24C]/25 bg-gradient-to-br from-[#122A44] to-[#0F2338] px-5 py-5 sm:px-6 sm:py-6 animate-fadeIn"
+                className="rounded-xl border border-[#D4A24C]/25 bg-gradient-to-br from-[#0A121E] to-[#080E18] px-5 py-5 sm:px-6 sm:py-6 animate-fadeIn"
               >
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                   <div>
@@ -444,7 +444,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
             {/* CURRENT ELECTED REPRESENTATIVE (MLA) PANEL */}
             {selectedAssembly && (
               <div className="rounded-xl border border-[#D4A24C]/30 bg-[#0A1A2B]/90 p-5 sm:p-6 space-y-4 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#22405E] pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[rgba(201,148,54,0.25)] pb-3">
                   <div className="flex items-center gap-2">
                     <Award className="w-4 h-4 text-[#D4A24C]" />
                     <span className="eyebrow gold-text">Current Elected Representative</span>
@@ -470,7 +470,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                           alt={currentRep.name}
                           className="w-14 h-14 rounded-full object-cover border-2 border-[#D4A24C]"
                         />
-                        <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 bg-[#D4A24C] text-[#0B1A2C] text-[9px] font-bold rounded-full">
+                        <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 bg-[#D4A24C] text-[#080E18] text-[9px] font-bold rounded-full">
                           MLA
                         </span>
                       </div>
@@ -505,7 +505,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                       </div>
                     </div>
 
-                    <div className="flex flex-col md:items-end justify-center text-xs space-y-1 bg-[#0F2338] p-3 rounded-lg border border-[#22405E]">
+                    <div className="flex flex-col md:items-end justify-center text-xs space-y-1 bg-[#080E18] p-3 rounded-lg border border-[rgba(201,148,54,0.25)]">
                       <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8A8E9B]">
                         Authoritative Source
                       </span>
@@ -539,7 +539,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-4 bg-[#0F2338] border border-[#22405E] rounded-lg text-[#B9AF95] text-xs">
+                  <div className="flex items-center gap-3 p-4 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-[#B9AF95] text-xs">
                     <AlertCircle className="w-5 h-5 text-[#8A8E9B] shrink-0" />
                     <div>
                       <div className="font-bold text-[#E2DCB8]">Current Representative Data Unavailable</div>
@@ -551,7 +551,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                 )}
 
                 {/* Client Designation Switch */}
-                <div className="pt-3 border-t border-[#22405E] space-y-2">
+                <div className="pt-3 border-t border-[rgba(201,148,54,0.25)] space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                       <UserCheck className="w-3.5 h-3.5" />
@@ -596,12 +596,12 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                           onClick={() => setClientType(item.type)}
                           className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                             isSelected
-                              ? "bg-[#D4A24C] text-[#0B1A2C] border-[#D4A24C] font-bold shadow-sm"
-                              : "bg-[#0F2338] text-[#D8CFB8] border-[#22405E] hover:border-[#D4A24C]/60"
+                              ? "bg-[#D4A24C] text-[#080E18] border-[#D4A24C] font-bold shadow-sm"
+                              : "bg-[#080E18] text-[#D8CFB8] border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60"
                           }`}
                         >
                           <div className="text-xs font-bold leading-tight">{item.label}</div>
-                          <div className={`text-[10px] mt-0.5 truncate ${isSelected ? "text-[#0B1A2C]/80" : "text-[#8A8E9B]"}`}>
+                          <div className={`text-[10px] mt-0.5 truncate ${isSelected ? "text-[#080E18]/80" : "text-[#8A8E9B]"}`}>
                             {item.desc}
                           </div>
                         </button>
@@ -622,7 +622,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                 type="submit"
                 data-testid="generate-audit-btn"
                 disabled={!selectedAssembly}
-                className="group inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:from-[#D26A0F] hover:to-[#C99640] text-[#0B1A2C] text-[13.5px] font-bold rounded-md transition-all disabled:opacity-40 cursor-pointer shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)]"
+                className="group inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:from-[#D26A0F] hover:to-[#C99640] text-[#080E18] text-[13.5px] font-bold rounded-md transition-all disabled:opacity-40 cursor-pointer shadow-[0_8px_24px_-8px_rgba(224,122,31,0.55)]"
               >
                 <span>Generate audit</span>
                 <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
@@ -644,7 +644,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({ onGenerateAu
                   data-testid={`chip-${ac.id}`}
                   className={`px-3 py-1.5 text-xs rounded-full border transition-colors tabular ${
                     active
-                      ? "bg-[#D4A24C] text-[#0B1A2C] border-[#D4A24C] font-semibold"
+                      ? "bg-[#D4A24C] text-[#080E18] border-[#D4A24C] font-semibold"
                       : "bg-transparent text-[#D8CFB8] border-[#D4A24C]/30 hover:bg-[#D4A24C]/10 hover:border-[#D4A24C]/60"
                   }`}
                 >

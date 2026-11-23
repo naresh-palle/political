@@ -818,7 +818,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
   return (
     <div className="w-full max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-6 space-y-6 sm:space-y-8 animate-fadeIn overflow-x-hidden">
       {/* Executive MLA & Ministerial Leadership Banner */}
-      <div className="bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] text-[#F5EFE0] p-5 sm:p-6 rounded-2xl border border-[#D4A24C]/40 shadow-xl space-y-4">
+      <div className="bg-gradient-to-r from-[#080E18] via-[#0A121E] to-[#080E18] text-[#F5EFE0] p-5 sm:p-6 rounded-2xl border border-[#D4A24C]/40 shadow-xl space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           {/* MLA Identity & Photo */}
           <div className="flex items-start sm:items-center gap-4">
@@ -828,21 +828,21 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 alt={activeMla.name}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-md"
               />
-              <span className="absolute -bottom-1 -right-1 text-base bg-[#071322] px-1.5 py-0.5 rounded-full border border-[#D4A24C]/50">
+              <span className="absolute -bottom-1 -right-1 text-base bg-[#050B12] px-1.5 py-0.5 rounded-full border border-[#D4A24C]/50">
                 {activeMla.partyEmoji}
               </span>
             </div>
 
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#050B12] text-[#D4A24C] border border-[#D4A24C]/40">
                   {activeMla.partyEmoji} {activeMla.partyName} ({activeMla.partyId})
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#142B45] text-[#8E9CAE] border border-[#22405E]">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0C1524] text-[#8E9CAE] border border-[rgba(201,148,54,0.25)]">
                   {activeMla.constituencyCode}
                 </span>
                 {activeMla.isMinister && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-[#D4A24C] text-[#0B1A2C] shadow-xs">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-[#D4A24C] text-[#080E18] shadow-xs">
                     ★ Ministerial Office
                   </span>
                 )}
@@ -864,12 +864,12 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
           </div>
 
           {/* Role Toggle Switch */}
-          <div className="flex items-center self-start lg:self-center bg-[#071322] p-1.5 rounded-xl border border-[#22405E]">
+          <div className="flex items-center self-start lg:self-center bg-[#050B12] p-1.5 rounded-xl border border-[rgba(201,148,54,0.25)]">
             <button
               onClick={() => setActiveRole("manager")}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeRole === "manager"
-                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-md font-bold"
+                  ? "bg-[#D4A24C] text-[#080E18] shadow-md font-bold"
                   : "text-[#B9AF95] hover:text-white"
               }`}
             >
@@ -880,7 +880,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               onClick={() => setActiveRole("volunteer")}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeRole === "volunteer"
-                  ? "bg-[#D4A24C] text-[#0B1A2C] shadow-md font-bold"
+                  ? "bg-[#D4A24C] text-[#080E18] shadow-md font-bold"
                   : "text-[#B9AF95] hover:text-white"
               }`}
             >
@@ -892,7 +892,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
         {/* Ministerial Portfolios Strip (if Minister or MLA Department Focus) */}
         {activeMla.ministerialDepartments && activeMla.ministerialDepartments.length > 0 && (
-          <div className="pt-3 border-t border-[#22405E]/60 flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
+          <div className="pt-3 border-t border-[rgba(201,148,54,0.25)]/60 flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1 flex-shrink-0">
               <Briefcase className="w-3.5 h-3.5" />
               {activeMla.isMinister ? "Ministerial Portfolios:" : "Key Department Focus:"}
@@ -901,7 +901,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {activeMla.ministerialDepartments.map((dept, i) => (
                 <span
                   key={i}
-                  className="px-2.5 py-1 rounded-lg bg-[#071322] border border-[#22405E] text-[11px] text-[#F5EFE0] font-medium"
+                  className="px-2.5 py-1 rounded-lg bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[11px] text-[#F5EFE0] font-medium"
                 >
                   {dept}
                 </span>
@@ -918,9 +918,9 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
         <div className="space-y-6 animate-fadeIn text-[#F5EFE0]">
           {/* Volunteer Not Logged In -> Designated Mobile Login Flow */}
           {!loggedVolunteer ? (
-            <div className="max-w-xl mx-auto bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="max-w-xl mx-auto bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
               <div className="text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center mx-auto shadow-inner">
+                <div className="w-12 h-12 rounded-2xl bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center mx-auto shadow-inner">
                   <Lock className="w-6 h-6 text-[#D4A24C]" />
                 </div>
                 <h2 className="font-display text-2xl font-normal text-[#F5EFE0]">
@@ -932,7 +932,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Sample Registered Numbers Notice for quick reference */}
-              <div className="bg-[#071322] border border-[#22405E] rounded-xl p-3.5 text-xs text-[#8E9CAE] space-y-1.5">
+              <div className="bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl p-3.5 text-xs text-[#8E9CAE] space-y-1.5">
                 <div className="flex items-center space-x-1.5 font-bold text-[#D4A24C] text-[11px] uppercase tracking-wider">
                   <Info className="w-3.5 h-3.5 text-[#D4A24C]" />
                   <span>Designated Authorized Numbers:</span>
@@ -943,7 +943,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       key={v.id}
                       type="button"
                       onClick={() => setVolunteerMobileInput(v.mobile)}
-                      className="px-2.5 py-1 bg-[#0B1A2C] border border-[#22405E] hover:border-[#D4A24C] rounded-lg text-[#F5EFE0] transition-colors"
+                      className="px-2.5 py-1 bg-[#080E18] border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C] rounded-lg text-[#F5EFE0] transition-colors"
                     >
                       {v.name}: <strong className="text-[#D4A24C]">{v.mobile}</strong>
                     </button>
@@ -972,14 +972,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         placeholder="e.g. 9848012345 or 123456"
                         value={volunteerMobileInput}
                         onChange={(e) => setVolunteerMobileInput(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-sm font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                        className="w-full pl-9 pr-4 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-sm font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
+                    className="w-full py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#080E18] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
                   >
                     <span>Request Authentication OTP</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1007,7 +1007,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       maxLength={6}
                       value={enteredOtp}
                       onChange={(e) => setEnteredOtp(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-center text-lg tracking-widest font-mono text-[#D4A24C] focus:outline-none focus:border-[#D4A24C]"
+                      className="w-full px-4 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-center text-lg tracking-widest font-mono text-[#D4A24C] focus:outline-none focus:border-[#D4A24C]"
                     />
                   </div>
 
@@ -1015,13 +1015,13 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
-                      className="w-1/3 py-2.5 bg-[#071322] hover:bg-[#142B45] border border-[#22405E] text-[#8E9CAE] text-xs font-semibold rounded-xl transition-colors"
+                      className="w-1/3 py-2.5 bg-[#050B12] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] text-[#8E9CAE] text-xs font-semibold rounded-xl transition-colors"
                     >
                       Change Number
                     </button>
                     <button
                       type="submit"
-                      className="w-2/3 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
+                      className="w-2/3 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#080E18] text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <span>Verify & Enter Field Intake</span>
                       <Check className="w-4 h-4" />
@@ -1034,15 +1034,15 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
             /* Logged In Volunteer Intake Experience */
             <div className="space-y-6">
               {/* Volunteer Active Session Header */}
-              <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center font-bold font-display text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C] flex items-center justify-center font-bold font-display text-lg">
                     {loggedVolunteer.name.charAt(0)}
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
                       <span className="font-bold text-sm text-[#F5EFE0]">{loggedVolunteer.name}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40">
                         Designated Field Volunteer
                       </span>
                     </div>
@@ -1058,7 +1058,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <button
                     type="button"
                     onClick={() => setShowVolunteerReceiptList(!showVolunteerReceiptList)}
-                    className="px-3 py-1.5 text-xs font-semibold text-[#F5EFE0] bg-[#071322] border border-[#22405E] rounded-lg hover:border-[#D4A24C] transition-colors"
+                    className="px-3 py-1.5 text-xs font-semibold text-[#F5EFE0] bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-lg hover:border-[#D4A24C] transition-colors"
                   >
                     {showVolunteerReceiptList ? "Back to Intake Form" : "My Logged Receipts"}
                   </button>
@@ -1073,7 +1073,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Notice of Restrictions */}
-              <div className="bg-[#071322] border border-[#22405E] rounded-xl p-3.5 text-xs text-[#D8CFB8] flex items-center justify-between">
+              <div className="bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl p-3.5 text-xs text-[#D8CFB8] flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Shield className="w-4 h-4 text-[#D4A24C] flex-shrink-0" />
                   <span>
@@ -1084,7 +1084,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
               {showVolunteerReceiptList ? (
                 /* Volunteer's Personal Submitted Receipts Log */
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
+                <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 shadow-xl space-y-4">
                   <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
                     My Submitted Tickets ({grievances.filter((g) => g.submittedByVolunteer?.phone === loggedVolunteer.mobile).length})
                   </h3>
@@ -1092,10 +1092,10 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     {grievances
                       .filter((g) => g.submittedByVolunteer?.phone === loggedVolunteer.mobile)
                       .map((item) => (
-                        <div key={item.id} className="p-4 rounded-xl border border-[#22405E] bg-[#071322] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div key={item.id} className="p-4 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
-                              <span className="font-mono font-bold text-xs bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 px-2 py-0.5 rounded">
+                              <span className="font-mono font-bold text-xs bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40 px-2 py-0.5 rounded">
                                 {item.ticketNumber}
                               </span>
                               <span className="text-xs font-semibold text-[#F5EFE0]">{item.citizenName} ({item.citizenType})</span>
@@ -1110,7 +1110,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               <span className="font-mono text-[#D8CFB8]">{item.submittedDate}</span>
                             </div>
                           </div>
-                          <div className="text-right sm:border-l border-[#22405E] sm:pl-4 text-xs">
+                          <div className="text-right sm:border-l border-[rgba(201,148,54,0.25)] sm:pl-4 text-xs">
                             <span className="text-[10px] uppercase text-[#8E9CAE] font-bold block">Assigned PoC</span>
                             <span className="font-semibold text-[#F5EFE0] block">{item.assignee}</span>
                             <span className="font-mono text-[11px] text-[#D4A24C]">{item.assigneeContact}</span>
@@ -1121,8 +1121,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
               ) : (
                 /* Volunteer 2-Section Intake Registration Form */
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-8">
-                  <div className="border-b border-[#22405E] pb-4">
+                <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 sm:p-8 shadow-xl space-y-8">
+                  <div className="border-b border-[rgba(201,148,54,0.25)] pb-4">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                       Fast-Track Field Intake
                     </span>
@@ -1139,8 +1139,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         SECTION 1: PERSONAL DETAILS
                         ========================================= */}
                     <div className="space-y-4">
-                      <div className="flex items-center space-x-2 border-b border-[#22405E] pb-2">
-                        <span className="w-6 h-6 rounded-full bg-[#D4A24C] text-[#0B1A2C] flex items-center justify-center text-xs font-bold">
+                      <div className="flex items-center space-x-2 border-b border-[rgba(201,148,54,0.25)] pb-2">
+                        <span className="w-6 h-6 rounded-full bg-[#D4A24C] text-[#080E18] flex items-center justify-center text-xs font-bold">
                           1
                         </span>
                         <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
@@ -1161,8 +1161,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               onClick={() => setCitizenType(type)}
                               className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                                 citizenType === type
-                                  ? "bg-[#D4A24C] text-[#0B1A2C] border-[#D4A24C] shadow-md"
-                                  : "bg-[#071322] border-[#22405E] text-[#8E9CAE] hover:text-[#F5EFE0] hover:border-[#D4A24C]/40"
+                                  ? "bg-[#D4A24C] text-[#080E18] border-[#D4A24C] shadow-md"
+                                  : "bg-[#050B12] border-[rgba(201,148,54,0.25)] text-[#8E9CAE] hover:text-[#F5EFE0] hover:border-[#D4A24C]/40"
                               }`}
                             >
                               {type === "Voter" ? "🗳️ Voter" : type === "Cadre" ? "🚩 Cadre" : "⭐ Leader"}
@@ -1183,7 +1183,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. K. Sudhakar Reddy"
                             value={citizenName}
                             onChange={(e) => setCitizenName(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                           />
                         </div>
 
@@ -1200,7 +1200,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. 45"
                             value={citizenAge}
                             onChange={(e) => setCitizenAge(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                           />
                         </div>
 
@@ -1212,7 +1212,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           <select
                             value={citizenGender}
                             onChange={(e) => setCitizenGender(e.target.value as any)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                           >
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -1233,7 +1233,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="+91 98480 12345"
                             value={citizenPhone}
                             onChange={(e) => setCitizenPhone(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs font-mono text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                           />
                         </div>
 
@@ -1247,13 +1247,13 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. D.No 14/231-A"
                             value={doorNo}
                             onChange={(e) => setDoorNo(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
                           />
                         </div>
                       </div>
 
                       {/* Address Hierarchy Sub-fields: Ward/Village, Town/Mandal, Assembly, Parliament, State */}
-                      <div className="p-4 bg-[#071322] rounded-xl border border-[#22405E] space-y-3">
+                      <div className="p-4 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)] space-y-3">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           Hierarchical Administrative Jurisdiction:
                         </span>
@@ -1266,7 +1266,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               placeholder="e.g. Chinna Chowk"
                               value={wardVillage}
                               onChange={(e) => handleVillageChange(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
+                              className="w-full px-3 py-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
                             />
                           </div>
 
@@ -1275,7 +1275,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             <select
                               value={townMandal}
                               onChange={(e) => handleMandalChange(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
+                              className="w-full px-3 py-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                             >
                               {MANDALS_LIST.map((m) => (
                                 <option key={m} value={m}>{m}</option>
@@ -1289,7 +1289,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               type="text"
                               value={assembly}
                               onChange={(e) => setAssembly(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#142B45] border border-[#22405E] rounded-lg text-xs font-semibold text-[#D4A24C]"
+                              className="w-full px-3 py-2 bg-[#0C1524] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs font-semibold text-[#D4A24C]"
                             />
                           </div>
 
@@ -1299,7 +1299,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               type="text"
                               value={parliament}
                               onChange={(e) => setParliament(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#142B45] border border-[#22405E] rounded-lg text-xs font-semibold text-[#D4A24C]"
+                              className="w-full px-3 py-2 bg-[#0C1524] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs font-semibold text-[#D4A24C]"
                             />
                           </div>
 
@@ -1309,7 +1309,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               type="text"
                               value={stateName}
                               onChange={(e) => setStateName(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#142B45] border border-[#22405E] rounded-lg text-xs font-semibold text-[#D4A24C]"
+                              className="w-full px-3 py-2 bg-[#0C1524] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs font-semibold text-[#D4A24C]"
                             />
                           </div>
                         </div>
@@ -1319,9 +1319,9 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     {/* =========================================
                         SECTION 2: ISSUE DETAILS
                         ========================================= */}
-                    <div className="space-y-4 pt-4 border-t border-[#22405E]">
-                      <div className="flex items-center space-x-2 border-b border-[#22405E] pb-2">
-                        <span className="w-6 h-6 rounded-full bg-[#D4A24C] text-[#0B1A2C] flex items-center justify-center text-xs font-bold">
+                    <div className="space-y-4 pt-4 border-t border-[rgba(201,148,54,0.25)]">
+                      <div className="flex items-center space-x-2 border-b border-[rgba(201,148,54,0.25)] pb-2">
+                        <span className="w-6 h-6 rounded-full bg-[#D4A24C] text-[#080E18] flex items-center justify-center text-xs font-bold">
                           2
                         </span>
                         <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
@@ -1340,7 +1340,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="e.g. Broken drinking water pipeline causing contamination on Street 4"
                           value={issueSubject}
                           onChange={(e) => setIssueSubject(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-semibold text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                          className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs font-semibold text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                         />
                       </div>
 
@@ -1353,7 +1353,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           <select
                             value={selectedDept}
                             onChange={(e) => handleDeptChange(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs font-semibold text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs font-semibold text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                           >
                             {Object.keys(DEPARTMENT_CATEGORIES).map((dept) => (
                               <option key={dept} value={dept}>{dept}</option>
@@ -1369,7 +1369,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           <select
                             value={selectedCat}
                             onChange={(e) => handleCatChange(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs text-[#F5EFE0] cursor-pointer focus:border-[#D4A24C]"
                           >
                             {(DEPARTMENT_CATEGORIES[selectedDept] || []).map((cat) => (
                               <option key={cat} value={cat}>{cat}</option>
@@ -1389,7 +1389,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="Provide full description of the grievance, affected households, background observations, and urgency notes..."
                           value={issueDescription}
                           onChange={(e) => setIssueDescription(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                          className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                         />
                       </div>
 
@@ -1405,7 +1405,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. Opposite Community Hall, Street 4, Chinna Chowk"
                             value={issueLocation}
                             onChange={(e) => setIssueLocation(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#071322] border border-[#22405E] rounded-xl text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
+                            className="w-full px-3.5 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl text-xs text-[#F5EFE0] focus:border-[#D4A24C]"
                           />
                         </div>
 
@@ -1427,7 +1427,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                                       : p === "Medium"
                                       ? "bg-amber-600 text-white border-amber-500 shadow-md"
                                       : "bg-emerald-600 text-white border-emerald-500 shadow-md"
-                                    : "bg-[#071322] border-[#22405E] text-[#8E9CAE] hover:text-[#F5EFE0]"
+                                    : "bg-[#050B12] border-[rgba(201,148,54,0.25)] text-[#8E9CAE] hover:text-[#F5EFE0]"
                                 }`}
                               >
                                 {p}
@@ -1438,7 +1438,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       </div>
 
                       {/* 7. Assignee (Auto-Fetched from Central Contact Database) */}
-                      <div className="p-4 bg-[#071322] rounded-xl border border-emerald-800/80 space-y-3">
+                      <div className="p-4 bg-[#050B12] rounded-xl border border-emerald-800/80 space-y-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex items-center space-x-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -1458,7 +1458,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               type="text"
                               value={assigneeName}
                               onChange={(e) => setAssigneeName(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs font-semibold text-[#F5EFE0]"
+                              className="w-full px-3 py-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs font-semibold text-[#F5EFE0]"
                             />
                           </div>
 
@@ -1468,7 +1468,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               type="text"
                               value={assigneeDesignation}
                               onChange={(e) => setAssigneeDesignation(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs text-[#F5EFE0]"
+                              className="w-full px-3 py-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs text-[#F5EFE0]"
                             />
                           </div>
 
@@ -1478,7 +1478,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               type="text"
                               value={assigneeContact}
                               onChange={(e) => setAssigneeContact(e.target.value)}
-                              className="w-full px-3 py-2 bg-[#0B1A2C] border border-[#22405E] rounded-lg text-xs font-mono text-[#D4A24C]"
+                              className="w-full px-3 py-2 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-lg text-xs font-mono text-[#D4A24C]"
                             />
                           </div>
                         </div>
@@ -1490,12 +1490,12 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     </div>
 
                     {/* Submit Action */}
-                    <div className="flex items-center justify-end space-x-4 pt-4 border-t border-[#22405E]">
+                    <div className="flex items-center justify-end space-x-4 pt-4 border-t border-[rgba(201,148,54,0.25)]">
                       <button
                         type="submit"
-                        className="px-8 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#0B1A2C] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center space-x-2 cursor-pointer"
+                        className="px-8 py-3 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] hover:brightness-110 text-[#080E18] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center space-x-2 cursor-pointer"
                       >
-                        <Send className="w-4 h-4 text-[#0B1A2C]" />
+                        <Send className="w-4 h-4 text-[#080E18]" />
                         <span>Submit Ticket (Generate ID)</span>
                       </button>
                     </div>
@@ -1508,8 +1508,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
           {/* Ticket Registration Success Modal */}
           {submittedReceipt && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-              <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 text-[#F5EFE0]">
-                <div className="text-center space-y-2 border-b border-[#22405E] pb-5">
+              <div className="bg-[#080E18] border border-[#D4A24C]/40 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 text-[#F5EFE0]">
+                <div className="text-center space-y-2 border-b border-[rgba(201,148,54,0.25)] pb-5">
                   <div className="w-14 h-14 rounded-full bg-emerald-950/40 border border-emerald-800 text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
@@ -1520,28 +1520,28 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     Ticket Registered Successfully
                   </h3>
                   <div className="pt-1">
-                    <span className="px-4 py-1.5 bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 font-mono font-bold text-sm rounded-lg tracking-wider">
+                    <span className="px-4 py-1.5 bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40 font-mono font-bold text-sm rounded-lg tracking-wider">
                       {submittedReceipt.ticketNumber}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs bg-[#071322] p-4 rounded-xl border border-[#22405E]">
-                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                <div className="space-y-2 text-xs bg-[#050B12] p-4 rounded-xl border border-[rgba(201,148,54,0.25)]">
+                  <div className="flex justify-between border-b border-[rgba(201,148,54,0.25)] pb-1.5">
                     <span className="text-[#8E9CAE]">Citizen Name:</span>
                     <strong className="text-[#F5EFE0]">{submittedReceipt.citizenName} ({submittedReceipt.citizenType})</strong>
                   </div>
-                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                  <div className="flex justify-between border-b border-[rgba(201,148,54,0.25)] pb-1.5">
                     <span className="text-[#8E9CAE]">Department:</span>
                     <strong className="text-[#F5EFE0]">{submittedReceipt.department}</strong>
                   </div>
-                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                  <div className="flex justify-between border-b border-[rgba(201,148,54,0.25)] pb-1.5">
                     <span className="text-[#8E9CAE]">Priority:</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadge(submittedReceipt.priority)}`}>
                       {submittedReceipt.priority} Priority
                     </span>
                   </div>
-                  <div className="flex justify-between border-b border-[#22405E] pb-1.5">
+                  <div className="flex justify-between border-b border-[rgba(201,148,54,0.25)] pb-1.5">
                     <span className="text-[#8E9CAE]">Assigned Officer:</span>
                     <strong className="text-[#F5EFE0]">{submittedReceipt.assignee}</strong>
                   </div>
@@ -1558,14 +1558,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       setSubmittedReceipt(null);
                       setShowVolunteerReceiptList(true);
                     }}
-                    className="px-4 py-2.5 bg-[#071322] border border-[#22405E] text-xs font-semibold rounded-xl text-[#F5EFE0] hover:border-[#D4A24C] transition-colors"
+                    className="px-4 py-2.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-xs font-semibold rounded-xl text-[#F5EFE0] hover:border-[#D4A24C] transition-colors"
                   >
                     View All My Receipts
                   </button>
                   <button
                     type="button"
                     onClick={() => setSubmittedReceipt(null)}
-                    className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                    className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#080E18] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                   >
                     Log Another Grievance
                   </button>
@@ -1582,14 +1582,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
       {activeRole === "manager" && (
         <div className="space-y-8 animate-fadeIn text-[#F5EFE0]">
           {/* Manager Navigation Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#22405E] pb-4">
-            <div className="flex items-center space-x-2 bg-[#071322] p-1.5 rounded-xl border border-[#22405E] overflow-x-auto">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(201,148,54,0.25)] pb-4">
+            <div className="flex items-center space-x-2 bg-[#050B12] p-1.5 rounded-xl border border-[rgba(201,148,54,0.25)] overflow-x-auto">
               <button
                 onClick={() => setManagerTab("overview")}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "overview"
-                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
-                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
+                    ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#0C1524]/50"
                 }`}
               >
                 1. KPI Overview & Analytics
@@ -1598,8 +1598,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 onClick={() => setManagerTab("tickets")}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "tickets"
-                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
-                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
+                    ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#0C1524]/50"
                 }`}
               >
                 2. Master Ticket Explorer ({grievances.length})
@@ -1608,8 +1608,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 onClick={() => setManagerTab("contacts")}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "contacts"
-                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
-                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
+                    ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#0C1524]/50"
                 }`}
               >
                 3. Contact Database ({contacts.length} PoCs)
@@ -1618,8 +1618,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 onClick={() => setManagerTab("volunteers")}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                   managerTab === "volunteers"
-                    ? "bg-[#D4A24C] text-[#071322] font-bold shadow-md"
-                    : "text-[#B9AF95] hover:text-white hover:bg-[#142B45]/50"
+                    ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-md"
+                    : "text-[#B9AF95] hover:text-white hover:bg-[#0C1524]/50"
                 }`}
               >
                 4. Volunteer Whitelist Access ({designatedVolunteers.length})
@@ -1631,9 +1631,9 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 setActiveRole("volunteer");
                 setLoggedVolunteer(designatedVolunteers[0]);
               }}
-              className="inline-flex items-center px-4 py-2.5 bg-[#142B45] border border-[#D4A24C]/40 hover:bg-[#D4A24C] hover:text-[#0B1A2C] rounded-xl text-xs font-bold text-[#D4A24C] transition-all shadow-md cursor-pointer"
+              className="inline-flex items-center px-4 py-2.5 bg-[#0C1524] border border-[#D4A24C]/40 hover:bg-[#D4A24C] hover:text-[#080E18] rounded-xl text-xs font-bold text-[#D4A24C] transition-all shadow-md cursor-pointer"
             >
-              <Smartphone className="w-4 h-4 mr-1.5 text-[#D4A24C] group-hover:text-[#0B1A2C]" />
+              <Smartphone className="w-4 h-4 mr-1.5 text-[#D4A24C] group-hover:text-[#080E18]" />
               <span>Test Field Volunteer Submission Form →</span>
             </button>
           </div>
@@ -1644,7 +1644,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {/* 8 Essential Executive KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                 {/* 1. Total Logged Tickets */}
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors col-span-2 sm:col-span-2">
+                <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors col-span-2 sm:col-span-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CAE] block">
                     1. Total Logged Tickets
                   </span>
@@ -1657,7 +1657,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 2. Priority: High */}
-                <div className="bg-[#0B1A2C] border border-rose-900/50 bg-rose-950/20 rounded-xl p-4 shadow-sm hover:border-rose-500/50 transition-colors">
+                <div className="bg-[#080E18] border border-rose-900/50 bg-rose-950/20 rounded-xl p-4 shadow-sm hover:border-rose-500/50 transition-colors">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-rose-300 block">
                     High Priority
                   </span>
@@ -1670,7 +1670,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 3. Priority: Medium */}
-                <div className="bg-[#0B1A2C] border border-amber-900/50 bg-amber-950/20 rounded-xl p-4 shadow-sm hover:border-amber-500/50 transition-colors">
+                <div className="bg-[#080E18] border border-amber-900/50 bg-amber-950/20 rounded-xl p-4 shadow-sm hover:border-amber-500/50 transition-colors">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block">
                     Medium Priority
                   </span>
@@ -1683,7 +1683,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 4. Priority: Low */}
-                <div className="bg-[#0B1A2C] border border-emerald-900/50 bg-emerald-950/20 rounded-xl p-4 shadow-sm hover:border-emerald-500/50 transition-colors">
+                <div className="bg-[#080E18] border border-emerald-900/50 bg-emerald-950/20 rounded-xl p-4 shadow-sm hover:border-emerald-500/50 transition-colors">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
                     Low Priority
                   </span>
@@ -1696,7 +1696,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 5. Completed Tickets */}
-                <div className="bg-[#0B1A2C] border border-emerald-800/60 rounded-xl p-4 shadow-sm hover:border-emerald-400/60 transition-colors">
+                <div className="bg-[#080E18] border border-emerald-800/60 rounded-xl p-4 shadow-sm hover:border-emerald-400/60 transition-colors">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">
                     6. Completed
                   </span>
@@ -1709,7 +1709,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 6. Pending Tickets */}
-                <div className="bg-[#0B1A2C] border border-blue-800/60 rounded-xl p-4 shadow-sm hover:border-blue-400/60 transition-colors">
+                <div className="bg-[#080E18] border border-blue-800/60 rounded-xl p-4 shadow-sm hover:border-blue-400/60 transition-colors">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300 block">
                     7. Pending
                   </span>
@@ -1722,7 +1722,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 7. Can't be done */}
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
+                <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-xl p-4 shadow-sm hover:border-[#D4A24C]/40 transition-colors">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                     8. Can't Be Done
                   </span>
@@ -1736,8 +1736,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Volunteer Activity & Time-Series Intake Analytics */}
-              <div className="bg-gradient-to-r from-[#0B1A2C] via-[#122A44] to-[#0F2338] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-4">
+              <div className="bg-gradient-to-r from-[#080E18] via-[#0A121E] to-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 shadow-xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(201,148,54,0.25)] pb-4">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                       Volunteer Filing Performance
@@ -1752,25 +1752,25 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* Volunteer Metrics Table */}
-                <div className="overflow-x-auto rounded-xl border border-[#22405E]">
+                <div className="overflow-x-auto rounded-xl border border-[rgba(201,148,54,0.25)]">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-[#22405E] bg-[#071322] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
+                      <tr className="border-b border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
                         <th className="py-3.5 px-4">Volunteer Name</th>
                         <th className="py-3.5 px-4">Designated Mobile</th>
                         <th className="py-3.5 px-4">Assigned Mandal</th>
                         <th className="py-3.5 px-4 text-center bg-blue-950/40 text-blue-300">Today (Day)</th>
                         <th className="py-3.5 px-4 text-center bg-indigo-950/40 text-indigo-300">This Week</th>
                         <th className="py-3.5 px-4 text-center bg-amber-950/40 text-amber-300">This Month</th>
-                        <th className="py-3.5 px-4 text-center bg-[#142B45] text-[#D4A24C]">Total Filed</th>
+                        <th className="py-3.5 px-4 text-center bg-[#0C1524] text-[#D4A24C]">Total Filed</th>
                         <th className="py-3.5 px-4 text-center text-emerald-400">Resolved</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#22405E]/40">
+                    <tbody className="divide-y divide-[rgba(201,148,54,0.25)]/40">
                       {volunteerAnalytics.map((v) => (
-                        <tr key={v.id} className="hover:bg-[#142B45]/50 transition-colors">
+                        <tr key={v.id} className="hover:bg-[#0C1524]/50 transition-colors">
                           <td className="py-3 px-4 font-semibold text-[#F5EFE0] flex items-center space-x-2.5">
-                            <span className="w-7 h-7 rounded-full bg-[#D4A24C] text-[#0B1A2C] flex items-center justify-center text-[10px] font-bold shadow-xs">
+                            <span className="w-7 h-7 rounded-full bg-[#D4A24C] text-[#080E18] flex items-center justify-center text-[10px] font-bold shadow-xs">
                               {v.name.charAt(0)}
                             </span>
                             <span>{v.name}</span>
@@ -1786,7 +1786,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           <td className="py-3 px-4 text-center font-bold font-mono bg-amber-950/20 text-amber-400">
                             {v.monthCount}
                           </td>
-                          <td className="py-3 px-4 text-center font-bold font-mono text-sm bg-[#142B45]/40 text-[#D4A24C]">
+                          <td className="py-3 px-4 text-center font-bold font-mono text-sm bg-[#0C1524]/40 text-[#D4A24C]">
                             {v.totalFiled}
                           </td>
                           <td className="py-3 px-4 text-center font-bold font-mono text-emerald-400">
@@ -1802,8 +1802,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {/* Two-Column Analytics: 3. Department Wise & 4. Area Wise */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* 3. Department Wise Issues */}
-                <div className="lg:col-span-6 bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+                <div className="lg:col-span-6 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                         Pillar 3
@@ -1828,7 +1828,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               <strong className="text-[#D4A24C]">{count}</strong> tickets ({pct}%)
                             </span>
                           </div>
-                          <div className="w-full h-2 bg-[#071322] border border-[#22405E] rounded-full overflow-hidden">
+                          <div className="w-full h-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-[#D4A24C] to-[#E07A1F] rounded-full transition-all"
                               style={{ width: `${Math.max(Number(pct), 4)}%` }}
@@ -1841,8 +1841,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 </div>
 
                 {/* 4. Area Wise Issues */}
-                <div className="lg:col-span-6 bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+                <div className="lg:col-span-6 bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                         Pillar 4
@@ -1867,7 +1867,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               <strong className="text-blue-400">{count}</strong> tickets ({pct}%)
                             </span>
                           </div>
-                          <div className="w-full h-2 bg-[#071322] border border-[#22405E] rounded-full overflow-hidden">
+                          <div className="w-full h-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all"
                               style={{ width: `${Math.max(Number(pct), 4)}%` }}
@@ -1882,22 +1882,22 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
               {/* Demographics Strip: Gender & Classification Breakdown */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-5 shadow-xl space-y-3">
+                <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-5 shadow-xl space-y-3">
                   <h4 className="font-display text-base font-normal text-[#F5EFE0]">
                     Citizen Gender Intake Ratio
                   </h4>
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                    <div className="p-3 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)]">
                       <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">Male</span>
                       <div className="font-display text-xl font-bold text-blue-400 mt-1 font-mono">{genderStats.Male}</div>
                       <span className="text-[10px] text-[#8E9CAE]">{((genderStats.Male / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                    <div className="p-3 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)]">
                       <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">Female</span>
                       <div className="font-display text-xl font-bold text-rose-400 mt-1 font-mono">{genderStats.Female}</div>
                       <span className="text-[10px] text-[#8E9CAE]">{((genderStats.Female / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                    <div className="p-3 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)]">
                       <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">Other</span>
                       <div className="font-display text-xl font-bold text-amber-400 mt-1 font-mono">{genderStats.Other}</div>
                       <span className="text-[10px] text-[#8E9CAE]">{((genderStats.Other / (totalTickets || 1)) * 100).toFixed(0)}%</span>
@@ -1905,22 +1905,22 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   </div>
                 </div>
 
-                <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-5 shadow-xl space-y-3">
+                <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-5 shadow-xl space-y-3">
                   <h4 className="font-display text-base font-normal text-[#F5EFE0]">
                     Citizen Type Distribution
                   </h4>
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                    <div className="p-3 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)]">
                       <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">🗳️ Voter</span>
                       <div className="font-display text-xl font-bold text-emerald-400 mt-1 font-mono">{citizenTypeStats.Voter}</div>
                       <span className="text-[10px] text-[#8E9CAE]">{((citizenTypeStats.Voter / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                    <div className="p-3 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)]">
                       <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">🚩 Cadre</span>
                       <div className="font-display text-xl font-bold text-[#D4A24C] mt-1 font-mono">{citizenTypeStats.Cadre}</div>
                       <span className="text-[10px] text-[#8E9CAE]">{((citizenTypeStats.Cadre / (totalTickets || 1)) * 100).toFixed(0)}%</span>
                     </div>
-                    <div className="p-3 bg-[#071322] rounded-xl border border-[#22405E]">
+                    <div className="p-3 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)]">
                       <span className="text-[10px] uppercase font-bold text-[#8E9CAE] block">⭐ Leader</span>
                       <div className="font-display text-xl font-bold text-purple-400 mt-1 font-mono">{citizenTypeStats.Leader}</div>
                       <span className="text-[10px] text-[#8E9CAE]">{((citizenTypeStats.Leader / (totalTickets || 1)) * 100).toFixed(0)}%</span>
@@ -1930,8 +1930,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* 5. Ticket Assigned Persons Workload */}
-              <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+              <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                       Pillar 5
@@ -1944,7 +1944,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {assigneeStats.map((a) => (
-                    <div key={a.name} className="p-3.5 bg-[#071322] border border-[#22405E] rounded-xl flex items-center justify-between">
+                    <div key={a.name} className="p-3.5 bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl flex items-center justify-between">
                       <div className="space-y-0.5">
                         <span className="font-semibold text-xs text-[#F5EFE0] block">{a.name}</span>
                         <span className="text-[10px] text-[#8E9CAE] block">{a.designation}</span>
@@ -1965,7 +1965,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
           {managerTab === "tickets" && (
             <div className="space-y-6 animate-fadeIn text-[#F5EFE0]">
               {/* Filter Bar */}
-              <div className="bg-[#0F2338] border border-[#22405E] rounded-2xl p-4 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-4 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="relative flex-1 w-full">
                   <Search className="w-4 h-4 text-[#8E9CAE] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
@@ -1973,7 +1973,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                     placeholder="Search by ticket #, citizen name, phone, issue, or location..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:outline-none focus:border-[#D4A24C]"
+                    className="w-full pl-9 pr-4 py-2 text-xs bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl focus:outline-none focus:border-[#D4A24C]"
                   />
                 </div>
 
@@ -1982,7 +1982,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <select
                     value={filterPriority}
                     onChange={(e) => setFilterPriority(e.target.value)}
-                    className="bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
+                    className="bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
                   >
                     <option value="All">All Priorities</option>
                     <option value="High">High</option>
@@ -1994,7 +1994,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
+                    className="bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
                   >
                     <option value="All">All Statuses</option>
                     <option value="Pending">Pending</option>
@@ -2006,7 +2006,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                   <select
                     value={filterDepartment}
                     onChange={(e) => setFilterDepartment(e.target.value)}
-                    className="bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
+                    className="bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl px-3 py-2 text-xs font-semibold cursor-pointer focus:border-[#D4A24C]"
                   >
                     <option value="All">All Departments</option>
                     {Object.keys(DEPARTMENT_CATEGORIES).map((d) => (
@@ -2034,8 +2034,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           onClick={() => setActiveTicket(item)}
                           className={`p-4 rounded-xl border transition-all cursor-pointer ${
                             isSelected
-                              ? "bg-[#142B45] border-2 border-[#D4A24C] shadow-lg"
-                              : "bg-[#0B1A2C] border-[#22405E] hover:border-[#D4A24C]/60"
+                              ? "bg-[#0C1524] border-2 border-[#D4A24C] shadow-lg"
+                              : "bg-[#080E18] border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60"
                           }`}
                         >
                           <div className="flex items-center justify-between text-xs mb-1.5">
@@ -2056,7 +2056,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             {item.subject}
                           </h4>
 
-                          <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] mt-2 pt-2 border-t border-[#22405E]/60">
+                          <div className="flex items-center justify-between text-[11px] text-[#8E9CAE] mt-2 pt-2 border-t border-[rgba(201,148,54,0.25)]/60">
                             <span>{item.citizenName} ({item.citizenType})</span>
                             <span className="font-mono text-[#D8CFB8]">{item.submittedDate}</span>
                           </div>
@@ -2069,12 +2069,12 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                 {/* Ticket Detail Inspector (Right 7 Cols) */}
                 <div className="lg:col-span-7">
                   {activeTicket ? (
-                    <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 shadow-xl space-y-6">
+                    <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 shadow-xl space-y-6">
                       {/* Ticket Header & Status Management Controls */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(201,148,54,0.25)] pb-4">
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-mono text-xs font-bold px-2 py-0.5 bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 rounded">
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40 rounded">
                               {activeTicket.ticketNumber}
                             </span>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getPriorityBadge(activeTicket.priority)}`}>
@@ -2132,7 +2132,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           1. Citizen Personal Profile & Classification
                         </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#071322] rounded-xl border border-[#22405E] text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)] text-xs">
                           <div>
                             <span className="text-[10px] uppercase text-[#8E9CAE] font-bold block">Citizen Name</span>
                             <span className="font-semibold text-[#F5EFE0]">{activeTicket.citizenName}</span>
@@ -2157,7 +2157,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           Citizen Address Details
                         </span>
-                        <div className="p-3.5 bg-[#071322] rounded-xl border border-[#22405E] text-xs space-y-1.5">
+                        <div className="p-3.5 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)] text-xs space-y-1.5">
                           <div className="flex items-center space-x-2 text-[#F5EFE0]">
                             <MapPin className="w-4 h-4 text-[#D4A24C] flex-shrink-0" />
                             <span className="font-semibold text-[#D8CFB8]">
@@ -2173,8 +2173,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]">
                           2. Issue Description & Location
                         </span>
-                        <div className="p-4 bg-[#071322] rounded-xl border border-[#22405E] space-y-2">
-                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8E9CAE] border-b border-[#22405E] pb-2">
+                        <div className="p-4 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)] space-y-2">
+                          <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#8E9CAE] border-b border-[rgba(201,148,54,0.25)] pb-2">
                             <span>Department: <strong className="text-[#F5EFE0]">{activeTicket.department}</strong></span>
                             <span>·</span>
                             <span>Category: <strong className="text-[#F5EFE0]">{activeTicket.category}</strong></span>
@@ -2188,7 +2188,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       </div>
 
                       {/* Assignee Information & Reassignment Option */}
-                      <div className="p-4 bg-[#071322] rounded-xl border border-[#22405E] space-y-3 text-xs">
+                      <div className="p-4 bg-[#050B12] rounded-xl border border-[rgba(201,148,54,0.25)] space-y-3 text-xs">
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
@@ -2207,7 +2207,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                                   const selected = contacts.find((c) => c.id === e.target.value);
                                   if (selected) handleReassignTicket(activeTicket.id, selected);
                                 }}
-                                className="bg-[#0B1A2C] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:border-[#D4A24C]"
+                                className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-lg px-2.5 py-1 text-xs cursor-pointer focus:border-[#D4A24C]"
                               >
                                 <option value="">Choose new PoC...</option>
                                 {contacts.map((c) => (
@@ -2257,21 +2257,21 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         </div>
 
                         {/* Volunteer Submitter Tag */}
-                        <div className="pt-2 border-t border-[#22405E] flex items-center justify-between text-[11px] text-[#8E9CAE]">
+                        <div className="pt-2 border-t border-[rgba(201,148,54,0.25)] flex items-center justify-between text-[11px] text-[#8E9CAE]">
                           <span>Logged by Volunteer: <strong className="text-[#D4A24C]">{activeTicket.submittedByVolunteer?.name}</strong> (+91 {activeTicket.submittedByVolunteer?.phone})</span>
                           <span className="font-mono text-[#D8CFB8]">{activeTicket.submittedDate}</span>
                         </div>
                       </div>
 
                       {/* Liaison Notes & Action Trail */}
-                      <div className="space-y-3 pt-2 border-t border-[#22405E] text-xs">
+                      <div className="space-y-3 pt-2 border-t border-[rgba(201,148,54,0.25)] text-xs">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C] block">
                           Field Liaison Resolution Log & Notes
                         </span>
 
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {activeTicket.notes.map((note, idx) => (
-                            <div key={idx} className="flex items-start space-x-2 text-xs text-[#D8CFB8] bg-[#071322] p-2.5 rounded-lg border border-[#22405E]">
+                            <div key={idx} className="flex items-start space-x-2 text-xs text-[#D8CFB8] bg-[#050B12] p-2.5 rounded-lg border border-[rgba(201,148,54,0.25)]">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#D4A24C] mt-1.5 flex-shrink-0" />
                               <span>{note}</span>
                             </div>
@@ -2286,11 +2286,11 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             value={resolutionNoteInput}
                             onChange={(e) => setResolutionNoteInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddResolutionNote(activeTicket.id)}
-                            className="flex-1 px-3 py-2 text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-lg focus:outline-none focus:border-[#D4A24C]"
+                            className="flex-1 px-3 py-2 text-xs bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-lg focus:outline-none focus:border-[#D4A24C]"
                           />
                           <button
                             onClick={() => handleAddResolutionNote(activeTicket.id)}
-                            className="px-3.5 py-2 bg-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-lg hover:brightness-110 transition-all cursor-pointer"
+                            className="px-3.5 py-2 bg-[#D4A24C] text-[#080E18] text-xs font-bold rounded-lg hover:brightness-110 transition-all cursor-pointer"
                           >
                             <Send className="w-3.5 h-3.5" />
                           </button>
@@ -2298,7 +2298,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-12 text-center text-xs text-[#8E9CAE]">
+                    <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-12 text-center text-xs text-[#8E9CAE]">
                       Select a grievance ticket to inspect details and assign field officers.
                     </div>
                   )}
@@ -2309,8 +2309,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
           {/* TAB 3: CONTACT DATABASE (POINT OF CONTACTS DIRECTORY) */}
           {managerTab === "contacts" && (
-            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn text-[#F5EFE0]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-5">
+            <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn text-[#F5EFE0]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(201,148,54,0.25)] pb-5">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                     Central PoC Registry
@@ -2325,7 +2325,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                 <button
                   onClick={() => setIsAddContactModalOpen(true)}
-                  className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
+                  className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#080E18] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
                   Add New Contact PoC
@@ -2333,10 +2333,10 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Contacts Table */}
-              <div className="overflow-x-auto rounded-xl border border-[#22405E]">
+              <div className="overflow-x-auto rounded-xl border border-[rgba(201,148,54,0.25)]">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-[#22405E] bg-[#071322] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
+                    <tr className="border-b border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
                       <th className="py-3.5 px-4">Officer / PoC Name</th>
                       <th className="py-3.5 px-4">Department & Category</th>
                       <th className="py-3.5 px-4">Jurisdiction (Village/Mandal/Assembly)</th>
@@ -2345,14 +2345,14 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#22405E]/40">
+                  <tbody className="divide-y divide-[rgba(201,148,54,0.25)]/40">
                     {contacts.map((c) => (
-                      <tr key={c.id} className="hover:bg-[#142B45]/50 transition-colors">
+                      <tr key={c.id} className="hover:bg-[#0C1524]/50 transition-colors">
                         <td className="py-3 px-4 font-semibold text-[#F5EFE0]">
                           {c.pocName}
                         </td>
                         <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/40 block w-fit">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/40 block w-fit">
                             {c.department}
                           </span>
                           <span className="text-[11px] text-[#8E9CAE] mt-0.5 block">{c.category}</span>
@@ -2383,8 +2383,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {/* Add Contact Modal */}
               {isAddContactModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-                  <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 text-[#F5EFE0]">
-                    <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+                  <div className="bg-[#080E18] border border-[#D4A24C]/40 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 text-[#F5EFE0]">
+                    <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4A24C]">
                           Directory Entry
@@ -2410,7 +2410,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="e.g. M. Ramesh (Irrigation Liaison)"
                           value={newContactName}
                           onChange={(e) => setNewContactName(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
+                          className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                         />
                       </div>
 
@@ -2423,7 +2423,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                               setNewContactDept(e.target.value);
                               setNewContactCat(DEPARTMENT_CATEGORIES[e.target.value]?.[0] || "");
                             }}
-                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
+                            className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                           >
                             {Object.keys(DEPARTMENT_CATEGORIES).map((d) => (
                               <option key={d} value={d}>{d}</option>
@@ -2436,7 +2436,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           <select
                             value={newContactCat}
                             onChange={(e) => setNewContactCat(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
+                            className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                           >
                             {(DEPARTMENT_CATEGORIES[newContactDept] || []).map((c) => (
                               <option key={c} value={c}>{c}</option>
@@ -2453,7 +2453,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. Chinna Chowk"
                             value={newContactVillage}
                             onChange={(e) => setNewContactVillage(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
+                            className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                           />
                         </div>
                         <div className="space-y-1">
@@ -2461,7 +2461,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           <select
                             value={newContactMandal}
                             onChange={(e) => setNewContactMandal(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
+                            className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                           >
                             {MANDALS_LIST.map((m) => (
                               <option key={m} value={m}>{m}</option>
@@ -2474,7 +2474,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             type="text"
                             value={newContactAssembly}
                             onChange={(e) => setNewContactAssembly(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
+                            className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                           />
                         </div>
                       </div>
@@ -2487,7 +2487,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="e.g. Executive Engineer Water Works"
                             value={newContactDesignation}
                             onChange={(e) => setNewContactDesignation(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
+                            className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                           />
                         </div>
                         <div className="space-y-1">
@@ -2498,7 +2498,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                             placeholder="+91 94408 11223"
                             value={newContactPhone}
                             onChange={(e) => setNewContactPhone(e.target.value)}
-                            className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl font-mono focus:border-[#D4A24C]"
+                            className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl font-mono focus:border-[#D4A24C]"
                           />
                         </div>
                       </div>
@@ -2510,11 +2510,11 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="poc@kadapa.gov.in"
                           value={newContactEmail}
                           onChange={(e) => setNewContactEmail(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
+                          className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                         />
                       </div>
 
-                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[#22405E]">
+                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[rgba(201,148,54,0.25)]">
                         <button
                           type="button"
                           onClick={() => setIsAddContactModalOpen(false)}
@@ -2524,7 +2524,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         </button>
                         <button
                           type="submit"
-                          className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                          className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#080E18] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                         >
                           Save Contact PoC
                         </button>
@@ -2538,8 +2538,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
           {/* TAB 4: VOLUNTEER WHITELIST & ACCESS MANAGEMENT */}
           {managerTab === "volunteers" && (
-            <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn text-[#F5EFE0]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#22405E] pb-5">
+            <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 animate-fadeIn text-[#F5EFE0]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(201,148,54,0.25)] pb-5">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4A24C] block">
                     Access Control Registry
@@ -2554,7 +2554,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
 
                 <button
                   onClick={() => setIsAddVolunteerModalOpen(true)}
-                  className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
+                  className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#080E18] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
                   Add Designated Volunteer
@@ -2562,10 +2562,10 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               </div>
 
               {/* Volunteers Table */}
-              <div className="overflow-x-auto rounded-xl border border-[#22405E]">
+              <div className="overflow-x-auto rounded-xl border border-[rgba(201,148,54,0.25)]">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-[#22405E] bg-[#071322] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
+                    <tr className="border-b border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#8E9CAE] uppercase text-[10px] tracking-wider font-bold">
                       <th className="py-3.5 px-4">Volunteer Name</th>
                       <th className="py-3.5 px-4">Designated Mobile (OTP Whitelist)</th>
                       <th className="py-3.5 px-4">Assigned Constituency</th>
@@ -2574,9 +2574,9 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                       <th className="py-3.5 px-4 text-right">Toggle Access</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#22405E]/40">
+                  <tbody className="divide-y divide-[rgba(201,148,54,0.25)]/40">
                     {designatedVolunteers.map((v) => (
-                      <tr key={v.id} className="hover:bg-[#142B45]/50 transition-colors">
+                      <tr key={v.id} className="hover:bg-[#0C1524]/50 transition-colors">
                         <td className="py-3 px-4 font-semibold text-[#F5EFE0]">
                           {v.name}
                         </td>
@@ -2599,7 +2599,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => handleToggleVolunteerStatus(v.id)}
-                            className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-[#22405E] bg-[#071322] text-[#F5EFE0] hover:border-[#D4A24C] transition-colors cursor-pointer"
+                            className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] hover:border-[#D4A24C] transition-colors cursor-pointer"
                           >
                             {v.active ? "Revoke Access" : "Grant Access"}
                           </button>
@@ -2613,8 +2613,8 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
               {/* Add Volunteer Modal */}
               {isAddVolunteerModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-                  <div className="bg-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-[#F5EFE0]">
-                    <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+                  <div className="bg-[#080E18] border border-[#D4A24C]/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-[#F5EFE0]">
+                    <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
                       <h3 className="font-display text-xl font-normal text-[#F5EFE0]">
                         Add Designated Volunteer
                       </h3>
@@ -2635,7 +2635,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="e.g. M. Chenna Kesavulu"
                           value={newVolName}
                           onChange={(e) => setNewVolName(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
+                          className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl focus:border-[#D4A24C]"
                         />
                       </div>
 
@@ -2647,7 +2647,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                           placeholder="9848012345"
                           value={newVolMobile}
                           onChange={(e) => setNewVolMobile(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl font-mono focus:border-[#D4A24C]"
+                          className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl font-mono focus:border-[#D4A24C]"
                         />
                       </div>
 
@@ -2656,7 +2656,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         <select
                           value={newVolMandal}
                           onChange={(e) => setNewVolMandal(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
+                          className="w-full px-3 py-2 bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-xl cursor-pointer focus:border-[#D4A24C]"
                         >
                           {MANDALS_LIST.map((m) => (
                             <option key={m} value={m}>{m}</option>
@@ -2664,7 +2664,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         </select>
                       </div>
 
-                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[#22405E]">
+                      <div className="flex items-center justify-end space-x-3 pt-3 border-t border-[rgba(201,148,54,0.25)]">
                         <button
                           type="button"
                           onClick={() => setIsAddVolunteerModalOpen(false)}
@@ -2674,7 +2674,7 @@ export const GrievanceManagement: React.FC<GrievanceManagementProps> = ({ curren
                         </button>
                         <button
                           type="submit"
-                          className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                          className="px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#080E18] text-xs font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                         >
                           Authorize Volunteer
                         </button>

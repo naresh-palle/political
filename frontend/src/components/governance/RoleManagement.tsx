@@ -599,7 +599,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           )}
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40">
+              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-[#050B12] text-[#D4A24C] border border-[#D4A24C]/40">
                 {isSuperAdmin
                   ? "Level 1: Platform Super Admin"
                   : isPoliticalAdmin
@@ -629,7 +629,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           <button
             type="button"
             onClick={handleOpenAddUser}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D4A24C] text-[#071322] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#D4A24C] text-[#050B12] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>{isSuperAdmin ? "Add System User" : "Add Volunteer"}</span>
@@ -638,13 +638,13 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
       </div>
 
       {/* Module Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#22405E] pb-2 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 border-b border-[rgba(201,148,54,0.25)] pb-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("roles")}
           className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === "roles"
-              ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
-              : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
+              ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
+              : "bg-[#050B12] text-[#B9AF95] hover:text-[#F5EFE0] border border-[rgba(201,148,54,0.25)]"
           }`}
         >
           <Users className="w-4 h-4" />
@@ -663,8 +663,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
               onClick={() => setActiveTab("branding")}
               className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === "branding"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
-                  : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
+                  : "bg-[#050B12] text-[#B9AF95] hover:text-[#F5EFE0] border border-[rgba(201,148,54,0.25)]"
               }`}
             >
               <Palette className="w-4 h-4" />
@@ -675,8 +675,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
               onClick={() => setActiveTab("representatives")}
               className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
                 activeTab === "representatives"
-                  ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
-                  : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
+                  ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
+                  : "bg-[#050B12] text-[#B9AF95] hover:text-[#F5EFE0] border border-[rgba(201,148,54,0.25)]"
               }`}
             >
               <Award className="w-4 h-4" />
@@ -689,8 +689,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           onClick={() => setActiveTab("audit")}
           className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === "audit"
-              ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
-              : "bg-[#071322] text-[#B9AF95] hover:text-[#F5EFE0] border border-[#22405E]"
+              ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
+              : "bg-[#050B12] text-[#B9AF95] hover:text-[#F5EFE0] border border-[rgba(201,148,54,0.25)]"
           }`}
         >
           <History className="w-4 h-4" />
@@ -798,7 +798,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 }
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full bg-[#071322] border border-[#22405E] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                className="w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
               />
             </div>
 
@@ -807,7 +807,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 <select
                   value={userRoleFilter}
                   onChange={(e) => setUserRoleFilter(e.target.value)}
-                  className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
+                  className="text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
                 >
                   <option value="ALL">All Platform Roles</option>
                   <option value="SUPER_ADMIN">Level 1: Platform Super Admin</option>
@@ -823,7 +823,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 <select
                   value={userRoleFilter}
                   onChange={(e) => setUserRoleFilter(e.target.value)}
-                  className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
+                  className="text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
                 >
                   <option value="ALL">All Constituency Directors</option>
                   <option value="DIRECTOR">Active Directors Only</option>
@@ -834,7 +834,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 <select
                   value={userRoleFilter}
                   onChange={(e) => setUserRoleFilter(e.target.value)}
-                  className="text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
+                  className="text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] focus:outline-none focus:border-[#D4A24C] font-semibold text-[#F5EFE0]"
                 >
                   <option value="ALL">All Squad Volunteers</option>
                   <option value="VOLUNTEER">Active Volunteers Only</option>
@@ -845,7 +845,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenAddUser}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D4A24C] text-[#071322] hover:brightness-110 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D4A24C] text-[#050B12] hover:brightness-110 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>
@@ -861,11 +861,11 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           </div>
 
           {/* User Directory Table */}
-          <div className="bg-[#0B1A2C] border border-[#22405E] rounded-2xl shadow-md overflow-hidden">
+          <div className="bg-[#080E18] border border-[rgba(201,148,54,0.25)] rounded-2xl shadow-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#071322] border-b border-[#22405E] text-[10.5px] font-bold uppercase tracking-wider text-[#8E9CAE]">
+                  <tr className="bg-[#050B12] border-b border-[rgba(201,148,54,0.25)] text-[10.5px] font-bold uppercase tracking-wider text-[#8E9CAE]">
                     <th className="py-2.5 px-3">User / Operator</th>
                     <th className="py-2.5 px-3">Tier & Role</th>
                     <th className="py-2.5 px-3">Jurisdiction</th>
@@ -874,7 +874,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#22405E]/60 text-xs">
+                <tbody className="divide-y divide-[rgba(201,148,54,0.25)]/60 text-xs">
                   {filteredUsers.map((user) => {
                     const isSelf = user.id === currentProfile.id;
                     const isUserSuperAdmin =
@@ -895,7 +895,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     return (
                       <tr
                         key={user.id}
-                        className="hover:bg-[#122A44]/60 transition-colors group"
+                        className="hover:bg-[#0A121E]/60 transition-colors group"
                       >
                         <td className="py-2.5 px-3">
                           <div className="flex items-center gap-3">
@@ -959,7 +959,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         </td>
 
                         <td className="py-2.5 px-3">
-                          <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#071322] border border-[#22405E] text-[#D8CFB8]">
+                          <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#D8CFB8]">
                             {user.clearanceLevel?.split("(")[0] || "LEVEL 2"}
                           </span>
                         </td>
@@ -990,7 +990,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditUser(user)}
-                                className="h-8 w-full px-2.5 text-xs font-semibold whitespace-nowrap text-[#F5EFE0] bg-[#071322] hover:bg-[#142B45] border border-[#22405E] hover:border-[#D4A24C] rounded-lg transition-colors cursor-pointer"
+                                className="h-8 w-full px-2.5 text-xs font-semibold whitespace-nowrap text-[#F5EFE0] bg-[#050B12] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C] rounded-lg transition-colors cursor-pointer"
                               >
                                 Edit Role
                               </button>
@@ -1002,7 +1002,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                               <button
                                 type="button"
                                 onClick={() => setSelectedUserAudit(user)}
-                                className="h-8 w-8 inline-flex items-center justify-center text-[#8E9CAE] hover:text-[#D4A24C] hover:bg-[#071322] border border-transparent hover:border-[#22405E] rounded-lg transition-colors cursor-pointer"
+                                className="h-8 w-8 inline-flex items-center justify-center text-[#8E9CAE] hover:text-[#D4A24C] hover:bg-[#050B12] border border-transparent hover:border-[rgba(201,148,54,0.25)] rounded-lg transition-colors cursor-pointer"
                                 title="View User Activity & Audit Trail"
                               >
                                 <History className="w-4 h-4" />
@@ -1036,8 +1036,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           {/* Add / Edit User Modal */}
           {isUserModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-              <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl border border-[#D4A24C]/40 shadow-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+              <div className="bg-[#080E18] text-[#F5EFE0] rounded-2xl border border-[#D4A24C]/40 shadow-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
                   <div>
                     <h3 className="font-display text-lg font-bold text-[#F5EFE0]">
                       {editingUser ? `Edit User: ${editingUser.name}` : "Create New System User"}
@@ -1105,7 +1105,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         }
                       }}
                       disabled={isPoliticalAdmin}
-                      className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                      className={`w-full text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
                         isPoliticalAdmin ? "opacity-80 cursor-not-allowed" : ""
                       }`}
                     >
@@ -1137,7 +1137,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         value={userFormName}
                         onChange={(e) => setUserFormName(e.target.value)}
                         placeholder="e.g. Ramesh Babu"
-                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
                     <div>
@@ -1149,7 +1149,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         readOnly={!!editingUser && !isSuperAdmin}
                         onChange={(e) => setUserFormEmail(e.target.value)}
                         placeholder="e.g. ramesh"
-                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
                           editingUser && !isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""
                         }`}
                       />
@@ -1165,7 +1165,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         readOnly={!!editingUser && !isSuperAdmin}
                         onChange={(e) => setUserFormPhone(e.target.value)}
                         placeholder="+91 98850 00000"
-                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
                           editingUser && !isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""
                         }`}
                       />
@@ -1177,7 +1177,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         required
                         value={userFormPassword}
                         onChange={(e) => setUserFormPassword(e.target.value)}
-                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] font-mono"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] font-mono"
                       />
                     </div>
                   </div>
@@ -1191,7 +1191,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         value={userFormRoleTitle}
                         readOnly={!!editingUser && !isSuperAdmin}
                         onChange={(e) => setUserFormRoleTitle(e.target.value)}
-                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
+                        className={`w-full text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C] ${
                           editingUser && !isSuperAdmin ? "opacity-70 cursor-not-allowed" : ""
                         }`}
                       />
@@ -1204,18 +1204,18 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         value={userFormConstituency}
                         onChange={(e) => setUserFormConstituency(e.target.value)}
                         placeholder="e.g. Kadapa AC (AC-132)"
-                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#22405E] bg-[#071322] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[rgba(201,148,54,0.25)] bg-[#050B12] text-[#F5EFE0] focus:outline-none focus:border-[#D4A24C]"
                       />
                     </div>
                   </div>
 
                   {/* Granular Permissions Checklist */}
-                  <div className="space-y-2 pt-2 border-t border-[#22405E]">
+                  <div className="space-y-2 pt-2 border-t border-[rgba(201,148,54,0.25)]">
                     <span className="text-xs font-bold text-[#D4A24C] block">
                       Granular Capabilities & Permissions
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canExportReports}
@@ -1224,7 +1224,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         />
                         <span>Export Reports & Audit Data</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canEditStrategy}
@@ -1233,7 +1233,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         />
                         <span>Edit Campaign Strategy</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canManageVolunteers}
@@ -1242,7 +1242,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         />
                         <span>Manage Volunteer Squads</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canResolveGrievances}
@@ -1251,7 +1251,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         />
                         <span>Resolve Citizen Grievances</span>
                       </label>
-                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#22405E] cursor-pointer">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={userFormPermissions.canPublishLandingPage}
@@ -1261,7 +1261,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                         <span>Publish Candidate Web Pages</span>
                       </label>
                       {isSuperAdmin && (
-                        <label className="flex items-center gap-2 p-2 rounded-xl bg-[#071322] border border-[#D4A24C]/40 cursor-pointer sm:col-span-2">
+                        <label className="flex items-center gap-2 p-2 rounded-xl bg-[#050B12] border border-[#D4A24C]/40 cursor-pointer sm:col-span-2">
                           <input
                             type="checkbox"
                             checked={userFormPermissions.canManageSystemUsers}
@@ -1276,7 +1276,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#22405E]">
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-[rgba(201,148,54,0.25)]">
                     <button
                       type="button"
                       onClick={() => setIsUserModalOpen(false)}
@@ -1286,11 +1286,11 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     </button>
                     <button
                       type="submit"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#0B1A2C] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#080E18] text-xs font-bold rounded-xl shadow-md hover:brightness-110 transition-all cursor-pointer"
                     >
                       {userSaveSuccess ? (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-[#0B1A2C]" />
+                          <CheckCircle2 className="w-4 h-4 text-[#080E18]" />
                           <span>Saved Successfully!</span>
                         </>
                       ) : (
@@ -1309,7 +1309,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           {/* Delete User Confirmation Modal */}
           {deletingUser && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-              <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl border border-rose-500/50 shadow-2xl max-w-md w-full p-6 space-y-4">
+              <div className="bg-[#080E18] text-[#F5EFE0] rounded-2xl border border-rose-500/50 shadow-2xl max-w-md w-full p-6 space-y-4">
                 <div className="flex items-center gap-3 text-rose-400">
                   <AlertTriangle className="w-6 h-6" />
                   <h3 className="font-display text-lg font-bold text-[#F5EFE0]">
@@ -1321,12 +1321,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                   Are you sure you want to remove <strong className="text-white">{deletingUser.name}</strong> ({deletingUser.email}) from the platform directory?
                 </p>
 
-                <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] text-[11px] space-y-1 text-[#8E9CAE]">
+                <div className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[11px] space-y-1 text-[#8E9CAE]">
                   <div>Role: <strong className="text-[#F5EFE0]">{deletingUser.roleTitle}</strong></div>
                   <div>Jurisdiction: <strong className="text-[#D4A24C]">{deletingUser.assignedConstituency}</strong></div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#22405E]">
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[rgba(201,148,54,0.25)]">
                   <button
                     type="button"
                     disabled={isDeleting}
@@ -1351,8 +1351,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
           {/* User Activity & Audit Ledger Modal (Super Admin & Political Admin) */}
           {selectedUserAudit && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-              <div className="bg-[#0B1A2C] text-[#F5EFE0] rounded-2xl border border-[#D4A24C]/40 shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto">
-                <div className="flex items-center justify-between border-b border-[#22405E] pb-3">
+              <div className="bg-[#080E18] text-[#F5EFE0] rounded-2xl border border-[#D4A24C]/40 shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)] pb-3">
                   <div>
                     <h3 className="font-display text-base font-bold text-[#F5EFE0] flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-[#D4A24C]" />
@@ -1372,7 +1372,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <div className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between text-xs">
+                  <div className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] flex items-center justify-between text-xs">
                     <div>
                       <span className="text-[#8E9CAE] block text-[10px] uppercase">Account Status</span>
                       <strong className="text-[#D4A24C] font-semibold">Active & Certified</strong>
@@ -1393,12 +1393,12 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                     </span>
                     <div className="space-y-2 text-xs max-h-72 overflow-y-auto pr-1">
                       {userAuditLogs.length === 0 ? (
-                        <div className="p-3 rounded-xl bg-[#071322] border border-[#22405E] text-[#8E9CAE]">
+                        <div className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#8E9CAE]">
                           No usage recorded for this user yet.
                         </div>
                       ) : (
                         userAuditLogs.map((log) => (
-                          <div key={log.id} className="p-3 rounded-xl bg-[#071322] border border-[#22405E] space-y-1">
+                          <div key={log.id} className="p-3 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-1">
                             <div className="flex items-center justify-between text-[10px] text-[#8E9CAE]">
                               <span className="font-mono">{formatAuditTime(log.timestamp)}</span>
                               <span className="text-[#D4A24C] font-bold uppercase">Live</span>
@@ -1417,11 +1417,11 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#22405E] text-right">
+                <div className="pt-2 border-t border-[rgba(201,148,54,0.25)] text-right">
                   <button
                     type="button"
                     onClick={() => setSelectedUserAudit(null)}
-                    className="px-4 py-2 bg-[#071322] hover:bg-[#142B45] border border-[#22405E] text-xs font-semibold rounded-xl text-[#F5EFE0] transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-[#050B12] hover:bg-[#0C1524] border border-[rgba(201,148,54,0.25)] text-xs font-semibold rounded-xl text-[#F5EFE0] transition-colors cursor-pointer"
                   >
                     Close Audit View
                   </button>
@@ -1434,7 +1434,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
       {/* TAB 2: PARTY BRANDING & CUSTOMIZER (SUPER ADMIN ONLY) */}
       {activeTab === "branding" && isSuperAdmin && (
-        <div className="p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-6">
+        <div className="p-6 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-6">
           <div>
             <h3 className="font-display text-xl text-[#F5EFE0]">Political Party Branding Engine</h3>
             <p className="text-xs text-[#8E9CAE]">Configure party color palettes, symbols, and wallpapers across India.</p>
@@ -1454,8 +1454,8 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
                 }}
                 className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                   selectedPartyId === p.id
-                    ? "border-[#D4A24C] bg-[#122A44] shadow-md"
-                    : "border-[#22405E] bg-[#071322] hover:border-[#D4A24C]/50"
+                    ? "border-[#D4A24C] bg-[#0A121E] shadow-md"
+                    : "border-[rgba(201,148,54,0.25)] bg-[#050B12] hover:border-[#D4A24C]/50"
                 }`}
               >
                 <div className="text-xl mb-1">{p.symbolEmoji || "🏛️"}</div>
@@ -1469,7 +1469,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
       {/* TAB 3: ELECTED REPRESENTATIVES LEDGER (SUPER ADMIN ONLY) */}
       {activeTab === "representatives" && isSuperAdmin && (
-        <div className="p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-4">
+        <div className="p-6 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-display text-xl text-[#F5EFE0]">ECI Gazette Representatives Ledger</h3>
@@ -1477,7 +1477,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#D8CFB8]">
+          <div className="p-4 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-xs text-[#D8CFB8]">
             Constituency: <strong className="text-[#D4A24C]">Kadapa AC (AC-132)</strong> · Incumbent MLA: <strong className="text-[#F5EFE0]">R. Madhavi Reddy (TDP)</strong>
           </div>
         </div>
@@ -1485,7 +1485,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
       {/* TAB 4: SECURITY AUDIT TRAIL */}
       {activeTab === "audit" && (
-        <div className="p-6 rounded-2xl bg-[#0B1A2C] border border-[#22405E] space-y-4">
+        <div className="p-6 rounded-2xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-display text-xl text-[#F5EFE0]">Platform Security & Access Audit Trail</h3>
@@ -1498,14 +1498,14 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({
 
           <div className="space-y-2.5">
             {auditLogs.length === 0 ? (
-              <div className="p-4 rounded-xl bg-[#071322] border border-[#22405E] text-xs text-[#8E9CAE]">
+              <div className="p-4 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-xs text-[#8E9CAE]">
                 No security audit entries yet. Sign-ins, user changes, and Political Intelligence collection changes appear here.
               </div>
             ) : (
               auditLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-4 rounded-xl bg-[#071322] border border-[#22405E] flex items-center justify-between gap-3 text-xs"
+                  className="p-4 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] flex items-center justify-between gap-3 text-xs"
                 >
                   <div className="min-w-0">
                     <span className="text-[10px] font-mono text-[#8E9CAE]">{formatAuditTime(log.timestamp)}</span>

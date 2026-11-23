@@ -1122,17 +1122,17 @@ function formatCompactCount(value?: number | null) {
 
 const CARD = `rounded-xl p-3 border ${UNIQUE_TICKET_SURFACE.kpi}`;
 const INPUT =
-  "ll-dark-input w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] focus:bg-[#071322] rounded-xl px-3 py-2 text-sm text-[#F5EFE0] outline-none";
-const LABEL = "block text-[10px] uppercase tracking-wider font-bold text-[#D4A24C] mb-1";
+  "ll-dark-input w-full bg-[#050B12] border border-[#C99436]/35 focus:border-[#C99436] focus:bg-[#080E18] rounded-xl px-3 py-2 text-sm text-[#F5EFE0] outline-none";
+const LABEL = "block text-[10px] uppercase tracking-wider font-bold text-[#C99436] mb-1";
 const BTN =
-  "relative z-10 px-4 py-2 rounded-xl bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-xs font-bold uppercase tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+  "relative z-10 px-4 py-2 rounded-xl bg-gradient-to-r from-[#C99436] to-[#E5B869] text-[#050B12] text-xs font-bold uppercase tracking-wider cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:brightness-105 transition-all";
 
 function statusTone(status?: string) {
   if (status === "VERIFIED") return "text-emerald-300 border-emerald-500/40 bg-emerald-950/40";
   if (status === "NEEDS_RECHECK") return "text-amber-300 border-amber-500/40 bg-amber-950/40";
   if (status === "REJECTED") return "text-rose-300 border-rose-500/40 bg-rose-950/40";
-  if (status === "NO_ACCOUNT" || status === "INACTIVE") return "text-[#B9AF95] border-[#22405E] bg-[#071322]";
-  return "text-[#D4A24C] border-[#D4A24C]/40 bg-[#071322]";
+  if (status === "NO_ACCOUNT" || status === "INACTIVE") return "text-[#B9AF95] border-[#C99436]/20 bg-[#050B12]";
+  return "text-[#C99436] border-[#C99436]/40 bg-[#080E18]";
 }
 
 function queueStatusOf(row: any) {
@@ -2365,7 +2365,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               <button
                 type="button"
                 onClick={() => setTab("dashboard")}
-                className="text-xs font-bold text-[#D4A24C] hover:text-[#F5EFE0] border border-[#D4A24C]/40 px-3 py-1 rounded-lg bg-[#0F2238] transition-all hover:bg-[#142B45]"
+                className="text-xs font-bold text-[#D4A24C] hover:text-[#F5EFE0] border border-[#D4A24C]/40 px-3 py-1 rounded-lg bg-[#080E18] transition-all hover:bg-[#0C1524]"
               >
                 ← Back to Dashboard
               </button>
@@ -2386,7 +2386,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
             key={item.id}
             onClick={() => setTab(item.id)}
             className={`min-h-10 w-full px-1 py-1.5 rounded-lg text-[9px] sm:text-[11px] font-bold uppercase tracking-wider inline-flex items-center justify-center text-center leading-tight ${
-              tab === item.id ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
+              tab === item.id ? "bg-[#D4A24C] text-[#050B12]" : "text-[#B9AF95] border border-[rgba(201,148,54,0.25)]"
             }`}
           >
             {item.label}
@@ -2624,7 +2624,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 const activeState = getStateElectorateInfo(stateId, states.find((s) => s.id === stateId)?.name);
                 return (
                   <>
-                    <div className={`${CARD} p-5 border border-[#D4A24C]/40 bg-gradient-to-br from-[#0F2238] via-[#071322] to-[#0A1A2E]`}>
+                    <div className={`${CARD} p-5 border border-[#D4A24C]/40 bg-gradient-to-br from-[#080E18] via-[#050B12] to-[#080E18]`}>
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[11px] font-bold uppercase tracking-wider mb-2">
@@ -2645,23 +2645,23 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       </div>
 
                       {/* Core State Statistics */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[#22405E]/80">
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[rgba(201,148,54,0.25)]/80">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
                           <span className="text-[11px] text-[#B9AF95] font-semibold block">Total Registered Voters</span>
                           <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalVotersDisplay}</span>
                           <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">{activeState.totalElectorsOfficial}</span>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
                           <span className="text-[11px] text-[#B9AF95] font-semibold block">Assembly Constituencies</span>
                           <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalConstituencies}</span>
                           <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.totalLokSabha} Lok Sabha seats</span>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
                           <span className="text-[11px] text-[#B9AF95] font-semibold block">Polling Stations</span>
                           <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalPollingStationsDisplay}</span>
                           <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Average {activeState.averagePerBooth} voters/booth</span>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] text-left">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
                           <span className="text-[11px] text-[#B9AF95] font-semibold block">Statewide Social Audience</span>
                           <span className="text-xl md:text-2xl font-display font-bold text-[#D4A24C] mt-0.5 block">{activeState.socialAudienceDisplay}</span>
                           <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">{activeState.penetrationPercent}% of voter base</span>
@@ -2670,7 +2670,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
                       {/* Platform Breakdown Cards - Perfect Grid, Spacing, and Typography Alignment in Brand Colors */}
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#1877F2] text-left">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#1877F2] text-left">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] text-[#B9AF95] font-bold">Facebook</span>
                             <span className="w-2 h-2 rounded-full bg-[#1877F2] shrink-0"></span>
@@ -2678,7 +2678,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.facebookDisplay}</span>
                           <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.facebookReachPercent}% state reach</span>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#E1306C] text-left">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#E1306C] text-left">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] text-[#B9AF95] font-bold">Instagram</span>
                             <span className="w-2 h-2 rounded-full bg-[#E1306C] shrink-0"></span>
@@ -2686,7 +2686,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.instagramDisplay}</span>
                           <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.instagramReachPercent}% state reach</span>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#1DA1F2] text-left">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#1DA1F2] text-left">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] text-[#B9AF95] font-bold">X (Twitter)</span>
                             <span className="w-2 h-2 rounded-full bg-[#1DA1F2] shrink-0"></span>
@@ -2694,7 +2694,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.xDisplay}</span>
                           <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.xReachPercent}% state reach</span>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#FF0000] text-left">
+                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#FF0000] text-left">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] text-[#B9AF95] font-bold">YouTube</span>
                             <span className="w-2 h-2 rounded-full bg-[#FF0000] shrink-0"></span>
@@ -2724,7 +2724,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   </div>
                   <p className="text-sm text-[#D4A24C] mt-1">{selectedDistrictProgress.totalConstituencies} constituencies</p>
                   <p className="text-[11px] text-[#B9AF95]">{selectedDistrictProgress.verificationPercent == null ? "No accounts yet" : `${selectedDistrictProgress.verificationPercent}% verified`} · {selectedDistrictProgress.needsRecheck} recheck</p>
-                  <div className="mt-2 h-1.5 rounded bg-[#142B45]">
+                  <div className="mt-2 h-1.5 rounded bg-[#0C1524]">
                     <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${selectedDistrictProgress.totalConstituencies ? (selectedDistrictProgress.constituenciesEntered / selectedDistrictProgress.totalConstituencies) * 100 : 0}%` }} />
                   </div>
                 </button>
@@ -2813,7 +2813,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         {pagedRecent.map((row: PiRecentCollection) => (
                           <tr
                             key={`${row.recordType}-${row.id}`}
-                            className="text-[#F5EFE0] border-t border-[#22405E] cursor-pointer hover:bg-[#131E2D]"
+                            className="text-[#F5EFE0] border-t border-[rgba(201,148,54,0.25)] cursor-pointer hover:bg-[#0C1524]"
                             onClick={() => {
                               goToDataEntry({
                                 districtId: row.districtId,
@@ -2857,17 +2857,17 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       Showing {(collectionPageSafe - 1) * collectionPageSize + 1}–{Math.min(collectionPageSafe * collectionPageSize, filteredRecent.length)} of {filteredRecent.length}
                     </p>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe <= 1} onClick={() => setCollectionPage(1)} aria-label="First page">
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={collectionPageSafe <= 1} onClick={() => setCollectionPage(1)} aria-label="First page">
                         <ChevronsLeft className="w-3.5 h-3.5 inline" /> First
                       </button>
-                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe <= 1} onClick={() => setCollectionPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={collectionPageSafe <= 1} onClick={() => setCollectionPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
                         <ChevronLeft className="w-3.5 h-3.5 inline" /> Previous
                       </button>
                       <span className="px-2 text-[#F5EFE0] font-semibold">Page {collectionPageSafe} of {collectionTotalPages}</span>
-                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe >= collectionTotalPages} onClick={() => setCollectionPage((p) => Math.min(collectionTotalPages, p + 1))} aria-label="Next page">
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={collectionPageSafe >= collectionTotalPages} onClick={() => setCollectionPage((p) => Math.min(collectionTotalPages, p + 1))} aria-label="Next page">
                         Next <ChevronRight className="w-3.5 h-3.5 inline" />
                       </button>
-                      <button type="button" className="px-2 py-1 rounded-lg border border-[#22405E] disabled:opacity-40" disabled={collectionPageSafe >= collectionTotalPages} onClick={() => setCollectionPage(collectionTotalPages)} aria-label="Last page">
+                      <button type="button" className="px-2 py-1 rounded-lg border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={collectionPageSafe >= collectionTotalPages} onClick={() => setCollectionPage(collectionTotalPages)} aria-label="Last page">
                         Last <ChevronsRight className="w-3.5 h-3.5 inline" />
                       </button>
                     </div>
@@ -2931,7 +2931,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 key={group.id}
                 onClick={() => setEntryGroup(group.id)}
                 className={`h-10 w-full px-2 rounded-lg text-[11px] font-bold uppercase tracking-wider inline-flex items-center justify-center ${
-                  entryGroup === group.id ? "bg-[#D4A24C] text-[#071322]" : "text-[#B9AF95] border border-[#22405E]"
+                  entryGroup === group.id ? "bg-[#D4A24C] text-[#050B12]" : "text-[#B9AF95] border border-[rgba(201,148,54,0.25)]"
                 }`}
               >
                 {group.label}
@@ -2979,8 +2979,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           {entryGroup === "leaders" && (
             <div className="space-y-4">
               {((repType === "MLA" && (!districtId || !acId)) || (repType === "MP" && !acId) || (repType === "MLC" && !acId)) ? (
-                <div className={`${CARD} p-8 text-center space-y-3 border border-[#D4A24C]/30 bg-[#071322]/80`}>
-                  <div className="w-12 h-12 rounded-full bg-[#142B45] text-[#D4A24C] flex items-center justify-center mx-auto text-xl border border-[#D4A24C]/40">
+                <div className={`${CARD} p-8 text-center space-y-3 border border-[#D4A24C]/30 bg-[#050B12]/80`}>
+                  <div className="w-12 h-12 rounded-full bg-[#0C1524] text-[#D4A24C] flex items-center justify-center mx-auto text-xl border border-[#D4A24C]/40">
                     🏛️
                   </div>
                   <h3 className="text-base font-display font-bold text-[#F5EFE0]">
@@ -3007,18 +3007,18 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       return (
                         <div
                           key={slot.leaderKind || index}
-                          className={`${CARD} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-[#22405E] hover:border-[#D4A24C]/60 transition-all`}
+                          className={`${CARD} p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60 transition-all`}
                         >
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-[#F5EFE0] text-sm break-words">{slot.name || (LEADER_SLOTS[index]?.label || `Leader ${index + 1}`)}</span>
                               {slot.partyId && (
-                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#071322] border border-[#D4A24C] text-[#D4A24C]">
+                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#050B12] border border-[#D4A24C] text-[#D4A24C]">
                                   {partyLabel(partyById, slot.partyId)}
                                 </span>
                               )}
                               {(slot.politicalRoles || []).map((r) => (
-                                <span key={r} className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30">
+                                <span key={r} className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
                                   {r.replace(/_/g, " ")}
                                 </span>
                               ))}
@@ -3053,13 +3053,13 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         onSubmit={(e) => saveLeader(e, index)}
                         className={`${CARD} min-w-0 h-full flex flex-col gap-3 ${slotAlert ? "border-rose-400 ring-2 ring-rose-400/70" : ""}`}
                       >
-                        <div className="flex items-center justify-between border-b border-[#22405E]/80 pb-2 mb-1">
+                        <div className="flex items-center justify-between border-b border-[rgba(201,148,54,0.25)]/80 pb-2 mb-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h2 className="text-sm font-bold text-[#F5EFE0]">
                               {LEADER_SLOTS[index]?.label || `Leader ${index + 1}`}: {slot.name || "Candidate Details"}
                             </h2>
                             {slot.partyId && (
-                              <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#071322] border border-[#D4A24C] text-[#D4A24C]">
+                              <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#050B12] border border-[#D4A24C] text-[#D4A24C]">
                                 {partyLabel(partyById, slot.partyId)}
                               </span>
                             )}
@@ -3117,8 +3117,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                               platformAlert
                                 ? "border border-rose-400 text-rose-200 ring-2 ring-rose-400/70"
                                 : active
-                                  ? "bg-[#D4A24C] text-[#071322]"
-                                  : "border border-[#22405E] text-[#F5EFE0]"
+                                  ? "bg-[#D4A24C] text-[#050B12]"
+                                  : "border border-[rgba(201,148,54,0.25)] text-[#F5EFE0]"
                             }`}
                           >
                             {PLATFORM_LABEL[platform]}
@@ -3127,7 +3127,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         );
                       })}
                     </div>
-                    <div className={`p-2.5 rounded-lg border space-y-2 ${profileInvalid || hasAccountInvalid ? "border-rose-400" : "border-[#22405E]"}`}>
+                    <div className={`p-2.5 rounded-lg border space-y-2 ${profileInvalid || hasAccountInvalid ? "border-rose-400" : "border-[rgba(201,148,54,0.25)]"}`}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
                           <label className={LABEL} htmlFor={leaderFieldDomId(index, `hasAccount-${activePlatform}`)}>{PLATFORM_LABEL[activePlatform]}: has account?</label>
@@ -3199,7 +3199,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           {(slot.politicalRoles || []).length ? `${(slot.politicalRoles || []).length} selected (multi-select)` : "Select 1 or more roles"}
                         </span>
                       </div>
-                      <div id={leaderFieldDomId(index, "role")} className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-[#071322] border border-[#22405E]/80">
+                      <div id={leaderFieldDomId(index, "role")} className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]/80">
                         {getPoliticalRolesForRepType(repType).map((role) => {
                           const currentRoles = slot.politicalRoles || (slot.politicalRole ? [slot.politicalRole] : []);
                           const active = currentRoles.includes(role);
@@ -3218,8 +3218,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                               }}
                               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 ${
                                 active
-                                  ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
-                                  : "bg-[#0F2238] text-[#B9AF95] border border-[#22405E] hover:text-[#F5EFE0] hover:border-[#D4A24C]/60"
+                                  ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
+                                  : "bg-[#080E18] text-[#B9AF95] border border-[rgba(201,148,54,0.25)] hover:text-[#F5EFE0] hover:border-[#D4A24C]/60"
                               }`}
                             >
                               <span>{role.replace(/_/g, " ")}</span>
@@ -3259,7 +3259,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       setVisibleLeaderSlotsCount((c) => c + 1);
                       setCollapsedSlots((prev) => ({ ...prev, [nextIndex]: false }));
                     }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#D4A24C] hover:bg-[#D4A24C]/90 text-[#071322] text-xs font-bold shadow-lg transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#D4A24C] hover:bg-[#D4A24C]/90 text-[#050B12] text-xs font-bold shadow-lg transition-all cursor-pointer"
                   >
                     <span>➕ Add Another Leader ({visibleLeaderSlotsCount + 1})</span>
                   </button>
@@ -3277,7 +3277,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       return (
                         <div
                           key={row.id}
-                          className="w-full text-left p-2.5 rounded-lg border border-[#22405E]"
+                          className="w-full text-left p-2.5 rounded-lg border border-[rgba(201,148,54,0.25)]"
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-[#F5EFE0]">{row.name}</span>
@@ -3314,7 +3314,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mb-2">
             <div className="flex flex-wrap gap-1">
               {QUEUE_STATUS_TABS.map((s) => (
-                <button type="button" key={s.id} onClick={() => setQueueStatus(s.id)} className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${queueStatus === s.id ? "bg-[#D4A24C] text-[#071322]" : "border-[#22405E] text-[#B9AF95]"}`}>{s.label}</button>
+                <button type="button" key={s.id} onClick={() => setQueueStatus(s.id)} className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${queueStatus === s.id ? "bg-[#D4A24C] text-[#050B12]" : "border-[rgba(201,148,54,0.25)] text-[#B9AF95]"}`}>{s.label}</button>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -3404,7 +3404,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 const showDelete = canDelete && canDeleteCollectedRow(row);
                 const showActions = (canVerify && queueCanAct(row.verificationStatus)) || showDelete;
                 return (
-                <div key={row.id} className="px-2 py-1 rounded-md border border-[#22405E]">
+                <div key={row.id} className="px-2 py-1 rounded-md border border-[rgba(201,148,54,0.25)]">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <div className="min-w-0 flex-1">
                       <span className="text-xs font-bold text-[#F5EFE0]">{row.leaderName} · {PLATFORM_LABEL[String(row.platform || "").toLowerCase() as keyof typeof PLATFORM_LABEL] || row.platform}</span>
@@ -3424,7 +3424,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     <div className="flex flex-wrap items-center gap-1 shrink-0">
                       {showActions && canVerify && queueCanAct(row.verificationStatus) ? (
                         <>
-                          <button className="px-2 py-0.5 rounded-md bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] text-[10px] font-bold uppercase tracking-wider" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
+                          <button className="px-2 py-0.5 rounded-md bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#050B12] text-[10px] font-bold uppercase tracking-wider" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "VERIFIED")}>{actingId === row.id ? "Saving…" : "Verify"}</button>
                           {queueStatusOf(row) === "PENDING" && (
                             <button className="px-2 py-0.5 rounded-md border border-amber-500/40 text-amber-200 text-[10px]" type="button" disabled={actingId === row.id} onClick={() => verify("social", row.id, "NEEDS_RECHECK")}>Recheck</button>
                           )}
@@ -3453,17 +3453,17 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 Showing {(queuePageSafe - 1) * queuePageSize + 1}–{Math.min(queuePageSafe * queuePageSize, filteredQueue.length)} of {filteredQueue.length}
               </p>
               <div className="flex flex-wrap items-center gap-1">
-                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage(1)} aria-label="First page">
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage(1)} aria-label="First page">
                   <ChevronsLeft className="w-3 h-3 inline" /> First
                 </button>
-                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={queuePageSafe <= 1} onClick={() => setQueuePage((p) => Math.max(1, p - 1))} aria-label="Previous page">
                   <ChevronLeft className="w-3 h-3 inline" /> Previous
                 </button>
                 <span className="px-1.5 text-[#F5EFE0] font-semibold">Page {queuePageSafe} of {queueTotalPages}</span>
-                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage((p) => Math.min(queueTotalPages, p + 1))} aria-label="Next page">
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage((p) => Math.min(queueTotalPages, p + 1))} aria-label="Next page">
                   Next <ChevronRight className="w-3 h-3 inline" />
                 </button>
-                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[#22405E] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage(queueTotalPages)} aria-label="Last page">
+                <button type="button" className="px-1.5 py-0.5 rounded-md border border-[rgba(201,148,54,0.25)] disabled:opacity-40" disabled={queuePageSafe >= queueTotalPages} onClick={() => setQueuePage(queueTotalPages)} aria-label="Last page">
                   Last <ChevronsRight className="w-3 h-3 inline" />
                 </button>
               </div>
@@ -3567,7 +3567,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   type="button"
                   disabled={!acId}
                   onClick={() => setIntelPlatform("")}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold disabled:opacity-50 disabled:cursor-not-allowed ${!intelPlatform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold disabled:opacity-50 disabled:cursor-not-allowed ${!intelPlatform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[rgba(201,148,54,0.25)] text-[#F5EFE0]"}`}
                 >
                   All
                 </button>
@@ -3577,7 +3577,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     key={platform}
                     disabled={!acId}
                     onClick={() => setIntelPlatform(platform)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold disabled:opacity-50 disabled:cursor-not-allowed ${intelPlatform === platform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[#22405E] text-[#F5EFE0]"}`}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold disabled:opacity-50 disabled:cursor-not-allowed ${intelPlatform === platform ? "bg-[#3B82F6] text-white border-2 border-[#D4A24C]" : "border border-[rgba(201,148,54,0.25)] text-[#F5EFE0]"}`}
                   >
                     {PLATFORM_LABEL[platform]}
                   </button>
@@ -3608,7 +3608,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
           </aside>
           <div className="flex-1 min-w-0 space-y-4">
             {isSmM && (
-              <div className={`${CARD} p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-[#D4A24C]/40 bg-[#0F2238]`}>
+              <div className={`${CARD} p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-[#D4A24C]/40 bg-[#080E18]`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold text-[#F5EFE0] flex items-center gap-1 mr-1">
                     <Calendar className="w-3.5 h-3.5 text-[#D4A24C]" />
@@ -3617,7 +3617,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   <button
                     type="button"
                     onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, -1))}
-                    className="px-2.5 py-1 text-xs rounded-lg border border-[#22405E] text-[#B9AF95] hover:text-[#F5EFE0] hover:border-[#D4A24C]"
+                    className="px-2.5 py-1 text-xs rounded-lg border border-[rgba(201,148,54,0.25)] text-[#B9AF95] hover:text-[#F5EFE0] hover:border-[#D4A24C]"
                   >
                     ◀ Prev
                   </button>
@@ -3627,12 +3627,12 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                   <button
                     type="button"
                     onClick={() => setSelectedMonth(getAdjacentMonth(selectedMonth, 1))}
-                    className="px-2.5 py-1 text-xs rounded-lg border border-[#22405E] text-[#B9AF95] hover:text-[#F5EFE0] hover:border-[#D4A24C]"
+                    className="px-2.5 py-1 text-xs rounded-lg border border-[rgba(201,148,54,0.25)] text-[#B9AF95] hover:text-[#F5EFE0] hover:border-[#D4A24C]"
                   >
                     Next ▶
                   </button>
                   <select
-                    className="text-xs bg-[#071322] border border-[#22405E] text-[#F5EFE0] rounded-lg px-2 py-1 ml-1 cursor-pointer focus:border-[#D4A24C]"
+                    className="text-xs bg-[#050B12] border border-[rgba(201,148,54,0.25)] text-[#F5EFE0] rounded-lg px-2 py-1 ml-1 cursor-pointer focus:border-[#D4A24C]"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
                   >
@@ -3649,7 +3649,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     type="button"
                     onClick={triggerWeeklySync}
                     disabled={syncingAllAccounts}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D4A24C] to-[#E6B865] text-[#071322] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#D4A24C] to-[#E6B865] text-[#050B12] font-bold text-xs shadow-md hover:brightness-110 disabled:opacity-50"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${syncingAllAccounts ? "animate-spin" : ""}`} />
                     {syncingAllAccounts ? "Auto-Fetching Social Accounts…" : "⚡ Sync All (Weekly Cron)"}
@@ -3816,11 +3816,11 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#22405E]/60">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[rgba(201,148,54,0.25)]/60">
               <button
                 type="button"
                 onClick={() => setEditingMonthlyLeader(null)}
-                className="px-3 py-1.5 text-xs rounded-xl border border-[#22405E] text-[#B9AF95] hover:text-[#F5EFE0]"
+                className="px-3 py-1.5 text-xs rounded-xl border border-[rgba(201,148,54,0.25)] text-[#B9AF95] hover:text-[#F5EFE0]"
               >
                 Cancel
               </button>
@@ -3900,7 +3900,7 @@ function renderTrendPlatformBadge(platform: string) {
     );
   }
   return (
-    <span key={platform} className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#142B45] text-[#B9AF95] font-semibold text-[10px]">
+    <span key={platform} className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#0C1524] text-[#B9AF95] font-semibold text-[10px]">
       {platform}
     </span>
   );
@@ -4025,7 +4025,7 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
   }, [list, trendPlatform, trendCategory]);
 
   return (
-    <div className={`${CARD} p-4 border border-[#22405E] bg-[#0A1A2E]/90`}>
+    <div className={`${CARD} p-4 border border-[rgba(201,148,54,0.25)] bg-[#080E18]/90`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
         <div className="flex items-start gap-2.5">
           <span className="relative flex h-2.5 w-2.5 mt-1">
@@ -4040,7 +4040,7 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-[#D4A24C]/15 text-[#D4A24C] border border-[#D4A24C]/40 text-xs font-bold">
                 📅 {formattedDate}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#071322] text-[#B9AF95] border border-[#22405E] text-[11px] font-medium">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#050B12] text-[#B9AF95] border border-[rgba(201,148,54,0.25)] text-[11px] font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 Source: Meta Ad Library & Public Buzz, X Trends API, YouTube Trending India ({stateName || "AP"})
               </span>
@@ -4049,13 +4049,13 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
         </div>
 
         {/* View Switcher: Grid vs List */}
-        <div className="flex items-center gap-1 bg-[#071322] p-1 rounded-lg border border-[#22405E]/80 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-[#050B12] p-1 rounded-lg border border-[rgba(201,148,54,0.25)]/80 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setViewMode("grid")}
             className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-all ${
               viewMode === "grid"
-                ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
                 : "text-[#B9AF95] hover:text-[#F5EFE0]"
             }`}
             title="Grid View (Cards)"
@@ -4068,7 +4068,7 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
             onClick={() => setViewMode("list")}
             className={`px-2.5 py-1 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-all ${
               viewMode === "list"
-                ? "bg-[#D4A24C] text-[#071322] shadow-sm font-bold"
+                ? "bg-[#D4A24C] text-[#050B12] shadow-sm font-bold"
                 : "text-[#B9AF95] hover:text-[#F5EFE0]"
             }`}
             title="List View (Table)"
@@ -4080,7 +4080,7 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
       </div>
 
       {/* Platform & Category Filters Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 pb-3 border-t border-[#142B45]">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 pb-3 border-t border-[#0C1524]">
         {/* Platform Selection Pills */}
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-[11px] text-[#B9AF95] font-semibold mr-1">Platform:</span>
@@ -4099,8 +4099,8 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
                 onClick={() => setTrendPlatform(p.id)}
                 className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-all border ${
                   active
-                    ? "bg-[#D4A24C] text-[#071322] border-[#D4A24C] font-bold shadow-sm"
-                    : "bg-[#071322] text-[#B9AF95] border-[#22405E] hover:border-[#D4A24C]/50 hover:text-[#F5EFE0]"
+                    ? "bg-[#D4A24C] text-[#050B12] border-[#D4A24C] font-bold shadow-sm"
+                    : "bg-[#050B12] text-[#B9AF95] border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/50 hover:text-[#F5EFE0]"
                 }`}
               >
                 {p.label}
@@ -4121,8 +4121,8 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
                 onClick={() => setTrendCategory(cat)}
                 className={`px-2 py-0.5 rounded-full text-[11px] transition-all border ${
                   active
-                    ? "bg-[#22405E] text-[#D4A24C] border-[#D4A24C] font-bold"
-                    : "bg-[#071322] text-[#B9AF95] border-[#22405E]/80 hover:text-[#F5EFE0]"
+                    ? "bg-[rgba(201,148,54,0.25)] text-[#D4A24C] border-[#D4A24C] font-bold"
+                    : "bg-[#050B12] text-[#B9AF95] border-[rgba(201,148,54,0.25)]/80 hover:text-[#F5EFE0]"
                 }`}
               >
                 {cat === "ALL" ? "All Topics" : cat}
@@ -4140,12 +4140,12 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
             return (
               <div
                 key={item.hashtag}
-                className="p-3.5 rounded-xl bg-[#071322] border border-[#22405E]/80 hover:border-[#D4A24C]/60 transition-all flex flex-col justify-between space-y-3"
+                className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)]/80 hover:border-[#D4A24C]/60 transition-all flex flex-col justify-between space-y-3"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-sm font-bold text-[#D4A24C]">{item.hashtag}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#142B45] text-[#B9AF95] font-medium shrink-0 border border-[#22405E]">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#0C1524] text-[#B9AF95] font-medium shrink-0 border border-[rgba(201,148,54,0.25)]">
                       {item.category}
                     </span>
                   </div>
@@ -4160,7 +4160,7 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
                   <p className="text-[11px] text-[#B9AF95] mt-1 line-clamp-2 leading-relaxed">{item.summary}</p>
                 </div>
 
-                <div className="pt-2 border-t border-[#142B45] flex items-center justify-between text-[11px]">
+                <div className="pt-2 border-t border-[#0C1524] flex items-center justify-between text-[11px]">
                   <span className="text-[#F5EFE0] font-bold">
                     {item.volume} posts <span className="text-emerald-400 font-semibold">{item.velocity}</span>
                   </span>
@@ -4174,10 +4174,10 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
         </div>
       ) : (
         /* List View: High-density scannable table */
-        <div className="overflow-x-auto rounded-xl border border-[#22405E]/80 bg-[#071322]">
+        <div className="overflow-x-auto rounded-xl border border-[rgba(201,148,54,0.25)]/80 bg-[#050B12]">
           <table className="w-full text-left text-xs text-[#EADBBF]">
             <thead>
-              <tr className="border-b border-[#22405E] text-[#B9AF95] uppercase tracking-wider text-[10px] bg-[#0A1A2E]">
+              <tr className="border-b border-[rgba(201,148,54,0.25)] text-[#B9AF95] uppercase tracking-wider text-[10px] bg-[#080E18]">
                 <th className="py-2.5 px-3">Hashtag & Topic</th>
                 <th className="py-2.5 px-3">Running Platforms</th>
                 <th className="py-2.5 px-3">Category</th>
@@ -4186,11 +4186,11 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
                 <th className="py-2.5 px-3">Topic Summary</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#142B45]">
+            <tbody className="divide-y divide-[#0C1524]">
               {displayList.map((item: any) => {
                 const platforms = getTrendPlatforms(item);
                 return (
-                  <tr key={item.hashtag} className="hover:bg-[#142B45]/50 transition-colors">
+                  <tr key={item.hashtag} className="hover:bg-[#0C1524]/50 transition-colors">
                     <td className="py-2.5 px-3 whitespace-nowrap">
                       <span className="font-bold text-[#D4A24C] block">{item.hashtag}</span>
                       <span className="text-[11px] text-[#F5EFE0] font-medium">{item.tag}</span>
@@ -4201,7 +4201,7 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
                       </div>
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap">
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#142B45] text-[#B9AF95] font-medium border border-[#22405E]">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#0C1524] text-[#B9AF95] font-medium border border-[rgba(201,148,54,0.25)]">
                         {item.category}
                       </span>
                     </td>
@@ -4339,7 +4339,7 @@ function StateWideOverview({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-[#EADBBF]">
             <thead>
-              <tr className="border-b border-[#22405E] text-[#B9AF95] uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-[rgba(201,148,54,0.25)] text-[#B9AF95] uppercase tracking-wider text-[10px]">
                 <th className="py-2.5 px-3">District</th>
                 <th className="py-2.5 px-3 text-center">Constituencies</th>
                 <th className="py-2.5 px-3 text-right">Registered Voters</th>
@@ -4348,7 +4348,7 @@ function StateWideOverview({
                 <th className="py-2.5 px-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#142B45]">
+            <tbody className="divide-y divide-[#0C1524]">
               {leaderboard.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-[#B9AF95] text-xs">
@@ -4362,7 +4362,7 @@ function StateWideOverview({
                   );
                   const targetId = matchDistrict?.id || d.districtId;
                   return (
-                    <tr key={d.name} className="hover:bg-[#142B45]/50 transition-colors">
+                    <tr key={d.name} className="hover:bg-[#0C1524]/50 transition-colors">
                       <td className="py-2.5 px-3 font-bold text-[#F5EFE0]">{d.name}</td>
                       <td className="py-2.5 px-3 text-center text-[#B9AF95]">{d.constituencies} ACs</td>
                       <td className="py-2.5 px-3 text-right text-[#B9AF95]">{formatCompactCount(d.voters)}</td>
@@ -4374,7 +4374,7 @@ function StateWideOverview({
                         <button
                           type="button"
                           onClick={() => onSelectDistrict(targetId)}
-                          className="px-2.5 py-1 rounded-lg bg-[#D4A24C]/10 border border-[#D4A24C]/40 text-[#D4A24C] hover:bg-[#D4A24C] hover:text-[#071322] font-semibold text-[11px] transition-all"
+                          className="px-2.5 py-1 rounded-lg bg-[#D4A24C]/10 border border-[#D4A24C]/40 text-[#D4A24C] hover:bg-[#D4A24C] hover:text-[#050B12] font-semibold text-[11px] transition-all"
                         >
                           Inspect District →
                         </button>
@@ -4453,7 +4453,7 @@ function IntelligenceDistrict({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D4A24C]/40 bg-[#0F2238] text-[#D4A24C] hover:bg-[#142B45] hover:text-[#F5EFE0] text-xs font-bold transition-all shadow-sm self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D4A24C]/40 bg-[#080E18] text-[#D4A24C] hover:bg-[#0C1524] hover:text-[#F5EFE0] text-xs font-bold transition-all shadow-sm self-start sm:self-auto"
           >
             ← Back to Intelligence
           </button>
@@ -4467,7 +4467,7 @@ function IntelligenceDistrict({
               type="button"
               key={row.assemblyConstituencyId}
               onClick={() => onOpen(row.assemblyConstituencyId)}
-              className={`${CARD} text-left w-full min-w-0 transition-all hover:border-[#D4A24C]/60 hover:bg-[#0F2238]/90 group`}
+              className={`${CARD} text-left w-full min-w-0 transition-all hover:border-[#D4A24C]/60 hover:bg-[#080E18]/90 group`}
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="font-bold text-[#F5EFE0] break-words group-hover:text-[#D4A24C] transition-colors">{row.assemblyName}</span>
@@ -4491,7 +4491,7 @@ function IntelligenceDistrict({
                 </span>
               </div>
               <p className="text-[11px] text-[#B9AF95]">of {formatCompactCount(row.estimatedUsers)} digital electors</p>
-              <div className="mt-2 h-1.5 rounded bg-[#142B45] overflow-hidden">
+              <div className="mt-2 h-1.5 rounded bg-[#0C1524] overflow-hidden">
                 <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${Math.max(5, Math.min(100, pct))}%` }} />
               </div>
               <div className="mt-2 flex items-center justify-between text-[11px] text-[#B9AF95]">
@@ -4631,20 +4631,20 @@ function AiCampaignIntelligence({
       <head>
         <title>Leaders Lens · Political Intelligence Report - ${leader.name}</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #071322; color: #F5EFE0; padding: 32px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #050B12; color: #F5EFE0; padding: 32px; }
           .header { border-bottom: 2px solid #D4A24C; padding-bottom: 16px; margin-bottom: 24px; }
           .brand { color: #D4A24C; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
           .title { font-size: 26px; font-weight: bold; color: #F5EFE0; margin: 4px 0; }
           .meta { color: #B9AF95; font-size: 13px; }
-          .card { background: #0F2238; border: 1px solid #22405E; border-radius: 12px; padding: 18px; margin-bottom: 20px; }
-          .card-title { color: #D4A24C; font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #22405E; padding-bottom: 6px; }
+          .card { background: #080E18; border: 1px solid rgba(201,148,54,0.25); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+          .card-title { color: #D4A24C; font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(201,148,54,0.25); padding-bottom: 6px; }
           table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-          th { text-align: left; padding: 8px 12px; background: #142B45; color: #D4A24C; font-size: 11px; text-transform: uppercase; }
-          td { padding: 8px 12px; border-bottom: 1px solid #22405E; color: #F5EFE0; }
+          th { text-align: left; padding: 8px 12px; background: #0C1524; color: #D4A24C; font-size: 11px; text-transform: uppercase; }
+          td { padding: 8px 12px; border-bottom: 1px solid rgba(201,148,54,0.25); color: #F5EFE0; }
           .rec-item { margin-bottom: 14px; padding-left: 12px; border-left: 3px solid #D4A24C; }
           .rec-title { font-weight: bold; color: #F5EFE0; font-size: 13px; }
           .rec-desc { color: #B9AF95; font-size: 12px; margin-top: 2px; }
-          .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #D4A24C; color: #071322; }
+          .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #D4A24C; color: #050B12; }
           @media print { body { background: white !important; color: black !important; } .card { background: #f9f9f9 !important; border-color: #ddd !important; } td, th { color: black !important; } .rec-title { color: black !important; } .rec-desc { color: #555 !important; } }
         </style>
       </head>
@@ -4743,8 +4743,8 @@ function AiCampaignIntelligence({
   };
 
   return (
-    <div className={`${CARD} border border-[#D4A24C]/40 bg-gradient-to-br from-[#0F2238] via-[#071322] to-[#0A1A2E] p-5 space-y-4`}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#22405E]/80 pb-3">
+    <div className={`${CARD} border border-[#D4A24C]/40 bg-gradient-to-br from-[#080E18] via-[#050B12] to-[#080E18] p-5 space-y-4`}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[rgba(201,148,54,0.25)]/80 pb-3">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[10px] font-bold uppercase tracking-wider mb-1.5">
             <span>✨ AI Campaign Intelligence & Strategy</span>
@@ -4759,7 +4759,7 @@ function AiCampaignIntelligence({
         <button
           type="button"
           onClick={exportLeaderReport}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D4A24C] hover:bg-[#D4A24C]/90 text-[#071322] font-bold text-xs shadow-md transition-all shrink-0 cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D4A24C] hover:bg-[#D4A24C]/90 text-[#050B12] font-bold text-xs shadow-md transition-all shrink-0 cursor-pointer"
         >
           <span>📥 Export Leader Brief (PDF / Print)</span>
         </button>
@@ -4769,7 +4769,7 @@ function AiCampaignIntelligence({
         {recommendations.map((rec, i) => (
           <div
             key={i}
-            className="p-3.5 rounded-xl bg-[#071322]/80 border border-[#22405E] border-l-4 border-l-[#D4A24C] space-y-1"
+            className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#D4A24C] space-y-1"
           >
             <div className="flex items-center justify-between gap-2">
               <span className="font-bold text-xs text-[#F5EFE0]">{rec.title}</span>
@@ -4782,7 +4782,7 @@ function AiCampaignIntelligence({
         ))}
       </div>
 
-      <div className="p-3 rounded-xl bg-[#071322]/50 border border-[#22405E]/70 text-xs">
+      <div className="p-3 rounded-xl bg-[#050B12]/50 border border-[rgba(201,148,54,0.25)]/70 text-xs">
         <span className="font-bold text-[#D4A24C] uppercase tracking-wider text-[10px] block mb-1.5">
           Priority 14-Day Tactical Execution Plan
         </span>
@@ -4993,7 +4993,7 @@ function IntelligenceConstituency({
             <button
               type="button"
               onClick={onBackDistrict}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#22405E] bg-[#0F2238] text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] text-xs font-semibold transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[rgba(201,148,54,0.25)] bg-[#080E18] text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#0C1524] text-xs font-semibold transition-all"
             >
               ← Back to District
             </button>
@@ -5002,7 +5002,7 @@ function IntelligenceConstituency({
             <button
               type="button"
               onClick={onBackRoot}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D4A24C]/40 bg-[#0F2238] text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#142B45] text-xs font-bold transition-all shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D4A24C]/40 bg-[#080E18] text-[#D4A24C] hover:text-[#F5EFE0] hover:bg-[#0C1524] text-xs font-bold transition-all shadow-sm"
             >
               ← Back to Intelligence
             </button>
@@ -5053,15 +5053,15 @@ function IntelligenceConstituency({
                       onClick={() => setSelectedFocusLeaderId(l.id)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                         isChosen
-                          ? "bg-[#D4A24C] text-[#071322] shadow font-bold border border-[#D4A24C]"
-                          : "bg-[#0F2238] text-[#B9AF95] border border-[#22405E] hover:text-[#F5EFE0] hover:border-[#D4A24C]/60"
+                          ? "bg-[#D4A24C] text-[#050B12] shadow font-bold border border-[#D4A24C]"
+                          : "bg-[#080E18] text-[#B9AF95] border border-[rgba(201,148,54,0.25)] hover:text-[#F5EFE0] hover:border-[#D4A24C]/60"
                       }`}
                     >
                       <span>{l.name}</span>
                       <span
                         className="text-[10px] font-bold px-1 rounded"
                         style={{
-                          backgroundColor: isChosen ? "#071322" : "rgba(255,255,255,0.06)",
+                          backgroundColor: isChosen ? "#050B12" : "rgba(255,255,255,0.06)",
                           color: isChosen ? "#D4A24C" : (l.partyColor || "#D4A24C")
                         }}
                       >
@@ -5130,7 +5130,7 @@ function IntelligenceConstituency({
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left min-w-[54rem]">
             <thead>
-              <tr className="border-b border-[#22405E] text-[#D4A24C] uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-[rgba(201,148,54,0.25)] text-[#D4A24C] uppercase tracking-wider text-[10px]">
                 <th className="py-2.5 px-3">Leader</th>
                 <th className="py-2.5 px-3">Party</th>
                 <th className="py-2.5 px-3 text-right">Followers</th>
@@ -5144,7 +5144,7 @@ function IntelligenceConstituency({
                 <th className="py-2.5 px-3 text-center">State Rank</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#142B45]">
+            <tbody className="divide-y divide-[#0C1524]">
               {constituencyLeadersPool.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="py-6 text-center text-[#B9AF95]">
@@ -5164,13 +5164,13 @@ function IntelligenceConstituency({
                       key={row.id}
                       onClick={() => setSelectedFocusLeaderId(row.id)}
                       className={`cursor-pointer transition-colors ${
-                        isFocus ? "bg-[#D4A24C]/15 border-l-4 border-l-[#D4A24C]" : "hover:bg-[#142B45]/50"
+                        isFocus ? "bg-[#D4A24C]/15 border-l-4 border-l-[#D4A24C]" : "hover:bg-[#0C1524]/50"
                       }`}
                     >
                       <td className="py-2.5 px-3 font-bold text-[#F5EFE0]">
                         <div className="flex items-center gap-1.5">
                           <span>{row.name}</span>
-                          {isFocus && <span className="text-[10px] bg-[#D4A24C] text-[#071322] font-bold px-1.5 py-0.2 rounded">FOCUS</span>}
+                          {isFocus && <span className="text-[10px] bg-[#D4A24C] text-[#050B12] font-bold px-1.5 py-0.2 rounded">FOCUS</span>}
                         </div>
                       </td>
                       <td className="py-2.5 px-3">
@@ -5221,7 +5221,7 @@ function IntelligenceConstituency({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Party Comparison */}
         <div className={CARD}>
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#22405E]/80">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-[rgba(201,148,54,0.25)]/80">
             <h3 className="text-sm font-bold text-[#F5EFE0]">Party Comparison</h3>
             <span className="text-[10px] text-[#B9AF95] uppercase tracking-wider font-semibold">Total Leaders & Reach</span>
           </div>
@@ -5230,7 +5230,7 @@ function IntelligenceConstituency({
               <p className="text-xs text-[#B9AF95] py-2">No party data available.</p>
             ) : (
               partyCompareRows.map((p: any) => (
-                <div key={p.partyId} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#071322]/60 border border-[#22405E]/40">
+                <div key={p.partyId} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#050B12]/60 border border-[rgba(201,148,54,0.25)]/40">
                   <span className="font-bold flex items-center gap-1.5" style={{ color: p.partyColor || "#D4A24C" }}>
                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.partyColor || "#D4A24C" }} />
                     {p.partyName || p.partyId}
@@ -5246,13 +5246,13 @@ function IntelligenceConstituency({
 
         {/* Platform Comparison */}
         <div className={CARD}>
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#22405E]/80">
+          <div className="flex items-center justify-between mb-2 pb-2 border-b border-[rgba(201,148,54,0.25)]/80">
             <h3 className="text-sm font-bold text-[#F5EFE0]">Platform Comparison & Gap</h3>
             <span className="text-[10px] text-[#B9AF95] uppercase tracking-wider font-semibold">Presence</span>
           </div>
           <div className="space-y-2">
             {platformCompareRows.map((p: any) => (
-              <div key={p.platform} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#071322]/60 border border-[#22405E]/40">
+              <div key={p.platform} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-[#050B12]/60 border border-[rgba(201,148,54,0.25)]/40">
                 <span className="font-bold uppercase tracking-wider text-[#D4A24C]">{PLATFORM_LABEL[p.platform as (typeof PLATFORMS)[number]] || p.platform}</span>
                 <span className="text-[#B9AF95]">
                   <strong className="text-[#F5EFE0]">{p.accounts}</strong> accounts · <strong className="text-[#F5EFE0]">{formatCompactCount(p.followers)}</strong> followers
@@ -5277,7 +5277,7 @@ function IntelligenceConstituency({
                 <h3 className="font-bold text-[#F5EFE0] break-words">{leader.name}</h3>
                 <div className="flex flex-wrap items-center gap-1 shrink-0 justify-end">
                   {leader.partyId ? (
-                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#071322] border border-current" style={{ color: leader.partyColor || "#D4A24C" }}>
+                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#050B12] border border-current" style={{ color: leader.partyColor || "#D4A24C" }}>
                       {partyLabel(partyById, leader.partyId, leader.partyName)}
                     </span>
                   ) : null}
@@ -5288,7 +5288,7 @@ function IntelligenceConstituency({
                     const uniqueRoles = Array.from(new Set(roles.filter(Boolean)));
                     if (uniqueRoles.length > 0) {
                       return uniqueRoles.map((r: string) => (
-                        <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#142B45] text-[#D4A24C] border border-[#D4A24C]/30">
+                        <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
                           {r.replace(/_/g, " ")}
                         </span>
                       ));
@@ -5323,7 +5323,7 @@ function IntelligenceConstituency({
                       )}
                     </div>
                     {!noAccount ? (
-                      <div className="mt-1 h-1.5 rounded bg-[#142B45]">
+                      <div className="mt-1 h-1.5 rounded bg-[#0C1524]">
                         <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
                       </div>
                     ) : null}
@@ -5331,7 +5331,7 @@ function IntelligenceConstituency({
                 );
               })}
               {isSmM && (
-                <div className="mt-3 pt-2.5 border-t border-[#22405E]/80 space-y-1.5">
+                <div className="mt-3 pt-2.5 border-t border-[rgba(201,148,54,0.25)]/80 space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-[#D4A24C] flex items-center gap-1">
                       <span>📢 Ads & Content · {formatMonthName(selectedMonth || "")}</span>
@@ -5346,7 +5346,7 @@ function IntelligenceConstituency({
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5 text-center bg-[#071322]/80 p-2 rounded-lg border border-[#22405E]/60">
+                  <div className="grid grid-cols-3 gap-1.5 text-center bg-[#050B12]/80 p-2 rounded-lg border border-[rgba(201,148,54,0.25)]/60">
                     <div>
                       <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Posts</p>
                       <p className="text-xs font-bold text-[#F5EFE0] mt-0.5">{leader.monthlyMetrics?.postsCount ?? 0}</p>
@@ -5443,7 +5443,7 @@ function Kpi({ label, value, hint, onClick }: { label: string; value: React.Reac
 
 function EmptyState({ text, compact }: { text: string; compact?: boolean }) {
   return (
-    <div className={`${compact ? "px-2 py-2" : "p-6"} text-center text-xs text-[#B9AF95] border border-dashed border-[#22405E] ${compact ? "rounded-md" : "rounded-xl"}`}>
+    <div className={`${compact ? "px-2 py-2" : "p-6"} text-center text-xs text-[#B9AF95] border border-dashed border-[rgba(201,148,54,0.25)] ${compact ? "rounded-md" : "rounded-xl"}`}>
       <Database className={`${compact ? "w-3.5 h-3.5" : "w-4 h-4"} mx-auto mb-1 text-[#D4A24C]`} />
       {text}
     </div>
@@ -5501,7 +5501,7 @@ function LeaderFieldPopup({ alert, onClose }: { alert: LeaderFieldAlert; onClose
       aria-labelledby="pi-leader-error-title"
       onClick={onClose}
     >
-      <div className="w-full max-w-md rounded-2xl border border-rose-400/50 bg-[#071322] p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-2xl border border-rose-400/50 bg-[#050B12] p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2 min-w-0">
             <AlertTriangle className="w-5 h-5 text-rose-300 shrink-0 mt-0.5" />
@@ -5851,7 +5851,7 @@ function StateRankingTab(props: {
   return (
     <section className="space-y-4">
       {/* Header and Filter Controls */}
-      <div className={`${CARD} p-4 border border-[#D4A24C]/40 bg-gradient-to-br from-[#0F2238] via-[#071322] to-[#0A1A2E]`}>
+      <div className={`${CARD} p-4 border border-[#D4A24C]/40 bg-gradient-to-br from-[#080E18] via-[#050B12] to-[#080E18]`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[11px] font-bold uppercase tracking-wider mb-1.5">
@@ -5868,7 +5868,7 @@ function StateRankingTab(props: {
             type="button"
             onClick={handleExportCsv}
             disabled={!filteredAndSorted.length}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D4A24C] text-[#071322] font-bold text-xs hover:brightness-110 transition-all shadow-md self-start sm:self-auto disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D4A24C] text-[#050B12] font-bold text-xs hover:brightness-110 transition-all shadow-md self-start sm:self-auto disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             <span>Export Rankings (CSV)</span>
@@ -5876,7 +5876,7 @@ function StateRankingTab(props: {
         </div>
 
         {/* 4 Interactive Filter Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-3 border-t border-[#22405E]/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-3 border-t border-[rgba(201,148,54,0.25)]/80">
           <div>
             <label className={LABEL}>State</label>
             <select
@@ -5933,12 +5933,12 @@ function StateRankingTab(props: {
 
       {/* 4 Summary KPI Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+        <div className="p-3.5 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-left">
           <span className="text-[11px] text-[#B9AF95] font-semibold block">Ranked Leaders</span>
           <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{totalRanked}</span>
           <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{repFilter === "ALL" ? "Across all tiers" : `${repFilter} category`}</span>
         </div>
-        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+        <div className="p-3.5 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-left">
           <span className="text-[11px] text-[#B9AF95] font-semibold block">#1 Digital Leader</span>
           <span className="text-base font-display font-bold text-[#D4A24C] mt-0.5 block truncate">
             {topLeader ? topLeader.name : "—"}
@@ -5947,12 +5947,12 @@ function StateRankingTab(props: {
             {topLeader ? `${formatCompactCount(topLeader.totalReach)} followers` : "Awaiting data"}
           </span>
         </div>
-        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+        <div className="p-3.5 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-left">
           <span className="text-[11px] text-[#B9AF95] font-semibold block">Average Followers / Leader</span>
           <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{formatCompactCount(avgReach)}</span>
           <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Aggregate cross-platform</span>
         </div>
-        <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
+        <div className="p-3.5 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)] text-left">
           <span className="text-[11px] text-[#B9AF95] font-semibold block">Verified Profiles</span>
           <span className="text-2xl font-display font-bold text-emerald-400 mt-0.5 block">{verifiedRate}%</span>
           <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">{verifiedCount} of {totalRanked} confirmed</span>
@@ -5993,7 +5993,7 @@ function StateRankingTab(props: {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-[#EADBBF]">
               <thead>
-                <tr className="border-b border-[#22405E] text-[#B9AF95] uppercase tracking-wider text-[10px]">
+                <tr className="border-b border-[rgba(201,148,54,0.25)] text-[#B9AF95] uppercase tracking-wider text-[10px]">
                   <th className="py-2.5 px-3 text-center w-14">Rank</th>
                   <th className="py-2.5 px-3">Leader</th>
                   <th className="py-2.5 px-3 text-center">Type</th>
@@ -6008,26 +6008,26 @@ function StateRankingTab(props: {
                   <th className="py-2.5 px-3 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#142B45]">
+              <tbody className="divide-y divide-[#0C1524]">
                 {filteredAndSorted.map((item, index) => {
                   const rank = index + 1;
                   return (
-                    <tr key={item.id} className="hover:bg-[#142B45]/50 transition-colors">
+                    <tr key={item.id} className="hover:bg-[#0C1524]/50 transition-colors">
                       <td className="py-2.5 px-3 text-center">
                         {rank === 1 ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#D4A24C] text-[#071322] font-black text-xs shadow-sm">
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#D4A24C] text-[#050B12] font-black text-xs shadow-sm">
                             1
                           </span>
                         ) : rank === 2 ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#EADBBF] text-[#071322] font-bold text-xs shadow-sm">
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#EADBBF] text-[#050B12] font-bold text-xs shadow-sm">
                             2
                           </span>
                         ) : rank === 3 ? (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#B9AF95] text-[#071322] font-bold text-xs shadow-sm">
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#B9AF95] text-[#050B12] font-bold text-xs shadow-sm">
                             3
                           </span>
                         ) : (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-[#22405E] text-[#B9AF95] font-semibold text-xs">
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-[rgba(201,148,54,0.25)] text-[#B9AF95] font-semibold text-xs">
                             {rank}
                           </span>
                         )}

@@ -174,7 +174,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
               type="button"
               onClick={() => setViewMode("GRID")}
               className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "GRID" ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm" : "text-[#CBD5E1]"
+                viewMode === "GRID" ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-sm" : "text-[#CBD5E1]"
               }`}
             >
               Grid
@@ -183,7 +183,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
               type="button"
               onClick={() => setViewMode("TABLE")}
               className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "TABLE" ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm" : "text-[#CBD5E1]"
+                viewMode === "TABLE" ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-sm" : "text-[#CBD5E1]"
               }`}
             >
               Table
@@ -283,7 +283,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                       ) : null}
                       <a
                         href={tel}
-                        className="p-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
+                        className="p-2 rounded-xl bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
                         title="Direct Phone Call"
                       >
                         <Phone className="w-3.5 h-3.5" />
@@ -323,7 +323,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                 return (
                   <tr
                     key={vol.id}
-                    className="align-top hover:bg-[#131E2D]/60 transition-colors cursor-pointer"
+                    className="align-top hover:bg-[#0C1524]/60 transition-colors cursor-pointer"
                     onClick={() => openAssignTickets(vol.id)}
                   >
                     <td className="px-2 py-2">
@@ -361,7 +361,7 @@ const ManagerVolunteerRoster: React.FC<ManagerVolunteerRosterProps> = ({
                         {tel ? (
                           <a
                             href={tel}
-                            className="px-1.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[10.5px] font-semibold inline-flex items-center gap-1"
+                            className="px-1.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[10.5px] font-semibold inline-flex items-center gap-1"
                           >
                             <Phone className="w-3.5 h-3.5 shrink-0" />
                             <span className="whitespace-normal break-words">Call</span>

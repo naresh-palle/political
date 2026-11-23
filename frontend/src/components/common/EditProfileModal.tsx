@@ -127,17 +127,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#071322]/85 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-[400000] flex items-center justify-center p-3 sm:p-4 bg-[#050B12]/85 backdrop-blur-md animate-fadeIn"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl bg-gradient-to-b from-[#0F2338] to-[#0B1A2C] border border-[#D4A24C]/40 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-xl bg-gradient-to-b from-[#080E18] to-[#080E18] border border-[#D4A24C]/40 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#22405E] bg-[#071322]/60">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[rgba(201,148,54,0.25)] bg-[#050B12]/60">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-[#142B45] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
+            <div className="w-9 h-9 rounded-xl bg-[#0C1524] border border-[#D4A24C]/40 flex items-center justify-center text-[#D4A24C]">
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -156,7 +156,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#142B45] rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[#B9AF95] hover:text-[#F5EFE0] hover:bg-[#0C1524] rounded-lg transition-colors cursor-pointer"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -166,7 +166,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         {/* Modal Content Form */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto space-y-5 no-scrollbar">
           {/* Avatar Edit Section */}
-          <div className="p-4 rounded-xl bg-[#071322]/80 border border-[#22405E] space-y-4">
+          <div className="p-4 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#D4A24C] flex items-center gap-1.5">
                 <Camera className="w-3.5 h-3.5" />
@@ -181,12 +181,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   src={avatar || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80"}
                   alt={name}
                   onError={() => setPreviewError(true)}
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg bg-[#142B45]"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#D4A24C] shadow-lg bg-[#0C1524]"
                 />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#142B45] hover:bg-[#1E3A5A] border border-[#D4A24C]/40 text-[#D4A24C] text-[10px] font-semibold transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-[10px] font-semibold transition-colors cursor-pointer"
                   title="Upload from device"
                 >
                   <Upload className="w-3 h-3" />
@@ -216,12 +216,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                         setPreviewError(false);
                       }}
                       placeholder="https://images.unsplash.com/..."
-                      className="flex-1 bg-[#0B1A2C] border border-[#22405E] focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                      className="flex-1 bg-[#080E18] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C] rounded-lg px-3 py-2 text-xs text-[#F5EFE0] placeholder-[#5F6875] outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center px-3 py-2 bg-[#142B45] hover:bg-[#1E3A5A] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center px-3 py-2 bg-[#0C1524] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
                     >
                       <Upload className="w-3.5 h-3.5 mr-1" />
                       Browse
@@ -246,14 +246,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                         className={`relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all cursor-pointer ${
                           avatar === preset.url
                             ? "border-[#D4A24C] ring-2 ring-[#D4A24C]/50 scale-105"
-                            : "border-[#22405E] hover:border-[#D4A24C]/60"
+                            : "border-[rgba(201,148,54,0.25)] hover:border-[#D4A24C]/60"
                         }`}
                         title={preset.label}
                       >
                         <img src={preset.url} alt={preset.label} className="w-full h-full object-cover" />
                         {avatar === preset.url && (
                           <div className="absolute inset-0 bg-[#D4A24C]/30 flex items-center justify-center">
-                            <Check className="w-3 h-3 text-[#071322] font-black" />
+                            <Check className="w-3 h-3 text-[#050B12] font-black" />
                           </div>
                         )}
                       </button>
@@ -278,7 +278,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. R. Madhavi Reddy (MLA) or Demo Admin"
-                className="w-full bg-[#071322] border border-[#22405E] focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
+                className="w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none"
               />
             </div>
 
@@ -294,7 +294,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 readOnly={!canEditIdentity}
                 onChange={(e) => canEditIdentity && setEmail(e.target.value)}
                 placeholder="admin"
-                className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
+                className={`w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
                   canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
                 }`}
               />
@@ -312,7 +312,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 readOnly={!canEditIdentity}
                 onChange={(e) => canEditIdentity && setPhone(e.target.value)}
                 placeholder="+91 98850 44001"
-                className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
+                className={`w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
                   canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
                 }`}
               />
@@ -330,7 +330,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 readOnly={!canEditIdentity}
                 onChange={(e) => canEditIdentity && setDesignation(e.target.value)}
                 placeholder="e.g. Poddutur Constituency Political Admin (MLA Office)"
-                className={`w-full bg-[#071322] border border-[#22405E] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
+                className={`w-full bg-[#050B12] border border-[rgba(201,148,54,0.25)] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#F5EFE0] placeholder-[#5F6875] outline-none ${
                   canEditIdentity ? "focus:border-[#D4A24C] focus:ring-1 focus:ring-[#D4A24C]" : "opacity-70 cursor-not-allowed"
                 }`}
               />
@@ -338,30 +338,30 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </div>
 
           {/* Assigned Constituency Notice */}
-          <div className="p-3 rounded-xl bg-[#142B45]/50 border border-[#22405E] flex items-center justify-between text-xs text-[#8E9CAE]">
+          <div className="p-3 rounded-xl bg-[#0C1524]/50 border border-[rgba(201,148,54,0.25)] flex items-center justify-between text-xs text-[#8E9CAE]">
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-[#D4A24C]" />
               <span>Assigned Jurisdiction:</span>
               <strong className="text-[#F5EFE0]">{currentUser.assignedConstituency || "Poddutur AC (AC-139)"}</strong>
             </div>
-            <span className="text-[10.5px] font-mono text-[#D4A24C] bg-[#071322] px-2 py-0.5 rounded border border-[#D4A24C]/20">
+            <span className="text-[10.5px] font-mono text-[#D4A24C] bg-[#050B12] px-2 py-0.5 rounded border border-[#D4A24C]/20">
               {currentUser.clearanceLevel || "LEVEL 4 — COMMAND"}
             </span>
           </div>
 
           {/* Form Actions */}
-          <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#22405E]">
+          <div className="pt-2 flex items-center justify-end gap-3 border-t border-[rgba(201,148,54,0.25)]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#B9AF95] hover:text-white hover:bg-[#142B45] transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#B9AF95] hover:text-white hover:bg-[#0C1524] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#071322] hover:brightness-110 shadow-[0_4px_20px_-4px_rgba(224,122,31,0.6)] transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-[#E07A1F] to-[#D4A24C] text-[#050B12] hover:brightness-110 shadow-[0_4px_20px_-4px_rgba(224,122,31,0.6)] transition-all cursor-pointer disabled:opacity-50"
             >
               {saveSuccess ? (
                 <>

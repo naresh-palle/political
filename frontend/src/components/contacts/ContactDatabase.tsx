@@ -537,7 +537,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               type="button"
               onClick={() => handleExportPdf("en")}
               disabled={exportingPdf !== null}
-              className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
+              className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
             >
               {exportingPdf === "en" ? "Exporting…" : "English"}
             </button>
@@ -545,7 +545,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               type="button"
               onClick={() => handleExportPdf("te")}
               disabled={exportingPdf !== null}
-              className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#071322] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
+              className="min-h-[32px] px-2.5 py-1.5 rounded-lg bg-[#050B12] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-bold cursor-pointer disabled:opacity-60"
             >
               {exportingPdf === "te" ? "Exporting…" : "Telugu"}
             </button>
@@ -553,7 +553,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
 
           <button
             onClick={openCreate}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] hover:brightness-110 text-[#0B131E] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] hover:brightness-110 text-[#050B12] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
           >
             <UserPlus className="w-4 h-4" />
             <span>Add New Contact</span>
@@ -626,7 +626,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               <button
                 onClick={() => setViewMode("GRID")}
                 className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === "GRID" ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm" : "text-[#CBD5E1]"
+                  viewMode === "GRID" ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-sm" : "text-[#CBD5E1]"
                 }`}
               >
                 Grid
@@ -634,7 +634,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               <button
                 onClick={() => setViewMode("TABLE")}
                 className={`p-1.5 px-2.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === "TABLE" ? "bg-[#D4A24C] text-[#0B131E] font-bold shadow-sm" : "text-[#CBD5E1]"
+                  viewMode === "TABLE" ? "bg-[#D4A24C] text-[#050B12] font-bold shadow-sm" : "text-[#CBD5E1]"
                 }`}
               >
                 Table
@@ -761,7 +761,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   </a>
                   <a
                     href={`tel:${contact.phone}`}
-                    className="p-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
+                    className="p-2 rounded-xl bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 transition-all"
                     title="Direct Phone Call"
                   >
                     <Phone className="w-3.5 h-3.5" />
@@ -777,7 +777,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                       <button
                         type="button"
                         onClick={() => openEdit(contact)}
-                        className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#131E2D] border border-[#D4A24C]/40 text-[#D4A24C] text-xs transition-all cursor-pointer"
+                        className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#0C1524] border border-[#D4A24C]/40 text-[#D4A24C] text-xs transition-all cursor-pointer"
                         title="Edit contact"
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -795,7 +795,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   <button
                     type="button"
                     onClick={() => setSelectedContact(contact)}
-                    className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#131E2D] border border-[#223348] text-[#CBD5E1] hover:text-[#F5EFE0] text-xs transition-all cursor-pointer"
+                    className="p-2 px-2.5 rounded-xl bg-[#0B131E] hover:bg-[#0C1524] border border-[#223348] text-[#CBD5E1] hover:text-[#F5EFE0] text-xs transition-all cursor-pointer"
                     title="View Full Profile"
                   >
                     <Eye className="w-3.5 h-3.5" />
@@ -821,7 +821,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             </thead>
             <tbody className="divide-y divide-[#223348]/60">
               {filteredContacts.map((c) => (
-                <tr key={c.id} className="hover:bg-[#131E2D]/60 transition-colors">
+                <tr key={c.id} className="hover:bg-[#0C1524]/60 transition-colors">
                   <td className="p-3.5">
                     <strong className="text-[#F5EFE0] block font-semibold">{c.name}</strong>
                     <span className="text-[11px] text-[#8E9CAE] block">{c.designation}</span>
@@ -859,14 +859,14 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                           <button
                             type="button"
                             onClick={() => openEdit(c)}
-                            className="px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteContact(c)}
-                            className="px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-[11px] font-semibold cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-[11px] font-semibold cursor-pointer"
                           >
                             Delete
                           </button>
@@ -875,7 +875,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                       <button
                         type="button"
                         onClick={() => setSelectedContact(c)}
-                        className="px-2.5 py-1 rounded-lg bg-[#131E2D] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-[#0C1524] hover:bg-[#1E3048] border border-[#223348] text-[#D4A24C] text-[11px] font-semibold cursor-pointer"
                       >
                         Details
                       </button>
@@ -905,7 +905,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   setIsAddModalOpen(false);
                   resetForm();
                 }}
-                className="p-1 rounded-lg hover:bg-[#131E2D] text-[#8E9CAE] hover:text-white"
+                className="p-1 rounded-lg hover:bg-[#0C1524] text-[#8E9CAE] hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1004,7 +1004,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               </div>
 
               {isOfficer && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-[#071322]/80 border border-[#D4A24C]/25">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-[#050B12]/80 border border-[#D4A24C]/25">
                   <div className="sm:col-span-2">
                     <label className="text-[#D4A24C] block mb-1 font-medium">Department *</label>
                     <select
@@ -1145,7 +1145,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] text-xs font-bold shadow-md hover:brightness-110"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#050B12] text-xs font-bold shadow-md hover:brightness-110"
                 >
                   {editingId ? "Save changes" : "Save to Database"}
                 </button>
@@ -1169,7 +1169,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               </div>
               <button
                 onClick={() => setSelectedContact(null)}
-                className="p-1 rounded-lg hover:bg-[#131E2D] text-[#8E9CAE] hover:text-white"
+                className="p-1 rounded-lg hover:bg-[#0C1524] text-[#8E9CAE] hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1212,7 +1212,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
             </div>
 
             {selectedContact.notes && (
-              <div className="p-3 rounded-xl bg-[#131E2D] border border-[#D4A24C]/30 text-xs">
+              <div className="p-3 rounded-xl bg-[#0C1524] border border-[#D4A24C]/30 text-xs">
                 <span className="text-[10px] uppercase font-bold text-[#D4A24C] block mb-1">Intelligence Notes</span>
                 <p className="text-[#CBD5E1] leading-relaxed">&ldquo;{selectedContact.notes}&rdquo;</p>
               </div>
@@ -1224,7 +1224,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   <button
                     type="button"
                     onClick={() => openEdit(selectedContact)}
-                    className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#0C1524] hover:bg-[#1E3048] border border-[#D4A24C]/40 text-[#D4A24C] text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                   >
                     <Pencil className="w-4 h-4" />
                     Edit
@@ -1232,7 +1232,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
                   <button
                     type="button"
                     onClick={() => handleDeleteContact(selectedContact)}
-                    className="px-4 py-2 rounded-xl bg-[#131E2D] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[#0C1524] hover:bg-rose-950/50 border border-[#223348] text-[#CBD5E1] hover:text-rose-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete
@@ -1252,7 +1252,7 @@ export const ContactDatabase: React.FC<{ currentUser: UserProfile }> = ({ curren
               </a>
               <a
                 href={`tel:${selectedContact.phone}`}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#0B131E] text-xs font-bold flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97724] to-[#C99738] text-[#050B12] text-xs font-bold flex items-center gap-1.5"
               >
                 <Phone className="w-4 h-4" />
                 <span>Call Now</span>

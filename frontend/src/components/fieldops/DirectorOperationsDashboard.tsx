@@ -843,7 +843,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
         <div className="flex items-center gap-4 min-w-0 w-full">
           <div className="min-w-0 w-full">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#071322] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
+              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#050B12] text-[#D4A24C] border border-[#D4A24C]/40 font-mono">
                 Campaign Manager
               </span>
               {currentUser.assignedConstituency && (
@@ -858,7 +858,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
               {currentUser.email && <span>✉️ {currentUser.email}</span>}
               {currentUser.phone && <span>📞 {currentUser.phone}</span>}
             </p>
-            <div className="pt-3 mt-3 border-t border-[#22405E]/60 space-y-2">
+            <div className="pt-3 mt-3 border-t border-[rgba(201,148,54,0.25)]/60 space-y-2">
               <span className="text-[10px] uppercase tracking-wider text-[#8E9CAE] font-semibold flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#D4A24C]" />
                 Associated Mandals
@@ -870,7 +870,7 @@ export const DirectorOperationsDashboard: React.FC<DirectorDashboardProps> = ({
                   associatedMandals.map((mandal) => (
                     <span
                       key={mandal.id}
-                      className="inline-flex items-center px-3 py-1 rounded-lg bg-[#071322]/60 border border-[#D4A24C]/35 text-xs text-[#F5EFE0]"
+                      className="inline-flex items-center px-3 py-1 rounded-lg bg-[#050B12]/60 border border-[#D4A24C]/35 text-xs text-[#F5EFE0]"
                     >
                       {mandal.name}
                     </span>

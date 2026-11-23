@@ -201,7 +201,7 @@ export async function downloadContactPdf(
     "box-sizing:border-box"
   ].join(";");
   host.innerHTML = `
-    <div style="background:#071322;color:#D4A24C;padding:6px 8px;border:1px solid #071322;">
+    <div style="background:#050B12;color:#D4A24C;padding:6px 8px;border:1px solid #050B12;">
       <div style="font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;line-height:1.2;">${escapeHtml(copy.brand)}</div>
       <div style="font-size:13px;font-weight:700;color:#F5EFE0;margin-top:1px;line-height:1.25;">${escapeHtml(copy.title)}</div>
       <div style="font-size:9px;color:#F5EFE0;margin-top:1px;line-height:1.2;">${escapeHtml(copy.subtitle(contacts.length, constituency, dateLabel))}</div>
@@ -227,17 +227,17 @@ export async function downloadContactPdf(
         border-collapse: collapse;
         font-size: 8.5px;
         line-height: 1.25;
-        border: 1px solid #071322;
+        border: 1px solid #050B12;
       }
       [data-contact-pdf] th, [data-contact-pdf] td {
         padding: 2px 4px;
-        border: 1px solid #071322;
+        border: 1px solid #050B12;
         vertical-align: top;
         word-break: break-word;
       }
       [data-contact-pdf] th {
         background: #D4A24C;
-        color: #071322;
+        color: #050B12;
         text-align: left;
         font-weight: 700;
       }

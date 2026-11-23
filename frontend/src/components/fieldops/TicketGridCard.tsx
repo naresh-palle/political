@@ -99,7 +99,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
       ) : (
         <div className="flex flex-wrap items-center gap-1 min-w-0">
           {extraBadges}
-          <span className="max-w-full truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#131E2D] text-[#D4A24C] border border-[#D4A24C]/25">
+          <span className="max-w-full truncate text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/25">
             {issue.category}
           </span>
           {issue.department && (
@@ -126,7 +126,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
           plain ? (
             <p className="mt-0.5 text-[11px] text-[#8E9CAE] truncate">Scheme: {issue.schemeSubDetail}</p>
           ) : (
-            <div className="mt-0.5 text-[10px] font-semibold text-[#D4A24C] bg-[#142B45]/80 border border-[#D4A24C]/30 px-2 py-0.5 rounded-md inline-block max-w-full truncate">
+            <div className="mt-0.5 text-[10px] font-semibold text-[#D4A24C] bg-[#0C1524]/80 border border-[#D4A24C]/30 px-2 py-0.5 rounded-md inline-block max-w-full truncate">
               Scheme Details: {issue.schemeSubDetail}
             </div>
           )
@@ -204,7 +204,7 @@ export const TicketGridCard: React.FC<TicketGridCardProps> = ({
             {issue.lastStatusUpdateAt ? ` · ${issue.lastStatusUpdateAt.replace("T", " ").slice(0, 16)}` : ""}
           </p>
         ) : (
-          <div className="p-1.5 rounded-lg bg-[#142B45]/80 border border-[#D4A24C]/35 min-w-0">
+          <div className="p-1.5 rounded-lg bg-[#0C1524]/80 border border-[#D4A24C]/35 min-w-0">
             <div className="text-[9.5px] font-bold uppercase tracking-wider text-[#D4A24C]">
               Officer status comment · {formatIssueStatus(issue.status)}
             </div>
