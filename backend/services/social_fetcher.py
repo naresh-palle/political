@@ -194,22 +194,12 @@ async def fetch_facebook_metrics(url: str, username: str, rapidapi_key: str = ""
         except Exception as ex:
             logger.warning("RapidAPI Facebook error: %s", ex)
 
-    # 4. Bulletproof Demographics / Heuristic Fallback
-    # If external network was blocked or timed out, provide realistic political presence metrics
-    clean_name = username.replace(".", " ").replace("_", " ").title()
-    u_hash = sum(ord(c) for c in (username or "leader"))
-    est_followers = 5200 + (u_hash % 14500)
+    # 4. Return clean failed response when live access is restricted by Meta
     return {
-        "success": True,
+        "success": False,
         "platform": "facebook",
         "username": username,
-        "followers": est_followers,
-        "avgViewsLast10": round(est_followers * 0.08),
-        "avgLikesLast10": round(est_followers * 0.015),
-        "postsLast30Days": 18 + (u_hash % 16),
-        "verified": False,
-        "dataSource": "SMART_FALLBACK",
-        "detail": f"Active baseline metrics calculated for Facebook page '{clean_name}'"
+        "detail": f"Could not auto-fetch Facebook page '{username}'. Meta restricted automated cloud access. Please enter follower count manually or configure RapidAPI key."
     }
 
 
@@ -225,7 +215,7 @@ async def fetch_instagram_metrics(url: str, username: str, rapidapi_key: str = "
 
     # 1. Direct Meta Crawler extraction (Free, instant, accurate)
     try:
-        async with httpx.AsyncClient(headers=CRAWLER_HEADERS, follow_redirects=True, timeout=10.0) as client:
+        async with httpx.AsyncClient(headers=CRAWLER_HEADERS, follow_redirects=True, timeout=4.0) as client:
             res = await client.get(target_url)
             if res.status_code == 200:
                 raw_text = html.unescape(res.text)
@@ -290,22 +280,12 @@ async def fetch_instagram_metrics(url: str, username: str, rapidapi_key: str = "
         except Exception as ex:
             logger.warning("RapidAPI Instagram error: %s", ex)
 
-    # 3. Bulletproof Demographics / Heuristic Fallback
-    clean_name = username.replace(".", " ").replace("_", " ").title()
-    u_hash = sum(ord(c) for c in (username or "leader"))
-    est_followers = 3800 + (u_hash % 9800)
+    # 3. Direct failure response without fake mock numbers
     return {
-        "success": True,
+        "success": False,
         "platform": "instagram",
         "username": username,
-        "followers": est_followers,
-        "avgViewsLast10": round(est_followers * 0.12),
-        "avgLikesLast10": round(est_followers * 0.035),
-        "postsLast30Days": 16 + (u_hash % 15),
-        "totalPosts": 150 + (u_hash % 400),
-        "verified": False,
-        "dataSource": "SMART_FALLBACK",
-        "detail": f"Active baseline metrics calculated for Instagram '@{username}'"
+        "detail": f"Could not auto-fetch Instagram metrics for '@{username}'. Instagram requires login verification from cloud IPs. Please enter follower count manually or configure RapidAPI key."
     }
 
 
@@ -402,7 +382,7 @@ async def fetch_youtube_metrics(url: str, api_key: Optional[str] = None) -> Dict
         return {"success": False, "detail": "httpx library not available"}
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=5.0) as client:
             endpoint = "https://www.googleapis.com/youtube/v3/channels"
             params = {
                 "part": "snippet,statistics",
@@ -417,19 +397,30 @@ async def fetch_youtube_metrics(url: str, api_key: Optional[str] = None) -> Dict
             data = res.json()
             items = data.get("items", [])
             
-            # If forHandle didn't find, try search
+            # If forHandle didn't find, try search with strict relevance check
             if not items:
                 search_res = await client.get(
                     "https://www.googleapis.com/youtube/v3/search",
-                    params={"part": "snippet", "q": username, "type": "channel", "key": api_key, "maxResults": 1}
+                    params={"part": "snippet", "q": username, "type": "channel", "key": api_key, "maxResults": 3}
                 )
                 search_data = search_res.json()
                 search_items = search_data.get("items", [])
-                if search_items:
-                    channel_id = search_items[0].get("snippet", {}).get("channelId")
-                    if channel_id:
-                        ch_res = await client.get(endpoint, params={"part": "snippet,statistics", "id": channel_id, "key": api_key})
-                        items = ch_res.json().get("items", [])
+                
+                # Verify channel candidate matches query
+                norm_q = username.lower().replace("@", "").replace("-", " ").replace("_", " ")
+                matched_channel_id = None
+                for candidate in search_items:
+                    snip = candidate.get("snippet", {})
+                    title = snip.get("title", "").lower()
+                    desc = snip.get("description", "").lower()
+                    cid = snip.get("channelId")
+                    if norm_q in title or norm_q in desc:
+                        matched_channel_id = cid
+                        break
+
+                if matched_channel_id:
+                    ch_res = await client.get(endpoint, params={"part": "snippet,statistics", "id": matched_channel_id, "key": api_key})
+                    items = ch_res.json().get("items", [])
 
             if not items:
                 return {

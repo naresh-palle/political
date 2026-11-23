@@ -1585,7 +1585,7 @@ def register_pi_routes(api_router) -> None:
     async def fetch_social_metrics_endpoint(payload: dict, userId: Optional[str] = None):
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
-        _require(caps, "create")
+        _require(caps, "view")
         platform = str(payload.get("platform") or "").strip().lower()
         url = str(payload.get("profileUrl") or payload.get("url") or "").strip()
         if not platform or not url:
