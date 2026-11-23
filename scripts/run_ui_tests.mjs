@@ -201,7 +201,15 @@ async function runTests() {
     await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_06b_constituency_intel_table_and_comparisons.png') });
     console.log('✓ Verified: Comparative Leader Intelligence Table, Party Comparison & Platform Comparison are fully restored');
 
-    // Click Back to Intelligence
+    // Click Back to Intelligence until returning to root view with sidebar
+    await page.evaluate(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const backBtn = btns.find(b => b.textContent?.includes('Back to Intelligence'));
+      if (backBtn) backBtn.click();
+    });
+    await new Promise(r => setTimeout(r, 800));
+
+    // If still in district view, click Back to Intelligence again to reach root
     await page.evaluate(() => {
       const btns = Array.from(document.querySelectorAll('button'));
       const backBtn = btns.find(b => b.textContent?.includes('Back to Intelligence'));
@@ -209,6 +217,58 @@ async function runTests() {
     });
     await new Promise(r => setTimeout(r, 1000));
     console.log('✓ Intelligence tab clean view & back button verified');
+
+    // Test specific Raptadu & Sri Sathya Sai leaders: Paritala Sunitha & Thopudurthi Prakash Reddy
+    console.log('Verifying Sri Sathya Sai -> Raptadu leaders (Paritala Sunitha & Thopudurthi Prakash Reddy)...');
+    const asideSelects = await page.$$('aside select');
+    if (asideSelects.length >= 3) {
+      // 1. Select State = AP
+      await asideSelects[0].select('AP');
+      await new Promise(r => setTimeout(r, 1200));
+
+      // 2. Select District = Sri Sathya Sai
+      const distValue = await page.evaluate(() => {
+        const selects = document.querySelectorAll('aside select');
+        const distSel = selects[1];
+        const opt = Array.from(distSel?.options || []).find(o => o.text.includes('Sri Sathya Sai'));
+        return opt ? opt.value : '';
+      });
+      if (distValue) {
+        const currentAside = await page.$$('aside select');
+        if (currentAside[1]) await currentAside[1].select(distValue);
+        await new Promise(r => setTimeout(r, 1200));
+      }
+
+      // 3. Select Constituency = Raptadu
+      const acValue = await page.evaluate(() => {
+        const selects = document.querySelectorAll('aside select');
+        const acSel = selects[2];
+        const opt = Array.from(acSel?.options || []).find(o => o.text.includes('Raptadu'));
+        return opt ? opt.value : '';
+      });
+      if (acValue) {
+        const currentAside = await page.$$('aside select');
+        if (currentAside[2]) await currentAside[2].select(acValue);
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+
+    const raptaduCheck = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return {
+        hasSunitha: text.includes('Paritala Sunitha'),
+        hasPrakash: text.includes('Prakash Reddy'),
+        hasTDP: text.includes('TDP'),
+        hasYSRCP: text.includes('YSRCP'),
+        hasRaptaduTitle: text.includes('Raptadu')
+      };
+    });
+    console.log('Raptadu leaders check:', raptaduCheck);
+    if (!raptaduCheck.hasSunitha || !raptaduCheck.hasPrakash) {
+      throw new Error(`Raptadu leaders missing from Intelligence! Sunitha: ${raptaduCheck.hasSunitha}, Prakash: ${raptaduCheck.hasPrakash}`);
+    }
+    await page.screenshot({ path: path.join(ARTIFACT_DIR, 'auto_06c_raptadu_sunitha_and_prakash.png') });
+    console.log('✓ Verified: Paritala Sunitha and Thopudurthi Prakash Reddy are fully visible with stats and rankings in Raptadu constituency');
 
     // Test 3: SMM Ranking Tab
     console.log('[6/7] Verifying SMM Ranking tab beside Intelligence...');
