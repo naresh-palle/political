@@ -374,7 +374,7 @@ def calculate_engagement(
 def snapshot_growth(snapshots: List[Dict[str, Any]], days: int) -> Optional[float]:
     dated = []
     for snap in snapshots:
-        collected = parse_iso(snap.get("collectionDate") or snap.get("createdAt"))
+        collected = parse_iso(snap.get("collectionDate") or snap.get("createdAt") or snap.get("timestamp"))
         followers = snap.get("followers")
         if collected is None or followers is None:
             continue

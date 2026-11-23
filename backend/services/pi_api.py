@@ -146,6 +146,7 @@ def _is_duplicate_key(exc: Exception) -> bool:
 COLLECTIONS = {
     "districts": "districts",
     "assembly_district_map": "assembly_district_map",
+    "states": "states",
     "constituency_statistics": "constituency_statistics",
     "constituency_statistics_history": "constituency_statistics_history",
     "political_persons": "political_persons",
@@ -1935,479 +1936,488 @@ def register_pi_routes(api_router) -> None:
         rankBy: Optional[str] = "followers",
         month: Optional[str] = None,
     ):
-        actor = await _load_actor(userId)
-        caps = actor_capabilities(actor)
-        _require(caps, "view")
-        geo = await _geo_lookups()
-        persons = await _list("political_persons")
-        accounts = await _list("social_media_accounts")
-        snapshots = await _list("social_media_snapshots")
-        stats = await _list("constituency_statistics")
-        monthly_ads = await _list("monthly_ads_metrics")
-
-        current_cal_month = datetime.now(timezone.utc).strftime("%Y-%m")
-        wanted_month = (month or current_cal_month).strip()
-        monthly_by_leader: Dict[str, Dict[str, Any]] = {}
-        for m_doc in monthly_ads:
-            if m_doc.get("month") == wanted_month:
-                l_id = m_doc.get("leaderId")
-                plat = m_doc.get("platform") or "all"
-                if l_id:
-                    monthly_by_leader[f"{l_id}:{plat}"] = m_doc
-        if stateId:
-            persons = [p for p in persons if str(p.get("stateId") or "").upper() == stateId.upper()]
-            stats = [s for s in stats if str(s.get("stateId") or "").upper() == stateId.upper()]
-        if districtId:
-            ac_ids = {m.get("assemblyConstituencyId") for m in await _list("assembly_district_map") if m.get("districtId") == districtId}
-            persons = [p for p in persons if p.get("districtId") == districtId or p.get("assemblyConstituencyId") in ac_ids]
-            stats = [s for s in stats if s.get("districtId") == districtId or s.get("assemblyConstituencyId") in ac_ids]
-        if parliamentConstituencyId:
-            persons = [p for p in persons if p.get("parliamentConstituencyId") == parliamentConstituencyId]
-        if assemblyConstituencyId:
-            persons = [p for p in persons if p.get("assemblyConstituencyId") == assemblyConstituencyId]
-            stats = [s for s in stats if s.get("assemblyConstituencyId") == assemblyConstituencyId]
-        if partyId:
-            persons = [p for p in persons if str(p.get("partyId") or "").upper() == partyId.upper()]
-        persons = [p for p in persons if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
-        person_ids = {p.get("id") for p in persons}
-        accounts = [a for a in accounts if a.get("personId") in person_ids]
-        audience = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0, "confidence": "Estimated"}
-        for stat in stats:
-            for key, plat in (("estimatedFacebookUsers", "facebook"), ("estimatedInstagramUsers", "instagram"), ("estimatedXUsers", "x"), ("estimatedYouTubeUsers", "youtube")):
-                val = stat.get(key)
-                if val is not None:
-                    audience[plat] += int(val)
-        assemblies_by_id = geo.get("assemblies") or {}
-        snapshots_by_account: Dict[str, List[Dict[str, Any]]] = {}
-        for snap in snapshots:
-            snapshots_by_account.setdefault(snap.get("accountId"), []).append(snap)
-        wanted_platform = str(platform or "").strip().lower()
-        if wanted_platform and wanted_platform not in PLATFORMS:
-            wanted_platform = ""
-        leaders = []
-        for person in persons:
-            party = geo["parties"].get(person.get("partyId")) or {}
-            all_accounts = [a for a in accounts if a.get("personId") == person.get("id")]
-            person_accounts = [a for a in all_accounts if account_is_rankable(a)]
-            platforms = {}
-            for acc in all_accounts:
-                plat = str(acc.get("platform") or "").lower()
-                if not plat:
-                    continue
-                related = snapshots_by_account.get(acc.get("id")) or []
-                g30 = snapshot_growth(related, 30)
-                g90 = snapshot_growth(related, 90)
-                acc["growth30"] = g30
-                acc["growth90"] = g90
-                platforms[plat] = {
-                    "followers": acc.get("followers"),
-                    "noAccount": bool(acc.get("noAccount") or acc.get("verificationStatus") == "NO_ACCOUNT"),
-                    "verified": acc.get("verificationStatus") == "VERIFIED",
-                    "profileUrl": acc.get("profileUrl"),
-                    "engagementPercent": acc.get("engagementPercent"),
-                    "growth30": g30,
-                    "postsLast30Days": acc.get("postsLast30Days"),
-                }
-            metric_accounts = [
-                acc for acc in person_accounts
-                if not wanted_platform or str(acc.get("platform") or "").lower() == wanted_platform
-            ]
-            metrics = aggregate_account_metrics(metric_accounts, snapshots_by_account)
-
-            l_id = person.get("id")
-            has_accounts = any(acc.get("followers") or not acc.get("noAccount") for acc in all_accounts)
-            base_reach = sum(int(acc.get("avgViewsLast10") or 0) for acc in all_accounts)
-
-            m_total = monthly_by_leader.get(f"{l_id}:all")
-            m_posts_sum = 0
-            m_ads_sum = 0
-            m_reach_sum = 0
-            has_explicit_m = False
-            for p_k in PLATFORMS:
-                p_m = monthly_by_leader.get(f"{l_id}:{p_k}")
-                if p_m:
-                    has_explicit_m = True
-                    m_posts_sum += int(p_m.get("postsCount") or 0)
-                    m_ads_sum += int(p_m.get("adsCount") or 0)
-                    m_reach_sum += int(p_m.get("reach") or 0)
-
-            if m_total:
-                total_posts = int(m_total.get("postsCount") or 0)
-                total_ads = int(m_total.get("adsCount") or 0)
-                total_reach = int(m_total.get("reach") or 0)
-            elif has_explicit_m:
-                total_posts = m_posts_sum
-                total_ads = m_ads_sum
-                total_reach = m_reach_sum
-            elif not has_accounts:
-                total_posts = 0
-                total_ads = 0
-                total_reach = 0
-            elif wanted_month > current_cal_month:
-                total_posts = 0
-                total_ads = 0
-                total_reach = 0
-            elif wanted_month == current_cal_month:
-                raw_posts = int(metrics.get("postsLast30Days") or 0)
-                total_posts = min(raw_posts, 35) if raw_posts > 60 else (raw_posts if raw_posts > 0 else 28)
-                total_ads = 0
-                total_reach = base_reach
-            else:
-                # Dynamic historical month activity unique to leader & month
-                m_hash = int(hashlib.md5(f"{l_id}:{wanted_month}".encode()).hexdigest(), 16)
-                total_posts = 18 + (m_hash % 18)
-                total_ads = 1 if (m_hash % 5 == 0) else 0
-                variance = 0.82 + ((m_hash % 35) / 100.0)
-                total_reach = round(base_reach * variance) if base_reach > 0 else 0
-
-            # If scraped raw posts was > 60 (lifetime total mistakenly put into single month), normalize for monthly display
-            if total_posts > 60 and not (m_total and m_total.get("updatedBy") != "weekly-cron"):
-                total_posts = 28
-
-            leader_monthly = {
-                "month": wanted_month,
-                "postsCount": total_posts,
-                "adsCount": total_ads,
-                "reach": total_reach,
-            }
-
-            leader_rep_type = person.get("representativeType")
-            if not leader_rep_type:
-                p_roles = [str(r.get("politicalRole") if isinstance(r, dict) else r).upper() for r in (person.get("roles") or [])]
-                if person.get("politicalRole"):
-                    p_roles.extend([r.strip().upper() for r in str(person.get("politicalRole")).split(",")])
-                if any("MP" in r for r in p_roles):
-                    leader_rep_type = "MP"
-                elif any("MLC" in r for r in p_roles):
-                    leader_rep_type = "MLC"
-                elif person.get("parliamentConstituencyId") and not person.get("assemblyConstituencyId"):
-                    leader_rep_type = "MP"
-                elif person.get("zoneId") and not person.get("assemblyConstituencyId"):
-                    leader_rep_type = "MLC"
+        try:
+            actor = await _load_actor(userId)
+            caps = actor_capabilities(actor)
+            _require(caps, "view")
+            geo = await _geo_lookups()
+            persons = await _list("political_persons")
+            accounts = await _list("social_media_accounts")
+            snapshots = await _list("social_media_snapshots")
+            stats = await _list("constituency_statistics")
+            monthly_ads = await _list("monthly_ads_metrics")
+    
+            current_cal_month = datetime.now(timezone.utc).strftime("%Y-%m")
+            wanted_month = (month or current_cal_month).strip()
+            monthly_by_leader: Dict[str, Dict[str, Any]] = {}
+            for m_doc in monthly_ads:
+                if m_doc.get("month") == wanted_month:
+                    l_id = m_doc.get("leaderId")
+                    plat = m_doc.get("platform") or "all"
+                    if l_id:
+                        monthly_by_leader[f"{l_id}:{plat}"] = m_doc
+            if stateId:
+                persons = [p for p in persons if str(p.get("stateId") or "").upper() == stateId.upper()]
+                stats = [s for s in stats if str(s.get("stateId") or "").upper() == stateId.upper()]
+            if districtId:
+                ac_ids = {m.get("assemblyConstituencyId") for m in await _list("assembly_district_map") if m.get("districtId") == districtId}
+                persons = [p for p in persons if p.get("districtId") == districtId or p.get("assemblyConstituencyId") in ac_ids]
+                stats = [s for s in stats if s.get("districtId") == districtId or s.get("assemblyConstituencyId") in ac_ids]
+            if parliamentConstituencyId:
+                persons = [p for p in persons if p.get("parliamentConstituencyId") == parliamentConstituencyId]
+            if assemblyConstituencyId:
+                persons = [p for p in persons if p.get("assemblyConstituencyId") == assemblyConstituencyId]
+                stats = [s for s in stats if s.get("assemblyConstituencyId") == assemblyConstituencyId]
+            if partyId:
+                persons = [p for p in persons if str(p.get("partyId") or "").upper() == partyId.upper()]
+            persons = [p for p in persons if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
+            person_ids = {p.get("id") for p in persons}
+            accounts = [a for a in accounts if a.get("personId") in person_ids]
+            audience = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0, "confidence": "Estimated"}
+            for stat in stats:
+                for key, plat in (("estimatedFacebookUsers", "facebook"), ("estimatedInstagramUsers", "instagram"), ("estimatedXUsers", "x"), ("estimatedYouTubeUsers", "youtube")):
+                    val = stat.get(key)
+                    if val is not None:
+                        audience[plat] += int(val)
+            assemblies_by_id = geo.get("assemblies") or {}
+            snapshots_by_account: Dict[str, List[Dict[str, Any]]] = {}
+            for snap in snapshots:
+                snapshots_by_account.setdefault(snap.get("accountId"), []).append(snap)
+            wanted_platform = str(platform or "").strip().lower()
+            if wanted_platform and wanted_platform not in PLATFORMS:
+                wanted_platform = ""
+            leaders = []
+            for person in persons:
+                party = geo["parties"].get(person.get("partyId")) or {}
+                all_accounts = [a for a in accounts if a.get("personId") == person.get("id")]
+                person_accounts = [a for a in all_accounts if account_is_rankable(a)]
+                platforms = {}
+                for acc in all_accounts:
+                    plat = str(acc.get("platform") or "").lower()
+                    if not plat:
+                        continue
+                    related = snapshots_by_account.get(acc.get("id")) or []
+                    g30 = snapshot_growth(related, 30)
+                    g90 = snapshot_growth(related, 90)
+                    acc["growth30"] = g30
+                    acc["growth90"] = g90
+                    platforms[plat] = {
+                        "followers": acc.get("followers"),
+                        "noAccount": bool(acc.get("noAccount") or acc.get("verificationStatus") == "NO_ACCOUNT"),
+                        "verified": acc.get("verificationStatus") == "VERIFIED",
+                        "profileUrl": acc.get("profileUrl"),
+                        "engagementPercent": acc.get("engagementPercent"),
+                        "growth30": g30,
+                        "postsLast30Days": acc.get("postsLast30Days"),
+                    }
+                metric_accounts = [
+                    acc for acc in person_accounts
+                    if not wanted_platform or str(acc.get("platform") or "").lower() == wanted_platform
+                ]
+                metrics = aggregate_account_metrics(metric_accounts, snapshots_by_account)
+    
+                l_id = person.get("id")
+                has_accounts = any(acc.get("followers") or not acc.get("noAccount") for acc in all_accounts)
+                base_reach = sum(int(acc.get("avgViewsLast10") or 0) for acc in all_accounts)
+    
+                m_total = monthly_by_leader.get(f"{l_id}:all")
+                m_posts_sum = 0
+                m_ads_sum = 0
+                m_reach_sum = 0
+                has_explicit_m = False
+                for p_k in PLATFORMS:
+                    p_m = monthly_by_leader.get(f"{l_id}:{p_k}")
+                    if p_m:
+                        has_explicit_m = True
+                        m_posts_sum += int(p_m.get("postsCount") or 0)
+                        m_ads_sum += int(p_m.get("adsCount") or 0)
+                        m_reach_sum += int(p_m.get("reach") or 0)
+    
+                if m_total:
+                    total_posts = int(m_total.get("postsCount") or 0)
+                    total_ads = int(m_total.get("adsCount") or 0)
+                    total_reach = int(m_total.get("reach") or 0)
+                elif has_explicit_m:
+                    total_posts = m_posts_sum
+                    total_ads = m_ads_sum
+                    total_reach = m_reach_sum
+                elif not has_accounts:
+                    total_posts = 0
+                    total_ads = 0
+                    total_reach = 0
+                elif wanted_month > current_cal_month:
+                    total_posts = 0
+                    total_ads = 0
+                    total_reach = 0
+                elif wanted_month == current_cal_month:
+                    raw_posts = int(metrics.get("postsLast30Days") or 0)
+                    total_posts = min(raw_posts, 35) if raw_posts > 60 else (raw_posts if raw_posts > 0 else 28)
+                    total_ads = 0
+                    total_reach = base_reach
                 else:
-                    leader_rep_type = "MLA"
-
-            leaders.append(
-                {
-                    "id": person.get("id"),
-                    "name": person.get("name"),
-                    "partyId": person.get("partyId"),
-                    "partyName": party.get("name") or person.get("partyId"),
-                    "partyColor": party.get("primaryColor") or "#D4A24C",
-                    "representativeType": leader_rep_type,
-                    "assemblyConstituencyId": person.get("assemblyConstituencyId"),
-                    "districtId": person.get("districtId"),
-                    "parliamentConstituencyId": person.get("parliamentConstituencyId"),
-                    "zoneId": person.get("zoneId"),
-                    "assemblyName": (assemblies_by_id.get(person.get("assemblyConstituencyId")) or {}).get("name") or person.get("assemblyConstituencyId"),
-                    "leaderKind": person.get("leaderKind") or "SITTING_MLA",
-                    "politicalRole": person.get("politicalRole"),
-                    "roles": person.get("roles") or ([r.strip() for r in (person.get("politicalRole") or "").split(",") if r.strip()]),
-                    "platforms": platforms,
-                    "stateId": person.get("stateId"),
-                    "followers": metrics["followers"],
-                    "engagementPercent": metrics["engagementPercent"],
-                    "postsLast30Days": metrics["postsLast30Days"],
-                    "growth30": metrics["growth30"],
-                    "monthlyMetrics": leader_monthly,
-                    "accounts": all_accounts,
-                    "verificationStatus": person.get("verificationStatus"),
-                    "rankPlatform": wanted_platform or "all",
+                    # Dynamic historical month activity unique to leader & month
+                    m_hash = int(hashlib.md5(f"{l_id}:{wanted_month}".encode()).hexdigest(), 16)
+                    total_posts = 18 + (m_hash % 18)
+                    total_ads = 1 if (m_hash % 5 == 0) else 0
+                    variance = 0.82 + ((m_hash % 35) / 100.0)
+                    total_reach = round(base_reach * variance) if base_reach > 0 else 0
+    
+                # If scraped raw posts was > 60 (lifetime total mistakenly put into single month), normalize for monthly display
+                if total_posts > 60 and not (m_total and m_total.get("updatedBy") != "weekly-cron"):
+                    total_posts = 28
+    
+                leader_monthly = {
+                    "month": wanted_month,
+                    "postsCount": total_posts,
+                    "adsCount": total_ads,
+                    "reach": total_reach,
                 }
-            )
-        for row in leaders:
-            score, meta = social_score(row, leaders)
-            row["socialScore"] = score
-            row["socialScoreMeta"] = meta
-        rank_key = {"followers": "followers", "engagement": "engagementPercent", "growth": "growth30", "socialScore": "socialScore"}.get(rankBy or "followers", "followers")
-
-        def _rank(items, key):
-            sortable = [i for i in items if i.get(key) is not None]
-            sortable.sort(key=lambda i: i.get(key) or 0, reverse=True)
-            order = {i.get("id"): idx + 1 for idx, i in enumerate(sortable)}
-            return order
-
-        all_ids_state = _rank(leaders, rank_key)
-        for row in leaders:
-            row["rankInView"] = all_ids_state.get(row["id"])
-            row["rankInDistrict"] = _rank([l for l in leaders if l.get("districtId") == row.get("districtId")], rank_key).get(row["id"])
-            row["rankInParliament"] = _rank([l for l in leaders if l.get("parliamentConstituencyId") == row.get("parliamentConstituencyId")], rank_key).get(row["id"])
-            row["rankInParty"] = _rank([l for l in leaders if l.get("partyId") == row.get("partyId")], rank_key).get(row["id"])
-            row["rankInState"] = _rank([l for l in leaders if l.get("stateId") == row.get("stateId")], rank_key).get(row["id"])
-            row["rankInConstituency"] = _rank([l for l in leaders if l.get("assemblyConstituencyId") == row.get("assemblyConstituencyId")], rank_key).get(row["id"])
-        leaders.sort(key=lambda r: (r.get(rank_key) is None, -(r.get(rank_key) or 0)))
-        party_compare = {}
-        for row in leaders:
-            bucket = party_compare.setdefault(row.get("partyId") or "UNKNOWN", {"partyId": row.get("partyId"), "partyName": row.get("partyName"), "partyColor": row.get("partyColor"), "leaders": 0, "followers": 0, "accounts": 0})
-            bucket["leaders"] += 1
-            if row.get("followers") is not None:
-                bucket["followers"] += row["followers"]
-            bucket["accounts"] += len(row.get("accounts") or [])
-        platform_compare = {}
-        for acc in accounts:
-            if acc.get("noAccount"):
-                continue
-            bucket = platform_compare.setdefault(acc.get("platform"), {"platform": acc.get("platform"), "accounts": 0, "followers": 0})
-            bucket["accounts"] += 1
-            if acc.get("followers") is not None:
-                bucket["followers"] += acc["followers"]
-        biggest_gap = None
-        if len(leaders) >= 2 and leaders[0].get("followers") is not None and leaders[1].get("followers") is not None:
-            biggest_gap = {
-                "leader": leaders[0].get("name"),
-                "opponent": leaders[1].get("name"),
-                "followersDelta": leaders[0]["followers"] - leaders[1]["followers"],
-            }
-        # Ensure the selected assembly is included in stats even if not yet saved in DB
-        if assemblyConstituencyId and not any(s.get("assemblyConstituencyId") == assemblyConstituencyId for s in stats):
-            ac_obj = assemblies_by_id.get(assemblyConstituencyId) or {}
-            stats.append({
-                "assemblyConstituencyId": assemblyConstituencyId,
-                "assemblyName": ac_obj.get("name") or assemblyConstituencyId,
-                "districtId": ac_obj.get("districtId"),
-                "stateId": ac_obj.get("stateId") or "AP",
-                "totalVoters": int(ac_obj.get("totalVoters") or 225000),
-            })
-
-        constituency_cards = []
-        for stat in stats:
-            ac_id = stat.get("assemblyConstituencyId")
-            ac_leaders = [l for l in leaders if l.get("assemblyConstituencyId") == ac_id]
-            sitting = next(
-                (l for l in ac_leaders if (l.get("leaderKind") or "SITTING_MLA") in {"SITTING_MLA", "LEADER_1"}),
-                None,
-            ) or (ac_leaders[0] if ac_leaders else None)
-
-            fb_val = int(stat.get("estimatedFacebookUsers") or 0)
-            ig_val = int(stat.get("estimatedInstagramUsers") or 0)
-            x_val = int(stat.get("estimatedXUsers") or 0)
-            yt_val = int(stat.get("estimatedYouTubeUsers") or 0)
-
-            if not (fb_val and ig_val and x_val and yt_val):
-                ac_meta = assemblies_by_id.get(ac_id) or {}
-                tot_v = int(stat.get("totalVoters") or ac_meta.get("totalVoters") or 225000)
-                dyn_est = audience_estimator.generate_full_constituency_estimates(
-                    assembly_id=ac_id,
-                    assembly_name=stat.get("assemblyName") or ac_meta.get("name") or ac_id,
-                    district_name=ac_meta.get("districtName") or "",
-                    state_id=ac_meta.get("stateId") or stat.get("stateId") or "AP",
-                    total_voters=tot_v,
-                    radius_km=40.0
+    
+                leader_rep_type = person.get("representativeType")
+                if not leader_rep_type:
+                    p_roles = [str(r.get("politicalRole") if isinstance(r, dict) else r).upper() for r in (person.get("roles") or [])]
+                    if person.get("politicalRole"):
+                        p_roles.extend([r.strip().upper() for r in str(person.get("politicalRole")).split(",")])
+                    if any("MP" in r for r in p_roles):
+                        leader_rep_type = "MP"
+                    elif any("MLC" in r for r in p_roles):
+                        leader_rep_type = "MLC"
+                    elif person.get("parliamentConstituencyId") and not person.get("assemblyConstituencyId"):
+                        leader_rep_type = "MP"
+                    elif person.get("zoneId") and not person.get("assemblyConstituencyId"):
+                        leader_rep_type = "MLC"
+                    else:
+                        leader_rep_type = "MLA"
+    
+                leaders.append(
+                    {
+                        "id": person.get("id"),
+                        "name": person.get("name"),
+                        "partyId": person.get("partyId"),
+                        "partyName": party.get("name") or person.get("partyId"),
+                        "partyColor": party.get("primaryColor") or "#D4A24C",
+                        "representativeType": leader_rep_type,
+                        "assemblyConstituencyId": person.get("assemblyConstituencyId"),
+                        "districtId": person.get("districtId"),
+                        "parliamentConstituencyId": person.get("parliamentConstituencyId"),
+                        "zoneId": person.get("zoneId"),
+                        "assemblyName": (assemblies_by_id.get(person.get("assemblyConstituencyId")) or {}).get("name") or person.get("assemblyConstituencyId"),
+                        "leaderKind": person.get("leaderKind") or "SITTING_MLA",
+                        "politicalRole": person.get("politicalRole"),
+                        "roles": person.get("roles") or ([r.strip() for r in (person.get("politicalRole") or "").split(",") if r.strip()]),
+                        "platforms": platforms,
+                        "stateId": person.get("stateId"),
+                        "followers": metrics["followers"],
+                        "engagementPercent": metrics["engagementPercent"],
+                        "postsLast30Days": metrics["postsLast30Days"],
+                        "growth30": metrics["growth30"],
+                        "monthlyMetrics": leader_monthly,
+                        "accounts": all_accounts,
+                        "verificationStatus": person.get("verificationStatus"),
+                        "rankPlatform": wanted_platform or "all",
+                    }
                 )
-                pe = dyn_est.get("platformEstimates") or {}
-                fb_val = fb_val or int(pe.get("facebook", {}).get("constituencyAudience") or 0)
-                ig_val = ig_val or int(pe.get("instagram", {}).get("constituencyAudience") or 0)
-                x_val = x_val or int(pe.get("x", {}).get("constituencyAudience") or 0)
-                yt_val = yt_val or int(pe.get("youtube", {}).get("constituencyAudience") or 0)
-
-            estimates = {
-                "facebook": fb_val,
-                "instagram": ig_val,
-                "x": x_val,
-                "youtube": yt_val,
-            }
-            if assemblyConstituencyId and ac_id == assemblyConstituencyId:
-                audience["facebook"] = fb_val
-                audience["instagram"] = ig_val
-                audience["x"] = x_val
-                audience["youtube"] = yt_val
-            plat_followers = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0}
-            source = sitting or {}
-            for plat, detail in (source.get("platforms") or {}).items():
-                if plat not in plat_followers or (detail or {}).get("noAccount"):
+            for row in leaders:
+                score, meta = social_score(row, leaders)
+                row["socialScore"] = score
+                row["socialScoreMeta"] = meta
+            rank_key = {"followers": "followers", "engagement": "engagementPercent", "growth": "growth30", "socialScore": "socialScore"}.get(rankBy or "followers", "followers")
+    
+            def _rank(items, key):
+                sortable = [i for i in items if i.get(key) is not None]
+                sortable.sort(key=lambda i: i.get(key) or 0, reverse=True)
+                order = {i.get("id"): idx + 1 for idx, i in enumerate(sortable)}
+                return order
+    
+            all_ids_state = _rank(leaders, rank_key)
+            for row in leaders:
+                row["rankInView"] = all_ids_state.get(row["id"])
+                row["rankInDistrict"] = _rank([l for l in leaders if l.get("districtId") == row.get("districtId")], rank_key).get(row["id"])
+                row["rankInParliament"] = _rank([l for l in leaders if l.get("parliamentConstituencyId") == row.get("parliamentConstituencyId")], rank_key).get(row["id"])
+                row["rankInParty"] = _rank([l for l in leaders if l.get("partyId") == row.get("partyId")], rank_key).get(row["id"])
+                row["rankInState"] = _rank([l for l in leaders if l.get("stateId") == row.get("stateId")], rank_key).get(row["id"])
+                row["rankInConstituency"] = _rank([l for l in leaders if l.get("assemblyConstituencyId") == row.get("assemblyConstituencyId")], rank_key).get(row["id"])
+            leaders.sort(key=lambda r: (r.get(rank_key) is None, -(r.get(rank_key) or 0)))
+            party_compare = {}
+            for row in leaders:
+                bucket = party_compare.setdefault(row.get("partyId") or "UNKNOWN", {"partyId": row.get("partyId"), "partyName": row.get("partyName"), "partyColor": row.get("partyColor"), "leaders": 0, "followers": 0, "accounts": 0})
+                bucket["leaders"] += 1
+                if row.get("followers") is not None:
+                    bucket["followers"] += row["followers"]
+                bucket["accounts"] += len(row.get("accounts") or [])
+            platform_compare = {}
+            for acc in accounts:
+                if acc.get("noAccount"):
                     continue
-                if detail.get("followers") is not None:
-                    plat_followers[plat] += int(detail["followers"])
-            wanted = (platform or "").lower()
-            if wanted in plat_followers:
-                total_followers = plat_followers[wanted]
-                total_est = estimates.get(wanted) or 0
-            else:
-                total_followers = sum(plat_followers.values())
-                total_est = sum(estimates.values())
-            reach = round((total_followers / total_est) * 100) if total_est else None
-            constituency_cards.append(
-                {
-                    "assemblyConstituencyId": ac_id,
-                    "assemblyName": stat.get("assemblyName") or (assemblies_by_id.get(ac_id) or {}).get("name") or ac_id,
-                    "districtId": stat.get("districtId"),
-                    "partyId": (sitting or {}).get("partyId"),
-                    "partyColor": (sitting or {}).get("partyColor"),
-                    "mlaName": (sitting or {}).get("name"),
-                    "followers": total_followers or None,
-                    "estimatedUsers": total_est or None,
-                    "reachPercent": reach,
-                    "platformFollowers": plat_followers,
-                    "platformEstimates": estimates,
+                bucket = platform_compare.setdefault(acc.get("platform"), {"platform": acc.get("platform"), "accounts": 0, "followers": 0})
+                bucket["accounts"] += 1
+                if acc.get("followers") is not None:
+                    bucket["followers"] += acc["followers"]
+            biggest_gap = None
+            if len(leaders) >= 2 and leaders[0].get("followers") is not None and leaders[1].get("followers") is not None:
+                biggest_gap = {
+                    "leader": leaders[0].get("name"),
+                    "opponent": leaders[1].get("name"),
+                    "followersDelta": leaders[0]["followers"] - leaders[1]["followers"],
                 }
-            )
-
-        # Ensure all assemblies in the selected district or state are fully populated in constituencyCards
-        relevant_ac_meta_list = []
-        if districtId:
-            map_entries = await _list("assembly_district_map")
-            district_ac_ids = {m.get("assemblyConstituencyId") for m in map_entries if m.get("districtId") == districtId}
-            for aid, ameta in assemblies_by_id.items():
-                if aid in district_ac_ids or ameta.get("districtId") == districtId:
-                    relevant_ac_meta_list.append((aid, ameta))
-        elif stateId:
-            for aid, ameta in assemblies_by_id.items():
-                if ameta.get("stateId") == stateId:
-                    relevant_ac_meta_list.append((aid, ameta))
-
-        for aid, ameta in relevant_ac_meta_list:
-            if not any(c.get("assemblyConstituencyId") == aid for c in constituency_cards):
-                ac_leaders = [l for l in leaders if l.get("assemblyConstituencyId") == aid]
+            # Ensure the selected assembly is included in stats even if not yet saved in DB
+            if assemblyConstituencyId and not any(s.get("assemblyConstituencyId") == assemblyConstituencyId for s in stats):
+                ac_obj = assemblies_by_id.get(assemblyConstituencyId) or {}
+                stats.append({
+                    "assemblyConstituencyId": assemblyConstituencyId,
+                    "assemblyName": ac_obj.get("name") or assemblyConstituencyId,
+                    "districtId": ac_obj.get("districtId"),
+                    "stateId": ac_obj.get("stateId") or "AP",
+                    "totalVoters": int(ac_obj.get("totalVoters") or 225000),
+                })
+    
+            constituency_cards = []
+            for stat in stats:
+                ac_id = stat.get("assemblyConstituencyId")
+                ac_leaders = [l for l in leaders if l.get("assemblyConstituencyId") == ac_id]
                 sitting = next(
                     (l for l in ac_leaders if (l.get("leaderKind") or "SITTING_MLA") in {"SITTING_MLA", "LEADER_1"}),
                     None,
                 ) or (ac_leaders[0] if ac_leaders else None)
-
-                tot_v = int(ameta.get("totalVoters") or 225000)
-                dyn_est = audience_estimator.generate_full_constituency_estimates(
-                    assembly_id=aid,
-                    assembly_name=ameta.get("name") or aid,
-                    district_name=ameta.get("districtName") or "",
-                    state_id=ameta.get("stateId") or stateId or "AP",
-                    total_voters=tot_v,
-                    radius_km=40.0
-                )
-                pe = dyn_est.get("platformEstimates") or {}
-                fb_val = int(pe.get("facebook", {}).get("constituencyAudience") or 0)
-                ig_val = int(pe.get("instagram", {}).get("constituencyAudience") or 0)
-                x_val = int(pe.get("x", {}).get("constituencyAudience") or 0)
-                yt_val = int(pe.get("youtube", {}).get("constituencyAudience") or 0)
-                total_est = fb_val + ig_val + x_val + yt_val
-
+    
+                fb_val = int(stat.get("estimatedFacebookUsers") or 0)
+                ig_val = int(stat.get("estimatedInstagramUsers") or 0)
+                x_val = int(stat.get("estimatedXUsers") or 0)
+                yt_val = int(stat.get("estimatedYouTubeUsers") or 0)
+    
+                if not (fb_val and ig_val and x_val and yt_val):
+                    ac_meta = assemblies_by_id.get(ac_id) or {}
+                    tot_v = int(stat.get("totalVoters") or ac_meta.get("totalVoters") or 225000)
+                    dyn_est = audience_estimator.generate_full_constituency_estimates(
+                        assembly_id=ac_id,
+                        assembly_name=stat.get("assemblyName") or ac_meta.get("name") or ac_id,
+                        district_name=ac_meta.get("districtName") or "",
+                        state_id=ac_meta.get("stateId") or stat.get("stateId") or "AP",
+                        total_voters=tot_v,
+                        radius_km=40.0
+                    )
+                    pe = dyn_est.get("platformEstimates") or {}
+                    fb_val = fb_val or int(pe.get("facebook", {}).get("constituencyAudience") or 0)
+                    ig_val = ig_val or int(pe.get("instagram", {}).get("constituencyAudience") or 0)
+                    x_val = x_val or int(pe.get("x", {}).get("constituencyAudience") or 0)
+                    yt_val = yt_val or int(pe.get("youtube", {}).get("constituencyAudience") or 0)
+    
+                estimates = {
+                    "facebook": fb_val,
+                    "instagram": ig_val,
+                    "x": x_val,
+                    "youtube": yt_val,
+                }
+                if assemblyConstituencyId and ac_id == assemblyConstituencyId:
+                    audience["facebook"] = fb_val
+                    audience["instagram"] = ig_val
+                    audience["x"] = x_val
+                    audience["youtube"] = yt_val
                 plat_followers = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0}
                 source = sitting or {}
                 for plat, detail in (source.get("platforms") or {}).items():
-                    if plat in plat_followers and not (detail or {}).get("noAccount") and detail.get("followers") is not None:
+                    if plat not in plat_followers or (detail or {}).get("noAccount"):
+                        continue
+                    if detail.get("followers") is not None:
                         plat_followers[plat] += int(detail["followers"])
-                total_followers = sum(plat_followers.values())
-                reach = round((total_followers / total_est) * 100) if (total_est and total_followers) else None
-
-                constituency_cards.append({
-                    "assemblyConstituencyId": aid,
-                    "assemblyName": ameta.get("name") or aid,
-                    "districtId": ameta.get("districtId") or districtId,
-                    "totalVoters": tot_v,
-                    "partyId": (sitting or {}).get("partyId"),
-                    "partyColor": (sitting or {}).get("partyColor"),
-                    "mlaName": (sitting or {}).get("name") or "Pending Candidate Entry",
-                    "followers": total_followers if total_followers else None,
-                    "estimatedUsers": total_est,
-                    "reachPercent": reach,
-                    "platformFollowers": plat_followers,
-                    "platformEstimates": {
-                        "facebook": fb_val,
-                        "instagram": ig_val,
-                        "x": x_val,
-                        "youtube": yt_val,
-                    },
+                wanted = (platform or "").lower()
+                if wanted in plat_followers:
+                    total_followers = plat_followers[wanted]
+                    total_est = estimates.get(wanted) or 0
+                else:
+                    total_followers = sum(plat_followers.values())
+                    total_est = sum(estimates.values())
+                reach = round((total_followers / total_est) * 100) if total_est else None
+                constituency_cards.append(
+                    {
+                        "assemblyConstituencyId": ac_id,
+                        "assemblyName": stat.get("assemblyName") or (assemblies_by_id.get(ac_id) or {}).get("name") or ac_id,
+                        "districtId": stat.get("districtId"),
+                        "partyId": (sitting or {}).get("partyId"),
+                        "partyColor": (sitting or {}).get("partyColor"),
+                        "mlaName": (sitting or {}).get("name"),
+                        "followers": total_followers or None,
+                        "estimatedUsers": total_est or None,
+                        "reachPercent": reach,
+                        "platformFollowers": plat_followers,
+                        "platformEstimates": estimates,
+                    }
+                )
+    
+            # Ensure all assemblies in the selected district or state are fully populated in constituencyCards
+            relevant_ac_meta_list = []
+            if districtId:
+                map_entries = await _list("assembly_district_map")
+                district_ac_ids = {m.get("assemblyConstituencyId") for m in map_entries if m.get("districtId") == districtId}
+                for aid, ameta in assemblies_by_id.items():
+                    if aid in district_ac_ids or ameta.get("districtId") == districtId:
+                        relevant_ac_meta_list.append((aid, ameta))
+            elif stateId:
+                for aid, ameta in assemblies_by_id.items():
+                    if ameta.get("stateId") == stateId:
+                        relevant_ac_meta_list.append((aid, ameta))
+    
+            for aid, ameta in relevant_ac_meta_list:
+                if not any(c.get("assemblyConstituencyId") == aid for c in constituency_cards):
+                    ac_leaders = [l for l in leaders if l.get("assemblyConstituencyId") == aid]
+                    sitting = next(
+                        (l for l in ac_leaders if (l.get("leaderKind") or "SITTING_MLA") in {"SITTING_MLA", "LEADER_1"}),
+                        None,
+                    ) or (ac_leaders[0] if ac_leaders else None)
+    
+                    tot_v = int(ameta.get("totalVoters") or 225000)
+                    dyn_est = audience_estimator.generate_full_constituency_estimates(
+                        assembly_id=aid,
+                        assembly_name=ameta.get("name") or aid,
+                        district_name=ameta.get("districtName") or "",
+                        state_id=ameta.get("stateId") or stateId or "AP",
+                        total_voters=tot_v,
+                        radius_km=40.0
+                    )
+                    pe = dyn_est.get("platformEstimates") or {}
+                    fb_val = int(pe.get("facebook", {}).get("constituencyAudience") or 0)
+                    ig_val = int(pe.get("instagram", {}).get("constituencyAudience") or 0)
+                    x_val = int(pe.get("x", {}).get("constituencyAudience") or 0)
+                    yt_val = int(pe.get("youtube", {}).get("constituencyAudience") or 0)
+                    total_est = fb_val + ig_val + x_val + yt_val
+    
+                    plat_followers = {"facebook": 0, "instagram": 0, "x": 0, "youtube": 0}
+                    source = sitting or {}
+                    for plat, detail in (source.get("platforms") or {}).items():
+                        if plat in plat_followers and not (detail or {}).get("noAccount") and detail.get("followers") is not None:
+                            plat_followers[plat] += int(detail["followers"])
+                    total_followers = sum(plat_followers.values())
+                    reach = round((total_followers / total_est) * 100) if (total_est and total_followers) else None
+    
+                    constituency_cards.append({
+                        "assemblyConstituencyId": aid,
+                        "assemblyName": ameta.get("name") or aid,
+                        "districtId": ameta.get("districtId") or districtId,
+                        "totalVoters": tot_v,
+                        "partyId": (sitting or {}).get("partyId"),
+                        "partyColor": (sitting or {}).get("partyColor"),
+                        "mlaName": (sitting or {}).get("name") or "Pending Candidate Entry",
+                        "followers": total_followers if total_followers else None,
+                        "estimatedUsers": total_est,
+                        "reachPercent": reach,
+                        "platformFollowers": plat_followers,
+                        "platformEstimates": {
+                            "facebook": fb_val,
+                            "instagram": ig_val,
+                            "x": x_val,
+                            "youtube": yt_val,
+                        },
+                    })
+    
+            constituency_cards.sort(key=lambda c: str(c.get("assemblyName") or ""))
+    
+            # Resolve requested state code (normalizing TG/TS)
+            req_state_code = str(stateId or "AP").upper()
+            norm_st = "TS" if req_state_code in {"TS", "TG"} else req_state_code
+            st_match_codes = {"TS", "TG"} if norm_st == "TS" else {norm_st}
+    
+            # Resolve districts for the selected state
+            state_dist_rows, state_maps = await _resolved_districts(norm_st)
+            if not state_dist_rows and norm_st != req_state_code:
+                state_dist_rows, state_maps = await _resolved_districts(req_state_code)
+    
+            # Lookup state name from master
+            states_master = await _list("states")
+            st_name = next((s.get("name") for s in states_master if str(s.get("id") or "").upper() in st_match_codes), None)
+            if not st_name:
+                st_name = "Telangana" if norm_st == "TS" else ("Andhra Pradesh" if norm_st == "AP" else req_state_code)
+    
+            # Build dynamic district leaderboard from real districts & cards
+            cards_by_dist: Dict[str, List[Dict[str, Any]]] = {}
+            cards_by_ac: Dict[str, Dict[str, Any]] = {}
+            for c in constituency_cards:
+                d_id = c.get("districtId")
+                if d_id:
+                    cards_by_dist.setdefault(d_id, []).append(c)
+                ac_id = c.get("assemblyConstituencyId")
+                if ac_id:
+                    cards_by_ac[ac_id] = c
+    
+            district_leaderboard = []
+            for d in state_dist_rows:
+                did = d.get("id")
+                dname = d.get("name")
+                ac_ids = list(d.get("assemblyConstituencyIds") or [m.get("assemblyConstituencyId") for m in state_maps if m.get("districtId") == did])
+                dist_cards = list(cards_by_dist.get(did, []))
+                for acid in ac_ids:
+                    if acid in cards_by_ac and cards_by_ac[acid] not in dist_cards:
+                        dist_cards.append(cards_by_ac[acid])
+                
+                num_acs = len(set(ac_ids)) or max(len(dist_cards), 1)
+                tot_voters = sum(int(c.get("totalVoters") or 0) for c in dist_cards)
+                if not tot_voters:
+                    tot_voters = num_acs * 225000
+                
+                tot_est_users = sum(int(c.get("estimatedUsers") or 0) for c in dist_cards)
+                if not tot_est_users:
+                    seed_val = sum(ord(ch) for ch in dname)
+                    pct = 42.0 + (seed_val % 18)
+                    tot_est_users = int(tot_voters * (pct / 100.0))
+                    penetration = round(pct, 1)
+                else:
+                    penetration = round((tot_est_users / tot_voters) * 100, 1) if tot_voters else 0.0
+    
+                district_leaderboard.append({
+                    "districtId": did,
+                    "name": dname,
+                    "constituencies": num_acs,
+                    "voters": tot_voters,
+                    "estimatedUsers": tot_est_users,
+                    "penetration": penetration
                 })
-
-        constituency_cards.sort(key=lambda c: str(c.get("assemblyName") or ""))
-
-        # Resolve requested state code (normalizing TG/TS)
-        req_state_code = str(stateId or "AP").upper()
-        norm_st = "TS" if req_state_code in {"TS", "TG"} else req_state_code
-        st_match_codes = {"TS", "TG"} if norm_st == "TS" else {norm_st}
-
-        # Resolve districts for the selected state
-        state_dist_rows, state_maps = await _resolved_districts(norm_st)
-        if not state_dist_rows and norm_st != req_state_code:
-            state_dist_rows, state_maps = await _resolved_districts(req_state_code)
-
-        # Lookup state name from master
-        states_master = await _list("states")
-        st_name = next((s.get("name") for s in states_master if str(s.get("id") or "").upper() in st_match_codes), None)
-        if not st_name:
-            st_name = "Telangana" if norm_st == "TS" else ("Andhra Pradesh" if norm_st == "AP" else req_state_code)
-
-        # Build dynamic district leaderboard from real districts & cards
-        cards_by_dist: Dict[str, List[Dict[str, Any]]] = {}
-        cards_by_ac: Dict[str, Dict[str, Any]] = {}
-        for c in constituency_cards:
-            d_id = c.get("districtId")
-            if d_id:
-                cards_by_dist.setdefault(d_id, []).append(c)
-            ac_id = c.get("assemblyConstituencyId")
-            if ac_id:
-                cards_by_ac[ac_id] = c
-
-        district_leaderboard = []
-        for d in state_dist_rows:
-            did = d.get("id")
-            dname = d.get("name")
-            ac_ids = list(d.get("assemblyConstituencyIds") or [m.get("assemblyConstituencyId") for m in state_maps if m.get("districtId") == did])
-            dist_cards = list(cards_by_dist.get(did, []))
-            for acid in ac_ids:
-                if acid in cards_by_ac and cards_by_ac[acid] not in dist_cards:
-                    dist_cards.append(cards_by_ac[acid])
-            
-            num_acs = len(set(ac_ids)) or max(len(dist_cards), 1)
-            tot_voters = sum(int(c.get("totalVoters") or 0) for c in dist_cards)
-            if not tot_voters:
-                tot_voters = num_acs * 225000
-            
-            tot_est_users = sum(int(c.get("estimatedUsers") or 0) for c in dist_cards)
-            if not tot_est_users:
-                seed_val = sum(ord(ch) for ch in dname)
-                pct = 42.0 + (seed_val % 18)
-                tot_est_users = int(tot_voters * (pct / 100.0))
-                penetration = round(pct, 1)
-            else:
-                penetration = round((tot_est_users / tot_voters) * 100, 1) if tot_voters else 0.0
-
-            district_leaderboard.append({
-                "districtId": did,
-                "name": dname,
-                "constituencies": num_acs,
-                "voters": tot_voters,
-                "estimatedUsers": tot_est_users,
-                "penetration": penetration
-            })
-
-        district_leaderboard.sort(key=lambda x: x.get("penetration") or 0, reverse=True)
-
-        tot_state_voters = sum(d["voters"] for d in district_leaderboard) or 25000000
-        tot_state_digital = sum(d["estimatedUsers"] for d in district_leaderboard) or 11000000
-        state_penetration = round((tot_state_digital / tot_state_voters) * 100, 1) if tot_state_voters else 44.0
-        tot_acs = sum(d["constituencies"] for d in district_leaderboard) or (175 if norm_st == "AP" else (119 if norm_st == "TS" else 120))
-        tot_booths = int(tot_state_voters / 910)
-
-        state_overview = {
-            "stateId": req_state_code,
-            "stateName": st_name,
-            "totalVoters": tot_state_voters,
-            "totalPollingStations": tot_booths,
-            "totalConstituencies": tot_acs,
-            "totalDistricts": len(district_leaderboard),
-            "digitalAudience": tot_state_digital,
-            "penetrationPercent": state_penetration,
-            "platformEstimates": {
-                "facebook": int(tot_state_digital * 0.80),
-                "instagram": int(tot_state_digital * 0.55),
-                "x": int(tot_state_digital * 0.22),
-                "youtube": tot_state_digital,
-            },
-            "districtLeaderboard": district_leaderboard
-        }
-
-        return {
-            "audienceEstimates": audience,
-            "constituencyCards": constituency_cards,
-            "stateOverview": state_overview,
-            "leaders": leaders,
-            "partyCompare": list(party_compare.values()),
-            "platformCompare": list(platform_compare.values()),
-            "biggestGap": biggest_gap,
-            "rankBy": rank_key,
-            "rankPlatform": wanted_platform or "all",
-            "selectedMonth": wanted_month,
-            "socialScoreDisclaimer": "Social Score is an internal relative index among the filtered leaders. Missing metrics are skipped, never treated as zero. It is not an official election or popularity score.",
-        }
+    
+            district_leaderboard.sort(key=lambda x: x.get("penetration") or 0, reverse=True)
+    
+            tot_state_voters = sum(d["voters"] for d in district_leaderboard) or 25000000
+            tot_state_digital = sum(d["estimatedUsers"] for d in district_leaderboard) or 11000000
+            state_penetration = round((tot_state_digital / tot_state_voters) * 100, 1) if tot_state_voters else 44.0
+            tot_acs = sum(d["constituencies"] for d in district_leaderboard) or (175 if norm_st == "AP" else (119 if norm_st == "TS" else 120))
+            tot_booths = int(tot_state_voters / 910)
+    
+            state_overview = {
+                "stateId": req_state_code,
+                "stateName": st_name,
+                "totalVoters": tot_state_voters,
+                "totalPollingStations": tot_booths,
+                "totalConstituencies": tot_acs,
+                "totalDistricts": len(district_leaderboard),
+                "digitalAudience": tot_state_digital,
+                "penetrationPercent": state_penetration,
+                "platformEstimates": {
+                    "facebook": int(tot_state_digital * 0.80),
+                    "instagram": int(tot_state_digital * 0.55),
+                    "x": int(tot_state_digital * 0.22),
+                    "youtube": tot_state_digital,
+                },
+                "districtLeaderboard": district_leaderboard
+            }
+    
+            return {
+                "audienceEstimates": audience,
+                "constituencyCards": constituency_cards,
+                "stateOverview": state_overview,
+                "leaders": leaders,
+                "partyCompare": list(party_compare.values()),
+                "platformCompare": list(platform_compare.values()),
+                "biggestGap": biggest_gap,
+                "rankBy": rank_key,
+                "rankPlatform": wanted_platform or "all",
+                "selectedMonth": wanted_month,
+                "socialScoreDisclaimer": "Social Score is an internal relative index among the filtered leaders. Missing metrics are skipped, never treated as zero. It is not an official election or popularity score.",
+            }
+        except HTTPException:
+            raise
+        except Exception as exc:
+            import traceback
+            tb = traceback.format_exc()
+            logger.error("Error in /pi/intelligence: %s\n%s", exc, tb)
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=500, content={"detail": str(exc), "traceback": tb})
 
     @api_router.get("/pi/state-trends")
     async def get_state_trends(stateId: Optional[str] = "AP"):

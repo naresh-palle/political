@@ -1,10 +1,11 @@
 # Continuous Deployment & Quality Rules
 
-## 0. Confirm before any new change (required)
+## 0. Confirm before any new change & Preserve Existing Features (required)
 
-Before coding a product, UI, role, routing, or data change, follow `.cursor/skills/confirm-before-change/SKILL.md`.
+Before coding a product, UI, role, routing, or data change, follow `.cursor/skills/confirm-before-change/SKILL.md` and `.cursor/skills/preserve-existing-features/SKILL.md`.
 
-This applies to **every section** and **every user** (admin, political admin, manager, volunteer, officer, SM A, SM M, public, and any later role). Check previous requirements. Ask which users and which screens if that is not already clear. Do not add extra features. After a change, other roles and other sections must still be correct.
+- Under NO circumstances may an existing feature, view, table, metric, filter, button, or workflow be removed, disabled, or broken unless the user EXPLICITLY and unambiguously requests its removal.
+- This applies to **every section** and **every user** (admin, political admin, manager, volunteer, officer, SM A, SM M, public, and any later role). Check previous requirements. Ask which users and which screens if that is not already clear. Do not add extra features. After a change, other roles and other sections must still be correct.
 
 ## 1. Zero Broken Deployments & UI Automation Testing
 - Whenever frontend/UI code changes are made, run the automated UI test suite: `node scripts/run_ui_tests.mjs` (or `npm run test:ui`).
