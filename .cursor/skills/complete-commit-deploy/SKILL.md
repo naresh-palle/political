@@ -35,7 +35,7 @@ Pushing `origin/main` is the deploy. Cloudflare already has Git access; it does 
 
 - Project: `leaders-lens` (https://leaders-lens.pages.dev and https://leaderslensconsulting.com)
 - Root `package.json` `build` → frontend Vite build
-- `wrangler.toml` `[assets] directory = "./dist"`
+- `wrangler.toml` `pages_build_output_dir = "./dist"` (Pages Git, not Workers `[assets]`)
 
 Do not create `.github/workflows` Cloudflare deploy jobs. Do not run `npx wrangler pages deploy` unless the user already has Wrangler logged in locally.
 

@@ -1,9 +1,6 @@
 name = "leaders-lens"
 compatibility_date = "2026-11-21"
+pages_build_output_dir = "./dist"
 
-# Cloudflare Git / Workers Builds with Path = frontend.
-# Build: npm ci && npm run build. Deploy: npx wrangler deploy.
-[assets]
-directory = "./dist"
-not_found_handling = "single-page-application"
-html_handling = "auto-trailing-slash"
+# Cloudflare Pages Git with Path = frontend. No API token. No GitHub Action.
+# Dashboard: Build command `npm run build`.
