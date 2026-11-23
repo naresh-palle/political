@@ -1,0 +1,9 @@
+name = "leaders-lens"
+compatibility_date = "2026-11-21"
+
+# Cloudflare Git / Workers Builds at repo root (no GitHub Action, no API token).
+# Dashboard: Path /, Build command `npm run build`, Deploy `npx wrangler deploy`.
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+html_handling = "auto-trailing-slash"

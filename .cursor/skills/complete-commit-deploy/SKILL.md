@@ -2,87 +2,47 @@
 name: complete-commit-deploy
 description: >-
   REQUIRED after every code change. Update skills if the workflow changed,
-  commit, push to git, deploy the frontend to Cloudflare Pages, and deploy
-  the backend to Render via origin/main. GitHub Pages is retired.
+  commit, push origin/main. Cloudflare builds the frontend from Git automatically.
+  Render deploys the backend from origin/main. GitHub Pages is retired. No Cloudflare API token. No GitHub Actions deploy.
 ---
 
-# Every code change → git push → Cloudflare Pages → Render
+# Every code change → build → push origin/main
 
-Do this in the **same turn** as the code change. Do not stop at “code is done.”
-Do not wait for the user to ask. Feature-branch-only work is not deployed.
+Do this in the **same turn**. Feature-branch-only work is not production.
 
-Production frontend is **Cloudflare Pages**, not GitHub Pages. Do not run `gh-pages`, do not copy builds into `docs/` or the repo root, and do not treat a GitHub Pages publish as a production deploy.
+Production frontend is **Cloudflare** (https://leaderslensconsulting.com), built from Git when `main` moves. Do **not** add GitHub Actions for Cloudflare. Do **not** ask for a Cloudflare API token. Do **not** run `gh-pages`. Do **not** copy builds into `docs/` or the repo root for GitHub Pages.
 
-## 0. Add / update skills
+## 0. Skills
 
-If this change affects how we ship (git, Cloudflare Pages, Render, quality gates), update:
-
-- `.cursor/skills/complete-commit-deploy/SKILL.md` (canonical)
-- `.agent/skills/complete-commit-deploy/SKILL.md` (pointer)
-- `.agent/skills/smart-deployment/SKILL.md`
-- `.agent/rules/deployment-rules.md`
-- `AGENTS.md`
-
-If this change affects screens, layout, or rendered fields, also follow `.cursor/skills/cross-device-ui-parity/SKILL.md`.
-
-Before implementing a **new** product, UI, role, routing, or data change, follow `.cursor/skills/confirm-before-change/SKILL.md`.
-
-Keep those files in the same commit as the related code when the workflow itself changed.
+If git / Cloudflare / Render shipping changed, update this file, `.agent/skills/complete-commit-deploy/SKILL.md`, `.agent/skills/smart-deployment/SKILL.md`, `.agent/rules/deployment-rules.md`, and `AGENTS.md` in the same commit.
 
 ## 1. Quality gates
 
-- From `frontend/`: `npm run build` (TypeScript + Vite + `sync_build.js`). Fix errors before committing.
-- Confirm `frontend/public/_redirects` exists (`/*    /index.html   200`) so Cloudflare Pages SPA routes work. `sync_build.js` copies it into `frontend/dist/`.
+- From `frontend/`: `npm run build`. That also prepares `frontend/dist` (`_redirects`, `404.html`).
+- Root `npm run build` builds the frontend and copies `frontend/dist` → `dist/` so Cloudflare Git (Path `/`, `npm run build`) publishes the Vite app, not Python.
 - If `backend/` changed: `PYTHONPATH=<repo> python3 -m pytest backend/tests -n 0`.
-- **Every screen size.** Laptop, desktop, tablet, iPad, and mobile must show the same alignment and the same information.
+- Same alignment and information on laptop, desktop, tablet, iPad, and mobile.
 
-UI automation (`node scripts/run_ui_tests.mjs`) is optional extra coverage. It does **not** replace the Cloudflare Pages deploy.
+## 2. Git
 
-## 2. Commit and push git
+- Stage source, tests, and skills. Never commit secrets, `.env`, or tokens.
+- Skip unrelated `yarn.lock` churn.
+- Commit, push the branch, and update `origin/main`.
 
-- Stage source, tests, skill/rule files, and `frontend/` config. Do not commit secrets, `.env`, `.deploy_credentials.json`, or tokens.
-- Do not stage leftover GitHub Pages artifacts (`docs/`, root `index.html` / `assets/` / `CNAME` / `.nojekyll`) unless the user asked to delete them.
-- Skip unrelated dirty files (for example unused `yarn.lock` churn).
-- Commit with a short imperative message.
-- Push the working branch: `git push -u origin <branch-name>`.
-- Create or update the pull request for that branch.
+## 3. Frontend: Cloudflare Git (automatic)
 
-## 3. Deploy Cloudflare Pages (always when the turn produced a frontend change)
+Pushing `origin/main` is the deploy. Cloudflare already has Git access; it does not use a Wrangler token in GitHub.
 
-Site: **https://leaderslensconsulting.com**  
-Project: **`leaders-lens`** (`https://leaders-lens.pages.dev`)  
-Account: `1b9ccc1557ec43d14cd6980a2aae9089`
+- Project: `leaders-lens` (https://leaders-lens.pages.dev and https://leaderslensconsulting.com)
+- Root `package.json` `build` → frontend Vite build
+- `wrangler.toml` `[assets] directory = "./dist"`
 
-1. `cd frontend && npm run build`
-2. Deploy the **existing** `frontend/dist` folder (do not rebuild again unless the build is stale):
+Do not create `.github/workflows` Cloudflare deploy jobs. Do not run `npx wrangler pages deploy` unless the user already has Wrangler logged in locally.
 
-```bash
-cd frontend
-npx wrangler pages deploy dist --project-name leaders-lens --commit-dirty=true
-```
+## 4. Backend: Render
 
-Auth (never paste keys into git or chat):
-
-- Preferred: `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`
-- Legacy: `CLOUDFLARE_API_KEY` + `CLOUDFLARE_EMAIL` + `CLOUDFLARE_ACCOUNT_ID`
-
-If this environment has no Cloudflare credentials, still push to `origin/main` so `.github/workflows/cloudflare-pages.yml` can deploy. Do **not** fall back to GitHub Pages.
-
-Never use `wrangler deploy` (Workers) for this frontend. Never use `npx wrangler deploy --temporary`.
-
-## 4. Deploy Render (always ship `origin/main`)
-
-Render auto-deploys **https://political-ddmj.onrender.com/** from **`origin/main`**.
-
-1. Fast-forward or merge onto `origin/main` (`git push origin <branch>:main` when the branch is based on current `main`).
-2. A feature-branch push is **not** a Render deploy.
+Render deploys https://political-ddmj.onrender.com/ from `origin/main`.
 
 ## 5. Report
 
-Tell the user:
-
-- Commit SHA and branch
-- That git was pushed
-- Cloudflare Pages deploy result (or that Actions must supply the token)
-- Whether `origin/main` was updated for Render
-- That clients must hard-refresh https://leaderslensconsulting.com after the Pages publish
+Commit SHA, that `origin/main` was pushed, and that Cloudflare Git / Render pick it up. Ask for a hard-refresh of https://leaderslensconsulting.com.

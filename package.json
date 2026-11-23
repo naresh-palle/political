@@ -5,7 +5,7 @@
   "description": "Leader's Lens Political Intelligence Platform",
   "main": "backend/server.py",
   "scripts": {
-    "build": "python3 -m pip install -r backend/requirements.txt",
+    "build": "npm ci --prefix frontend && npm run build --prefix frontend && node scripts/sync_cf_dist.js",
     "start": "sh start.sh",
     "test:ui": "node scripts/run_ui_tests.mjs",
     "deploy:smart": "node scripts/smart_deploy.js",
