@@ -405,6 +405,17 @@ const STATE_ELECTORATE_MAP: Record<string, StateElectorateInfo> = {
   }
 };
 
+function normStateCode(s: string): string {
+  const str = String(s || "").toLowerCase();
+  if (str.includes("andhra") || str === "ap") return "AP";
+  if (str.includes("telangana") || str === "ts" || str === "tg") return "TS";
+  if (str.includes("karnataka") || str === "ka") return "KA";
+  if (str.includes("maharashtra") || str === "mh") return "MH";
+  if (str.includes("tamil") || str === "tn") return "TN";
+  if (str.includes("uttar") || str === "up") return "UP";
+  return (s || "AP").toUpperCase();
+}
+
 function getStateElectorateInfo(stateId?: string, stateName?: string): StateElectorateInfo {
   const rawCode = (stateId || "AP").toUpperCase();
   const code = rawCode === "TS" ? "TG" : rawCode;
@@ -2513,31 +2524,97 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               {/* 7 Core Summary KPI Cards - Dynamically updated for selected state, repType & sub-territory */}
               {(() => {
                 const activeSt = getStateElectorateInfo(stateId, states.find((s) => s.id === stateId)?.name);
-                const totalUnits = (() => {
-                  if (repType === "MP") {
-                    const pcCount = parliaments.filter(p => p.stateId.toUpperCase() === stateId.toUpperCase()).length || (stateId === "AP" ? 25 : stateId === "TS" || stateId === "TG" ? 17 : 20);
-                    return pcId ? 1 : pcCount;
-                  }
-                  if (repType === "MLC") {
-                    const mlcZones = getMlcZonesForState(stateId);
-                    return zoneId ? 1 : mlcZones.length;
-                  }
-                  return dashboard.totalConstituencies && dashboard.totalConstituencies > 0
-                    ? dashboard.totalConstituencies
-                    : districtId ? (filteredAcs.length || (districts.find(d => d.id === districtId)?.assemblyConstituencyIds?.length) || 7) : activeSt.totalConstituencies;
-                })();
-                const targetLeaders = totalUnits * 4;
-                const leadersDisplay = `${dashboard?.totalLeaders || 0} / ${targetLeaders}`;
-                const labelUnits = repType === "MP" ? "Parliament constituencies" : repType === "MLC" ? "Council zones" : "Total constituencies";
+                const stCode = normStateCode(stateId);
+
+                // 1. MLA stats for selected state / district
+                const mlaTotal = districtId
+                  ? (filteredAcs.length || (districts.find(d => d.id === districtId)?.assemblyConstituencyIds?.length) || 7)
+                  : (dashboard.totalConstituencies && dashboard.totalConstituencies > 0 ? dashboard.totalConstituencies : activeSt.totalConstituencies);
+
+                const stateMlaLeaders = leaders.filter((l) => {
+                  const r = (l.representativeType || "MLA").toUpperCase();
+                  const s = normStateCode(l.stateId);
+                  const matchState = s === stCode;
+                  const matchDist = districtId ? l.districtId === districtId : true;
+                  return matchState && matchDist && r === "MLA";
+                });
+                const mlaEnteredSet = new Set(stateMlaLeaders.map((l) => l.assemblyConstituencyId).filter(Boolean));
+                const mlaCompleted = mlaEnteredSet.size;
+                const mlaPending = Math.max(0, mlaTotal - mlaCompleted);
+
+                // 2. MLC stats for selected state
+                const stateMlcZones = getMlcZonesForState(stateId);
+                const mlcTotal = zoneId ? 1 : (stateMlcZones.length || (stCode === "AP" ? 15 : stCode === "TG" || stCode === "TS" ? 12 : 10));
+                const stateMlcLeaders = leaders.filter((l) => {
+                  const r = (l.representativeType || "").toUpperCase();
+                  const s = normStateCode(l.stateId);
+                  return s === stCode && r === "MLC";
+                });
+                const mlcEnteredSet = new Set(stateMlcLeaders.map((l) => l.zoneId || l.assemblyConstituencyId).filter(Boolean));
+                const mlcCompleted = mlcEnteredSet.size;
+                const mlcPending = Math.max(0, mlcTotal - mlcCompleted);
+
+                // 3. MP stats for selected state
+                const statePcs = parliaments.filter((p) => normStateCode(p.stateId) === stCode);
+                const mpTotal = pcId ? 1 : (statePcs.length || (stCode === "AP" ? 25 : stCode === "TG" || stCode === "TS" ? 17 : 25));
+                const stateMpLeaders = leaders.filter((l) => {
+                  const r = (l.representativeType || "").toUpperCase();
+                  const s = normStateCode(l.stateId);
+                  return s === stCode && r === "MP";
+                });
+                const mpEnteredSet = new Set(stateMpLeaders.map((l) => l.parliamentConstituencyId || l.assemblyConstituencyId).filter(Boolean));
+                const mpCompleted = mpEnteredSet.size;
+                const mpPending = Math.max(0, mpTotal - mpCompleted);
+
+                // Grand Totals
+                const grandTotal = mlaTotal + mpTotal + mlcTotal;
+                const grandCompleted = mlaCompleted + mpCompleted + mlcCompleted;
+                const grandPending = mlaPending + mpPending + mlcPending;
+
                 return (
                   <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2">
-                    <Kpi label={labelUnits} value={totalUnits} onClick={() => goToDataEntry()} />
-                    <Kpi label="Leaders" value={leadersDisplay} onClick={() => goToDataEntry()} />
-                    <Kpi label="Social accounts" value={dashboard?.totalSocialAccounts || 0} onClick={() => goToDataEntry()} />
-                    <Kpi label="Verified" value={dashboard?.verifiedAccounts || 0} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
-                    <Kpi label="Pending" value={dashboard?.pendingVerification || 0} onClick={isSmM ? () => { setQueueStatus("PENDING"); setTab("verify"); } : undefined} />
-                    <Kpi label="Recheck" value={dashboard?.needsRecheck || 0} onClick={isSmM ? () => { setQueueStatus("NEEDS_RECHECK"); setTab("verify"); } : undefined} />
-                    <Kpi label="Verified %" value={dashboard?.totalSocialAccounts ? `${dashboard.verificationPercent ?? 0}%` : "0%"} onClick={isSmM ? () => { setQueueStatus("VERIFIED"); setTab("verify"); } : undefined} />
+                    <Kpi
+                      label="Total"
+                      value={grandTotal}
+                      hint={`${grandCompleted} Done · ${grandPending} Left`}
+                      onClick={() => goToDataEntry()}
+                    />
+                    <Kpi
+                      label="MLA Pending"
+                      value={mlaPending}
+                      hint={`of ${mlaTotal} ACs`}
+                      onClick={() => { setRepType("MLA"); }}
+                    />
+                    <Kpi
+                      label="MLA Completed"
+                      value={mlaCompleted}
+                      hint={`of ${mlaTotal} ACs`}
+                      onClick={() => { setRepType("MLA"); }}
+                    />
+                    <Kpi
+                      label="MLC Pending"
+                      value={mlcPending}
+                      hint={`of ${mlcTotal} Zones`}
+                      onClick={() => { setRepType("MLC"); }}
+                    />
+                    <Kpi
+                      label="MLC Completed"
+                      value={mlcCompleted}
+                      hint={`of ${mlcTotal} Zones`}
+                      onClick={() => { setRepType("MLC"); }}
+                    />
+                    <Kpi
+                      label="MP Pending"
+                      value={mpPending}
+                      hint={`of ${mpTotal} PCs`}
+                      onClick={() => { setRepType("MP"); }}
+                    />
+                    <Kpi
+                      label="MP Completed"
+                      value={mpCompleted}
+                      hint={`of ${mpTotal} PCs`}
+                      onClick={() => { setRepType("MP"); }}
+                    />
                   </div>
                 );
               })()}
@@ -3831,6 +3908,22 @@ function renderTrendPlatformBadge(platform: string) {
 
 function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: string }) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [trendPlatform, setTrendPlatform] = useState<string>("ALL");
+  const [trendCategory, setTrendCategory] = useState<string>("ALL");
+  const [trendDate, setTrendDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+
+  const formattedDate = useMemo(() => {
+    try {
+      const parts = trendDate.split("-");
+      if (parts.length === 3) {
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+      }
+      return trendDate;
+    } catch {
+      return trendDate;
+    }
+  }, [trendDate]);
 
   const defaultTrends = [
     {
@@ -3909,11 +4002,33 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
 
   const list = trends && trends.length ? trends : defaultTrends;
 
+  const allCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of list) {
+      if (it.category) set.add(it.category);
+    }
+    return ["ALL", ...Array.from(set)];
+  }, [list]);
+
+  const displayList = useMemo(() => {
+    return list.filter((item: any) => {
+      if (trendPlatform !== "ALL") {
+        const pList = getTrendPlatforms(item).map((p) => p.toLowerCase());
+        const targetP = trendPlatform.toLowerCase();
+        if (!pList.includes(targetP)) return false;
+      }
+      if (trendCategory !== "ALL" && item.category !== trendCategory) {
+        return false;
+      }
+      return true;
+    });
+  }, [list, trendPlatform, trendCategory]);
+
   return (
     <div className={`${CARD} p-4 border border-[#22405E] bg-[#0A1A2E]/90`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2.5 w-2.5">
+        <div className="flex items-start gap-2.5">
+          <span className="relative flex h-2.5 w-2.5 mt-1">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
@@ -3921,9 +4036,15 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
             <h2 className="text-sm font-bold text-[#F5EFE0] uppercase tracking-wider">
               Daily Political Pulse & Major Trends · {stateName || "Andhra Pradesh"}
             </h2>
-            <p className="text-[11px] text-[#B9AF95] mt-0.5">
-              Live political topic monitoring, cross-platform origin tracking & sentiment analysis
-            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-[#D4A24C]/15 text-[#D4A24C] border border-[#D4A24C]/40 text-xs font-bold">
+                📅 {formattedDate}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-[#071322] text-[#B9AF95] border border-[#22405E] text-[11px] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                Source: Meta Ad Library & Public Buzz, X Trends API, YouTube Trending India ({stateName || "AP"})
+              </span>
+            </div>
           </div>
         </div>
 
@@ -3958,10 +4079,63 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
         </div>
       </div>
 
+      {/* Platform & Category Filters Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 pb-3 border-t border-[#142B45]">
+        {/* Platform Selection Pills */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] text-[#B9AF95] font-semibold mr-1">Platform:</span>
+          {[
+            { id: "ALL", label: "All Platforms" },
+            { id: "X", label: "𝕏 X (Twitter)" },
+            { id: "Facebook", label: "Facebook" },
+            { id: "YouTube", label: "YouTube" },
+            { id: "Instagram", label: "Instagram" }
+          ].map((p) => {
+            const active = trendPlatform === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setTrendPlatform(p.id)}
+                className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-all border ${
+                  active
+                    ? "bg-[#D4A24C] text-[#071322] border-[#D4A24C] font-bold shadow-sm"
+                    : "bg-[#071322] text-[#B9AF95] border-[#22405E] hover:border-[#D4A24C]/50 hover:text-[#F5EFE0]"
+                }`}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Category Filter Pills */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] text-[#B9AF95] font-semibold mr-1">Category:</span>
+          {allCategories.map((cat) => {
+            const active = trendCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setTrendCategory(cat)}
+                className={`px-2 py-0.5 rounded-full text-[11px] transition-all border ${
+                  active
+                    ? "bg-[#22405E] text-[#D4A24C] border-[#D4A24C] font-bold"
+                    : "bg-[#071322] text-[#B9AF95] border-[#22405E]/80 hover:text-[#F5EFE0]"
+                }`}
+              >
+                {cat === "ALL" ? "All Topics" : cat}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {viewMode === "grid" ? (
         /* Grid View: Responsive cards */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {list.map((item: any) => {
+          {displayList.map((item: any) => {
             const platforms = getTrendPlatforms(item);
             return (
               <div
@@ -4013,7 +4187,7 @@ function MajorTrendsWidget({ trends, stateName }: { trends?: any[]; stateName?: 
               </tr>
             </thead>
             <tbody className="divide-y divide-[#142B45]">
-              {list.map((item: any) => {
+              {displayList.map((item: any) => {
                 const platforms = getTrendPlatforms(item);
                 return (
                   <tr key={item.hashtag} className="hover:bg-[#142B45]/50 transition-colors">
@@ -5360,6 +5534,7 @@ interface RankedLeaderItem {
   partyName: string;
   partyColor?: string;
   stateId: string;
+  posts: number;
   followersFb: number;
   followersYt: number;
   followersIg: number;
@@ -5442,17 +5617,6 @@ function StateRankingTab(props: {
     }
   }, [props.stateId]);
 
-  const normStateCode = (s: string) => {
-    const str = String(s || "").toLowerCase();
-    if (str.includes("andhra") || str === "ap") return "AP";
-    if (str.includes("telangana") || str === "ts" || str === "tg") return "TS";
-    if (str.includes("karnataka") || str === "ka") return "KA";
-    if (str.includes("maharashtra") || str === "mh") return "MH";
-    if (str.includes("tamil") || str === "tn") return "TN";
-    if (str.includes("uttar") || str === "up") return "UP";
-    return s.toUpperCase();
-  };
-
   useEffect(() => {
     let cancelled = false;
     const stCode = normStateCode(rankingState);
@@ -5469,10 +5633,11 @@ function StateRankingTab(props: {
       setLoading(true);
       setLeaders([]);
       try {
-        const [intelRes, leadersRes, accountsRes] = await Promise.all([
+        const [intelRes, leadersRes, accountsRes, metricsRes] = await Promise.all([
           politicalApiService.getPiIntelligence(props.userId, { stateId: rankingState }).catch(() => ({ leaders: [] })),
           politicalApiService.getPiLeaders(props.userId, { stateId: rankingState, limit: 1000 }).catch(() => ({ items: [] })),
-          politicalApiService.getPiAccounts(props.userId, { limit: 1000 }).catch(() => ({ items: [] }))
+          politicalApiService.getPiAccounts(props.userId, { limit: 1000 }).catch(() => ({ items: [] })),
+          politicalApiService.getMonthlyAdsMetrics(props.userId).catch(() => [])
         ]);
 
         if (cancelled) return;
@@ -5480,6 +5645,13 @@ function StateRankingTab(props: {
         const intelLeaders = intelRes?.leaders || [];
         const dbLeaders = leadersRes?.items || [];
         const dbAccounts = accountsRes?.items || [];
+
+        const postsByPersonId: Record<string, number> = {};
+        for (const m of (Array.isArray(metricsRes) ? metricsRes : [])) {
+          if (m?.leaderId) {
+            postsByPersonId[m.leaderId] = Math.max(postsByPersonId[m.leaderId] || 0, Number(m.postsCount || m.posts || 0));
+          }
+        }
 
         const accountsByPersonId: Record<string, any[]> = {};
         for (const a of dbAccounts) {
@@ -5533,6 +5705,7 @@ function StateRankingTab(props: {
             partyName: partyNameOf(l.partyId),
             partyColor: partyColorOf(l.partyId),
             stateId: rankingState,
+            posts: postsByPersonId[l.id] || Number(l.postsCount || l.posts || l.monthlyPosts || 0),
             followersFb: fb,
             followersYt: yt,
             followersIg: ig,
@@ -5574,6 +5747,7 @@ function StateRankingTab(props: {
             partyName: partyNameOf(l.partyId),
             partyColor: partyColorOf(l.partyId),
             stateId: rankingState,
+            posts: postsByPersonId[l.id] || Number(l.postsCount || l.posts || l.monthlyPosts || 0),
             followersFb: fb,
             followersYt: yt,
             followersIg: ig,
@@ -5638,11 +5812,12 @@ function StateRankingTab(props: {
       "Designation",
       "Territory",
       "Party",
+      "Monthly Posts",
       "Facebook Followers",
       "YouTube Subscribers",
       "Instagram Followers",
       "X Followers",
-      "Total Digital Reach",
+      "Total Followers",
       "Verification Status"
     ];
     const rows = filteredAndSorted.map((item, index) => [
@@ -5651,6 +5826,7 @@ function StateRankingTab(props: {
       item.representativeType,
       `"${item.territoryName.replace(/"/g, '""')}"`,
       `"${item.partyName}"`,
+      item.posts || 0,
       item.followersFb,
       item.followersYt,
       item.followersIg,
@@ -5735,7 +5911,7 @@ function StateRankingTab(props: {
               value={platformSort}
               onChange={(e) => setPlatformSort(e.target.value as any)}
             >
-              <option value="OVERALL">Total Reach (All Platforms)</option>
+              <option value="OVERALL">Total Followers (All Platforms)</option>
               <option value="FB">Facebook (FB) Followers</option>
               <option value="YT">YouTube (YT) Subscribers</option>
               <option value="IG">Instagram (IG) Followers</option>
@@ -5768,11 +5944,11 @@ function StateRankingTab(props: {
             {topLeader ? topLeader.name : "—"}
           </span>
           <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">
-            {topLeader ? `${formatCompactCount(topLeader.totalReach)} reach` : "Awaiting data"}
+            {topLeader ? `${formatCompactCount(topLeader.totalReach)} followers` : "Awaiting data"}
           </span>
         </div>
         <div className="p-3.5 rounded-xl bg-[#0F2238] border border-[#22405E] text-left">
-          <span className="text-[11px] text-[#B9AF95] font-semibold block">Average Reach / Leader</span>
+          <span className="text-[11px] text-[#B9AF95] font-semibold block">Average Followers / Leader</span>
           <span className="text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{formatCompactCount(avgReach)}</span>
           <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Aggregate cross-platform</span>
         </div>
@@ -5791,7 +5967,7 @@ function StateRankingTab(props: {
               Leaderboard · {selectedStateName}
             </h3>
             <p className="text-xs text-[#B9AF95]">
-              Sorted by {platformSort === "OVERALL" ? "Total Reach" : platformSort === "FB" ? "Facebook Followers" : platformSort === "YT" ? "YouTube Subscribers" : platformSort === "IG" ? "Instagram Followers" : "X Followers"}.
+              Sorted by {platformSort === "OVERALL" ? "Total Followers" : platformSort === "FB" ? "Facebook Followers" : platformSort === "YT" ? "YouTube Subscribers" : platformSort === "IG" ? "Instagram Followers" : "X Followers"}.
             </p>
           </div>
           <span className="text-xs font-semibold text-[#D4A24C]">
@@ -5823,11 +5999,12 @@ function StateRankingTab(props: {
                   <th className="py-2.5 px-3 text-center">Type</th>
                   <th className="py-2.5 px-3">Territory</th>
                   <th className="py-2.5 px-3 text-center">Party</th>
+                  <th className="py-2.5 px-3 text-center">Posts</th>
                   <th className={`py-2.5 px-3 text-right ${platformSort === "FB" ? "text-[#1877F2] font-bold" : ""}`}>Facebook</th>
                   <th className={`py-2.5 px-3 text-right ${platformSort === "YT" ? "text-[#FF0000] font-bold" : ""}`}>YouTube</th>
                   <th className={`py-2.5 px-3 text-right ${platformSort === "IG" ? "text-[#E1306C] font-bold" : ""}`}>Instagram</th>
                   <th className={`py-2.5 px-3 text-right ${platformSort === "X" ? "text-sky-400 font-bold" : ""}`}>X</th>
-                  <th className={`py-2.5 px-3 text-right ${platformSort === "OVERALL" ? "text-[#D4A24C] font-bold" : ""}`}>Total Reach</th>
+                  <th className={`py-2.5 px-3 text-right ${platformSort === "OVERALL" ? "text-[#D4A24C] font-bold" : ""}`}>Total Followers</th>
                   <th className="py-2.5 px-3 text-center">Status</th>
                 </tr>
               </thead>
@@ -5883,6 +6060,9 @@ function StateRankingTab(props: {
                         >
                           {item.partyName}
                         </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-[#F5EFE0] font-bold">
+                        {item.posts > 0 ? item.posts : "—"}
                       </td>
                       <td className="py-2.5 px-3 text-right text-[#B9AF95] font-medium">
                         {formatCompactCount(item.followersFb)}
