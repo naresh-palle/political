@@ -2322,7 +2322,12 @@ def register_pi_routes(api_router) -> None:
                 state_dist_rows, state_maps = await _resolved_districts(req_state_code)
     
             # Lookup state name from master
-            states_master = await _list("states")
+            try:
+                states_master = await _list("states")
+            except Exception:
+                states_master = []
+            if not states_master:
+                states_master = srv.load_json_fallback("states.json") or []
             st_name = next((s.get("name") for s in states_master if str(s.get("id") or "").upper() in st_match_codes), None)
             if not st_name:
                 st_name = "Telangana" if norm_st == "TS" else ("Andhra Pradesh" if norm_st == "AP" else req_state_code)

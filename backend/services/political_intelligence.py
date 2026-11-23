@@ -54,6 +54,7 @@ SAMPLE_TAG = "SAMPLE"
 MEMORY: Dict[str, Any] = {
     "districts": {},
     "assembly_district_map": {},
+    "states": {},
     "constituency_statistics": {},
     "constituency_statistics_history": [],
     "political_persons": {},
@@ -538,7 +539,9 @@ def in_scope(caps: Dict[str, Any], state_id: Optional[str] = None, assembly_id: 
 
 
 def memory_delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
-    bucket = MEMORY[collection]
+    bucket = MEMORY.get(collection)
+    if bucket is None:
+        return None
     if isinstance(bucket, dict):
         removed = bucket.pop(key, None)
         return deepcopy(removed) if removed else None
@@ -555,6 +558,8 @@ def memory_delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
 
 def memory_upsert(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any]:
     stored = deepcopy(doc)
+    if collection not in MEMORY:
+        MEMORY[collection] = {}
     bucket = MEMORY[collection]
     if isinstance(bucket, dict):
         bucket[key] = stored
@@ -565,7 +570,9 @@ def memory_upsert(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, A
 
 
 def memory_get(collection: str, key: str) -> Optional[Dict[str, Any]]:
-    bucket = MEMORY[collection]
+    bucket = MEMORY.get(collection)
+    if bucket is None:
+        return None
     if isinstance(bucket, dict):
         doc = bucket.get(key)
         return deepcopy(doc) if doc else None
@@ -576,7 +583,9 @@ def memory_get(collection: str, key: str) -> Optional[Dict[str, Any]]:
 
 
 def memory_list(collection: str) -> List[Dict[str, Any]]:
-    bucket = MEMORY[collection]
+    bucket = MEMORY.get(collection)
+    if bucket is None:
+        return []
     if isinstance(bucket, dict):
         return [deepcopy(v) for v in bucket.values()]
     return [deepcopy(v) for v in bucket]
