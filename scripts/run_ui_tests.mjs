@@ -167,6 +167,11 @@ async function runTests() {
 
     // Drill into a district and verify constituency drilldown with Comparative Intelligence Table
     await page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('tbody tr'));
+      if (rows.length > 0) {
+        rows[0].click();
+        return;
+      }
       const btns = Array.from(document.querySelectorAll('button'));
       const inspectBtn = btns.find(b => b.textContent?.includes('Inspect District'));
       if (inspectBtn) inspectBtn.click();
@@ -230,8 +235,14 @@ async function runTests() {
         return opt ? opt.value : 'AP';
       });
       console.log('State option value for AP:', apOptVal);
-      await asideSelects[0].select(apOptVal);
-      await new Promise(r => setTimeout(r, 1500));
+      await page.evaluate((val) => {
+        const selects = document.querySelectorAll('aside select');
+        if (selects[0]) {
+          selects[0].value = val;
+          selects[0].dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }, apOptVal);
+      await new Promise(r => setTimeout(r, 2000));
 
       // 2. Select District = Sri Sathya Sai
       const distValue = await page.evaluate(() => {
@@ -242,9 +253,14 @@ async function runTests() {
       });
       console.log('District option value for Sri Sathya Sai:', distValue);
       if (distValue) {
-        const currentAside = await page.$$('aside select');
-        if (currentAside[1]) await currentAside[1].select(distValue);
-        await new Promise(r => setTimeout(r, 1500));
+        await page.evaluate((dval) => {
+          const selects = document.querySelectorAll('aside select');
+          if (selects[1]) {
+            selects[1].value = dval;
+            selects[1].dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }, distValue);
+        await new Promise(r => setTimeout(r, 2000));
       }
 
       // 3. Select Constituency = Raptadu
@@ -256,8 +272,13 @@ async function runTests() {
       });
       console.log('Constituency option value for Raptadu:', acValue);
       if (acValue) {
-        const currentAside = await page.$$('aside select');
-        if (currentAside[2]) await currentAside[2].select(acValue);
+        await page.evaluate((acval) => {
+          const selects = document.querySelectorAll('aside select');
+          if (selects[2]) {
+            selects[2].value = acval;
+            selects[2].dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }, acValue);
         // Wait up to 12s for Render network response & React render
         try {
           await page.waitForFunction(
