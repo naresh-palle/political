@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-11-25T00:56:31Z",
+  "totalRawRows": 425,
+  "totalUniqueLeaders": 322,
+  "leadersSuccess": 322,
+  "leadersFailedCount": 0,
+  "leadersFailed": [],
+  "socialSuccess": 774,
+  "socialFailedCount": 8,
+  "socialFailed": [
+    {
+      "leader": "Nandamuri Blakrishna",
+      "platform": "facebook",
+      "url": "https://www.facebook.com/NandamuriBalakrishna/followers/",
+      "error": "409: {\"detail\":\"This Facebook profile link is already saved for Nandamuri Balakrishna. Use a different Facebook link, or open"
+    },
+    {
+      "leader": "S Savitha",
+      "platform": "instagram",
+      "url": "https://www.instagram.com/ssavithaofficial/followers/",
+      "error": "409: {\"detail\":\"This Instagram profile link is already saved for Savitha. Use a different Instagram link, or open that leader"
+    },
+    {
+      "leader": "S Savitha",
+      "platform": "x",
+      "url": "https://x.com/MinisterSavitha",
+      "error": "409: {\"detail\":\"This X / Twitter profile link is already saved for Savitha. Use a different X / Twitter link, or open that le"
+    },
+    {
+      "leader": "Paritala Sree Ram",
+      "platform": "instagram",
+      "url": "https://www.instagram.com/paritalasreeramofficial/followers/?hl=en",
+      "error": "409: {\"detail\":\"This Instagram profile link is already saved for Paritala Sreeram. Use a different Instagram link, or open th"
+    },
+    {
+      "leader": "Kurasala Kannababu",
+      "platform": "facebook",
+      "url": "https://www.facebook.com/KurasalaKannababu/followers/",
+      "error": "409: {\"detail\":\"This Facebook profile link is already saved for Kanna Babu. Use a different Facebook link, or open that leade"
+    },
+    {
+      "leader": "Kurasala Kannababu",
+      "platform": "instagram",
+      "url": "https://www.instagram.com/kurasalakannababu/",
+      "error": "409: {\"detail\":\"This Instagram profile link is already saved for Kanna Babu. Use a different Instagram link, or open that lea"
+    },
+    {
+      "leader": "Kurasala Kannababu",
+      "platform": "x",
+      "url": "https://x.com/kannababu_k/verified_followers",
+      "error": "409: {\"detail\":\"This X / Twitter profile link is already saved for Kanna Babu. Use a different X / Twitter link, or open that"
+    },
+    {
+      "leader": "Settipalli Raghurami Reddy",
+      "platform": "instagram",
+      "url": "https://www.instagram.com/puttasudhakaryadav_/followers/",
+      "error": "409: {\"detail\":\"This Instagram profile link is already saved for Putta Sudhakar Yadav. Use a different Instagram link, or ope"
+    }
+  ],
+  "elapsedSeconds": 2604.8
+}
