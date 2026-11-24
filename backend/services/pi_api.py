@@ -308,6 +308,23 @@ def _hydrate_memory_from_runtime() -> None:
                 MEMORY[collection].insert(0, deepcopy(row))
 
 
+_COLLECTION_CACHE: Dict[str, Tuple[float, List[Dict[str, Any]]]] = {}
+_COLLECTION_CACHE_TTL = 30.0  # seconds
+
+def _cache_key(collection: str, filt: Dict[str, Any]) -> str:
+    import json
+    return f"{collection}:{json.dumps(filt, sort_keys=True, default=str)}"
+
+def _invalidate_collection_cache(collection: Optional[str] = None):
+    global _COLLECTION_CACHE
+    if collection is None:
+        _COLLECTION_CACHE.clear()
+    else:
+        keys_to_del = [k for k in _COLLECTION_CACHE if k.startswith(f"{collection}:")]
+        for k in keys_to_del:
+            _COLLECTION_CACHE.pop(k, None)
+
+
 async def _list(collection: str, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     srv = _srv()
     mem = memory_list(collection)
@@ -320,14 +337,24 @@ async def _list(collection: str, query: Optional[Dict[str, Any]] = None) -> List
     if db is None:
         return merged or mem
     filt = {key: value for key, value in (query or {}).items() if value not in (None, "")}
+    ckey = _cache_key(collection, filt)
+    now = time.time()
+    if ckey in _COLLECTION_CACHE:
+        cached_at, cached_data = _COLLECTION_CACHE[ckey]
+        if now - cached_at < _COLLECTION_CACHE_TTL:
+            return cached_data
     try:
         col = getattr(db, COLLECTIONS[collection], None)
         if col is None:
             return merged or mem
         docs = await asyncio.wait_for(col.find(filt, {"_id": 0}).to_list(PI_MONGO_LIST_LIMIT), timeout=12.0)
         if not docs:
-            return merged or mem
-        return _merge_docs(list(docs), disk, mem)
+            res = merged or mem
+            _COLLECTION_CACHE[ckey] = (now, res)
+            return res
+        res = _merge_docs(list(docs), disk, mem)
+        _COLLECTION_CACHE[ckey] = (now, res)
+        return res
     except Exception:
         return merged or mem
 
@@ -357,6 +384,7 @@ async def _get(collection: str, key: str) -> Optional[Dict[str, Any]]:
 
 
 async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any]:
+    _invalidate_collection_cache(collection)
     stored = memory_upsert(collection, key, doc)
     _persist_pi_runtime()
     srv = _srv()
@@ -394,6 +422,7 @@ async def _save(collection: str, key: str, doc: Dict[str, Any]) -> Dict[str, Any
 
 
 async def _delete(collection: str, key: str) -> Optional[Dict[str, Any]]:
+    _invalidate_collection_cache(collection)
     removed = memory_delete(collection, key)
     _persist_pi_runtime()
     srv = _srv()
@@ -954,10 +983,28 @@ def register_pi_routes(api_router) -> None:
         actor = await _load_actor(userId)
         caps = actor_capabilities(actor)
         _require(caps, "view")
-        stats = [s for s in await _list("constituency_statistics") if in_scope(caps, s.get("stateId"), s.get("assemblyConstituencyId"))]
+        
+        # Concurrently fetch collections and lookups in parallel
+        (
+            raw_stats,
+            raw_persons,
+            raw_accounts,
+            (catalog, catalog_maps),
+            mongo_maps,
+            geo,
+        ) = await asyncio.gather(
+            _list("constituency_statistics"),
+            _list("political_persons"),
+            _list("social_media_accounts"),
+            _resolved_districts(stateId),
+            _list("assembly_district_map"),
+            _geo_lookups(),
+        )
+
+        stats = [s for s in raw_stats if in_scope(caps, s.get("stateId"), s.get("assemblyConstituencyId"))]
         if stateId:
             stats = [s for s in stats if str(s.get("stateId") or "").upper() == stateId.upper()]
-        persons = [p for p in await _list("political_persons") if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
+        persons = [p for p in raw_persons if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
         if stateId:
             persons = [p for p in persons if str(p.get("stateId") or "").upper() == stateId.upper()]
         
@@ -969,11 +1016,8 @@ def register_pi_routes(api_router) -> None:
         else:
             persons = [p for p in persons if str(p.get("representativeType") or "MLA").upper() in ("MLA", "SITTING_MLA")]
             
-        accounts = await _list("social_media_accounts")
         person_ids = {p.get("id") for p in persons}
-        accounts = [a for a in accounts if a.get("personId") in person_ids]
-        catalog, catalog_maps = await _resolved_districts(stateId)
-        mongo_maps = await _list("assembly_district_map")
+        accounts = [a for a in raw_accounts if a.get("personId") in person_ids]
         if stateId:
             mongo_maps = [m for m in mongo_maps if str(m.get("stateId") or "").upper() == stateId.upper()]
         maps = catalog_maps or mongo_maps
@@ -1010,11 +1054,18 @@ def register_pi_routes(api_router) -> None:
             {s.get("assemblyConstituencyId") for s in stats if s.get("assemblyConstituencyId")}
         )
         entered = len({s.get("assemblyConstituencyId") for s in stats if s.get("assemblyConstituencyId")})
-        districts = await _district_progress_rows(caps, stateId)
+        districts = await _district_progress_rows(
+            caps,
+            stateId,
+            preloaded_districts=catalog,
+            preloaded_maps=maps,
+            preloaded_stats=raw_stats,
+            preloaded_persons=raw_persons,
+            preloaded_accounts=raw_accounts,
+        )
         if wanted_district:
             districts = [d for d in districts if d.get("id") == wanted_district]
         district_names = {d.get("id"): d.get("name") for d in catalog if d.get("id")}
-        geo = await _geo_lookups()
         assembly_names = {a.get("id"): a.get("name") for a in (geo.get("assembly_rows") or []) if a.get("id")}
         if not assembly_names:
             assembly_names = {a.get("id"): a.get("name") for a in (geo.get("assemblies") or {}).values() if a.get("id")}
@@ -1024,7 +1075,7 @@ def register_pi_routes(api_router) -> None:
         last_dates = [row.get("collectedAt") for row in recent if row.get("collectedAt")]
         last_dates.sort()
         # Multi-tier progress calculation directly from DB persons & accounts without hardcoding
-        all_state_persons = [p for p in await _list("political_persons") if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
+        all_state_persons = [p for p in raw_persons if in_scope(caps, p.get("stateId"), p.get("assemblyConstituencyId"))]
         if stateId:
             all_state_persons = [p for p in all_state_persons if str(p.get("stateId") or "").upper() == stateId.upper()]
         if wanted_district:
@@ -1035,9 +1086,8 @@ def register_pi_routes(api_router) -> None:
                 or ac_to_district.get(str(p.get("assemblyConstituencyId") or "")) == wanted_district
             ]
         
-        all_state_accounts = await _list("social_media_accounts")
         all_person_ids = {p.get("id") for p in all_state_persons}
-        all_state_accounts = [a for a in all_state_accounts if a.get("personId") in all_person_ids]
+        all_state_accounts = [a for a in raw_accounts if a.get("personId") in all_person_ids]
         
         def resolve_p_rep(p):
             rt = str(p.get("representativeType") or "").strip().upper()
@@ -1107,11 +1157,22 @@ def register_pi_routes(api_router) -> None:
             "repMetrics": rep_metrics,
         }
 
-    async def _district_progress_rows(caps, state_id=None):
-        districts, maps = await _resolved_districts(state_id)
-        stats = await _list("constituency_statistics")
-        persons = await _list("political_persons")
-        accounts = await _list("social_media_accounts")
+    async def _district_progress_rows(
+        caps,
+        state_id=None,
+        preloaded_districts=None,
+        preloaded_maps=None,
+        preloaded_stats=None,
+        preloaded_persons=None,
+        preloaded_accounts=None,
+    ):
+        if preloaded_districts is not None and preloaded_maps is not None:
+            districts, maps = preloaded_districts, preloaded_maps
+        else:
+            districts, maps = await _resolved_districts(state_id)
+        stats = preloaded_stats if preloaded_stats is not None else await _list("constituency_statistics")
+        persons = preloaded_persons if preloaded_persons is not None else await _list("political_persons")
+        accounts = preloaded_accounts if preloaded_accounts is not None else await _list("social_media_accounts")
         person_by_id = {p.get("id"): p for p in persons}
         rows = []
         for district in districts:
@@ -2007,12 +2068,25 @@ def register_pi_routes(api_router) -> None:
             actor = await _load_actor(userId)
             caps = actor_capabilities(actor)
             _require(caps, "view")
-            geo = await _geo_lookups()
-            persons = await _list("political_persons")
-            accounts = await _list("social_media_accounts")
-            snapshots = await _list("social_media_snapshots")
-            stats = await _list("constituency_statistics")
-            monthly_ads = await _list("monthly_ads_metrics")
+            
+            # Concurrently fetch collections in parallel
+            (
+                geo,
+                persons,
+                accounts,
+                snapshots,
+                stats,
+                monthly_ads,
+                district_maps,
+            ) = await asyncio.gather(
+                _geo_lookups(),
+                _list("political_persons"),
+                _list("social_media_accounts"),
+                _list("social_media_snapshots"),
+                _list("constituency_statistics"),
+                _list("monthly_ads_metrics"),
+                _list("assembly_district_map"),
+            )
     
             current_cal_month = datetime.now(timezone.utc).strftime("%Y-%m")
             wanted_month = (month or current_cal_month).strip()
@@ -2027,7 +2101,7 @@ def register_pi_routes(api_router) -> None:
                 persons = [p for p in persons if str(p.get("stateId") or "").upper() == stateId.upper()]
                 stats = [s for s in stats if str(s.get("stateId") or "").upper() == stateId.upper()]
             if districtId:
-                ac_ids = {m.get("assemblyConstituencyId") for m in await _list("assembly_district_map") if m.get("districtId") == districtId}
+                ac_ids = {m.get("assemblyConstituencyId") for m in district_maps if m.get("districtId") == districtId}
                 persons = [p for p in persons if p.get("districtId") == districtId or p.get("assemblyConstituencyId") in ac_ids]
                 stats = [s for s in stats if s.get("districtId") == districtId or s.get("assemblyConstituencyId") in ac_ids]
             if parliamentConstituencyId:

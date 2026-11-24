@@ -1482,8 +1482,9 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const refreshDashboard = async () => {
     const req = ++dashReqRef.current;
     const scopedDistrict = repType === "MLA" ? (districtId || undefined) : undefined;
-    setDashboard(null);
-    setPageLoading(true);
+    if (!dashboard) {
+      setPageLoading(true);
+    }
     try {
       const data = await politicalApiService.getPiDashboard(userId, stateId, scopedDistrict, repType);
       if (req !== dashReqRef.current) return;

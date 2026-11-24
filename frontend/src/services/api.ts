@@ -367,6 +367,8 @@ async function loadStaticGeography() {
 }
 
 let notificationListInflight: Promise<any[]> | null = null;
+const PI_DASHBOARD_CACHE: Record<string, { at: number; data: any }> = {};
+const PI_DASHBOARD_CACHE_TTL = 15000; // 15-second cache for instant tab-switching
 
 export const politicalApiService = {
   async getUsers(): Promise<UserProfile[]> {
@@ -2182,13 +2184,27 @@ export const politicalApiService = {
     }
   },
 
-  getPiDashboard(userId: string, stateId?: string, districtId?: string, repType?: string) {
+  async getPiDashboard(userId: string, stateId?: string, districtId?: string, repType?: string) {
     const q = new URLSearchParams();
     if (stateId) q.set("stateId", stateId);
     if (districtId) q.set("districtId", districtId);
     if (repType) q.set("repType", repType);
     const suffix = q.toString() ? `?${q.toString()}` : "";
-    return this.piRequest(`/pi/dashboard${suffix}`, userId, {}, 30000);
+    const key = `${userId}:${suffix}`;
+    const now = Date.now();
+    if (PI_DASHBOARD_CACHE[key] && now - PI_DASHBOARD_CACHE[key].at < PI_DASHBOARD_CACHE_TTL) {
+      return PI_DASHBOARD_CACHE[key].data;
+    }
+    const data = await this.piRequest(`/pi/dashboard${suffix}`, userId, {}, 30000);
+    if (data) {
+      PI_DASHBOARD_CACHE[key] = { at: now, data };
+    }
+    return data;
+  },
+  invalidatePiDashboardCache() {
+    for (const k in PI_DASHBOARD_CACHE) {
+      delete PI_DASHBOARD_CACHE[k];
+    }
   },
   getPiDistricts(userId: string, stateId?: string) {
     return this.getDistrictsByState(stateId, userId);
@@ -2259,9 +2275,11 @@ export const politicalApiService = {
     return this.piRequest(`/pi/leaders?${q.toString()}`, userId, {}, 20000);
   },
   savePiLeader(userId: string, payload: any) {
+    this.invalidatePiDashboardCache();
     return this.piRequest("/pi/leaders", userId, { method: "POST", body: JSON.stringify(payload) }, 0);
   },
   deletePiLeader(userId: string, personId: string) {
+    this.invalidatePiDashboardCache();
     return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" }, 0);
   },
   getPiAccounts(userId: string, params: Record<string, string | number | undefined> = {}) {
@@ -2272,6 +2290,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId, {}, 20000);
   },
   savePiAccount(userId: string, payload: any) {
+    this.invalidatePiDashboardCache();
     return this.piRequest("/pi/social-accounts", userId, { method: "POST", body: JSON.stringify(payload) }, 0);
   },
   fetchSocialMetrics(userId: string, platform: string, profileUrl: string) {
@@ -2281,6 +2300,7 @@ export const politicalApiService = {
     }, 15000);
   },
   deletePiAccount(userId: string, accountId: string) {
+    this.invalidatePiDashboardCache();
     return this.piRequest(`/pi/social-accounts/${encodeURIComponent(accountId)}`, userId, { method: "DELETE" }, 0);
   },
   getPiSnapshots(userId: string, accountId: string) {
@@ -2290,6 +2310,7 @@ export const politicalApiService = {
     return this.piRequest(`/pi/verification-queue?status=${encodeURIComponent(status)}`, userId, {}, 20000);
   },
   verifyPiRecord(userId: string, recordType: string, recordId: string, payload: any) {
+    this.invalidatePiDashboardCache();
     return this.piRequest(`/pi/verification/${encodeURIComponent(recordType)}/${encodeURIComponent(recordId)}`, userId, {
       method: "POST",
       body: JSON.stringify(payload)

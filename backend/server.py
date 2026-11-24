@@ -3601,15 +3601,22 @@ async def ensure_mongodb_indexes():
         await db.political_persons.create_index("assemblyConstituencyId", background=True)
         await db.political_persons.create_index("districtId", background=True)
         await db.political_persons.create_index("stateId", background=True)
+        await db.political_persons.create_index([("stateId", 1), ("representativeType", 1)], background=True)
+        await db.political_persons.create_index([("assemblyConstituencyId", 1), ("representativeType", 1)], background=True)
         await db.political_persons.create_index("enteredBy", background=True)
 
         await db.social_media_accounts.create_index("id", unique=True, background=True)
         await db.social_media_accounts.create_index("personId", background=True)
+        await db.social_media_accounts.create_index([("personId", 1), ("platform", 1)], background=True)
         await db.social_media_accounts.create_index("identityKey", background=True)
         await db.social_media_accounts.create_index("verificationStatus", background=True)
 
         await db.social_media_snapshots.create_index([("accountId", 1), ("collectionDate", -1)], background=True)
         await db.constituency_statistics.create_index("assemblyConstituencyId", unique=True, background=True)
+        await db.constituency_statistics.create_index([("stateId", 1), ("districtId", 1)], background=True)
+        await db.assembly_district_map.create_index([("stateId", 1), ("districtId", 1)], background=True)
+        await db.assembly_district_map.create_index([("districtId", 1), ("assemblyConstituencyId", 1)], background=True)
+        await db.monthly_ads_metrics.create_index([("leaderId", 1), ("month", 1)], background=True)
         await db.constituency_contacts.create_index("politicalPersonId", background=True)
     except Exception as e:
         log_mongo_notice("ensure_indexes", e)
