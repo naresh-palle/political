@@ -1207,6 +1207,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
   const [districts, setDistricts] = useState<any[]>([]);
   const [assemblies, setAssemblies] = useState<any[]>([]);
   const [stateTrends, setStateTrends] = useState<any[]>([]);
+  const [showStateFootprintDetails, setShowStateFootprintDetails] = useState(false);
   const [stateId, setStateId] = useState(((currentUser.stateId && currentUser.stateId.length <= 5) ? currentUser.stateId : "AP"));
   const [districtId, setDistrictId] = useState("");
   const [pcId, setPcId] = useState("");
@@ -2639,87 +2640,128 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               {/* Executive State Political Intelligence Banner - Only shown for non-SMA (SMM / Admin) with dynamic state selection */}
               {!isSmA && (() => {
                 const activeState = getStateElectorateInfo(stateId, states.find((s) => s.id === stateId)?.name);
+                const fbEst = Number(activeState.platformEstimates?.facebook || 15100000);
+                const igEst = Number(activeState.platformEstimates?.instagram || 9280000);
+                const xEst = Number(activeState.platformEstimates?.x || 3560000);
+                const ytEst = Number(activeState.platformEstimates?.youtube || 18800000);
+                const totalPlatformEst = fbEst + igEst + xEst + ytEst || 1;
+                const fbPct = Math.round((fbEst / totalPlatformEst) * 100);
+                const igPct = Math.round((igEst / totalPlatformEst) * 100);
+                const xPct = Math.round((xEst / totalPlatformEst) * 100);
+                const ytPct = Math.max(0, 100 - (fbPct + igPct + xPct));
+
                 return (
                   <>
+                    {/* State Footprint Hero & Stacked Platform Bar */}
                     <div className={`${CARD} p-5 border border-[#D4A24C]/40 bg-gradient-to-br from-[#080E18] via-[#050B12] to-[#080E18]`}>
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div>
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[11px] font-bold uppercase tracking-wider mb-2">
                             <span>🏛️ {activeState.name} · Executive Political Intelligence</span>
                           </div>
-                          <h2 className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0]">
-                            Statewide Electorate & Digital Social Footprint
-                          </h2>
-                          <p className="text-xs md:text-sm text-[#B9AF95] mt-1">
-                            Official ECI electoral roll statistics combined with multi-platform digital audience insights across all {activeState.totalConstituencies} constituencies.
-                          </p>
+                          <span className="text-xs font-semibold text-[#B9AF95] block">Reachable voters online</span>
+                          <div className="text-3xl md:text-4xl font-bold font-mono tracking-tight text-[#F3EEE2] my-0.5">
+                            {activeState.penetrationPercent}%
+                          </div>
+                          <span className="text-xs text-[#B9AF95] font-mono">
+                            {activeState.socialAudienceDisplay} of {activeState.totalVotersDisplay}
+                          </span>
                         </div>
-                        <div className="text-left md:text-right shrink-0">
-                          <span className="text-xs text-[#B9AF95] block">State Social Penetration</span>
-                          <span className="text-3xl md:text-4xl font-display font-bold text-[#D4A24C] block my-0.5">{activeState.penetrationPercent}%</span>
-                          <span className="text-[10px] text-[#B9AF95] block">{activeState.socialAudienceDisplay} unique voters reachable</span>
+                        <div className="flex flex-wrap items-center gap-3 text-left md:text-right">
+                          <span className="text-xs text-[#B9AF95] font-mono">
+                            {activeState.totalConstituencies} seats · {activeState.totalPollingStationsDisplay} booths
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowStateFootprintDetails(!showStateFootprintDetails)}
+                            className="px-2.5 py-1 rounded text-xs font-semibold text-[#D4A24C] hover:bg-[#D4A24C]/10 border border-[rgba(201,148,54,0.3)] transition-all flex items-center gap-1"
+                          >
+                            details {showStateFootprintDetails ? "▴" : "▾"}
+                          </button>
                         </div>
                       </div>
 
-                      {/* Core State Statistics */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4 pt-4 border-t border-[rgba(201,148,54,0.25)]/80">
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
-                          <span className="text-[11px] text-[#B9AF95] font-semibold block">Total Registered Voters</span>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalVotersDisplay}</span>
-                          <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">{activeState.totalElectorsOfficial}</span>
+                      {/* 4-Color Stacked Platform Share Bar */}
+                      <div className="mt-4 pt-3 border-t border-[rgba(201,148,54,0.15)]">
+                        <div className="w-full h-2.5 rounded-full bg-[#050B12] overflow-hidden flex border border-[rgba(201,148,54,0.2)]">
+                          <div style={{ width: `${fbPct}%` }} className="h-full bg-[#1877F2]" title={`Facebook: ${activeState.platformEstimates.facebookDisplay} (${fbPct}%)`} />
+                          <div style={{ width: `${igPct}%` }} className="h-full bg-[#E1306C]" title={`Instagram: ${activeState.platformEstimates.instagramDisplay} (${igPct}%)`} />
+                          <div style={{ width: `${xPct}%` }} className="h-full bg-[#F3EEE2]" title={`X: ${activeState.platformEstimates.xDisplay} (${xPct}%)`} />
+                          <div style={{ width: `${ytPct}%` }} className="h-full bg-[#FF0000]" title={`YouTube: ${activeState.platformEstimates.youtubeDisplay} (${ytPct}%)`} />
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
-                          <span className="text-[11px] text-[#B9AF95] font-semibold block">Assembly Constituencies</span>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalConstituencies}</span>
-                          <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.totalLokSabha} Lok Sabha seats</span>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
-                          <span className="text-[11px] text-[#B9AF95] font-semibold block">Polling Stations</span>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalPollingStationsDisplay}</span>
-                          <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Average {activeState.averagePerBooth} voters/booth</span>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
-                          <span className="text-[11px] text-[#B9AF95] font-semibold block">Statewide Social Audience</span>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#D4A24C] mt-0.5 block">{activeState.socialAudienceDisplay}</span>
-                          <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">{activeState.penetrationPercent}% of voter base</span>
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#A7A39A] mt-2">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#1877F2]"></span> Facebook</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#E1306C]"></span> Instagram</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F3EEE2]"></span> X</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#FF0000]"></span> YouTube</span>
+                          </div>
+                          <span className="text-[11px] text-[#736B5E]">Facebook · Instagram · X · YouTube share</span>
                         </div>
                       </div>
 
-                      {/* Platform Breakdown Cards - Perfect Grid, Spacing, and Typography Alignment in Brand Colors */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#1877F2] text-left">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] text-[#B9AF95] font-bold">Facebook</span>
-                            <span className="w-2 h-2 rounded-full bg-[#1877F2] shrink-0"></span>
+                      {/* Expandable Breakdown Cards (Shown on details toggle) */}
+                      {showStateFootprintDetails && (
+                        <div className="mt-4 pt-4 border-t border-[rgba(201,148,54,0.2)] space-y-3">
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
+                              <span className="text-[11px] text-[#B9AF95] font-semibold block">Total Registered Voters</span>
+                              <span className="text-xl md:text-2xl font-mono font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalVotersDisplay}</span>
+                              <span className="text-[10px] text-emerald-400 font-medium block mt-0.5">{activeState.totalElectorsOfficial}</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
+                              <span className="text-[11px] text-[#B9AF95] font-semibold block">Assembly Constituencies</span>
+                              <span className="text-xl md:text-2xl font-mono font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalConstituencies}</span>
+                              <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.totalLokSabha} Lok Sabha seats</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
+                              <span className="text-[11px] text-[#B9AF95] font-semibold block">Polling Stations</span>
+                              <span className="text-xl md:text-2xl font-mono font-bold text-[#F5EFE0] mt-0.5 block">{activeState.totalPollingStationsDisplay}</span>
+                              <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">Average {activeState.averagePerBooth} voters/booth</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] text-left">
+                              <span className="text-[11px] text-[#B9AF95] font-semibold block">Statewide Social Audience</span>
+                              <span className="text-xl md:text-2xl font-mono font-bold text-[#D4A24C] mt-0.5 block">{activeState.socialAudienceDisplay}</span>
+                              <span className="text-[10px] text-[#B9AF95] font-medium block mt-0.5">{activeState.penetrationPercent}% of voter base</span>
+                            </div>
                           </div>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.facebookDisplay}</span>
-                          <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.facebookReachPercent}% state reach</span>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#E1306C] text-left">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] text-[#B9AF95] font-bold">Instagram</span>
-                            <span className="w-2 h-2 rounded-full bg-[#E1306C] shrink-0"></span>
+
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#1877F2] text-left">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#B9AF95] font-bold">Facebook</span>
+                                <span className="w-2 h-2 rounded-full bg-[#1877F2] shrink-0"></span>
+                              </div>
+                              <span className="text-xl font-mono font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.facebookDisplay}</span>
+                              <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.facebookReachPercent}% state reach</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#E1306C] text-left">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#B9AF95] font-bold">Instagram</span>
+                                <span className="w-2 h-2 rounded-full bg-[#E1306C] shrink-0"></span>
+                              </div>
+                              <span className="text-xl font-mono font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.instagramDisplay}</span>
+                              <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.instagramReachPercent}% state reach</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#F3EEE2] text-left">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#B9AF95] font-bold">X (Twitter)</span>
+                                <span className="w-2 h-2 rounded-full bg-[#F3EEE2] shrink-0"></span>
+                              </div>
+                              <span className="text-xl font-mono font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.xDisplay}</span>
+                              <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.xReachPercent}% state reach</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#FF0000] text-left">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] text-[#B9AF95] font-bold">YouTube</span>
+                                <span className="w-2 h-2 rounded-full bg-[#FF0000] shrink-0"></span>
+                              </div>
+                              <span className="text-xl font-mono font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.youtubeDisplay}</span>
+                              <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.youtubeReachPercent}% state reach</span>
+                            </div>
                           </div>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.instagramDisplay}</span>
-                          <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.instagramReachPercent}% state reach</span>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#1DA1F2] text-left">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] text-[#B9AF95] font-bold">X (Twitter)</span>
-                            <span className="w-2 h-2 rounded-full bg-[#1DA1F2] shrink-0"></span>
-                          </div>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.xDisplay}</span>
-                          <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.xReachPercent}% state reach</span>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#050B12]/80 border border-[rgba(201,148,54,0.25)] border-l-4 border-l-[#FF0000] text-left">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] text-[#B9AF95] font-bold">YouTube</span>
-                            <span className="w-2 h-2 rounded-full bg-[#FF0000] shrink-0"></span>
-                          </div>
-                          <span className="text-xl md:text-2xl font-display font-bold text-[#F5EFE0] mt-0.5 block">{activeState.platformEstimates.youtubeDisplay}</span>
-                          <span className="text-[10px] text-[#D4A24C] font-medium block mt-0.5">{activeState.platformEstimates.youtubeReachPercent}% state reach</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Daily Political Pulse & Major Trends */}
@@ -5921,6 +5963,10 @@ interface RankedLeaderItem {
   followersYt: number;
   followersIg: number;
   followersX: number;
+  hasFb?: boolean;
+  hasYt?: boolean;
+  hasIg?: boolean;
+  hasX?: boolean;
   totalReach: number;
   verificationStatus: "VERIFIED" | "PENDING";
   rankChange?: number;
@@ -6079,6 +6125,11 @@ function StateRankingTab(props: {
             if (acc.verificationStatus === "VERIFIED" || acc.verified) isVerified = true;
           }
 
+          const hasFb = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("facebook") || a.platform === "fb") || l.platforms?.facebook?.hasAccount === "yes" || fb > 0);
+          const hasYt = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("youtube") || a.platform === "yt") || l.platforms?.youtube?.hasAccount === "yes" || yt > 0);
+          const hasIg = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("instagram") || a.platform === "ig") || l.platforms?.instagram?.hasAccount === "yes" || ig > 0);
+          const hasX = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("twitter") || a.platform === "x") || l.platforms?.x?.hasAccount === "yes" || x > 0);
+
           items.push({
             id: l.id,
             name: l.name,
@@ -6093,6 +6144,10 @@ function StateRankingTab(props: {
             followersYt: yt,
             followersIg: ig,
             followersX: x,
+            hasFb,
+            hasYt,
+            hasIg,
+            hasX,
             totalReach: fb + yt + ig + x,
             verificationStatus: isVerified ? "VERIFIED" : "PENDING"
           });
@@ -6121,6 +6176,11 @@ function StateRankingTab(props: {
             if (acc.verificationStatus === "VERIFIED" || acc.verified) isVerified = true;
           }
 
+          const hasFb = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("facebook") || a.platform === "fb") || fb > 0);
+          const hasYt = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("youtube") || a.platform === "yt") || yt > 0);
+          const hasIg = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("instagram") || a.platform === "ig") || ig > 0);
+          const hasX = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("twitter") || a.platform === "x") || x > 0);
+
           items.push({
             id: l.id,
             name: l.name,
@@ -6135,6 +6195,10 @@ function StateRankingTab(props: {
             followersYt: yt,
             followersIg: ig,
             followersX: x,
+            hasFb,
+            hasYt,
+            hasIg,
+            hasX,
             totalReach: fb + yt + ig + x,
             verificationStatus: isVerified ? "VERIFIED" : "PENDING"
           });
@@ -6627,16 +6691,16 @@ function StateRankingTab(props: {
                           {item.posts > 0 ? item.posts : "—"}
                         </td>
                         <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {formatCompactCount(item.followersFb)}
+                          {item.followersFb > 0 ? formatCompactCount(item.followersFb) : !item.hasFb ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
                         </td>
                         <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {formatCompactCount(item.followersYt)}
+                          {item.followersYt > 0 ? formatCompactCount(item.followersYt) : !item.hasYt ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
                         </td>
                         <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {formatCompactCount(item.followersIg)}
+                          {item.followersIg > 0 ? formatCompactCount(item.followersIg) : !item.hasIg ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
                         </td>
                         <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {formatCompactCount(item.followersX)}
+                          {item.followersX > 0 ? formatCompactCount(item.followersX) : !item.hasX ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
                         </td>
                         <td className="py-2.5 px-3 text-right font-bold text-[#F3EEE2] font-mono text-sm">
                           {formatCompactCount(item.totalReach)}
