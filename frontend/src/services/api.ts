@@ -2192,8 +2192,17 @@ export const politicalApiService = {
     const suffix = q.toString() ? `?${q.toString()}` : "";
     const key = `${userId}:${suffix}`;
     const now = Date.now();
-    if (PI_DASHBOARD_CACHE[key] && now - PI_DASHBOARD_CACHE[key].at < PI_DASHBOARD_CACHE_TTL) {
-      return PI_DASHBOARD_CACHE[key].data;
+    const cached = PI_DASHBOARD_CACHE[key];
+    if (cached) {
+      // Return cached instantly (0ms) and revalidate in background if older than 5s
+      if (now - cached.at > 5000) {
+        this.piRequest(`/pi/dashboard${suffix}`, userId, {}, 30000).then((data) => {
+          if (data) {
+            PI_DASHBOARD_CACHE[key] = { at: Date.now(), data };
+          }
+        }).catch(() => {});
+      }
+      return cached.data;
     }
     const data = await this.piRequest(`/pi/dashboard${suffix}`, userId, {}, 30000);
     if (data) {

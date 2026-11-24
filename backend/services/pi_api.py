@@ -309,14 +309,17 @@ def _hydrate_memory_from_runtime() -> None:
 
 
 _COLLECTION_CACHE: Dict[str, Tuple[float, List[Dict[str, Any]]]] = {}
-_COLLECTION_CACHE_TTL = 30.0  # seconds
+_COLLECTION_CACHE_TTL = 120.0  # seconds
+_DASHBOARD_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+_DASHBOARD_CACHE_TTL = 120.0  # seconds
 
 def _cache_key(collection: str, filt: Dict[str, Any]) -> str:
     import json
     return f"{collection}:{json.dumps(filt, sort_keys=True, default=str)}"
 
 def _invalidate_collection_cache(collection: Optional[str] = None):
-    global _COLLECTION_CACHE
+    global _COLLECTION_CACHE, _DASHBOARD_CACHE
+    _DASHBOARD_CACHE.clear()
     if collection is None:
         _COLLECTION_CACHE.clear()
     else:
@@ -326,6 +329,14 @@ def _invalidate_collection_cache(collection: Optional[str] = None):
 
 
 async def _list(collection: str, query: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    filt = {key: value for key, value in (query or {}).items() if value not in (None, "")}
+    ckey = _cache_key(collection, filt)
+    now = time.time()
+    if ckey in _COLLECTION_CACHE:
+        cached_at, cached_data = _COLLECTION_CACHE[ckey]
+        if now - cached_at < _COLLECTION_CACHE_TTL:
+            return cached_data
+
     srv = _srv()
     mem = memory_list(collection)
     disk = _runtime_list(collection)
@@ -336,13 +347,6 @@ async def _list(collection: str, query: Optional[Dict[str, Any]] = None) -> List
     db = _pi_mongo_db(srv)
     if db is None:
         return merged or mem
-    filt = {key: value for key, value in (query or {}).items() if value not in (None, "")}
-    ckey = _cache_key(collection, filt)
-    now = time.time()
-    if ckey in _COLLECTION_CACHE:
-        cached_at, cached_data = _COLLECTION_CACHE[ckey]
-        if now - cached_at < _COLLECTION_CACHE_TTL:
-            return cached_data
     try:
         col = getattr(db, COLLECTIONS[collection], None)
         if col is None:
@@ -984,6 +988,13 @@ def register_pi_routes(api_router) -> None:
         caps = actor_capabilities(actor)
         _require(caps, "view")
         
+        dash_cache_key = f"{userId}:{stateId}:{districtId}:{repType}"
+        now = time.time()
+        if dash_cache_key in _DASHBOARD_CACHE:
+            cat, cval = _DASHBOARD_CACHE[dash_cache_key]
+            if now - cat < _DASHBOARD_CACHE_TTL:
+                return deepcopy(cval)
+
         # Concurrently fetch collections and lookups in parallel
         (
             raw_stats,
@@ -1139,7 +1150,7 @@ def register_pi_routes(api_router) -> None:
             "totalAccounts": len(all_state_accounts),
         }
 
-        return {
+        res = {
             "totalConstituencies": total_ac,
             "constituenciesEntered": entered,
             "totalLeaders": len(persons),
@@ -1156,6 +1167,8 @@ def register_pi_routes(api_router) -> None:
             "districtId": wanted_district or districtId,
             "repMetrics": rep_metrics,
         }
+        _DASHBOARD_CACHE[dash_cache_key] = (time.time(), deepcopy(res))
+        return res
 
     async def _district_progress_rows(
         caps,
@@ -1679,17 +1692,26 @@ def register_pi_routes(api_router) -> None:
         if assemblyConstituencyId:
             rows = [r for r in rows if persons.get(r.get("personId"), {}).get("assemblyConstituencyId") == assemblyConstituencyId]
         rows = [r for r in rows if in_scope(caps, persons.get(r.get("personId"), {}).get("stateId"), persons.get(r.get("personId"), {}).get("assemblyConstituencyId"))]
+        total = len(rows)
+        page_items = rows[skip : skip + max(1, min(limit, 200))]
+        page_account_ids = {r.get("id") for r in page_items if r.get("id")}
+        
         snapshots = await _list("social_media_snapshots")
-        for row in rows:
+        snapshots_by_account: Dict[str, list] = {}
+        for s in snapshots:
+            aid = s.get("accountId")
+            if aid in page_account_ids:
+                snapshots_by_account.setdefault(aid, []).append(s)
+
+        for row in page_items:
             person = persons.get(row.get("personId")) or {}
             row["leaderName"] = person.get("name")
             row["partyId"] = person.get("partyId")
-            related = [s for s in snapshots if s.get("accountId") == row.get("id")]
+            related = snapshots_by_account.get(row.get("id"), [])
             row["growth7"] = snapshot_growth(related, 7)
             row["growth30"] = snapshot_growth(related, 30)
             row["growth90"] = snapshot_growth(related, 90)
-        total = len(rows)
-        return {"total": total, "items": rows[skip : skip + max(1, min(limit, 200))]}
+        return {"total": total, "items": page_items}
 
     @api_router.post("/pi/social-accounts")
     async def upsert_account(payload: dict, userId: Optional[str] = None):
