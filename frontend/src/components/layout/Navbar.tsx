@@ -336,11 +336,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   />
                 )}
                 <div className="flex flex-col text-left shrink-0">
-                  <span className="text-xs font-bold text-[#F5EFE0] leading-none whitespace-nowrap">
-                    {currentProfile.name.split(" ")[0]}
+                  <span className="text-xs font-bold text-[#F5EFE0] leading-none whitespace-nowrap max-w-[140px] truncate">
+                    {currentProfile.name}
                   </span>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--party-primary)] mt-0.5 whitespace-nowrap">
-                    {primaryRole === "DIRECTOR" ? "MANAGER" : primaryRole === "SM_A" ? "SM A" : primaryRole === "SM_M" ? "SM M" : primaryRole}
+                    {primaryRole === "DIRECTOR" ? "Lead Manager" : primaryRole === "SM_A" ? "Associate Manager" : primaryRole === "SM_M" ? "Social Media Manager" : primaryRole}
                   </span>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#C99436] shrink-0 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />

@@ -2464,7 +2464,7 @@ def register_pi_routes(api_router) -> None:
                     "facebook": int(tot_state_digital * 0.80),
                     "instagram": int(tot_state_digital * 0.55),
                     "x": int(tot_state_digital * 0.22),
-                    "youtube": tot_state_digital,
+                    "youtube": int(tot_state_digital * 0.86),
                 },
                 "districtLeaderboard": district_leaderboard
             }
