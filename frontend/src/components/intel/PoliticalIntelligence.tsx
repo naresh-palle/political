@@ -5740,104 +5740,6 @@ function IntelligenceConstituency({
           </div>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {leaders.length ? leaders.map((leader: any) => {
-          const sitting = isSittingMlaKind(leader.leaderKind);
-          return (
-            <div key={leader.id} className={`${CARD} min-w-0 space-y-3`}>
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-[#F5EFE0] break-words">{leader.name}</h3>
-                <div className="flex flex-wrap items-center gap-1 shrink-0 justify-end">
-                  {leader.partyId ? (
-                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#050B12] border border-current" style={{ color: leader.partyColor || "#D4A24C" }}>
-                      {partyLabel(partyById, leader.partyId, leader.partyName)}
-                    </span>
-                  ) : null}
-                  {(() => {
-                    const roles: string[] = Array.isArray(leader.roles) && leader.roles.length
-                      ? leader.roles.map((r: any) => typeof r === "string" ? r : r.politicalRole || "")
-                      : (leader.politicalRole ? String(leader.politicalRole).split(",").map((s: string) => s.trim()) : []);
-                    const uniqueRoles = Array.from(new Set(roles.filter(Boolean)));
-                    if (uniqueRoles.length > 0) {
-                      return uniqueRoles.map((r: string) => (
-                        <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
-                          {r.replace(/_/g, " ")}
-                        </span>
-                      ));
-                    }
-                    return sitting ? <span className="text-[10px] text-[#B9AF95]">Sitting MLA</span> : null;
-                  })()}
-                </div>
-              </div>
-              {PLATFORMS.map((plat) => {
-                const detail = platformDetail(leader, plat);
-                const estimate = Number(estimates[plat] || 0);
-                const noAccount = Boolean(detail?.noAccount);
-                const followers = noAccount ? null : detail?.followers;
-                const pct = followers != null && estimate ? Math.round((Number(followers) / estimate) * 100) : 0;
-                const hasAccount = !noAccount && (Boolean(detail?.verified) || followers != null);
-                const selected = platform === plat;
-                const emphasize = !platform || selected;
-                return (
-                  <div key={plat} className={`min-w-0 rounded-lg ${selected ? `p-1.5 ${SELECTED_PLATFORM_CARD}` : emphasize ? "" : "opacity-70"}`}>
-                    <div className="flex items-center justify-between gap-2 text-[12px]">
-                      <span className="text-[#F5EFE0] inline-flex items-center gap-1 min-w-0">
-                        {PLATFORM_LABEL[plat]}
-                        {hasAccount ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : null}
-                      </span>
-                      {noAccount ? (
-                        <span className="text-rose-400 font-bold shrink-0">No account</span>
-                      ) : (
-                        <span className="text-[#B9AF95] text-right">
-                          {formatCompactCount(followers)} of {formatCompactCount(estimate)}
-                          {followers != null && estimate ? <span className="text-[#F5EFE0] font-bold"> = {pct}%</span> : null}
-                        </span>
-                      )}
-                    </div>
-                    {!noAccount ? (
-                      <div className="mt-1 h-1.5 rounded bg-[#0C1524]">
-                        <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-              {isSmM && (
-                <div className="mt-3 pt-2.5 border-t border-[rgba(201,148,54,0.25)]/80 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#D4A24C] flex items-center gap-1">
-                      <span>📢 Ads & Content · {formatMonthName(selectedMonth || "")}</span>
-                    </span>
-                    {onEditMonthly && (
-                      <button
-                        type="button"
-                        onClick={() => onEditMonthly(leader)}
-                        className="text-[11px] text-[#D4A24C] hover:underline font-semibold"
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5 text-center bg-[#050B12]/80 p-2 rounded-lg border border-[rgba(201,148,54,0.25)]/60">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Posts</p>
-                      <p className="text-xs font-bold text-[#F5EFE0] mt-0.5">{leader.monthlyMetrics?.postsCount ?? 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Ads</p>
-                      <p className="text-xs font-bold text-[#F5EFE0] mt-0.5">{leader.monthlyMetrics?.adsCount ?? 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Reach</p>
-                      <p className="text-xs font-bold text-emerald-400 mt-0.5">{formatCompactCount(leader.monthlyMetrics?.reach ?? 0)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        }) : <EmptyState text="No leaders entered for this constituency." />}
-      </div>
 
       {focus && (
         <AiCampaignIntelligence
@@ -6071,6 +5973,8 @@ function getLeaderTerritory(l: any, repType: "MLA" | "MP" | "MLC", props: { asse
   return "Statewide";
 }
 
+const PI_RANKINGS_CACHE: Record<string, { at: number; items: RankedLeaderItem[] }> = {};
+
 function StateRankingTab(props: {
   stateId: string;
   states: StateInfo[];
@@ -6085,8 +5989,12 @@ function StateRankingTab(props: {
   const [repFilter, setRepFilter] = useState<"ALL" | "MLA" | "MP" | "MLC">("ALL");
   const [platformSort, setPlatformSort] = useState<"OVERALL" | "FB" | "YT" | "IG" | "X">("OVERALL");
   const [searchTerm, setSearchTerm] = useState("");
-  const [leaders, setLeaders] = useState<RankedLeaderItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [leaders, setLeaders] = useState<RankedLeaderItem[]>(() => {
+    return PI_RANKINGS_CACHE[props.stateId || "AP"]?.items || [];
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    return !(PI_RANKINGS_CACHE[props.stateId || "AP"]?.items?.length);
+  });
 
   useEffect(() => {
     if (props.stateId && props.stateId !== rankingState) {
@@ -6107,8 +6015,9 @@ function StateRankingTab(props: {
     const partyNameOf = (pid: string) => partyMap[pid?.toUpperCase()]?.abbreviation || partyMap[pid?.toUpperCase()]?.name || pid || "IND";
 
     const loadDbData = async () => {
-      setLoading(true);
-      setLeaders([]);
+      if (!PI_RANKINGS_CACHE[rankingState]?.items?.length) {
+        setLoading(true);
+      }
       try {
         const [intelRes, leadersRes, accountsRes, metricsRes] = await Promise.all([
           politicalApiService.getPiIntelligence(props.userId, { stateId: rankingState }).catch(() => ({ leaders: [] })),
@@ -6252,9 +6161,18 @@ function StateRankingTab(props: {
           });
         }
 
-        setLeaders(items);
+        if (items.length > 0) {
+          PI_RANKINGS_CACHE[rankingState] = { at: Date.now(), items };
+          setLeaders(items);
+        } else if (PI_RANKINGS_CACHE[rankingState]?.items?.length) {
+          setLeaders(PI_RANKINGS_CACHE[rankingState].items);
+        } else {
+          setLeaders([]);
+        }
       } catch (err) {
-        setLeaders([]);
+        if (!PI_RANKINGS_CACHE[rankingState]?.items?.length) {
+          setLeaders([]);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
