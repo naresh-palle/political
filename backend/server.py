@@ -93,6 +93,7 @@ try:
     )
     from services.officer_otp import IN_MEMORY_OFFICER_OTPS
     from services.pi_api import register_pi_routes
+    from services.party_api import register_party_routes
 except ImportError:
     from backend.services.whatsapp_service import WhatsAppMessageBuilder, WhatsAppCloudApiClient
     from backend.services.officer_status_workflow import (
@@ -139,6 +140,7 @@ except ImportError:
     )
     from backend.services.officer_otp import IN_MEMORY_OFFICER_OTPS
     from backend.services.pi_api import register_pi_routes
+    from backend.services.party_api import register_party_routes
 
 mongo_url = (
     os.environ.get("MONGO_URL")
@@ -3432,6 +3434,7 @@ async def create_field_notification(payload: dict):
     return sanitize_doc(doc)
 
 register_pi_routes(api_router)
+register_party_routes(api_router)
 
 # Include router
 app.include_router(api_router)
@@ -3618,6 +3621,22 @@ async def ensure_mongodb_indexes():
         await db.assembly_district_map.create_index([("districtId", 1), ("assemblyConstituencyId", 1)], background=True)
         await db.monthly_ads_metrics.create_index([("leaderId", 1), ("month", 1)], background=True)
         await db.constituency_contacts.create_index("politicalPersonId", background=True)
+
+        # Party Command Center
+        for party_collection in (
+            "party_admins",
+            "party_member_contacts",
+            "member_research_notes",
+            "social_posts",
+            "party_content_calendar",
+            "party_gap_rules",
+            "party_pending_tasks",
+        ):
+            await db[party_collection].create_index("id", unique=True, background=True)
+            await db[party_collection].create_index("partyId", background=True)
+        await db.party_audit_log.create_index([("partyId", 1), ("timestamp", -1)], background=True)
+        await db.social_posts.create_index([("personId", 1), ("publishedAt", -1)], background=True)
+        await db.member_research_notes.create_index([("personId", 1), ("createdAt", -1)], background=True)
     except Exception as e:
         log_mongo_notice("ensure_indexes", e)
 

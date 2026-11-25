@@ -160,6 +160,14 @@ COLLECTIONS = {
     "data_import_batches": "data_import_batches",
     "constituency_contacts": "constituency_contacts",
     "constituency_contact_history": "constituency_contact_history",
+    "party_admins": "party_admins",
+    "party_member_contacts": "party_member_contacts",
+    "member_research_notes": "member_research_notes",
+    "social_posts": "social_posts",
+    "party_content_calendar": "party_content_calendar",
+    "party_gap_rules": "party_gap_rules",
+    "party_pending_tasks": "party_pending_tasks",
+    "party_audit_log": "party_audit_log",
 }
 
 PI_RUNTIME_PATH = Path(__file__).resolve().parents[1] / "data" / ".runtime_pi_store.json"

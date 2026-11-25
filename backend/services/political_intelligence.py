@@ -68,6 +68,14 @@ MEMORY: Dict[str, Any] = {
     "data_import_batches": [],
     "constituency_contacts": {},
     "constituency_contact_history": [],
+    "party_admins": {},
+    "party_member_contacts": {},
+    "member_research_notes": {},
+    "social_posts": {},
+    "party_content_calendar": {},
+    "party_gap_rules": {},
+    "party_pending_tasks": {},
+    "party_audit_log": [],
 }
 
 
