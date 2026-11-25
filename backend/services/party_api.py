@@ -1,9 +1,11 @@
 """Party Command Center HTTP routes, registered onto the shared /api router."""
 from __future__ import annotations
 
+import asyncio
 import re
+import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException
@@ -31,6 +33,7 @@ from .party_command import (
     pending_items,
 )
 from .political_intelligence import PLATFORMS, memory_list, new_id, now_iso, parse_iso
+from .social_fetcher import POSTS_PER_ACCOUNT, fetch_recent_posts
 
 PARTY_ROLE_TITLES = {
     PARTY_PRESIDENT: "Party President",
@@ -62,7 +65,33 @@ def _caps_for(actor: Dict[str, Any], party_id: Optional[str] = None, action: str
     return caps
 
 
+_WORLD_CACHE: Dict[str, Any] = {"gen": -1, "at": 0.0, "data": None}
+_WORLD_GEN = 0
+_WORLD_TTL = 20.0
+_REFRESH_JOBS: Dict[str, Dict[str, Any]] = {}
+
+
+def _touch_world() -> None:
+    global _WORLD_GEN
+    _WORLD_GEN += 1
+
+
+def _reset_world_cache() -> None:
+    _touch_world()
+    _WORLD_CACHE.update(gen=-1, at=0.0, data=None)
+
+
+def _canon_post(url: str, platform: str = "") -> str:
+    text = str(url or "").strip()
+    if platform == "youtube" or "youtu.be" in text or "youtube.com" in text:
+        match = re.search(r"[?&]v=([\w-]{6,})", text) or re.search(r"youtu\.be/([\w-]{6,})", text) or re.search(r"/shorts/([\w-]{6,})", text)
+        if match:
+            return f"youtube:{match.group(1).lower()}"
+    return text.split("?")[0].rstrip("/").lower()
+
+
 async def _party_audit(caps: Dict[str, Any], actor: Dict[str, Any], party_id: str, action: str, target: str, target_name: Optional[str] = None, metadata: Optional[dict] = None) -> None:
+    _touch_world()
     await P._append(
         "party_audit_log",
         {
@@ -116,23 +145,58 @@ async def _parties() -> Dict[str, Dict[str, Any]]:
         return {}
 
 
+async def _load_named(name: str) -> List[Dict[str, Any]]:
+    try:
+        if name == "social_media_snapshots":
+            return await asyncio.wait_for(P._list(name), timeout=4.0)
+        return await P._list(name)
+    except Exception:
+        return []
+
+
 async def _load_world() -> Dict[str, Any]:
-    persons = await P._list("political_persons")
-    return {
-        "persons": persons,
-        "roles": await P._list("political_person_roles"),
-        "accounts": await P._list("social_media_accounts"),
-        "snapshots": await P._list("social_media_snapshots"),
-        "posts": await P._list("social_posts"),
-        "contacts": await P._list("party_member_contacts"),
-        "linkedContacts": await P._list("constituency_contacts"),
-        "research": await P._list("member_research_notes"),
-        "calendar": await P._list("party_content_calendar"),
-        "rules": await P._list("party_gap_rules"),
-        "tasks": await P._list("party_pending_tasks"),
-        "parties": await _parties(),
-        "geoNames": await _geo_names(),
+    now = time.time()
+    cached = _WORLD_CACHE.get("data")
+    if cached is not None and _WORLD_CACHE.get("gen") == _WORLD_GEN and now - float(_WORLD_CACHE.get("at") or 0) < _WORLD_TTL:
+        return cached
+    names = [
+        "political_persons",
+        "political_person_roles",
+        "social_media_accounts",
+        "social_media_snapshots",
+        "social_posts",
+        "party_member_contacts",
+        "constituency_contacts",
+        "member_research_notes",
+        "party_content_calendar",
+        "party_gap_rules",
+        "party_pending_tasks",
+        "party_reminders",
+    ]
+    loaded, parties, geo_names = await asyncio.gather(
+        asyncio.gather(*(_load_named(name) for name in names)),
+        _parties(),
+        _geo_names(),
+    )
+    by_name = dict(zip(names, loaded))
+    data = {
+        "persons": by_name["political_persons"],
+        "roles": by_name["political_person_roles"],
+        "accounts": by_name["social_media_accounts"],
+        "snapshots": by_name["social_media_snapshots"],
+        "posts": by_name["social_posts"],
+        "contacts": by_name["party_member_contacts"],
+        "linkedContacts": by_name["constituency_contacts"],
+        "research": by_name["member_research_notes"],
+        "calendar": by_name["party_content_calendar"],
+        "rules": by_name["party_gap_rules"],
+        "tasks": by_name["party_pending_tasks"],
+        "reminders": by_name["party_reminders"],
+        "parties": parties,
+        "geoNames": geo_names,
     }
+    _WORLD_CACHE.update(gen=_WORLD_GEN, at=now, data=data)
+    return data
 
 
 def _group(rows: List[Dict[str, Any]], key: str) -> Dict[str, List[Dict[str, Any]]]:
@@ -144,7 +208,17 @@ def _group(rows: List[Dict[str, Any]], key: str) -> Dict[str, List[Dict[str, Any
     return out
 
 
-def _party_members(world: Dict[str, Any], party_id: str) -> Dict[str, Any]:
+def _window_days(value: Any) -> int:
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Choose 7 days, 30 days, or all posts.")
+    if number not in (0, 7, 30):
+        raise HTTPException(status_code=400, detail="Choose 7 days, 30 days, or all posts.")
+    return number
+
+
+def _party_members(world: Dict[str, Any], party_id: str, window_days: int = 7) -> Dict[str, Any]:
     pid = normalize_party_id(party_id)
     aliases = party_aliases(pid, world["parties"].values())
     persons = [p for p in world["persons"] if normalize_party_id(p.get("partyId")) in aliases and p.get("id")]
@@ -183,6 +257,7 @@ def _party_members(world: Dict[str, Any], party_id: str) -> Dict[str, Any]:
                 rules=rules,
                 geo_names=world["geoNames"],
                 now=now,
+                window_days=window_days,
             )
         )
     tasks = {
@@ -204,6 +279,8 @@ def _party_members(world: Dict[str, Any], party_id: str) -> Dict[str, Any]:
         "tasks": tasks,
         "research": research_by_person,
         "roles": roles_by_person,
+        "reminders": [r for r in world.get("reminders") or [] if normalize_party_id(r.get("partyId")) == pid],
+        "windowDays": window_days,
     }
 
 
@@ -271,6 +348,191 @@ async def _update_party_user(user_id: str, changes: Dict[str, Any]) -> None:
         await db.users.update_one({"id": user_id}, {"$set": changes})
     except Exception as exc:
         raise HTTPException(status_code=503, detail=P._save_error_detail(exc)) from exc
+
+
+def _json_users() -> List[Dict[str, Any]]:
+    try:
+        rows = P._srv().load_json_fallback("users.json") or []
+        if rows:
+            return rows
+    except Exception:
+        pass
+    return []
+
+
+async def _party_team(party_id: str) -> List[Dict[str, Any]]:
+    parties = await _parties()
+    pid = normalize_party_id(party_id)
+    aliases = party_aliases(pid, parties.values()) or {pid}
+    found: Dict[str, Dict[str, Any]] = {}
+
+    def add(user: Dict[str, Any], fallback_role: str = "") -> None:
+        if not user or not user.get("id"):
+            return
+        party = normalize_party_id(user.get("commandPartyId"))
+        if party not in aliases:
+            return
+        if str(user.get("status") or "ACTIVE").upper() != "ACTIVE":
+            return
+        role = str(user.get("primaryRole") or user.get("roleId") or fallback_role or "").upper()
+        found[user["id"]] = {
+            "id": user["id"],
+            "name": user.get("name") or user.get("email") or user["id"],
+            "role": role,
+            "roleTitle": user.get("roleTitle") or role,
+        }
+
+    for row in memory_list("party_admins") + P._runtime_list("party_admins"):
+        if row.get("active") is False:
+            continue
+        if normalize_party_id(row.get("partyId")) in aliases:
+            add(row.get("user") or {}, row.get("role") or "")
+    for user in _json_users():
+        add(user)
+    try:
+        srv = P._srv()
+        db = P._pi_mongo_db(srv)
+        if db is not None:
+            docs = await db.users.find({"commandPartyId": {"$in": list(aliases)}}, {"passwordHash": 0, "demoPassword": 0, "_id": 0}).to_list(300)
+            for user in docs or []:
+                add(user)
+    except Exception:
+        pass
+    return sorted(found.values(), key=lambda row: str(row.get("name") or "").lower())
+
+
+def _refresh_view(party_id: str, sync: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    job = dict(_REFRESH_JOBS.get(party_id) or {"status": "IDLE"})
+    job["lastRunAt"] = (sync or {}).get("lastRunAt") or job.get("finishedAt")
+    return job
+
+
+async def _run_post_refresh(party_id: str, caps: Dict[str, Any], actor: Dict[str, Any], person_id: Optional[str] = None) -> Dict[str, Any]:
+    pid = normalize_party_id(party_id)
+    try:
+        return await _run_post_refresh_body(pid, caps, actor, person_id)
+    except Exception:
+        job = _REFRESH_JOBS.get(pid) or {}
+        job["status"] = "DONE"
+        job["finishedAt"] = now_iso()
+        job["notes"] = ["The fetch stopped early. Try again."]
+        _touch_world()
+        return job
+
+
+async def _run_post_refresh_body(pid: str, caps: Dict[str, Any], actor: Dict[str, Any], person_id: Optional[str] = None) -> Dict[str, Any]:
+    bundle = _party_members(await _load_world(), pid)
+    accounts = [
+        account for account in bundle["accounts"]
+        if account.get("profileUrl") and not account.get("noAccount") and str(account.get("platform") or "").lower() in PLATFORMS
+        and (not person_id or account.get("personId") == person_id)
+    ]
+    job = _REFRESH_JOBS[pid]
+    job.update({"total": len(accounts), "done": 0, "saved": 0, "updated": 0, "failed": 0, "platforms": {}})
+    existing = {}
+    for post in bundle["posts"]:
+        key = (post.get("personId"), _canon_post(post.get("url") or "", post.get("platform") or ""))
+        if key[0] and key[1]:
+            existing[key] = post
+    sem = asyncio.Semaphore(4)
+    needs_key = False
+    names = {member["id"]: member.get("name") for member in bundle["members"]}
+
+    async def one(account: Dict[str, Any]) -> None:
+        nonlocal needs_key
+        platform = str(account.get("platform") or "").lower()
+        async with sem:
+            try:
+                result = await fetch_recent_posts(platform, account.get("profileUrl") or "", POSTS_PER_ACCOUNT)
+            except Exception:
+                result = {"success": False, "detail": "Could not fetch posts.", "posts": []}
+        detail = str(result.get("detail") or "")
+        if "RAPIDAPI_KEY" in detail:
+            needs_key = True
+        posts = result.get("posts") or []
+        if not result.get("success") and not posts:
+            job["failed"] += 1
+        for post in posts:
+            url = str(post.get("url") or "")
+            published = parse_iso(post.get("publishedAt"))
+            if not url or not published:
+                continue
+            key = (account.get("personId"), _canon_post(url, platform))
+            current = existing.get(key)
+            doc = dict(current or {})
+            doc.update({
+                "partyId": pid,
+                "personId": account.get("personId"),
+                "accountId": account.get("id"),
+                "platform": platform,
+                "url": url,
+                "publishedAt": published.isoformat(),
+                "thumbnailUrl": post.get("thumbnailUrl") or doc.get("thumbnailUrl"),
+                "text": post.get("text") or doc.get("text") or "",
+                "likes": post.get("likes") if post.get("likes") is not None else doc.get("likes"),
+                "comments": post.get("comments") if post.get("comments") is not None else doc.get("comments"),
+                "shares": post.get("shares") if post.get("shares") is not None else doc.get("shares"),
+                "views": post.get("views") if post.get("views") is not None else doc.get("views"),
+                "externalId": post.get("externalId") or doc.get("externalId"),
+                "fetchedAt": now_iso(),
+            })
+            if current:
+                doc["id"] = current.get("id")
+                doc["source"] = current.get("source") or "FETCH"
+                await P._save("social_posts", doc["id"], doc)
+                job["updated"] += 1
+            else:
+                doc.update({
+                    "id": new_id("post"),
+                    "source": "FETCH",
+                    "createdBy": caps["actorId"],
+                    "createdByName": caps["actorName"],
+                })
+                await P._save("social_posts", doc["id"], doc)
+                existing[key] = doc
+                job["saved"] += 1
+        job["done"] += 1
+        bucket = job["platforms"].setdefault(platform, {"saved": 0, "failed": 0})
+        if posts:
+            bucket["saved"] += len(posts)
+        elif not result.get("success"):
+            bucket["failed"] += 1
+
+    await asyncio.gather(*(one(account) for account in accounts))
+    notes = []
+    youtube_saved = job["platforms"].get("youtube", {}).get("saved", 0)
+    if youtube_saved:
+        notes.append(f"YouTube: {youtube_saved} posts with thumbnails.")
+    elif not any(str(a.get("platform")).lower() == "youtube" for a in accounts):
+        notes.append("No YouTube links are saved for this selection.")
+    else:
+        notes.append("YouTube returned no new posts for these channels.")
+    for platform, label in (("instagram", "Instagram"), ("x", "X"), ("facebook", "Facebook")):
+        bucket = job["platforms"].get(platform) or {}
+        if bucket.get("saved"):
+            notes.append(f"{label}: {bucket['saved']} posts.")
+    if needs_key:
+        notes.append("Instagram, X and Facebook need RAPIDAPI_KEY on the server. YouTube does not.")
+    job["notes"] = notes
+    job["status"] = "DONE"
+    job["finishedAt"] = now_iso()
+    sync = {
+        "id": pid,
+        "partyId": pid,
+        "lastRunAt": job["finishedAt"],
+        "saved": job["saved"],
+        "updated": job["updated"],
+        "failed": job["failed"],
+        "notes": notes,
+        "by": caps["actorName"],
+    }
+    await P._save("party_post_sync", pid, sync)
+    await _party_audit(
+        caps, actor, pid, "PARTY_POSTS_FETCH", person_id or pid, names.get(person_id) or bundle["party"].get("name"),
+        {"saved": job["saved"], "updated": job["updated"], "failed": job["failed"], "personId": person_id},
+    )
+    job["lastRunAt"] = sync["lastRunAt"]
+    return job
 
 
 def register_party_routes(api_router) -> None:
@@ -425,10 +687,12 @@ def register_party_routes(api_router) -> None:
         assemblyConstituencyId: Optional[str] = None,
         role: Optional[str] = None,
         platform: Optional[str] = None,
+        windowDays: int = 7,
     ):
         actor = await _load_party_actor(userId)
         _caps_for(actor, party_id)
-        bundle = _party_members(await _load_world(), party_id)
+        window_days = _window_days(windowDays)
+        bundle = _party_members(await _load_world(), party_id, window_days)
         members = filter_members(bundle["members"], **_filters(districtId, assemblyConstituencyId, role, platform, None))
         districts = sorted({(m["districtId"], m["districtName"] or m["districtId"]) for m in bundle["members"] if m.get("districtId")}, key=lambda d: d[1])
         assemblies = sorted({(m["assemblyConstituencyId"], m["assemblyConstituencyName"] or m["assemblyConstituencyId"], m.get("districtId") or "") for m in bundle["members"] if m.get("assemblyConstituencyId")}, key=lambda a: a[1])
@@ -436,6 +700,7 @@ def register_party_routes(api_router) -> None:
         return {
             "party": bundle["party"],
             "rules": bundle["rules"],
+            "windowDays": window_days,
             **overview_from_members(members),
             "filters": {
                 "districts": [{"id": d[0], "name": d[1]} for d in districts],
@@ -455,13 +720,15 @@ def register_party_routes(api_router) -> None:
         platform: Optional[str] = None,
         q: Optional[str] = None,
         gap: Optional[str] = None,
+        windowDays: int = 7,
         format: Optional[str] = None,
         skip: int = 0,
         limit: int = 500,
     ):
         actor = await _load_party_actor(userId)
         caps = _caps_for(actor, party_id)
-        bundle = _party_members(await _load_world(), party_id)
+        window_days = _window_days(windowDays)
+        bundle = _party_members(await _load_world(), party_id, window_days)
         members = filter_members(bundle["members"], **_filters(districtId, assemblyConstituencyId, role, platform, q, gap))
         if (format or "").lower() == "csv":
             if not caps.get("export"):
@@ -474,7 +741,7 @@ def register_party_routes(api_router) -> None:
                 headers={"Content-Disposition": f'attachment; filename="LeadersLens_{bundle["partyId"]}_members_{stamp}.csv"'},
             )
         page = members[max(0, skip): max(0, skip) + max(1, min(limit, 1000))]
-        return {"total": len(members), "items": page}
+        return {"total": len(members), "windowDays": window_days, "items": page}
 
     @api_router.get("/party/{party_id}/members/{person_id}")
     async def party_member_detail(party_id: str, person_id: str, userId: Optional[str] = None):
@@ -742,6 +1009,17 @@ def register_party_routes(api_router) -> None:
         bundle = _party_members(await _load_world(), party_id)
         members = filter_members(bundle["members"], **_filters(districtId, assemblyConstituencyId, role, None, None))
         groups = gap_report(members)
+        latest_reminder: Dict[tuple, Dict[str, Any]] = {}
+        for reminder in bundle.get("reminders") or []:
+            key = (str(reminder.get("personId") or ""), str(reminder.get("gapType") or ""))
+            if key[0] and (key not in latest_reminder or str(reminder.get("createdAt") or "") > str(latest_reminder[key].get("createdAt") or "")):
+                latest_reminder[key] = reminder
+        for group in groups:
+            for row in group.get("members") or []:
+                hit = latest_reminder.get((str(row.get("id") or ""), group.get("type")))
+                if hit:
+                    row["remindedAt"] = hit.get("createdAt")
+                    row["remindedBy"] = hit.get("createdByName")
         if (format or "").lower() == "csv":
             await _party_audit(caps, actor, party_id, "PARTY_GAPS_EXPORT", bundle["partyId"], bundle["party"].get("name"), {"rows": sum(g["count"] for g in groups)})
             import csv
@@ -886,6 +1164,91 @@ def register_party_routes(api_router) -> None:
         saved = await P._save("party_gap_rules", pid, doc)
         await _party_audit(caps, actor, pid, "PARTY_GAP_RULES_UPDATE", pid, pid, {k: doc[k] for k in limits})
         return {"rules": merge_gap_rules(saved), "updatedAt": saved.get("updatedAt"), "updatedByName": saved.get("updatedByName")}
+
+    @api_router.get("/party/{party_id}/team")
+    async def party_team(party_id: str, userId: Optional[str] = None):
+        actor = await _load_party_actor(userId)
+        _caps_for(actor, party_id)
+        return {"items": await _party_team(party_id)}
+
+    @api_router.post("/party/{party_id}/reminders")
+    async def party_remind(party_id: str, payload: dict, userId: Optional[str] = None):
+        actor = await _load_party_actor(userId)
+        caps = _caps_for(actor, party_id, "edit")
+        payload = payload or {}
+        person_id = _clean_str(payload.get("personId"), 80)
+        gap_type = str(payload.get("gapType") or "").upper()
+        if gap_type not in {item[0] for item in GAP_TYPES}:
+            raise HTTPException(status_code=400, detail="Choose a gap from the report.")
+        bundle = _party_members(await _load_world(), party_id)
+        member = _member_or_404(bundle, person_id)
+        now = datetime.now(timezone.utc)
+        for reminder in bundle.get("reminders") or []:
+            if reminder.get("personId") == person_id and str(reminder.get("gapType") or "").upper() == gap_type:
+                created = parse_iso(reminder.get("createdAt"))
+                if created and now - created < timedelta(hours=24):
+                    return {**reminder, "already": True}
+        doc = {
+            "id": new_id("rem"),
+            "partyId": bundle["partyId"],
+            "personId": person_id,
+            "gapType": gap_type,
+            "createdAt": now_iso(),
+            "createdBy": caps["actorId"],
+            "createdByName": caps["actorName"],
+        }
+        saved = await P._save("party_reminders", doc["id"], doc)
+        await _party_audit(caps, actor, party_id, "PARTY_REMIND", person_id, member["name"], {"personId": person_id, "gapType": gap_type})
+        return saved
+
+    @api_router.get("/party/{party_id}/posts/refresh")
+    async def party_refresh_status(party_id: str, userId: Optional[str] = None):
+        actor = await _load_party_actor(userId)
+        _caps_for(actor, party_id)
+        pid = normalize_party_id(party_id)
+        sync = await P._get("party_post_sync", pid) or {}
+        return _refresh_view(pid, sync)
+
+    @api_router.post("/party/{party_id}/posts/refresh")
+    async def party_refresh(party_id: str, payload: dict, userId: Optional[str] = None):
+        actor = await _load_party_actor(userId)
+        caps = _caps_for(actor, party_id, "edit")
+        payload = payload or {}
+        person_id = _clean_str(payload.get("personId"), 80) or None
+        force = bool(payload.get("force"))
+        wait = bool(payload.get("wait"))
+        pid = normalize_party_id(party_id)
+        if person_id:
+            _member_or_404(_party_members(await _load_world(), pid), person_id)
+        current = _REFRESH_JOBS.get(pid)
+        if current and current.get("status") == "RUNNING":
+            return current
+        sync = await P._get("party_post_sync", pid) or {}
+        last = parse_iso(sync.get("lastRunAt"))
+        if last and not force and not person_id and (datetime.now(timezone.utc) - last).total_seconds() < 24 * 3600:
+            view = _refresh_view(pid, sync)
+            view["status"] = "SKIPPED"
+            view["detail"] = "Posts were fetched in the last 24 hours."
+            return view
+        job = {
+            "id": new_id("job"),
+            "partyId": pid,
+            "status": "RUNNING",
+            "total": 0,
+            "done": 0,
+            "saved": 0,
+            "updated": 0,
+            "failed": 0,
+            "notes": [],
+            "startedAt": now_iso(),
+            "finishedAt": None,
+            "personId": person_id,
+        }
+        _REFRESH_JOBS[pid] = job
+        if wait:
+            return await _run_post_refresh(pid, caps, actor, person_id)
+        asyncio.get_running_loop().create_task(_run_post_refresh(pid, caps, actor, person_id))
+        return job
 
     @api_router.get("/party/{party_id}/audit")
     async def party_audit_log(party_id: str, userId: Optional[str] = None, limit: int = 200):

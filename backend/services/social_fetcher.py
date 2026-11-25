@@ -518,3 +518,320 @@ async def auto_fetch_metrics(platform: str, url: str) -> Dict[str, Any]:
         return await fetch_x_metrics(url, username, rapidapi_key)
 
     return {"success": False, "platform": plat, "detail": f"Unsupported platform: {platform}"}
+
+
+# ---------------------------------------------------------------------------
+# RECENT POSTS (up to 9) WITH THUMBNAILS
+# YouTube uses the public channel feed. X, Instagram and Facebook use RapidAPI
+# when RAPIDAPI_KEY is set; without it they return a clear failure and no fake posts.
+# ---------------------------------------------------------------------------
+
+POSTS_PER_ACCOUNT = 9
+
+_ATOM = "{http://www.w3.org/2005/Atom}"
+_YT = "{http://www.youtube.com/xml/schemas/2015}"
+_MEDIA = "{http://search.yahoo.com/mrss/}"
+
+
+def channel_id_from_youtube_html(text: str) -> str:
+    for pattern in (
+        r'"externalId"\s*:\s*"(UC[\w-]{20,})"',
+        r'"browseId"\s*:\s*"(UC[\w-]{20,})"',
+        r'"channelId"\s*:\s*"(UC[\w-]{20,})"',
+    ):
+        match = re.search(pattern, text or "")
+        if match:
+            return match.group(1)
+    return ""
+
+
+def posts_from_youtube_feed(xml_text: str, limit: int = POSTS_PER_ACCOUNT) -> list:
+    import xml.etree.ElementTree as ET
+
+    posts = []
+    try:
+        root = ET.fromstring(xml_text)
+    except ET.ParseError:
+        return posts
+    for entry in root.findall(f"{_ATOM}entry"):
+        video_id = (entry.findtext(f"{_YT}videoId") or "").strip()
+        title = (entry.findtext(f"{_ATOM}title") or "").strip()
+        published = (entry.findtext(f"{_ATOM}published") or "").strip()
+        link = ""
+        for node in entry.findall(f"{_ATOM}link"):
+            if node.attrib.get("rel", "alternate") == "alternate":
+                link = node.attrib.get("href") or link
+        if not link and video_id:
+            link = f"https://www.youtube.com/watch?v={video_id}"
+        thumbnail = f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg" if video_id else ""
+        views = None
+        description = ""
+        group = entry.find(f"{_MEDIA}group")
+        if group is not None:
+            thumb = group.find(f"{_MEDIA}thumbnail")
+            if thumb is not None and thumb.attrib.get("url"):
+                thumbnail = thumb.attrib["url"]
+            stats = group.find(f"{_MEDIA}statistics")
+            if stats is not None and str(stats.attrib.get("views") or "").isdigit():
+                views = int(stats.attrib["views"])
+            description = (group.findtext(f"{_MEDIA}description") or "").strip()
+        if not link or not published:
+            continue
+        posts.append({
+            "platform": "youtube",
+            "url": link,
+            "text": (title or description)[:1000],
+            "publishedAt": published,
+            "thumbnailUrl": thumbnail or None,
+            "views": views,
+            "likes": None,
+            "comments": None,
+            "shares": None,
+            "externalId": video_id or None,
+        })
+        if len(posts) >= limit:
+            break
+    return posts
+
+
+def _coerce_post_date(value: Any) -> Optional[str]:
+    from datetime import datetime, timezone
+
+    if value is None or value == "":
+        return None
+    if isinstance(value, (int, float)) or (isinstance(value, str) and value.strip().isdigit()):
+        ts = float(value)
+        if ts > 10_000_000_000:
+            ts /= 1000.0
+        try:
+            return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+        except (OverflowError, OSError, ValueError):
+            return None
+    text = str(value).strip()
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).isoformat()
+    except ValueError:
+        pass
+    for fmt in ("%a %b %d %H:%M:%S %z %Y", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(text, fmt).astimezone(timezone.utc).isoformat()
+        except ValueError:
+            continue
+    return None
+
+
+def _first_http(value: Any) -> str:
+    if isinstance(value, str) and value.startswith("http"):
+        return value
+    if isinstance(value, dict):
+        for key in ("url", "src", "media_url_https", "thumbnail"):
+            found = _first_http(value.get(key))
+            if found:
+                return found
+    if isinstance(value, list):
+        for item in value:
+            found = _first_http(item)
+            if found:
+                return found
+    return ""
+
+
+def _post_image(item: Dict[str, Any]) -> str:
+    for key in ("thumbnailUrl", "thumbnail_url", "thumbnail", "display_url", "image", "full_picture", "media_url", "media_url_https"):
+        found = _first_http(item.get(key))
+        if found:
+            return found
+    for key in ("media", "images", "attachments"):
+        found = _first_http(item.get(key))
+        if found:
+            return found
+    entities = item.get("entities")
+    if isinstance(entities, dict):
+        found = _first_http(entities.get("media"))
+        if found:
+            return found
+    return ""
+
+
+def _as_int(value: Any) -> Optional[int]:
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, dict):
+        return _as_int(value.get("count") if "count" in value else value.get("total"))
+    match = re.search(r"\d+", str(value).replace(",", ""))
+    return int(match.group(0)) if match else None
+
+
+def _payload_items(payload: Any) -> list:
+    if isinstance(payload, list):
+        return payload
+    if not isinstance(payload, dict):
+        return []
+    for key in ("timeline", "posts", "items", "results", "edges", "data", "medias"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return value
+        if isinstance(value, dict):
+            nested = _payload_items(value)
+            if nested:
+                return nested
+    return []
+
+
+def posts_from_social_payload(platform: str, username: str, payload: Any, limit: int = POSTS_PER_ACCOUNT) -> list:
+    posts = []
+    for item in _payload_items(payload):
+        node = item.get("node") if isinstance(item, dict) and isinstance(item.get("node"), dict) else item
+        if not isinstance(node, dict):
+            continue
+        published = _coerce_post_date(
+            node.get("publishedAt") or node.get("taken_at") or node.get("created_at") or node.get("timestamp") or node.get("date") or node.get("time")
+        )
+        url = _first_http(node.get("url") or node.get("permalink") or node.get("link") or node.get("post_url"))
+        shortcode = str(node.get("shortcode") or node.get("code") or "").strip()
+        external_id = str(node.get("id") or node.get("id_str") or node.get("post_id") or shortcode or "").strip()
+        if not url:
+            if platform == "instagram" and shortcode:
+                url = f"https://www.instagram.com/p/{shortcode}/"
+            elif platform == "x" and external_id and username:
+                url = f"https://x.com/{username}/status/{external_id}"
+            elif platform == "facebook" and external_id:
+                url = f"https://www.facebook.com/{username}/posts/{external_id}" if username else ""
+        text = node.get("text") or node.get("full_text") or node.get("caption") or node.get("message") or node.get("title") or node.get("description") or ""
+        if isinstance(text, dict):
+            text = text.get("text") or ""
+        if not url or not published:
+            continue
+        posts.append({
+            "platform": platform,
+            "url": url,
+            "text": str(text)[:1000],
+            "publishedAt": published,
+            "thumbnailUrl": _post_image(node) or None,
+            "views": _as_int(node.get("views") or node.get("view_count") or node.get("play_count") or node.get("video_view_count")),
+            "likes": _as_int(node.get("likes") or node.get("like_count") or node.get("favorite_count") or node.get("edge_liked_by")),
+            "comments": _as_int(node.get("comments") or node.get("comment_count") or node.get("reply_count")),
+            "shares": _as_int(node.get("shares") or node.get("retweet_count") or node.get("share_count") or node.get("reshare_count")),
+            "externalId": external_id or None,
+        })
+        if len(posts) >= limit:
+            break
+    return posts
+
+
+def _rapidapi_key() -> str:
+    return (
+        os.getenv("RAPIDAPI_KEY")
+        or os.getenv("RAPID_API_KEY")
+        or os.getenv("X_RAPIDAPI_KEY")
+        or os.getenv("SOCIAL_API_KEY")
+        or os.getenv("rapidapi_key")
+        or ""
+    ).strip()
+
+
+def _no_key(platform: str, username: str) -> Dict[str, Any]:
+    return {
+        "success": False,
+        "platform": platform,
+        "username": username,
+        "posts": [],
+        "detail": "Add RAPIDAPI_KEY on the server to fetch posts from this platform.",
+    }
+
+
+async def fetch_youtube_posts(url: str, limit: int = POSTS_PER_ACCOUNT) -> Dict[str, Any]:
+    username = extract_username(url, "youtube")
+    if not httpx:
+        return {"success": False, "platform": "youtube", "username": username, "posts": [], "detail": "httpx library not available"}
+    channel_id = ""
+    match = re.search(r"/channel/(UC[\w-]{20,})", url or "")
+    if match:
+        channel_id = match.group(1)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept-Language": "en",
+    }
+    try:
+        async with httpx.AsyncClient(headers=headers, timeout=12.0, follow_redirects=True) as client:
+            if not channel_id:
+                page = url if str(url).startswith("http") else f"https://www.youtube.com/@{username}"
+                res = await client.get(page)
+                channel_id = channel_id_from_youtube_html(res.text) if res.status_code == 200 else ""
+            if not channel_id:
+                return {"success": False, "platform": "youtube", "username": username, "posts": [], "detail": "Could not find the YouTube channel from this link."}
+            feed = await client.get(f"https://www.youtube.com/feeds/videos.xml?channel_id={urllib.parse.quote(channel_id)}")
+            if feed.status_code != 200:
+                return {"success": False, "platform": "youtube", "username": username, "posts": [], "detail": f"YouTube feed returned {feed.status_code}."}
+            posts = posts_from_youtube_feed(feed.text, limit)
+            return {"success": True, "platform": "youtube", "username": username, "posts": posts}
+    except Exception as exc:
+        logger.warning("YouTube posts notice for %s: %s", username, exc)
+        return {"success": False, "platform": "youtube", "username": username, "posts": [], "detail": "Could not reach YouTube for this channel."}
+
+
+async def _rapidapi_posts(platform: str, username: str, key: str, host: str, attempts: list) -> Dict[str, Any]:
+    last = "The post service did not return posts."
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            for path, params in attempts:
+                res = await client.get(
+                    f"https://{host}{path}",
+                    params=params,
+                    headers={"x-rapidapi-key": key, "x-rapidapi-host": host},
+                )
+                if res.status_code == 200:
+                    try:
+                        payload = res.json()
+                    except Exception:
+                        payload = {}
+                    posts = posts_from_social_payload(platform, username, payload)
+                    if posts:
+                        return {"success": True, "platform": platform, "username": username, "posts": posts}
+                    last = "The post service returned no posts for this account."
+                else:
+                    last = f"The post service returned {res.status_code} for {platform}."
+    except Exception as exc:
+        logger.warning("RapidAPI %s posts notice for %s: %s", platform, username, exc)
+        last = f"Could not reach the {platform} post service."
+    return {"success": False, "platform": platform, "username": username, "posts": [], "detail": last}
+
+
+async def fetch_recent_posts(platform: str, url: str, limit: int = POSTS_PER_ACCOUNT) -> Dict[str, Any]:
+    """Latest posts for one profile link. Never invents posts."""
+    plat = (platform or "").strip().lower()
+    if plat in ("twitter", "x"):
+        plat = "x"
+    limit = max(1, min(int(limit or POSTS_PER_ACCOUNT), POSTS_PER_ACCOUNT))
+    username = extract_username(url, plat)
+    if plat == "youtube":
+        return await fetch_youtube_posts(url, limit)
+    if plat not in ("facebook", "instagram", "x"):
+        return {"success": False, "platform": plat, "posts": [], "detail": f"Unsupported platform: {platform}"}
+    if not username:
+        return {"success": False, "platform": plat, "posts": [], "detail": "Could not read the account name from this link."}
+    key = _rapidapi_key()
+    if not key or not httpx:
+        return _no_key(plat, username)
+    if plat == "instagram":
+        host = os.getenv("RAPIDAPI_IG_HOST", "instagram-scraper-api2.p.rapidapi.com")
+        attempts = [
+            ("/v1.2/posts", {"username_or_id_or_url": username}),
+            ("/v1/posts", {"username_or_id_or_url": username}),
+        ]
+    elif plat == "x":
+        host = os.getenv("RAPIDAPI_X_HOST", "twitter-api45.p.rapidapi.com")
+        attempts = [("/timeline.php", {"screenname": username})]
+    else:
+        host = os.getenv("RAPIDAPI_FB_HOST", "facebook-pages-scraper2.p.rapidapi.com")
+        attempts = [
+            ("/get_facebook_posts_details", {"profile_url": url, "page_id": username}),
+            ("/page_posts", {"page_id": username}),
+        ]
+    result = await _rapidapi_posts(plat, username, key, host, attempts)
+    result["posts"] = (result.get("posts") or [])[:limit]
+    return result

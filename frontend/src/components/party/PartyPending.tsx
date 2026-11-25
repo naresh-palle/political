@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, RotateCcw, UserPlus } from "lucide-react";
-import { partyApi, type PendingItem } from "../../services/partyApi";
+import { partyApi, type PendingItem, type TeamMember } from "../../services/partyApi";
 import type { PartyScreenProps } from "./PartyCommandCenter";
 import { Avatar, Btn, Card, Empty, ErrorBanner, Loading, PLATFORM_LABELS, SectionTitle, Segmented, formatDate, inputCls } from "./partyUi";
 
@@ -18,7 +18,8 @@ export const PendingRow: React.FC<{
   onChanged: () => void;
   onOpenMember?: (id: string) => void;
   showMember?: boolean;
-}> = ({ item, userId, partyId, canEdit, onChanged, onOpenMember, showMember = true }) => {
+  team?: TeamMember[];
+}> = ({ item, userId, partyId, canEdit, onChanged, onOpenMember, showMember = true, team = [] }) => {
   const [assignee, setAssignee] = useState(item.assigneeName || "");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -65,11 +66,24 @@ export const PendingRow: React.FC<{
         </div>
       </div>
       {canEdit && (
-        <div className="mt-2 grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
+        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] gap-2">
+          <select
+            aria-label="Choose a team member"
+            className={inputCls}
+            value={team.some((person) => person.name === assignee) ? assignee : ""}
+            onChange={(e) => setAssignee(e.target.value)}
+          >
+            <option value="">Choose a team member</option>
+            {team.map((person) => (
+              <option key={person.id} value={person.name}>
+                {person.name} · {person.roleTitle || person.role}
+              </option>
+            ))}
+          </select>
           <input
             aria-label="Assign to"
             className={inputCls}
-            placeholder="Assign to (name)"
+            placeholder="Or type a name"
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
           />
@@ -99,6 +113,8 @@ export const PartyPending: React.FC<PartyScreenProps> = ({ userId, partyId, meta
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [oldestFirst, setOldestFirst] = useState(true);
+  const [team, setTeam] = useState<TeamMember[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -118,7 +134,18 @@ export const PartyPending: React.FC<PartyScreenProps> = ({ userId, partyId, meta
     load();
   }, [load]);
 
-  const visible = kind === "ALL" ? items : items.filter((i) => i.kind === kind);
+  useEffect(() => {
+    partyApi.team(userId, partyId).then((res) => setTeam(res.items)).catch(() => setTeam([]));
+  }, [userId, partyId]);
+
+  const visible = useMemo(() => {
+    const rows = kind === "ALL" ? items : items.filter((i) => i.kind === kind);
+    return [...rows].sort((a, b) => {
+      const left = a.ageDays ?? -1;
+      const right = b.ageDays ?? -1;
+      return oldestFirst ? right - left : left - right;
+    });
+  }, [items, kind, oldestFirst]);
   const total = (counts.ACCOUNT || 0) + (counts.REVIEW || 0) + (counts.CAMPAIGN || 0);
 
   return (
@@ -127,10 +154,19 @@ export const PartyPending: React.FC<PartyScreenProps> = ({ userId, partyId, meta
         title="Pending"
         subtitle="Accounts waiting for verification, member records waiting for review, and campaign posts not yet published."
         right={
-          <label className="flex items-center gap-2 text-xs text-[#F5EFE0]">
-            <input type="checkbox" checked={includeDone} onChange={(e) => setIncludeDone(e.target.checked)} className="accent-[#C99436]" />
-            Show done
-          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setOldestFirst((value) => !value)}
+              className="rounded-lg border border-[#C99436]/40 px-3 py-1.5 text-[11px] font-semibold text-[#F5EFE0]"
+            >
+              {oldestFirst ? "Oldest first" : "Newest first"}
+            </button>
+            <label className="flex items-center gap-2 text-xs text-[#F5EFE0]">
+              <input type="checkbox" checked={includeDone} onChange={(e) => setIncludeDone(e.target.checked)} className="accent-[#C99436]" />
+              Show done
+            </label>
+          </div>
         }
       />
       <div className="mb-3">
@@ -162,6 +198,7 @@ export const PartyPending: React.FC<PartyScreenProps> = ({ userId, partyId, meta
               canEdit={meta.capabilities.edit}
               onChanged={load}
               onOpenMember={onOpenMember}
+              team={team}
             />
           ))}
         </div>

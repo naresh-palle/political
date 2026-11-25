@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Crown, Lock } from "lucide-react";
 import type { UserProfile } from "../../types";
-import { partyApi, type PartyFilters, type PartyMeta } from "../../services/partyApi";
-import { ErrorBanner, Loading, Segmented } from "./partyUi";
+import { partyApi, type PartyFilters, type PartyMeta, type RefreshJob } from "../../services/partyApi";
+import { ErrorBanner, Loading } from "./partyUi";
 import { PartyOverview } from "./PartyOverview";
 import { PartyMembers } from "./PartyMembers";
 import { PartyMemberProfile } from "./PartyMemberProfile";
@@ -19,7 +19,21 @@ export interface PartyScreenProps {
   userId: string;
   partyId: string;
   meta: PartyMeta;
+  windowDays: number;
+  onWindowDays: (days: number) => void;
+  refreshTick: number;
   onOpenMember: (personId: string) => void;
+}
+
+interface RefreshApi {
+  job: RefreshJob | null;
+  start: (opts?: { personId?: string; force?: boolean }) => Promise<void>;
+}
+
+const RefreshContext = createContext<RefreshApi | null>(null);
+
+export function usePartyRefresh(): RefreshApi | null {
+  return useContext(RefreshContext);
 }
 
 interface Props {
@@ -34,6 +48,44 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
   const [tab, setTab] = useState<PartyTab>("overview");
   const [memberId, setMemberId] = useState<string | null>(null);
   const [memberFilters, setMemberFilters] = useState<PartyFilters>({});
+  const [windowDays, setWindowDays] = useState(7);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [job, setJob] = useState<RefreshJob | null>(null);
+  const autoStarted = useRef("");
+
+  const startRefresh = useCallback(async (opts?: { personId?: string; force?: boolean }) => {
+    if (!partyId) return;
+    const res = await partyApi.refreshPosts(userId, partyId, { personId: opts?.personId, force: opts?.force ?? true, wait: false });
+    setJob(res);
+    if (res.status === "DONE") setRefreshTick((n) => n + 1);
+  }, [userId, partyId]);
+
+  useEffect(() => {
+    if (!job || job.status !== "RUNNING" || !partyId) return;
+    const timer = window.setInterval(async () => {
+      try {
+        const next = await partyApi.refreshStatus(userId, partyId);
+        setJob(next);
+        if (next.status !== "RUNNING") setRefreshTick((n) => n + 1);
+      } catch {
+        /* keep the last status and try again */
+      }
+    }, 2500);
+    return () => window.clearInterval(timer);
+  }, [job, partyId, userId]);
+
+  useEffect(() => {
+    if (!meta?.capabilities.edit || !partyId || autoStarted.current === partyId) return;
+    autoStarted.current = partyId;
+    partyApi.refreshStatus(userId, partyId).then((status) => {
+      const last = status.lastRunAt ? Date.parse(status.lastRunAt) : 0;
+      if (status.status === "RUNNING" || (last && Date.now() - last < 24 * 60 * 60 * 1000)) {
+        setJob(status);
+        return;
+      }
+      startRefresh({ force: false });
+    }).catch(() => {});
+  }, [meta, partyId, userId, startRefresh]);
 
   const loadMeta = useCallback(async () => {
     setError("");
@@ -87,10 +139,24 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
   ];
 
   const openMember = (personId: string) => setMemberId(personId);
-  const screenProps: PartyScreenProps = { userId, partyId: party?.id || partyId, meta, onOpenMember: openMember };
+  const screenProps: PartyScreenProps = {
+    userId,
+    partyId: party?.id || partyId,
+    meta,
+    windowDays,
+    onWindowDays: setWindowDays,
+    refreshTick,
+    onOpenMember: openMember
+  };
+  const chooseTab = (id: PartyTab) => {
+    if (id === "members") setMemberFilters({});
+    setMemberId(null);
+    setTab(id);
+  };
 
   return (
-    <div data-testid="party-command" className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+    <RefreshContext.Provider value={{ job, start: startRefresh }}>
+    <div data-testid="party-command" className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 pb-40">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-11 h-11 rounded-xl border border-[#C99436]/50 bg-[#050B12] flex items-center justify-center text-xl shrink-0">
@@ -133,17 +199,16 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
 
       <ErrorBanner message={error} onRetry={loadMeta} />
 
-      {!memberId && (
-        <div className="mb-4">
-          <Segmented
-            testId="party-tabs"
-            options={tabs}
-            value={tab}
-            onChange={(id) => {
-              if (id === "members") setMemberFilters({});
-              setTab(id as PartyTab);
-            }}
-          />
+      {job && (job.status === "RUNNING" || job.detail || (job.notes && job.notes.length > 0)) && (
+        <div role="status" data-testid="post-refresh" className="mb-3 rounded-xl border border-[#C99436]/30 bg-[#080E18] px-3 py-2 text-xs text-[#E6DCC4]">
+          {job.status === "RUNNING" && <span>Fetching latest posts{job.total ? ` (${job.done || 0} of ${job.total} accounts)` : "…"} </span>}
+          {job.detail && <span>{job.detail} </span>}
+          {(job.notes || []).join(" ")}
+          {caps.edit && job.status !== "RUNNING" && (
+            <button type="button" className="ml-2 font-bold text-[#F9E29C] underline" onClick={() => startRefresh({ force: true })}>
+              Fetch again
+            </button>
+          )}
         </div>
       )}
 
@@ -170,6 +235,26 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
           {tab === "accounts" && caps.manageAdmins && <PartyAccounts {...screenProps} />}
         </React.Fragment>
       )}
+      <nav
+        data-testid="party-tabs"
+        className="fixed bottom-0 inset-x-0 z-30 border-t border-[#C99436]/35 bg-[#050B12]/95 backdrop-blur-xl"
+      >
+        <div className="max-w-7xl mx-auto px-2 py-1.5 flex flex-wrap gap-1">
+          {tabs.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => chooseTab(item.id)}
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[11px] font-semibold cursor-pointer ${
+                !memberId && tab === item.id ? "bg-gradient-to-r from-[#C99436] to-[#E5B869] text-[#050B12]" : "text-[#CBD5E1] hover:bg-[#0C1524]"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
+    </RefreshContext.Provider>
   );
 };

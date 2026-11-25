@@ -14,6 +14,7 @@ import {
   PlatformChips,
   SectionTitle,
   formatNumber,
+  postsLabel,
   timeAgo,
   roleText
 } from "./partyUi";
@@ -22,7 +23,7 @@ interface Props extends PartyScreenProps {
   initialFilters?: PartyFilters;
 }
 
-export const MemberCard: React.FC<{ member: PartyMember; onOpen: () => void }> = ({ member, onOpen }) => (
+export const MemberCard: React.FC<{ member: PartyMember; windowDays: number; onOpen: () => void }> = ({ member, windowDays, onOpen }) => (
   <button
     type="button"
     data-testid="member-card"
@@ -32,7 +33,14 @@ export const MemberCard: React.FC<{ member: PartyMember; onOpen: () => void }> =
     <div className="flex items-start gap-3">
       <Avatar name={member.name} url={member.photoUrl} size={44} />
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-bold text-[#F5EFE0] break-words">{member.name}</div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-sm font-bold text-[#F5EFE0] break-words">{member.name}</span>
+          {member.roles[0] && (
+            <span className="rounded-full border border-[#C99436]/50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#F9E29C]">
+              {roleText([member.roles[0]])}
+            </span>
+          )}
+        </div>
         <div className="text-[11px] text-[#D4A24C] break-words">{roleText(member.roles) || "—"}</div>
         <div className="text-[11px] text-[#B9AF95] break-words">
           {member.assemblyConstituencyName || "—"}
@@ -53,17 +61,21 @@ export const MemberCard: React.FC<{ member: PartyMember; onOpen: () => void }> =
     <div className="mt-2">
       <PlatformChips platforms={member.platforms} />
     </div>
-    <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+    <div className="mt-2 grid grid-cols-2 gap-2 text-center">
       <div className="rounded-lg bg-[#050B12] py-1.5">
         <div className="text-xs font-bold text-[#F9E29C]">{formatNumber(member.followersTotal)}</div>
         <div className="text-[9px] uppercase text-[#8A8E9B]">Followers</div>
       </div>
       <div className="rounded-lg bg-[#050B12] py-1.5">
         <div className="text-xs font-bold text-[#F9E29C]">
-          {member.postsThisWeek}
-          {member.postsEstimated ? "*" : ""}
+          {member.postsInWindow ?? member.postsThisWeek}
+          {(member.postsInWindowEstimated ?? member.postsEstimated) ? "*" : ""}
         </div>
-        <div className="text-[9px] uppercase text-[#8A8E9B]">Posts / week</div>
+        <div className="text-[9px] uppercase text-[#8A8E9B]">{postsLabel(windowDays)}</div>
+      </div>
+      <div className="rounded-lg bg-[#050B12] py-1.5">
+        <div className="text-xs font-bold text-[#F9E29C]">{member.engagementPercent === null || member.engagementPercent === undefined ? "—" : `${member.engagementPercent}%`}</div>
+        <div className="text-[9px] uppercase text-[#8A8E9B]">Engagement</div>
       </div>
       <div className="rounded-lg bg-[#050B12] py-1.5">
         <div className="text-xs font-bold text-[#F9E29C]">{timeAgo(member.lastPostAt)}</div>
@@ -84,7 +96,7 @@ export const MemberCard: React.FC<{ member: PartyMember; onOpen: () => void }> =
   </button>
 );
 
-export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, onOpenMember, initialFilters }) => {
+export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, windowDays, refreshTick, onOpenMember, initialFilters }) => {
   const [filters, setFilters] = useState<PartyFilters>(initialFilters || {});
   const [options, setOptions] = useState<PartyOverview["filters"] | null>(null);
   const [rows, setRows] = useState<PartyMember[]>([]);
@@ -106,7 +118,7 @@ export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, onOpenMem
     setLoading(true);
     setError("");
     try {
-      const res = await partyApi.members(userId, partyId, filters);
+      const res = await partyApi.members(userId, partyId, filters, windowDays);
       if (id !== seq.current) return;
       setRows(res.items);
       setTotal(res.total);
@@ -115,7 +127,7 @@ export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, onOpenMem
     } finally {
       if (id === seq.current) setLoading(false);
     }
-  }, [userId, partyId, filters]);
+  }, [userId, partyId, filters, windowDays, refreshTick]);
 
   useEffect(() => {
     const timer = setTimeout(load, filters.q ? 300 : 0);
@@ -156,7 +168,7 @@ export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, onOpenMem
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
           {rows.map((m) => (
-            <MemberCard key={m.id} member={m} onOpen={() => onOpenMember(m.id)} />
+            <MemberCard key={m.id} member={m} windowDays={windowDays} onOpen={() => onOpenMember(m.id)} />
           ))}
         </div>
       )}

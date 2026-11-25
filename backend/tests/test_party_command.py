@@ -74,6 +74,8 @@ def routes(monkeypatch):
     monkeypatch.setattr(party_api, "_create_party_user", fake_create_user)
     monkeypatch.setattr(party_api, "_update_party_user", fake_update_user)
     pi_api._invalidate_collection_cache()
+    party_api._reset_world_cache()
+    party_api._REFRESH_JOBS.clear()
 
     router = APIRouter()
     party_api.register_party_routes(router)
@@ -83,6 +85,8 @@ def routes(monkeypatch):
             table[(method, route.path)] = route.endpoint
     yield table
     pi_api._invalidate_collection_cache()
+    party_api._reset_world_cache()
+    party_api._REFRESH_JOBS.clear()
     reset_memory()
 
 
@@ -434,3 +438,72 @@ def test_super_admin_creates_and_deactivates_party_accounts(routes):
     with pytest.raises(HTTPException) as exc:
         _call(routes, "GET", "/party/meta", userId=record["id"])
     assert exc.value.status_code == 403
+
+
+def test_window_days_changes_the_count_and_not_the_weekly_gap():
+    accounts = [{"id": "a1", "platform": "facebook", "verificationStatus": "VERIFIED", "postsLast30Days": 30, "dataCollectionDate": _iso(0)}]
+    week = _summary(accounts=accounts)
+    month = _summary(accounts=accounts, window_days=30)
+    assert week["postsThisWeek"] == 7 and week["postsInWindow"] == 7
+    assert month["postsThisWeek"] == 7 and month["postsInWindow"] == 30
+    assert month["windowDays"] == 30
+    posts = [{"id": "old", "personId": "pp-1", "publishedAt": _iso(20)}, {"id": "new", "personId": "pp-1", "publishedAt": _iso(1)}]
+    scoped = _summary(accounts=accounts, posts=posts, window_days=7)
+    assert scoped["postsThisWeek"] == 1 and scoped["postsInWindow"] == 1
+    assert _summary(accounts=accounts, posts=posts, window_days=30)["postsInWindow"] == 2
+    assert _summary(accounts=accounts, posts=posts, window_days=0)["postsInWindow"] == 2
+
+
+def test_refresh_saves_real_post_shape_and_does_not_duplicate(routes, monkeypatch):
+    import backend.services.party_api as party_api
+
+    async def fake_fetch(platform, url, limit=9):
+        if platform != "youtube":
+            return {"success": False, "platform": platform, "posts": [], "detail": "Add RAPIDAPI_KEY on the server to fetch posts from this platform."}
+        return {
+            "success": True,
+            "platform": "youtube",
+            "posts": [{
+                "platform": "youtube",
+                "url": "https://www.youtube.com/watch?v=abc12345678",
+                "text": "Health camp",
+                "publishedAt": _iso(1),
+                "thumbnailUrl": "https://i.ytimg.com/vi/abc12345678/hqdefault.jpg",
+                "views": 42,
+                "likes": None,
+                "comments": None,
+                "shares": None,
+                "externalId": "abc12345678",
+            }],
+        }
+
+    monkeypatch.setattr(party_api, "fetch_recent_posts", fake_fetch)
+    first = _call(routes, "POST", "/party/{party_id}/posts/refresh", party_id="TDP", userId=TDP_PRES["id"], payload={"wait": True, "force": True})
+    assert first["status"] == "DONE" and first["saved"] >= 1
+    assert any("RAPIDAPI_KEY" in note for note in first["notes"])
+    second = _call(routes, "POST", "/party/{party_id}/posts/refresh", party_id="TDP", userId=TDP_PRES["id"], payload={"wait": True, "force": True})
+    assert second["saved"] == 0 and second["updated"] >= 1
+    members = _call(routes, "GET", "/party/{party_id}/members", party_id="TDP", userId=TDP_PRES["id"])["items"]
+    posted = [m for m in members if m["lastPostAt"]]
+    assert posted and all(m["postsEstimated"] is False for m in posted)
+    person = posted[0]["id"]
+    detail = _call(routes, "GET", "/party/{party_id}/members/{person_id}", party_id="TDP", person_id=person, userId=TDP_PRES["id"])
+    saved = detail["posts"][0]
+    assert saved["thumbnailUrl"].endswith("hqdefault.jpg") and saved["views"] == 42 and saved["text"] == "Health camp"
+
+
+def test_remind_and_team_are_party_scoped(routes):
+    gaps = _call(routes, "GET", "/party/{party_id}/gaps", party_id="TDP", userId=TDP_PRES["id"])
+    group = next(g for g in gaps["groups"] if g["members"])
+    person = group["members"][0]["id"]
+    saved = _call(routes, "POST", "/party/{party_id}/reminders", party_id="TDP", userId=TDP_PRES["id"], payload={"personId": person, "gapType": group["type"]})
+    assert saved["gapType"] == group["type"] and not saved.get("already")
+    again = _call(routes, "POST", "/party/{party_id}/reminders", party_id="TDP", userId=TDP_PRES["id"], payload={"personId": person, "gapType": group["type"]})
+    assert again.get("already") is True
+    refreshed = _call(routes, "GET", "/party/{party_id}/gaps", party_id="TDP", userId=TDP_PRES["id"])
+    row = next(m for g in refreshed["groups"] if g["type"] == group["type"] for m in g["members"] if m["id"] == person)
+    assert row["remindedBy"] == "TDP President" and row["remindedAt"]
+    team = _call(routes, "GET", "/party/{party_id}/team", party_id="TDP", userId=TDP_PRES["id"])["items"]
+    assert any(item["name"] == "TDP President" for item in team)
+    assert all(item["role"] in {"PARTY_PRESIDENT", "PARTY_ANALYST"} for item in team)
+    assert not any(item["name"] == "YSRCP President" for item in team)

@@ -76,6 +76,8 @@ MEMORY: Dict[str, Any] = {
     "party_gap_rules": {},
     "party_pending_tasks": {},
     "party_audit_log": [],
+    "party_reminders": {},
+    "party_post_sync": {},
 }
 
 

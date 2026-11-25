@@ -215,6 +215,7 @@ def member_summary(
     rules: Dict[str, Any],
     geo_names: Optional[Dict[str, str]] = None,
     now: Optional[datetime] = None,
+    window_days: int = 7,
 ) -> Dict[str, Any]:
     now = now or datetime.now(timezone.utc)
     geo_names = geo_names or {}
@@ -261,14 +262,34 @@ def member_summary(
         reverse=True,
     )
     last_post_at = member_posts[0].get("publishedAt") if member_posts else None
-    week_ago = now - timedelta(days=7)
+    monthly = sum(int(float(a.get("postsLast30Days") or 0)) for a in live_accounts)
+
+    def _count_since(days: int) -> int:
+        if days <= 0:
+            return len(member_posts)
+        start = now - timedelta(days=days)
+        return sum(1 for p in member_posts if (parse_iso(p.get("publishedAt")) or datetime.min.replace(tzinfo=timezone.utc)) >= start)
+
     if member_posts:
-        posts_this_week = sum(1 for p in member_posts if (parse_iso(p.get("publishedAt")) or datetime.min.replace(tzinfo=timezone.utc)) >= week_ago)
+        posts_this_week = _count_since(7)
         posts_estimated = False
     else:
-        monthly = sum(int(float(a.get("postsLast30Days") or 0)) for a in live_accounts)
         posts_this_week = int(round(monthly * 7 / 30.0))
         posts_estimated = monthly > 0
+
+    try:
+        window_days = int(window_days)
+    except (TypeError, ValueError):
+        window_days = 7
+    if member_posts:
+        posts_in_window = _count_since(window_days)
+        posts_in_window_estimated = False
+    elif window_days <= 0 or window_days >= 30:
+        posts_in_window = monthly
+        posts_in_window_estimated = monthly > 0
+    else:
+        posts_in_window = int(round(monthly * window_days / 30.0))
+        posts_in_window_estimated = monthly > 0
 
     last_post_age = _age_days(last_post_at, now)
     inactive = (last_post_age is not None and last_post_age > rules["inactiveDays"]) or (last_post_at is None and posts_this_week == 0)
@@ -354,6 +375,9 @@ def member_summary(
         "lastPostAt": last_post_at,
         "postsThisWeek": posts_this_week,
         "postsEstimated": posts_estimated,
+        "postsInWindow": posts_in_window,
+        "postsInWindowEstimated": posts_in_window_estimated,
+        "windowDays": window_days,
         "lastDataAt": last_data_at,
         "lastResearchAt": last_research_at,
         "completeness": completeness,
@@ -376,7 +400,10 @@ def overview_from_members(members: List[Dict[str, Any]], *, limit: int = 5) -> D
                 pending += 1
 
     def activity_key(member: Dict[str, Any]):
-        return (member.get("postsThisWeek") or 0, member.get("engagementPercent") or 0.0, member.get("followersTotal") or 0.0)
+        posts = member.get("postsInWindow")
+        if posts is None:
+            posts = member.get("postsThisWeek") or 0
+        return (posts or 0, member.get("engagementPercent") or 0.0, member.get("followersTotal") or 0.0)
 
     ranked = sorted(members, key=activity_key, reverse=True)
     most = ranked[:limit]
@@ -391,7 +418,9 @@ def overview_from_members(members: List[Dict[str, Any]], *, limit: int = 5) -> D
             "assemblyConstituencyName": member.get("assemblyConstituencyName") or member.get("assemblyConstituencyId"),
             "photoUrl": member.get("photoUrl"),
             "postsThisWeek": member.get("postsThisWeek"),
-            "postsEstimated": member.get("postsEstimated"),
+            "postsInWindow": member.get("postsInWindow", member.get("postsThisWeek")),
+            "postsEstimated": member.get("postsInWindowEstimated", member.get("postsEstimated")),
+            "windowDays": member.get("windowDays", 7),
             "engagementPercent": member.get("engagementPercent"),
         }
 
@@ -565,7 +594,7 @@ def members_csv(members: List[Dict[str, Any]]) -> str:
     writer = csv.writer(buf)
     header = ["Name", "Roles", "District", "Constituency", "Email", "Phone"]
     header += [PLATFORM_LABELS[p] for p in PLATFORMS]
-    header += ["Last post", "Posts this week", "Engagement %", "Followers", "Profile %", "Gaps"]
+    header += ["Last post", "Posts this week", "Engagement %", "Followers", "Profile %", "Gaps", "Posts in window"]
     writer.writerow(header)
     for m in members:
         row = [
@@ -584,6 +613,7 @@ def members_csv(members: List[Dict[str, Any]]) -> str:
             int(m.get("followersTotal") or 0),
             m.get("completeness") or 0,
             "; ".join(g["detail"] for g in m.get("gaps") or []),
+            m.get("postsInWindow") if m.get("postsInWindow") is not None else "",
         ]
         writer.writerow(row)
     return buf.getvalue()

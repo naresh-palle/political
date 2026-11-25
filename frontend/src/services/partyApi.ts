@@ -70,7 +70,10 @@ export interface PartyMember {
   engagementPercent: number | null;
   lastPostAt: string | null;
   postsThisWeek: number;
+  postsInWindow?: number;
   postsEstimated: boolean;
+  postsInWindowEstimated?: boolean;
+  windowDays?: number;
   lastDataAt: string | null;
   lastResearchAt: string | null;
   completeness: number;
@@ -88,7 +91,9 @@ export interface MemberBrief {
   assemblyConstituencyName: string;
   photoUrl: string;
   postsThisWeek: number;
+  postsInWindow?: number;
   postsEstimated: boolean;
+  windowDays?: number;
   engagementPercent: number | null;
 }
 
@@ -104,6 +109,7 @@ export interface PartyFilters {
 export interface PartyOverview {
   party: PartyRef & Record<string, any>;
   rules: GapRules;
+  windowDays?: number;
   totals: {
     members: number;
     verifiedAccounts: number;
@@ -145,8 +151,28 @@ export interface SocialPost {
   comments?: number | null;
   shares?: number | null;
   views?: number | null;
+  thumbnailUrl?: string | null;
   calendarId?: string | null;
   createdByName?: string;
+}
+
+export interface RefreshJob {
+  status: "RUNNING" | "DONE" | "SKIPPED" | "IDLE";
+  total?: number;
+  done?: number;
+  saved?: number;
+  updated?: number;
+  failed?: number;
+  notes?: string[];
+  lastRunAt?: string | null;
+  detail?: string;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  roleTitle: string;
 }
 
 export interface PendingItem {
@@ -208,9 +234,11 @@ export interface GapGroup {
     roles: string[];
     assemblyConstituencyName: string;
     districtName: string;
-    photoUrl: string;
-    detail: string;
-  }[];
+  photoUrl: string;
+  detail: string;
+  remindedAt?: string | null;
+  remindedBy?: string | null;
+}[];
 }
 
 export interface CalendarItem {
@@ -268,11 +296,11 @@ export const partyApi = {
   meta(userId: string): Promise<PartyMeta> {
     return politicalApiService.piRequest("/party/meta", userId, {}, 20000);
   },
-  overview(userId: string, partyId: string, filters: PartyFilters = {}): Promise<PartyOverview> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/overview${query(filters)}`, userId, {}, 30000);
+  overview(userId: string, partyId: string, filters: PartyFilters = {}, windowDays = 7): Promise<PartyOverview> {
+    return politicalApiService.piRequest(`/party/${enc(partyId)}/overview${query(filters, { windowDays: String(windowDays) })}`, userId, {}, 30000);
   },
-  members(userId: string, partyId: string, filters: PartyFilters = {}): Promise<{ total: number; items: PartyMember[] }> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/members${query(filters)}`, userId, {}, 30000);
+  members(userId: string, partyId: string, filters: PartyFilters = {}, windowDays = 7): Promise<{ total: number; windowDays?: number; items: PartyMember[] }> {
+    return politicalApiService.piRequest(`/party/${enc(partyId)}/members${query(filters, { windowDays: String(windowDays) })}`, userId, {}, 30000);
   },
   exportMembers(userId: string, partyId: string, filters: PartyFilters = {}): Promise<void> {
     const stamp = new Date().toISOString().slice(0, 10);
@@ -351,5 +379,17 @@ export const partyApi = {
   },
   updateAdmin(userId: string, adminId: string, payload: Record<string, unknown>): Promise<PartyAdminRecord> {
     return politicalApiService.piRequest(`/party/admins/${enc(adminId)}`, userId, send("PATCH", payload), 20000);
+  },
+  team(userId: string, partyId: string): Promise<{ items: TeamMember[] }> {
+    return politicalApiService.piRequest(`/party/${enc(partyId)}/team`, userId, {}, 20000);
+  },
+  remind(userId: string, partyId: string, personId: string, gapType: string) {
+    return politicalApiService.piRequest(`/party/${enc(partyId)}/reminders`, userId, send("POST", { personId, gapType }), 20000);
+  },
+  refreshStatus(userId: string, partyId: string): Promise<RefreshJob> {
+    return politicalApiService.piRequest(`/party/${enc(partyId)}/posts/refresh`, userId, {}, 20000);
+  },
+  refreshPosts(userId: string, partyId: string, payload: { personId?: string; force?: boolean; wait?: boolean } = {}): Promise<RefreshJob> {
+    return politicalApiService.piRequest(`/party/${enc(partyId)}/posts/refresh`, userId, send("POST", payload), payload.wait ? 120000 : 20000);
   }
 };

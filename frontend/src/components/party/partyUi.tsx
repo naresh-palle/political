@@ -197,6 +197,45 @@ export const GapChip: React.FC<{ type: string }> = ({ type }) => (
   </span>
 );
 
+export const WINDOW_OPTIONS = [
+  { id: "7", label: "Last 7 days" },
+  { id: "30", label: "Last 30 days" },
+  { id: "0", label: "All posts" }
+];
+
+export function postsLabel(windowDays?: number): string {
+  if (windowDays === 30) return "Posts / 30 days";
+  if (windowDays === 0) return "Posts";
+  return "Posts / week";
+}
+
+export const CompletenessRing: React.FC<{ value: number; size?: number }> = ({ value, size = 76 }) => {
+  const pct = Math.max(0, Math.min(100, value || 0));
+  const radius = 28;
+  const circ = 2 * Math.PI * radius;
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }} aria-label={`Profile ${Math.round(pct)}%`}>
+      <svg viewBox="0 0 72 72" className="w-full h-full -rotate-90">
+        <circle cx="36" cy="36" r={radius} fill="none" stroke="#2A2418" strokeWidth="6" />
+        <circle
+          cx="36"
+          cy="36"
+          r={radius}
+          fill="none"
+          stroke="#C99436"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={`${(circ * pct) / 100} ${circ}`}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[8px] uppercase tracking-wide text-[#B9AF95]">Profile</span>
+        <span className="text-sm font-bold text-[#F9E29C] leading-none">{Math.round(pct)}%</span>
+      </div>
+    </div>
+  );
+};
+
 export const CompletenessBar: React.FC<{ value: number }> = ({ value }) => {
   const tone = value >= 80 ? "from-emerald-400 to-emerald-300" : value >= 50 ? "from-[#C99436] to-[#F9E29C]" : "from-rose-500 to-rose-300";
   return (

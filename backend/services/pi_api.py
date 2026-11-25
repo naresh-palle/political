@@ -168,6 +168,8 @@ COLLECTIONS = {
     "party_gap_rules": "party_gap_rules",
     "party_pending_tasks": "party_pending_tasks",
     "party_audit_log": "party_audit_log",
+    "party_reminders": "party_reminders",
+    "party_post_sync": "party_post_sync",
 }
 
 PI_RUNTIME_PATH = Path(__file__).resolve().parents[1] / "data" / ".runtime_pi_store.json"

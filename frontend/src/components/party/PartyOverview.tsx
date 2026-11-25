@@ -2,14 +2,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import { partyApi, type MemberBrief, type PartyFilters, type PartyOverview as Overview } from "../../services/partyApi";
 import type { PartyScreenProps, PartyTab } from "./PartyCommandCenter";
 import { PartyFilterBar } from "./PartyFilterBar";
-import { Avatar, Card, ErrorBanner, Kpi, Loading, SectionTitle, roleText } from "./partyUi";
+import { Avatar, Card, ErrorBanner, Kpi, Loading, SectionTitle, WINDOW_OPTIONS, postsLabel, roleText } from "./partyUi";
 
 interface Props extends PartyScreenProps {
   onShowMembers: (filters: PartyFilters) => void;
   onShowTab: (tab: PartyTab) => void;
 }
 
-const ActivityList: React.FC<{ title: string; rows: MemberBrief[]; onOpen: (id: string) => void; testId: string }> = ({ title, rows, onOpen, testId }) => (
+const ActivityList: React.FC<{ title: string; rows: MemberBrief[]; onOpen: (id: string) => void; testId: string; windowDays: number }> = ({ title, rows, onOpen, testId, windowDays }) => (
   <Card testId={testId}>
     <h3 className="text-sm font-bold text-[#F9E29C] mb-2">{title}</h3>
     {rows.length === 0 ? (
@@ -33,8 +33,8 @@ const ActivityList: React.FC<{ title: string; rows: MemberBrief[]; onOpen: (id: 
               </span>
               <span className="text-right shrink-0">
                 <span className="block text-xs font-bold text-[#F9E29C]">
-                  {m.postsThisWeek}
-                  {m.postsEstimated ? "*" : ""} posts/wk
+                  {m.postsInWindow ?? m.postsThisWeek}
+                  {m.postsEstimated ? "*" : ""} {postsLabel(windowDays).toLowerCase()}
                 </span>
                 <span className="block text-[10px] text-[#B9AF95]">
                   {m.engagementPercent === null || m.engagementPercent === undefined ? "—" : `${m.engagementPercent}%`} engagement
@@ -48,7 +48,7 @@ const ActivityList: React.FC<{ title: string; rows: MemberBrief[]; onOpen: (id: 
   </Card>
 );
 
-export const PartyOverview: React.FC<Props> = ({ userId, partyId, onOpenMember, onShowMembers, onShowTab }) => {
+export const PartyOverview: React.FC<Props> = ({ userId, partyId, windowDays, onWindowDays, refreshTick, onOpenMember, onShowMembers, onShowTab }) => {
   const [filters, setFilters] = useState<PartyFilters>({});
   const [options, setOptions] = useState<Overview["filters"] | null>(null);
   const [data, setData] = useState<Overview | null>(null);
@@ -59,7 +59,7 @@ export const PartyOverview: React.FC<Props> = ({ userId, partyId, onOpenMember, 
     setLoading(true);
     setError("");
     try {
-      const res = await partyApi.overview(userId, partyId, filters);
+      const res = await partyApi.overview(userId, partyId, filters, windowDays);
       setData(res);
       setOptions((prev) => (Object.values(filters).some(Boolean) && prev ? prev : res.filters));
     } catch (e: any) {
@@ -67,7 +67,7 @@ export const PartyOverview: React.FC<Props> = ({ userId, partyId, onOpenMember, 
     } finally {
       setLoading(false);
     }
-  }, [userId, partyId, filters]);
+  }, [userId, partyId, filters, windowDays, refreshTick]);
 
   useEffect(() => {
     load();
@@ -82,6 +82,22 @@ export const PartyOverview: React.FC<Props> = ({ userId, partyId, onOpenMember, 
         title="Overview"
         subtitle={data ? `${data.party?.name || partyId} · inactive after ${data.rules.inactiveDays} days · weekly target ${data.rules.weeklyPostTarget} posts` : undefined}
       />
+      <div className="mb-3">
+        <div data-testid="party-window" className="flex flex-wrap gap-1">
+          {WINDOW_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onWindowDays(Number(option.id))}
+              className={`rounded-full border px-3 py-1 text-[11px] font-semibold cursor-pointer ${
+                String(windowDays) === option.id ? "border-[#C99436] bg-[#C99436] text-[#050B12]" : "border-[#C99436]/40 text-[#F5EFE0]"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <PartyFilterBar filters={filters} options={options} onChange={setFilters} />
       <ErrorBanner message={error} onRetry={load} />
       {loading && !data ? (
@@ -102,8 +118,8 @@ export const PartyOverview: React.FC<Props> = ({ userId, partyId, onOpenMember, 
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <ActivityList testId="most-active" title="Most active" rows={data!.mostActive} onOpen={onOpenMember} />
-            <ActivityList testId="least-active" title="Least active" rows={data!.leastActive} onOpen={onOpenMember} />
+            <ActivityList testId="most-active" title="Most active" rows={data!.mostActive} onOpen={onOpenMember} windowDays={windowDays} />
+            <ActivityList testId="least-active" title="Least active" rows={data!.leastActive} onOpen={onOpenMember} windowDays={windowDays} />
           </div>
           <p className="mt-2 text-[10px] text-[#8A8E9B]">* Estimated from the last 30 days of collected data when no posts are logged this week.</p>
         </>

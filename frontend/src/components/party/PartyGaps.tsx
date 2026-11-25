@@ -3,7 +3,7 @@ import { ChevronDown, Download } from "lucide-react";
 import { partyApi, type GapGroup, type GapRules, type PartyFilters, type PartyOverview } from "../../services/partyApi";
 import type { PartyScreenProps } from "./PartyCommandCenter";
 import { PartyFilterBar } from "./PartyFilterBar";
-import { Avatar, Btn, Card, ErrorBanner, Loading, SectionTitle, roleText } from "./partyUi";
+import { Avatar, Btn, Card, ErrorBanner, Loading, SectionTitle, formatDate, roleText } from "./partyUi";
 
 export const PartyGaps: React.FC<PartyScreenProps> = ({ userId, partyId, meta, onOpenMember }) => {
   const [filters, setFilters] = useState<PartyFilters>({});
@@ -15,6 +15,7 @@ export const PartyGaps: React.FC<PartyScreenProps> = ({ userId, partyId, meta, o
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
+  const [reminding, setReminding] = useState("");
 
   useEffect(() => {
     partyApi
@@ -103,21 +104,41 @@ export const PartyGaps: React.FC<PartyScreenProps> = ({ userId, partyId, meta, o
                       <ul className="space-y-1.5">
                         {g.members.map((m) => (
                           <li key={m.id}>
-                            <button
-                              type="button"
-                              onClick={() => onOpenMember(m.id)}
-                              className="w-full flex items-start gap-2 rounded-xl bg-[#050B12] px-2 py-2 text-left hover:bg-[#0C1524]"
-                            >
+                            <div className="w-full flex items-start gap-2 rounded-xl bg-[#050B12] px-2 py-2">
                               <Avatar name={m.name} url={m.photoUrl} size={30} />
-                              <span className="min-w-0 flex-1">
+                              <button type="button" onClick={() => onOpenMember(m.id)} className="min-w-0 flex-1 text-left">
                                 <span className="block text-xs font-bold text-[#F5EFE0] break-words">{m.name}</span>
                                 <span className="block text-[10px] text-[#B9AF95] break-words">
                                   {roleText(m.roles) || "—"} · {m.assemblyConstituencyName || "—"}
                                   {m.districtName ? ` · ${m.districtName}` : ""}
                                 </span>
                                 <span className="block text-[11px] text-rose-200 break-words">{m.detail}</span>
-                              </span>
-                            </button>
+                                {m.remindedAt && (
+                                  <span className="block text-[10px] text-[#D4A24C]">Reminded {formatDate(m.remindedAt)} by {m.remindedBy || "the team"}</span>
+                                )}
+                              </button>
+                              {meta.capabilities.edit && (
+                                <Btn
+                                  className="shrink-0"
+                                  busy={reminding === `${g.type}:${m.id}`}
+                                  onClick={async (event) => {
+                                    event.stopPropagation();
+                                    setReminding(`${g.type}:${m.id}`);
+                                    setError("");
+                                    try {
+                                      await partyApi.remind(userId, partyId, m.id, g.type);
+                                      await load();
+                                    } catch (e: any) {
+                                      setError(e?.message || "Could not save the reminder.");
+                                    } finally {
+                                      setReminding("");
+                                    }
+                                  }}
+                                >
+                                  Remind
+                                </Btn>
+                              )}
+                            </div>
                           </li>
                         ))}
                       </ul>

@@ -3631,6 +3631,8 @@ async def ensure_mongodb_indexes():
             "party_content_calendar",
             "party_gap_rules",
             "party_pending_tasks",
+            "party_reminders",
+            "party_post_sync",
         ):
             await db[party_collection].create_index("id", unique=True, background=True)
             await db[party_collection].create_index("partyId", background=True)

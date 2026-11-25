@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, Plus, Save, Trash2 } from "lucide-react";
 import { partyApi, type CalendarItem, type MemberDetail, type PartyPlatform } from "../../services/partyApi";
-import type { PartyScreenProps } from "./PartyCommandCenter";
+import { usePartyRefresh, type PartyScreenProps } from "./PartyCommandCenter";
 import { PendingRow } from "./PartyPending";
 import {
   Avatar,
   Btn,
   Card,
   CompletenessBar,
+  CompletenessRing,
   Empty,
   ErrorBanner,
   GAP_LABELS,
@@ -49,7 +50,9 @@ const ACTION_LABELS: Record<string, string> = {
   PARTY_MEMBERS_EXPORT: "Exported members",
   PARTY_GAPS_EXPORT: "Exported gaps report",
   PARTY_ADMIN_CREATE: "Created party account",
-  PARTY_ADMIN_UPDATE: "Updated party account"
+  PARTY_ADMIN_UPDATE: "Updated party account",
+  PARTY_REMIND: "Sent a reminder",
+  PARTY_POSTS_FETCH: "Fetched latest posts"
 };
 
 export const actionLabel = (action: string) => ACTION_LABELS[action] || action.replace(/_/g, " ").toLowerCase();
@@ -60,8 +63,9 @@ const splitList = (value: string) =>
     .map((v) => v.trim())
     .filter(Boolean);
 
-export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, personId, onBack }) => {
+export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, refreshTick, personId, onBack }) => {
   const caps = meta.capabilities;
+  const refresh = usePartyRefresh();
   const [data, setData] = useState<MemberDetail | null>(null);
   const [calendar, setCalendar] = useState<CalendarItem[]>([]);
   const [tab, setTab] = useState<ProfileTab>("details");
@@ -84,31 +88,39 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
     calendarId: ""
   });
 
-  const load = useCallback(async () => {
+  const applyContact = (res: { details: { email?: string; phone?: string; alternateContact?: string; address?: string; photoUrl?: string; consent?: boolean } }) => {
+    setContact({
+      email: res.details.email || "",
+      phone: res.details.phone || "",
+      alternateContact: res.details.alternateContact || "",
+      address: res.details.address || "",
+      photoUrl: res.details.photoUrl || "",
+      consent: !!res.details.consent
+    });
+  };
+
+  const load = useCallback(async (syncForm: boolean) => {
     setError("");
     try {
       const res = await partyApi.member(userId, partyId, personId);
       setData(res);
-      setContact({
-        email: res.details.email || "",
-        phone: res.details.phone || "",
-        alternateContact: res.details.alternateContact || "",
-        address: res.details.address || "",
-        photoUrl: res.details.photoUrl || "",
-        consent: !!res.details.consent
-      });
+      if (syncForm) applyContact(res);
     } catch (e: any) {
       setError(e?.message || "Could not load this member.");
     }
   }, [userId, partyId, personId]);
 
   useEffect(() => {
-    load();
+    load(true);
     partyApi
       .calendar(userId, partyId)
       .then((c) => setCalendar(c.items.filter((i) => i.status !== "CANCELLED")))
       .catch(() => setCalendar([]));
   }, [load, userId, partyId]);
+
+  useEffect(() => {
+    if (refreshTick) load(false);
+  }, [refreshTick, load]);
 
   const run = async (key: string, fn: () => Promise<unknown>, success: string) => {
     setBusy(key);
@@ -116,7 +128,7 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
     setNotice("");
     try {
       await fn();
-      await load();
+      await load(true);
       setNotice(success);
       return true;
     } catch (e: any) {
@@ -133,7 +145,7 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
         <Btn onClick={onBack} className="mb-3">
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </Btn>
-        <ErrorBanner message={error} onRetry={load} />
+        <ErrorBanner message={error} onRetry={() => load(true)} />
         {!error && <Loading label="Loading member…" />}
       </div>
     );
@@ -160,13 +172,21 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
         <div className="flex flex-wrap items-start gap-3">
           <Avatar name={m.name} url={m.photoUrl} size={64} />
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-xl text-[#F9E29C] break-words">{m.name}</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-display text-xl text-[#F9E29C] break-words">{m.name}</h2>
+              {m.roles[0] && (
+                <span className="rounded-full border border-[#C99436]/50 px-2 py-0.5 text-[10px] font-bold uppercase text-[#F9E29C]">
+                  {roleText([m.roles[0]])}
+                </span>
+              )}
+            </div>
             <div className="text-xs text-[#D4A24C]">{roleText(m.roles) || "—"}</div>
             <div className="text-xs text-[#B9AF95]">
               {m.assemblyConstituencyName || "—"}
               {m.districtName ? ` · ${m.districtName}` : ""} · Record {m.verificationStatus.toLowerCase()}
             </div>
           </div>
+          <CompletenessRing value={m.completeness} />
         </div>
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {PLATFORMS.map((p) => {
@@ -403,6 +423,14 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
       {tab === "posts" && (
         <div className="space-y-3" data-testid="member-posts">
           {caps.edit && (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-[#B9AF95]">Latest posts are fetched from the accounts saved by SM A. YouTube works now. Instagram, X and Facebook start when a RapidAPI key is on the server.</p>
+              <Btn variant="gold" data-testid="fetch-member-posts" onClick={() => refresh?.start({ personId, force: true })}>
+                Fetch this member
+              </Btn>
+            </div>
+          )}
+          {caps.edit && (
             <Card>
               <h3 className="text-sm font-bold text-[#F9E29C] mb-2">Log a post</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -503,15 +531,21 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
           ) : (
             posts.map((p) => (
               <Card key={p.id} testId="post-row">
-                <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  {p.thumbnailUrl && (
+                    <a href={p.url} target="_blank" rel="noreferrer" className="shrink-0">
+                      <img src={p.thumbnailUrl} alt="" className="w-36 h-24 rounded-lg object-cover border border-[#C99436]/30 bg-[#050B12]" />
+                    </a>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-[#F9E29C]">
                       {PLATFORM_LABELS[p.platform]} · {formatDate(p.publishedAt, true)}
                     </div>
                     {p.text && <p className="mt-1 text-xs text-[#E6DCC4] break-words">{p.text}</p>}
-                    <a href={p.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#D4A24C] underline break-all">
-                      <ExternalLink className="w-3 h-3 shrink-0" /> {p.url}
+                    <a href={p.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#F9E29C] underline">
+                      <ExternalLink className="w-3 h-3 shrink-0" /> Open post
                     </a>
+                    <div className="text-[10px] text-[#8A8E9B] break-all">{p.url}</div>
                   </div>
                   {caps.edit && (
                     <Btn
@@ -552,7 +586,7 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
             <Empty message="Nothing pending for this member." />
           ) : (
             data.pending.map((item) => (
-              <PendingRow key={item.id} item={item} userId={userId} partyId={partyId} canEdit={caps.edit} onChanged={load} showMember={false} />
+              <PendingRow key={item.id} item={item} userId={userId} partyId={partyId} canEdit={caps.edit} onChanged={() => load(true)} showMember={false} />
             ))
           )}
         </div>
