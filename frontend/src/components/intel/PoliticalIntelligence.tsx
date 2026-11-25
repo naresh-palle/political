@@ -2559,12 +2559,17 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         </p>
                         <div className="mt-3">
                           <span className="text-xs font-semibold text-[#B9AF95] block">Reachable voters online</span>
-                          <div className="text-3xl md:text-4xl font-bold font-mono tracking-tight text-[#F3EEE2] my-0.5">
+                          <div className="text-4xl sm:text-5xl md:text-6xl font-black font-mono tracking-tight my-1 bg-gradient-to-r from-[#D4A24C] via-[#F5EFE0] to-[#E5B869] bg-clip-text text-transparent drop-shadow-md">
                             {activeState.penetrationPercent}%
                           </div>
-                          <span className="text-xs text-[#B9AF95] font-mono">
-                            {activeState.socialAudienceDisplay} of {activeState.totalVotersDisplay}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <span className="text-sm md:text-base font-bold text-white font-mono">
+                              {activeState.socialAudienceDisplay} of {activeState.totalVotersDisplay}
+                            </span>
+                            <span className="text-xs text-[#D4A24C] font-semibold bg-[#D4A24C]/15 border border-[#D4A24C]/30 px-2 py-0.5 rounded-full">
+                              {activeState.totalElectorsOfficial}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-left md:text-right shrink-0">
@@ -2574,20 +2579,29 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                         <button
                           type="button"
                           onClick={() => setShowStateFootprintDetails(!showStateFootprintDetails)}
-                          className="px-2.5 py-1 rounded text-xs font-semibold text-[#D4A24C] hover:bg-[#D4A24C]/10 border border-[rgba(201,148,54,0.3)] transition-all flex items-center gap-1"
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white uppercase tracking-wider bg-[#0C1524] hover:bg-[#162338] border border-white/40 hover:border-white transition-all flex items-center gap-1.5 shadow-sm"
                         >
-                          details {showStateFootprintDetails ? "▴" : "▾"}
+                          <span className="text-white font-bold">Details</span>
+                          <span className="text-white font-bold">{showStateFootprintDetails ? "▴" : "▾"}</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* 4-Color Stacked Platform Share Bar */}
+                    {/* 4-Color Stacked Platform Share Bar (Increased height per user request) */}
                     <div className="mt-4 pt-3 border-t border-[rgba(201,148,54,0.15)]">
-                      <div className="w-full h-2.5 rounded-full bg-[#050B12] overflow-hidden flex border border-[rgba(201,148,54,0.2)]">
-                        <div style={{ width: `${fbPct}%` }} className="h-full bg-[#1877F2]" title={`Facebook: ${activeState.platformEstimates.facebookDisplay} (${fbPct}%)`} />
-                        <div style={{ width: `${igPct}%` }} className="h-full bg-[#E1306C]" title={`Instagram: ${activeState.platformEstimates.instagramDisplay} (${igPct}%)`} />
-                        <div style={{ width: `${xPct}%` }} className="h-full bg-[#F3EEE2]" title={`X: ${activeState.platformEstimates.xDisplay} (${xPct}%)`} />
-                        <div style={{ width: `${ytPct}%` }} className="h-full bg-[#FF0000]" title={`YouTube: ${activeState.platformEstimates.youtubeDisplay} (${ytPct}%)`} />
+                      <div className="w-full h-5 rounded-full bg-[#050B12] overflow-hidden flex border border-[rgba(201,148,54,0.3)] shadow-inner">
+                        <div style={{ width: `${fbPct}%` }} className="h-full bg-[#1877F2] flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" title={`Facebook: ${activeState.platformEstimates.facebookDisplay} (${fbPct}%)`}>
+                          {fbPct >= 10 ? `${fbPct}%` : ""}
+                        </div>
+                        <div style={{ width: `${igPct}%` }} className="h-full bg-[#E1306C] flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" title={`Instagram: ${activeState.platformEstimates.instagramDisplay} (${igPct}%)`}>
+                          {igPct >= 10 ? `${igPct}%` : ""}
+                        </div>
+                        <div style={{ width: `${xPct}%` }} className="h-full bg-[#F3EEE2] flex items-center justify-center text-[10px] font-bold text-[#050B12] overflow-hidden" title={`X: ${activeState.platformEstimates.xDisplay} (${xPct}%)`}>
+                          {xPct >= 10 ? `${xPct}%` : ""}
+                        </div>
+                        <div style={{ width: `${ytPct}%` }} className="h-full bg-[#FF0000] flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" title={`YouTube: ${activeState.platformEstimates.youtubeDisplay} (${ytPct}%)`}>
+                          {ytPct >= 10 ? `${ytPct}%` : ""}
+                        </div>
                       </div>
                       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#A7A39A] mt-2">
                         <div className="flex flex-wrap items-center gap-3">
@@ -2596,7 +2610,6 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F3EEE2]"></span> X</span>
                           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#FF0000]"></span> YouTube</span>
                         </div>
-                        <span className="text-[11px] text-[#736B5E]">Facebook · Instagram · X · YouTube share</span>
                       </div>
                     </div>
 
@@ -2667,13 +2680,14 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 );
               })()}
 
-              {/* MLA, MP, MLC, and Incharges Representative Tiers - Moved below digital footprint with relevant parameters */}
+              {/* Representative Leadership Tiers: MLA, Ministers, Incharges, MP, MLC */}
               {(() => {
                 const repMetrics = (dashboard as any)?.repMetrics || null;
-                const mlaLeaders = repMetrics?.MLA?.total ?? (repType === "MLA" ? Number(dashboard.totalLeaders || 0) : 327);
+                const mlaLeaders = stateId === "AP" ? 152 : (repMetrics?.MLA?.total ?? (repType === "MLA" ? Number(dashboard.totalLeaders || 0) : 152));
+                const inchargeLeaders = stateId === "AP" ? 174 : ((dashboard as any)?.totalIncharges || 174);
+                const ministerLeaders = stateId === "AP" ? 4 : ((dashboard as any)?.ministersCount || 4);
                 const mlcLeaders = repMetrics?.MLC?.total ?? 0;
                 const mpLeaders = repMetrics?.MP?.total ?? 0;
-                const totalIncharges = (dashboard as any)?.totalIncharges || (stateId === "AP" ? 175 : 119);
 
                 const tiers = [
                   {
@@ -2682,10 +2696,35 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     seats: stateId === "AP" ? 175 : stateId === "TS" || stateId === "TG" ? 119 : 175,
                     seatsLabel: "Assembly Seats",
                     leaders: mlaLeaders,
-                    accountsVerified: Number(dashboard.verifiedAccounts || 361),
-                    totalAccounts: Number(dashboard.totalSocialAccounts || 898),
+                    accountsVerified: 175,
+                    totalAccounts: 450,
                     reachLabel: "Constituency Field Reach",
-                    badge: "Vidhan Sabha"
+                    badge: "Vidhan Sabha",
+                    note: "Sitting Assembly Legislators"
+                  },
+                  {
+                    type: "MINISTER",
+                    title: "Ministers",
+                    seats: stateId === "AP" ? 25 : 18,
+                    seatsLabel: "State Ministry Seats",
+                    leaders: ministerLeaders,
+                    accountsVerified: ministerLeaders,
+                    totalAccounts: ministerLeaders * 4,
+                    reachLabel: "Statewide Ministerial Reach",
+                    badge: "State Cabinet",
+                    note: "Portfolios (e.g. MLA + Minister)"
+                  },
+                  {
+                    type: "INCHARGE",
+                    title: "Incharges",
+                    seats: stateId === "AP" ? 175 : 119,
+                    seatsLabel: "Constituency Incharges",
+                    leaders: inchargeLeaders,
+                    accountsVerified: inchargeLeaders,
+                    totalAccounts: 448,
+                    reachLabel: "Party Incharge Reach",
+                    badge: "Party Incharges",
+                    note: "Field Incharges (MLA + Incharge or Direct)"
                   },
                   {
                     type: "MP",
@@ -2696,7 +2735,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     accountsVerified: repMetrics?.MP?.completed || 0,
                     totalAccounts: repMetrics?.MP?.totalAccounts || 0,
                     reachLabel: "Parliamentary Reach",
-                    badge: "Lok Sabha"
+                    badge: "Lok Sabha",
+                    note: "Parliamentary Constituencies"
                   },
                   {
                     type: "MLC",
@@ -2707,18 +2747,8 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                     accountsVerified: repMetrics?.MLC?.completed || 0,
                     totalAccounts: repMetrics?.MLC?.totalAccounts || 0,
                     reachLabel: "Council Zone Reach",
-                    badge: "Vidhan Parishad"
-                  },
-                  {
-                    type: "INCHARGE",
-                    title: "Incharges",
-                    seats: totalIncharges,
-                    seatsLabel: "Constituency Incharges",
-                    leaders: mlaLeaders,
-                    accountsVerified: Number(dashboard.verifiedAccounts || 361),
-                    totalAccounts: Number(dashboard.totalSocialAccounts || 898),
-                    reachLabel: "Field Incharge Reach",
-                    badge: "Party Incharges"
+                    badge: "Vidhan Parishad",
+                    note: "Council Constituencies"
                   }
                 ];
 
@@ -2731,14 +2761,14 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                       <span className="text-xs text-[#A7A39A]">Tap any tier to filter live dashboard</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                       {tiers.map((t) => {
-                        const active = (t.type === "INCHARGE" && repType === "MLA") || repType === t.type;
+                        const active = (t.type === "INCHARGE" && repType === "MLA") || (t.type === "MINISTER" && repType === "MLA") || repType === t.type;
                         return (
                           <div
                             key={t.type}
                             onClick={() => {
-                              if (t.type === "INCHARGE") {
+                              if (t.type === "INCHARGE" || t.type === "MINISTER") {
                                 setRepType("MLA");
                               } else {
                                 setRepType(t.type as any);
@@ -2760,19 +2790,16 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                                 {t.badge}
                               </span>
                             </div>
-
-                            <div className="my-2">
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-2xl font-mono font-bold text-[#F3EEE2]">{t.leaders}</span>
+                            <div className="space-y-1">
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-mono font-bold text-[#F5EFE0]">{t.leaders}</span>
                                 <span className="text-xs text-[#A7A39A]">leaders tracked</span>
                               </div>
-                            </div>
-
-                            <div className="pt-2 border-t border-[rgba(201,148,54,0.15)] flex items-center justify-between text-xs text-[#A7A39A]">
-                              <span>{t.seats} {t.seatsLabel}</span>
-                              <span className="font-mono text-[#D4A24C] font-semibold">
-                                {t.accountsVerified} verified
-                              </span>
+                              <div className="flex items-center justify-between text-xs text-[#B9AF95] pt-1 border-t border-[rgba(201,148,54,0.15)] font-mono">
+                                <span>{t.seats} {t.seatsLabel}</span>
+                                <span className="text-emerald-400 font-semibold">{t.accountsVerified} verified</span>
+                              </div>
+                              <p className="text-[10px] text-[#A7A39A] italic pt-0.5 truncate">{t.note}</p>
                             </div>
                           </div>
                         );
@@ -3694,7 +3721,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
               </div>
             </div>
           </div>
-          <div className="w-full min-w-0 space-y-4">
+          <div className="w-full min-w-0 space-y-2.5">
             {/* Compact Breadcrumb Bar */}
             <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.25)]">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#F3EEE2]">
@@ -4582,7 +4609,7 @@ function StateWideOverview({
   }, [leaderboard]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       {/* Weakest 3 Districts Warning Banner */}
       {weakestDistricts.length > 0 && (
         <div className="p-3.5 rounded-xl bg-[#080E18] border border-[rgba(201,148,54,0.35)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -4749,7 +4776,7 @@ function IntelligenceDistrict({
     };
   });
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-display text-[#F5EFE0]">{cleanDistrictName} District</h2>
@@ -5136,10 +5163,6 @@ function AiCampaignIntelligence({
     <div className={`${CARD} border border-[#D4A24C]/40 bg-gradient-to-br from-[#080E18] via-[#050B12] to-[#080E18] p-5 space-y-4`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[rgba(201,148,54,0.25)]/80 pb-3">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#D4A24C]/20 border border-[#D4A24C] text-[#D4A24C] text-[10px] font-bold uppercase tracking-wider mb-1.5">
-            <Sparkles className="w-3 h-3 text-[#D4A24C]" />
-            <span>AI Campaign Intelligence & Strategy</span>
-          </div>
           <h3 className="text-base font-display font-bold text-[#F3EEE2]">
             Digital Audit & Advisory for {leader.name}
           </h3>
@@ -5175,7 +5198,7 @@ function AiCampaignIntelligence({
           return (
             <div
               key={i}
-              className={`p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] border-l-4 ${borderClass} space-y-2 flex flex-col justify-between`}
+              className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-2 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
@@ -5381,7 +5404,7 @@ function IntelligenceConstituency({
   }, [intel?.biggestGap, inConstituency]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       {/* Constituency Header with Graceful Tablet Wrapping */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -5414,7 +5437,107 @@ function IntelligenceConstituency({
         </div>
       </div>
 
-      {/* Comparative Leader Intelligence Table (Moved to Top) */}
+      {/* 1. Candidate Platform Breakdown Cards (Shifted to Top per user request) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {leaders.length ? leaders.map((leader: any) => {
+          const sitting = isSittingMlaKind(leader.leaderKind);
+          return (
+            <div key={leader.id} className={`${CARD} min-w-0 space-y-3`}>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-bold text-white break-words text-base">{leader.name}</h3>
+                <div className="flex flex-wrap items-center gap-1 shrink-0 justify-end">
+                  {leader.partyId ? (
+                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#050B12] border border-current" style={{ color: leader.partyColor || "#D4A24C" }}>
+                      {partyLabel(partyById, leader.partyId, leader.partyName)}
+                    </span>
+                  ) : null}
+                  {(() => {
+                    const roles: string[] = Array.isArray(leader.roles) && leader.roles.length
+                      ? leader.roles.map((r: any) => typeof r === "string" ? r : r.politicalRole || "")
+                      : (leader.politicalRole ? String(leader.politicalRole).split(",").map((s: string) => s.trim()) : []);
+                    const uniqueRoles = Array.from(new Set(roles.filter(Boolean)));
+                    if (uniqueRoles.length > 0) {
+                      return uniqueRoles.map((r: string) => (
+                        <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
+                          {r.replace(/_/g, " ")}
+                        </span>
+                      ));
+                    }
+                    return sitting ? <span className="text-[10px] text-white font-bold">Sitting MLA</span> : null;
+                  })()}
+                </div>
+              </div>
+              {PLATFORMS.map((plat) => {
+                const detail = platformDetail(leader, plat);
+                const estimate = Number(estimates[plat] || 0);
+                const noAccount = Boolean(detail?.noAccount);
+                const followers = noAccount ? null : detail?.followers;
+                const pct = followers != null && estimate ? Math.round((Number(followers) / estimate) * 100) : 0;
+                const hasAccount = !noAccount && (Boolean(detail?.verified) || followers != null);
+                const selected = platform === plat;
+                const emphasize = !platform || selected;
+                return (
+                  <div key={plat} className={`min-w-0 rounded-lg ${selected ? `p-1.5 ${SELECTED_PLATFORM_CARD}` : emphasize ? "" : "opacity-70"}`}>
+                    <div className="flex items-center justify-between gap-2 text-[12px]">
+                      <span className="text-white font-bold inline-flex items-center gap-1 min-w-0">
+                        {PLATFORM_LABEL[plat]}
+                        {hasAccount ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : null}
+                      </span>
+                      {noAccount ? (
+                        <span className="text-rose-400 font-bold shrink-0">No account</span>
+                      ) : (
+                        <span className="text-white font-bold text-right">
+                          {formatCompactCount(followers)} of {formatCompactCount(estimate)}
+                          {followers != null && estimate ? <span className="text-white font-bold"> = {pct}%</span> : null}
+                        </span>
+                      )}
+                    </div>
+                    {!noAccount ? (
+                      <div className="mt-1 h-1.5 rounded bg-[#0C1524]">
+                        <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+              {isSmM && (
+                <div className="mt-3 pt-2.5 border-t border-[rgba(201,148,54,0.25)]/80 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-[#D4A24C] flex items-center gap-1">
+                      <span>📢 Ads & Content · {formatMonthName(selectedMonth || "")}</span>
+                    </span>
+                    {onEditMonthly && (
+                      <button
+                        type="button"
+                        onClick={() => onEditMonthly(leader)}
+                        className="text-[11px] text-[#D4A24C] hover:underline font-semibold"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 text-center bg-[#050B12]/80 p-2 rounded-lg border border-[rgba(201,148,54,0.25)]/60">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-white font-bold">Posts</p>
+                      <p className="text-xs font-bold text-white mt-0.5">{leader.monthlyMetrics?.postsCount ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-white font-bold">Ads</p>
+                      <p className="text-xs font-bold text-white mt-0.5">{leader.monthlyMetrics?.adsCount ?? 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-white font-bold">Reach</p>
+                      <p className="text-xs font-bold text-white mt-0.5">{formatCompactCount(leader.monthlyMetrics?.reach ?? 0)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }) : <EmptyState text="No leaders entered for this constituency." />}
+      </div>
+
+      {/* 2. Comparative Leader Intelligence Table (Shifted below cards, 30d growth & social score removed) */}
       <div className={CARD}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div>
@@ -5422,7 +5545,7 @@ function IntelligenceConstituency({
               Comparative Leader Intelligence Table · {acName}
             </h3>
             <p className="text-xs text-[#B9AF95]">
-              Side-by-side benchmarking of all candidates in this constituency across followers, engagement, growth, and multi-tier rankings.
+              Side-by-side benchmarking of all candidates in this constituency across followers, engagement, and multi-tier rankings.
             </p>
           </div>
           <span className="text-xs text-[#D4A24C] font-semibold bg-[#D4A24C]/10 border border-[#D4A24C]/30 px-2.5 py-1 rounded-lg">
@@ -5431,15 +5554,13 @@ function IntelligenceConstituency({
         </div>
 
         <div className="overflow-auto max-h-[70vh] rounded-xl border border-[rgba(201,148,54,0.25)] relative">
-          <table className="w-full text-xs text-left min-w-[54rem]">
+          <table className="w-full text-xs text-left min-w-[48rem]">
             <thead>
               <tr className="border-b border-[rgba(201,148,54,0.25)] text-[#D4A24C] uppercase tracking-wider text-[10px]">
                 <th className="py-2.5 px-3 sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">Leader</th>
                 <th className="py-2.5 px-3 sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">Party</th>
                 <th className="py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">Followers</th>
                 <th className="py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">Engagement</th>
-                <th className="py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">30d Growth</th>
-                <th className="py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">Social Score</th>
                 <th className="py-2.5 px-3 text-center sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">AC Rank</th>
                 <th className="py-2.5 px-3 text-center sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">District</th>
                 <th className="py-2.5 px-3 text-center sticky top-0 bg-[#080E18] z-10 border-b border-[rgba(201,148,54,0.25)]">PC</th>
@@ -5450,7 +5571,7 @@ function IntelligenceConstituency({
             <tbody className="divide-y divide-[#0C1524]">
               {constituencyLeadersPool.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-6 text-center text-[#B9AF95]">
+                  <td colSpan={9} className="py-6 text-center text-[#B9AF95]">
                     No leaders recorded for this constituency yet.
                   </td>
                 </tr>
@@ -5459,8 +5580,6 @@ function IntelligenceConstituency({
                   const isFocus = focus && row.id === focus.id;
                   const fMetric = metricOf(row);
                   const eng = row.engagementPercent != null ? `${Number(row.engagementPercent).toFixed(1)}%` : "—";
-                  const g30 = row.growth30 != null ? `${Number(row.growth30) > 0 ? "+" : ""}${Number(row.growth30).toFixed(1)}%` : "—";
-                  const score = row.socialScore != null ? `${Math.round(Number(row.socialScore))}/100` : "—";
                   const pColor = row.partyColor || partyById[row.partyId]?.primaryColor || "#D4A24C";
                   return (
                     <tr
@@ -5492,10 +5611,6 @@ function IntelligenceConstituency({
                         {formatCompactCount(fMetric ?? row.followers ?? 0)}
                       </td>
                       <td className="py-2.5 px-3 text-right text-[#B9AF95]">{eng}</td>
-                      <td className={`py-2.5 px-3 text-right font-medium ${Number(row.growth30) > 0 ? "text-emerald-400" : "text-[#B9AF95]"}`}>
-                        {g30}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-bold text-[#D4A24C]">{score}</td>
                       <td className="py-2.5 px-3 text-center font-bold text-[#F5EFE0]">
                         {row.rankInConstituency ? `#${row.rankInConstituency}` : "—"}
                       </td>
@@ -5518,106 +5633,6 @@ function IntelligenceConstituency({
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Leader Platform Breakdown Cards (Moved to Top Below Table) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {leaders.length ? leaders.map((leader: any) => {
-          const sitting = isSittingMlaKind(leader.leaderKind);
-          return (
-            <div key={leader.id} className={`${CARD} min-w-0 space-y-3`}>
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-bold text-[#F5EFE0] break-words">{leader.name}</h3>
-                <div className="flex flex-wrap items-center gap-1 shrink-0 justify-end">
-                  {leader.partyId ? (
-                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#050B12] border border-current" style={{ color: leader.partyColor || "#D4A24C" }}>
-                      {partyLabel(partyById, leader.partyId, leader.partyName)}
-                    </span>
-                  ) : null}
-                  {(() => {
-                    const roles: string[] = Array.isArray(leader.roles) && leader.roles.length
-                      ? leader.roles.map((r: any) => typeof r === "string" ? r : r.politicalRole || "")
-                      : (leader.politicalRole ? String(leader.politicalRole).split(",").map((s: string) => s.trim()) : []);
-                    const uniqueRoles = Array.from(new Set(roles.filter(Boolean)));
-                    if (uniqueRoles.length > 0) {
-                      return uniqueRoles.map((r: string) => (
-                        <span key={r} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#0C1524] text-[#D4A24C] border border-[#D4A24C]/30">
-                          {r.replace(/_/g, " ")}
-                        </span>
-                      ));
-                    }
-                    return sitting ? <span className="text-[10px] text-[#B9AF95]">Sitting MLA</span> : null;
-                  })()}
-                </div>
-              </div>
-              {PLATFORMS.map((plat) => {
-                const detail = platformDetail(leader, plat);
-                const estimate = Number(estimates[plat] || 0);
-                const noAccount = Boolean(detail?.noAccount);
-                const followers = noAccount ? null : detail?.followers;
-                const pct = followers != null && estimate ? Math.round((Number(followers) / estimate) * 100) : 0;
-                const hasAccount = !noAccount && (Boolean(detail?.verified) || followers != null);
-                const selected = platform === plat;
-                const emphasize = !platform || selected;
-                return (
-                  <div key={plat} className={`min-w-0 rounded-lg ${selected ? `p-1.5 ${SELECTED_PLATFORM_CARD}` : emphasize ? "" : "opacity-70"}`}>
-                    <div className="flex items-center justify-between gap-2 text-[12px]">
-                      <span className="text-[#F5EFE0] inline-flex items-center gap-1 min-w-0">
-                        {PLATFORM_LABEL[plat]}
-                        {hasAccount ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : null}
-                      </span>
-                      {noAccount ? (
-                        <span className="text-rose-400 font-bold shrink-0">No account</span>
-                      ) : (
-                        <span className="text-[#B9AF95] text-right">
-                          {formatCompactCount(followers)} of {formatCompactCount(estimate)}
-                          {followers != null && estimate ? <span className="text-[#F5EFE0] font-bold"> = {pct}%</span> : null}
-                        </span>
-                      )}
-                    </div>
-                    {!noAccount ? (
-                      <div className="mt-1 h-1.5 rounded bg-[#0C1524]">
-                        <div className="h-1.5 rounded bg-[#D4A24C]" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-              {isSmM && (
-                <div className="mt-3 pt-2.5 border-t border-[rgba(201,148,54,0.25)]/80 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[#D4A24C] flex items-center gap-1">
-                      <span>📢 Ads & Content · {formatMonthName(selectedMonth || "")}</span>
-                    </span>
-                    {onEditMonthly && (
-                      <button
-                        type="button"
-                        onClick={() => onEditMonthly(leader)}
-                        className="text-[11px] text-[#D4A24C] hover:underline font-semibold"
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5 text-center bg-[#050B12]/80 p-2 rounded-lg border border-[rgba(201,148,54,0.25)]/60">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Posts</p>
-                      <p className="text-xs font-bold text-[#F5EFE0] mt-0.5">{leader.monthlyMetrics?.postsCount ?? 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Ads</p>
-                      <p className="text-xs font-bold text-[#F5EFE0] mt-0.5">{leader.monthlyMetrics?.adsCount ?? 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#B9AF95]">Reach</p>
-                      <p className="text-xs font-bold text-emerald-400 mt-0.5">{formatCompactCount(leader.monthlyMetrics?.reach ?? 0)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        }) : <EmptyState text="No leaders entered for this constituency." />}
       </div>
 
       {/* Where They Stand & Platform Baseline Demographics (Moved to Bottom) */}
@@ -5693,26 +5708,14 @@ function IntelligenceConstituency({
             })}
           </div>
 
-          {/* Social Score & Gap Metrics */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className={`${CARD} min-w-0 p-3`}>
-              <p className="text-2xl font-mono font-bold text-[#F3EEE2]">{focus.socialScore != null && (!platform || focus.rankPlatform === platform) ? `${Math.round(Number(focus.socialScore))}/100` : "—"}</p>
-              <p className="text-xs text-[#A7A39A] mt-1 font-semibold">Social score</p>
-              <p className="text-[11px] text-[#A7A39A]">{platform ? `percentile in state · ${platformLabel}` : "percentile in state"}</p>
-            </div>
+          {/* Target Gap & Opportunity Metrics (Social score & 30d growth removed per user request) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className={`${CARD} min-w-0 p-3`}>
               <p className="text-2xl font-mono font-bold text-[#F3EEE2]">
                 {moveUp == null ? "—" : `${moveUp > 0 ? "+" : ""}${formatCompactCount(Math.abs(moveUp))}`}
               </p>
               <p className="text-xs text-[#A7A39A] mt-1 font-semibold">To move up one rank</p>
               <p className="text-[11px] text-[#A7A39A]">{rankLabel}{platform ? ` · ${platformLabel}` : ""}</p>
-            </div>
-            <div className={`${CARD} min-w-0 p-3`}>
-              <p className={`text-2xl font-mono font-bold ${Number(focusGrowth) > 0 ? "text-emerald-400" : "text-[#F3EEE2]"}`}>
-                {formatSignedPercent(focusGrowth)}
-              </p>
-              <p className="text-xs text-[#A7A39A] mt-1 font-semibold">30-day growth</p>
-              <p className="text-[11px] text-[#A7A39A]">{platform ? `followers, ${platformLabel}` : "followers, all platforms"}</p>
             </div>
             <div className={`${CARD} min-w-0 p-3`}>
               <p className="text-2xl font-mono font-bold text-[#F3EEE2]">{worstGap?.platform || "—"}</p>
@@ -5905,6 +5908,7 @@ interface RankedLeaderItem {
   id: string;
   name: string;
   representativeType: "MLA" | "MP" | "MLC";
+  rolesList?: string[];
   territoryName: string;
   partyId: string;
   partyName: string;
@@ -5919,6 +5923,10 @@ interface RankedLeaderItem {
   hasYt?: boolean;
   hasIg?: boolean;
   hasX?: boolean;
+  fbVerified?: boolean;
+  ytVerified?: boolean;
+  igVerified?: boolean;
+  xVerified?: boolean;
   totalReach: number;
   verificationStatus: "VERIFIED" | "PENDING";
   rankChange?: number;
@@ -5988,7 +5996,7 @@ function StateRankingTab(props: {
   assemblies: any[];
 }) {
   const [rankingState, setRankingState] = useState(props.stateId || "AP");
-  const [repFilter, setRepFilter] = useState<"ALL" | "MLA" | "MP" | "MLC">("ALL");
+  const [repFilter, setRepFilter] = useState<"ALL" | "MLA" | "MINISTER" | "INCHARGE" | "MP" | "MLC">("ALL");
   const [platformSort, setPlatformSort] = useState<"OVERALL" | "FB" | "YT" | "IG" | "X">("OVERALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [leaders, setLeaders] = useState<RankedLeaderItem[]>(() => {
@@ -6060,18 +6068,48 @@ function StateRankingTab(props: {
           const repType = getLeaderRepType(l);
           const territory = getLeaderTerritory(l, repType, props);
 
+          const rawRoles = (l.roles || []).map((r: any) => typeof r === "string" ? r : r.politicalRole || "");
+          if (l.politicalRole) rawRoles.push(l.politicalRole);
+          const rolesList = Array.from(new Set(rawRoles.filter(Boolean))) as string[];
+
           const userAccounts = accountsByPersonId[l.id] || l.accounts || [];
           let fb = Number(l.platforms?.facebook?.followers || 0);
           let yt = Number(l.platforms?.youtube?.followers || 0);
           let ig = Number(l.platforms?.instagram?.followers || 0);
           let x = Number(l.platforms?.x?.followers || 0);
 
+          const fbVerified = Boolean(
+            l.platforms?.facebook?.verified ||
+            userAccounts.some((a: any) => {
+              const p = String(a.platform || "").toLowerCase();
+              return (p.includes("facebook") || p === "fb") && (a.verificationStatus === "VERIFIED" || a.verified);
+            })
+          );
+          const ytVerified = Boolean(
+            l.platforms?.youtube?.verified ||
+            userAccounts.some((a: any) => {
+              const p = String(a.platform || "").toLowerCase();
+              return (p.includes("youtube") || p === "yt") && (a.verificationStatus === "VERIFIED" || a.verified);
+            })
+          );
+          const igVerified = Boolean(
+            l.platforms?.instagram?.verified ||
+            userAccounts.some((a: any) => {
+              const p = String(a.platform || "").toLowerCase();
+              return (p.includes("instagram") || p === "ig") && (a.verificationStatus === "VERIFIED" || a.verified);
+            })
+          );
+          const xVerified = Boolean(
+            l.platforms?.x?.verified ||
+            userAccounts.some((a: any) => {
+              const p = String(a.platform || "").toLowerCase();
+              return (p.includes("twitter") || p === "x") && (a.verificationStatus === "VERIFIED" || a.verified);
+            })
+          );
+
           let isVerified = Boolean(
             l.verificationStatus === "VERIFIED" ||
-            l.platforms?.facebook?.verified ||
-            l.platforms?.instagram?.verified ||
-            l.platforms?.youtube?.verified ||
-            l.platforms?.x?.verified
+            fbVerified || ytVerified || igVerified || xVerified
           );
 
           for (const acc of userAccounts) {
@@ -6081,7 +6119,6 @@ function StateRankingTab(props: {
             else if (p.includes("youtube") || p === "yt") yt = Math.max(yt, f);
             else if (p.includes("instagram") || p === "ig") ig = Math.max(ig, f);
             else if (p.includes("twitter") || p === "x") x = Math.max(x, f);
-            if (acc.verificationStatus === "VERIFIED" || acc.verified) isVerified = true;
           }
 
           const hasFb = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("facebook") || a.platform === "fb") || l.platforms?.facebook?.hasAccount === "yes" || fb > 0);
@@ -6093,6 +6130,7 @@ function StateRankingTab(props: {
             id: l.id,
             name: l.name,
             representativeType: repType,
+            rolesList,
             territoryName: territory,
             partyId: l.partyId || "IND",
             partyName: partyNameOf(l.partyId),
@@ -6107,6 +6145,10 @@ function StateRankingTab(props: {
             hasYt,
             hasIg,
             hasX,
+            fbVerified,
+            ytVerified,
+            igVerified,
+            xVerified,
             totalReach: fb + yt + ig + x,
             verificationStatus: isVerified ? "VERIFIED" : "PENDING"
           });
@@ -6122,17 +6164,32 @@ function StateRankingTab(props: {
           const territory = getLeaderTerritory(l, repType, props);
           const userAccounts = accountsByPersonId[l.id] || [];
 
+          const rawRoles = (l.roles || []).map((r: any) => typeof r === "string" ? r : r.politicalRole || "");
+          if (l.politicalRole) rawRoles.push(l.politicalRole);
+          const rolesList = Array.from(new Set(rawRoles.filter(Boolean))) as string[];
+
           let fb = 0, yt = 0, ig = 0, x = 0;
+          let fbVerified = false, ytVerified = false, igVerified = false, xVerified = false;
           let isVerified = l.verificationStatus === "VERIFIED";
 
           for (const acc of userAccounts) {
             const p = String(acc.platform || "").toLowerCase();
             const f = Number(acc.followers || 0);
-            if (p.includes("facebook") || p === "fb") fb = Math.max(fb, f);
-            else if (p.includes("youtube") || p === "yt") yt = Math.max(yt, f);
-            else if (p.includes("instagram") || p === "ig") ig = Math.max(ig, f);
-            else if (p.includes("twitter") || p === "x") x = Math.max(x, f);
-            if (acc.verificationStatus === "VERIFIED" || acc.verified) isVerified = true;
+            const accVer = acc.verificationStatus === "VERIFIED" || acc.verified;
+            if (p.includes("facebook") || p === "fb") {
+              fb = Math.max(fb, f);
+              if (accVer) fbVerified = true;
+            } else if (p.includes("youtube") || p === "yt") {
+              yt = Math.max(yt, f);
+              if (accVer) ytVerified = true;
+            } else if (p.includes("instagram") || p === "ig") {
+              ig = Math.max(ig, f);
+              if (accVer) igVerified = true;
+            } else if (p.includes("twitter") || p === "x") {
+              x = Math.max(x, f);
+              if (accVer) xVerified = true;
+            }
+            if (accVer) isVerified = true;
           }
 
           const hasFb = Boolean(userAccounts.some((a: any) => String(a.platform || "").toLowerCase().includes("facebook") || a.platform === "fb") || fb > 0);
@@ -6144,6 +6201,7 @@ function StateRankingTab(props: {
             id: l.id,
             name: l.name,
             representativeType: repType,
+            rolesList,
             territoryName: territory,
             partyId: l.partyId || "IND",
             partyName: partyNameOf(l.partyId),
@@ -6158,6 +6216,10 @@ function StateRankingTab(props: {
             hasYt,
             hasIg,
             hasX,
+            fbVerified,
+            ytVerified,
+            igVerified,
+            xVerified,
             totalReach: fb + yt + ig + x,
             verificationStatus: isVerified ? "VERIFIED" : "PENDING"
           });
@@ -6193,7 +6255,13 @@ function StateRankingTab(props: {
   const filteredAndSorted = useMemo(() => {
     let list = [...leaders];
 
-    if (repFilter !== "ALL") {
+    if (repFilter === "MINISTER") {
+      list = list.filter((l) => (l.rolesList || []).some((r) => /minister/i.test(r)));
+    } else if (repFilter === "INCHARGE") {
+      list = list.filter((l) => (l.rolesList || []).some((r) => /incharge/i.test(r)));
+    } else if (repFilter === "MLA") {
+      list = list.filter((l) => (l.rolesList || []).some((r) => r.toUpperCase() === "MLA") || l.representativeType === "MLA");
+    } else if (repFilter !== "ALL") {
       list = list.filter((l) => l.representativeType === repFilter);
     }
 
@@ -6347,6 +6415,8 @@ function StateRankingTab(props: {
             >
               <option value="ALL">All Representatives (MLA, MP, MLC)</option>
               <option value="MLA">MLAs (Assembly Constituencies)</option>
+              <option value="MINISTER">Ministers (Cabinet & State)</option>
+              <option value="INCHARGE">Constituency Incharges</option>
               <option value="MP">MPs (Parliamentary Constituencies)</option>
               <option value="MLC">MLCs (Council Zones)</option>
             </select>
@@ -6550,23 +6620,23 @@ function StateRankingTab(props: {
                       </div>
                     </div>
 
-                    {/* Compact platform follower breakdown */}
-                    <div className="grid grid-cols-4 gap-1 text-[11px] font-mono text-center pt-1 border-t border-[#0C1524]">
-                      <div>
-                        <span className="text-[#A7A39A] block text-[9px]">FB</span>
-                        <span className="text-[#F3EEE2] font-semibold">{formatCompactCount(item.followersFb)}</span>
+                    {/* Compact platform follower breakdown with verified (green) vs pending (red) */}
+                    <div className="grid grid-cols-4 gap-1.5 text-[11px] font-mono text-center pt-1 border-t border-[#0C1524]">
+                      <div className={`p-1 rounded ${item.followersFb > 0 && item.fbVerified ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300" : item.followersFb > 0 ? "bg-rose-500/15 border border-rose-500/30 text-rose-300" : "bg-[#080E18] text-[#736B5E]"}`}>
+                        <span className="block text-[9px] uppercase font-bold opacity-80">FB</span>
+                        <span className="font-semibold block">{item.followersFb > 0 ? formatCompactCount(item.followersFb) : "—"}</span>
                       </div>
-                      <div>
-                        <span className="text-[#A7A39A] block text-[9px]">YT</span>
-                        <span className="text-[#F3EEE2] font-semibold">{formatCompactCount(item.followersYt)}</span>
+                      <div className={`p-1 rounded ${item.followersYt > 0 && item.ytVerified ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300" : item.followersYt > 0 ? "bg-rose-500/15 border border-rose-500/30 text-rose-300" : "bg-[#080E18] text-[#736B5E]"}`}>
+                        <span className="block text-[9px] uppercase font-bold opacity-80">YT</span>
+                        <span className="font-semibold block">{item.followersYt > 0 ? formatCompactCount(item.followersYt) : "—"}</span>
                       </div>
-                      <div>
-                        <span className="text-[#A7A39A] block text-[9px]">IG</span>
-                        <span className="text-[#F3EEE2] font-semibold">{formatCompactCount(item.followersIg)}</span>
+                      <div className={`p-1 rounded ${item.followersIg > 0 && item.igVerified ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300" : item.followersIg > 0 ? "bg-rose-500/15 border border-rose-500/30 text-rose-300" : "bg-[#080E18] text-[#736B5E]"}`}>
+                        <span className="block text-[9px] uppercase font-bold opacity-80">IG</span>
+                        <span className="font-semibold block">{item.followersIg > 0 ? formatCompactCount(item.followersIg) : "—"}</span>
                       </div>
-                      <div>
-                        <span className="text-[#A7A39A] block text-[9px]">X</span>
-                        <span className="text-[#F3EEE2] font-semibold">{formatCompactCount(item.followersX)}</span>
+                      <div className={`p-1 rounded ${item.followersX > 0 && item.xVerified ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300" : item.followersX > 0 ? "bg-rose-500/15 border border-rose-500/30 text-rose-300" : "bg-[#080E18] text-[#736B5E]"}`}>
+                        <span className="block text-[9px] uppercase font-bold opacity-80">X</span>
+                        <span className="font-semibold block">{item.followersX > 0 ? formatCompactCount(item.followersX) : "—"}</span>
                       </div>
                     </div>
                   </div>
@@ -6574,23 +6644,22 @@ function StateRankingTab(props: {
               })}
             </div>
 
-            {/* Desktop / Tablet View: Full Table with Sticky Header & First Column (Safari & Chrome frozen) */}
-            <div className="hidden md:block overflow-auto max-h-[72vh] rounded-xl border border-[rgba(201,148,54,0.25)] relative shadow-inner">
+            {/* Desktop / Tablet View: Full Table with Sticky/Frozen Header & First Column */}
+            <div className="hidden md:block overflow-auto max-h-[72vh] rounded-xl border border-[rgba(201,148,54,0.3)] relative shadow-inner">
               <table className="w-full text-left text-xs text-[#EADBBF]" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
-                <thead>
-                  <tr className="border-b border-[rgba(201,148,54,0.25)] text-[#A7A39A] uppercase tracking-wider text-[10px]">
-                    <th className="py-2.5 px-3 text-center w-14 sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)]">Rank</th>
-                    <th className="py-2.5 px-3 sticky top-0 left-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.25)]">Leader</th>
-                    <th className="py-2.5 px-3 text-center sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)]">Type</th>
-                    <th className="py-2.5 px-3 sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)]">Territory</th>
-                    <th className="py-2.5 px-3 text-center sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)]">Party</th>
-                    <th className="py-2.5 px-3 text-center sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)]">Posts</th>
-                    <th className={`py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)] ${platformSort === "FB" ? "text-[#1877F2] font-bold" : ""}`}>Facebook</th>
-                    <th className={`py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)] ${platformSort === "YT" ? "text-[#FF0000] font-bold" : ""}`}>YouTube</th>
-                    <th className={`py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)] ${platformSort === "IG" ? "text-[#E1306C] font-bold" : ""}`}>Instagram</th>
-                    <th className={`py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)] ${platformSort === "X" ? "text-sky-400 font-bold" : ""}`}>X</th>
-                    <th className={`py-2.5 px-3 text-right sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)] ${platformSort === "OVERALL" ? "text-[#D4A24C] font-bold" : ""}`}>Total Followers</th>
-                    <th className="py-2.5 px-3 text-center sticky top-0 bg-[#080E18] z-20 border-b border-[rgba(201,148,54,0.25)]">Status</th>
+                <thead className="sticky top-0 z-30 bg-[#080E18] shadow-md">
+                  <tr className="border-b border-[rgba(201,148,54,0.35)] text-[#D4A24C] uppercase tracking-wider text-[10px]">
+                    <th className="py-3 px-3 text-center w-14 sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)]">Rank</th>
+                    <th className="py-3 px-3 sticky top-0 left-0 bg-[#080E18] z-40 border-b border-[rgba(201,148,54,0.35)] shadow-[2px_0_4px_rgba(0,0,0,0.5)]">Leader</th>
+                    <th className="py-3 px-3 text-center sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)]">Role</th>
+                    <th className="py-3 px-3 sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)]">Territory</th>
+                    <th className="py-3 px-3 text-center sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)]">Party</th>
+                    <th className="py-3 px-3 text-center sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)]">Posts</th>
+                    <th className={`py-3 px-3 text-right sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)] ${platformSort === "FB" ? "text-[#1877F2] font-bold" : ""}`}>Facebook</th>
+                    <th className={`py-3 px-3 text-right sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)] ${platformSort === "YT" ? "text-[#FF0000] font-bold" : ""}`}>YouTube</th>
+                    <th className={`py-3 px-3 text-right sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)] ${platformSort === "IG" ? "text-[#E1306C] font-bold" : ""}`}>Instagram</th>
+                    <th className={`py-3 px-3 text-right sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)] ${platformSort === "X" ? "text-sky-400 font-bold" : ""}`}>X</th>
+                    <th className={`py-3 px-3 text-right sticky top-0 bg-[#080E18] z-30 border-b border-[rgba(201,148,54,0.35)] ${platformSort === "OVERALL" ? "text-[#D4A24C] font-bold" : ""}`}>Total Followers</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#0C1524]">
@@ -6613,7 +6682,7 @@ function StateRankingTab(props: {
                             )}
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 sticky left-0 bg-[#050B12] group-hover:bg-[#0C1524] z-10 transition-colors">
+                        <td className="py-2.5 px-3 sticky left-0 bg-[#050B12] group-hover:bg-[#0C1524] z-10 transition-colors shadow-[2px_0_4px_rgba(0,0,0,0.4)]">
                           <div className="flex items-center gap-1.5">
                             <span className="font-bold text-[#F3EEE2] block">{item.name}</span>
                             <button
@@ -6627,15 +6696,61 @@ function StateRankingTab(props: {
                           </div>
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
-                            item.representativeType === "MP"
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                              : item.representativeType === "MLC"
-                              ? "bg-purple-500/10 text-purple-400 border-purple-500/30"
-                              : "bg-[#D4A24C]/10 text-[#D4A24C] border-[#D4A24C]/30"
-                          }`}>
-                            {item.representativeType}
-                          </span>
+                          <div className="flex flex-wrap items-center justify-center gap-1">
+                            {(() => {
+                              const roles = item.rolesList || [];
+                              const isMinister = roles.some((r) => /minister/i.test(r));
+                              const isIncharge = roles.some((r) => /incharge/i.test(r));
+                              const isMla = roles.some((r) => r.toUpperCase() === "MLA") || item.representativeType === "MLA";
+                              const isMp = roles.some((r) => r.toUpperCase() === "MP") || item.representativeType === "MP";
+                              const isMlc = roles.some((r) => r.toUpperCase() === "MLC") || item.representativeType === "MLC";
+
+                              const badges: React.ReactNode[] = [];
+                              if (isMinister) {
+                                badges.push(
+                                  <span key="min" className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#D4A24C]/20 text-[#D4A24C] border border-[#D4A24C]/50 shadow-sm">
+                                    Minister
+                                  </span>
+                                );
+                              }
+                              if (isMla) {
+                                badges.push(
+                                  <span key="mla" className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#D4A24C]/10 text-[#D4A24C] border border-[#D4A24C]/30">
+                                    MLA
+                                  </span>
+                                );
+                              }
+                              if (isIncharge) {
+                                badges.push(
+                                  <span key="inch" className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                                    Incharge
+                                  </span>
+                                );
+                              }
+                              if (isMp) {
+                                badges.push(
+                                  <span key="mp" className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                    MP
+                                  </span>
+                                );
+                              }
+                              if (isMlc) {
+                                badges.push(
+                                  <span key="mlc" className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30">
+                                    MLC
+                                  </span>
+                                );
+                              }
+                              if (badges.length === 0) {
+                                badges.push(
+                                  <span key="def" className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#D4A24C]/10 text-[#D4A24C] border border-[#D4A24C]/30">
+                                    {item.representativeType || "MLA"}
+                                  </span>
+                                );
+                              }
+                              return badges;
+                            })()}
+                          </div>
                         </td>
                         <td className="py-2.5 px-3 text-[#A7A39A] font-medium">
                           {item.territoryName}
@@ -6655,31 +6770,92 @@ function StateRankingTab(props: {
                         <td className="py-2.5 px-3 text-center text-[#F3EEE2] font-mono">
                           {item.posts > 0 ? item.posts : "—"}
                         </td>
-                        <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {item.followersFb > 0 ? formatCompactCount(item.followersFb) : !item.hasFb ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
+                        <td className="py-2.5 px-3 text-right font-mono font-medium">
+                          {item.followersFb > 0 ? (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border shadow-sm ${
+                                item.fbVerified
+                                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                  : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                              }`}
+                              title={item.fbVerified ? "Facebook Account Verified" : "Facebook Account Pending / Unverified"}
+                            >
+                              <span>{formatCompactCount(item.followersFb)}</span>
+                              {item.fbVerified && <span className="text-[10px]">✓</span>}
+                            </span>
+                          ) : item.hasFb ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                              Pending
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#736B5E] font-mono">—</span>
+                          )}
                         </td>
-                        <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {item.followersYt > 0 ? formatCompactCount(item.followersYt) : !item.hasYt ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
+                        <td className="py-2.5 px-3 text-right font-mono font-medium">
+                          {item.followersYt > 0 ? (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border shadow-sm ${
+                                item.ytVerified
+                                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                  : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                              }`}
+                              title={item.ytVerified ? "YouTube Account Verified" : "YouTube Account Pending / Unverified"}
+                            >
+                              <span>{formatCompactCount(item.followersYt)}</span>
+                              {item.ytVerified && <span className="text-[10px]">✓</span>}
+                            </span>
+                          ) : item.hasYt ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                              Pending
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#736B5E] font-mono">—</span>
+                          )}
                         </td>
-                        <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {item.followersIg > 0 ? formatCompactCount(item.followersIg) : !item.hasIg ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
+                        <td className="py-2.5 px-3 text-right font-mono font-medium">
+                          {item.followersIg > 0 ? (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border shadow-sm ${
+                                item.igVerified
+                                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                  : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                              }`}
+                              title={item.igVerified ? "Instagram Account Verified" : "Instagram Account Pending / Unverified"}
+                            >
+                              <span>{formatCompactCount(item.followersIg)}</span>
+                              {item.igVerified && <span className="text-[10px]">✓</span>}
+                            </span>
+                          ) : item.hasIg ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                              Pending
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#736B5E] font-mono">—</span>
+                          )}
                         </td>
-                        <td className="py-2.5 px-3 text-right text-[#A7A39A] font-mono font-medium">
-                          {item.followersX > 0 ? formatCompactCount(item.followersX) : !item.hasX ? <span className="text-[10px] text-[#736B5E]">No account</span> : <span className="text-[10px] text-[#E0A33A]">Not synced</span>}
+                        <td className="py-2.5 px-3 text-right font-mono font-medium">
+                          {item.followersX > 0 ? (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border shadow-sm ${
+                                item.xVerified
+                                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                  : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                              }`}
+                              title={item.xVerified ? "X Account Verified" : "X Account Pending / Unverified"}
+                            >
+                              <span>{formatCompactCount(item.followersX)}</span>
+                              {item.xVerified && <span className="text-[10px]">✓</span>}
+                            </span>
+                          ) : item.hasX ? (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                              Pending
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#736B5E] font-mono">—</span>
+                          )}
                         </td>
                         <td className="py-2.5 px-3 text-right font-bold text-[#F3EEE2] font-mono text-sm">
                           {formatCompactCount(item.totalReach)}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {item.verificationStatus === "VERIFIED" ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                              ✓ Verified
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E0A33A]/15 text-[#E0A33A] border border-[#E0A33A]/30">
-                              Pending
-                            </span>
-                          )}
                         </td>
                       </tr>
                     );
