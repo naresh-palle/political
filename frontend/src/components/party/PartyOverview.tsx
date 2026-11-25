@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { partyApi, type MemberBrief, type PartyFilters, type PartyOverview as Overview } from "../../services/partyApi";
 import type { PartyScreenProps, PartyTab } from "./PartyCommandCenter";
 import { PartyFilterBar } from "./PartyFilterBar";
-import { Avatar, Card, ErrorBanner, Kpi, Loading, SectionTitle } from "./partyUi";
+import { Avatar, Card, ErrorBanner, Kpi, Loading, SectionTitle, roleText } from "./partyUi";
 
 interface Props extends PartyScreenProps {
   onShowMembers: (filters: PartyFilters) => void;
@@ -28,7 +28,7 @@ const ActivityList: React.FC<{ title: string; rows: MemberBrief[]; onOpen: (id: 
               <span className="flex-1 min-w-0">
                 <span className="block text-xs font-bold text-[#F5EFE0] truncate">{m.name}</span>
                 <span className="block text-[10px] text-[#B9AF95] truncate">
-                  {(m.roles || []).join(", ") || "—"} · {m.assemblyConstituencyName || "—"}
+                  {roleText(m.roles) || "—"} · {m.assemblyConstituencyName || "—"}
                 </span>
               </span>
               <span className="text-right shrink-0">

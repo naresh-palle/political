@@ -3,7 +3,7 @@ import { ChevronDown, Download } from "lucide-react";
 import { partyApi, type GapGroup, type GapRules, type PartyFilters, type PartyOverview } from "../../services/partyApi";
 import type { PartyScreenProps } from "./PartyCommandCenter";
 import { PartyFilterBar } from "./PartyFilterBar";
-import { Avatar, Btn, Card, ErrorBanner, Loading, SectionTitle } from "./partyUi";
+import { Avatar, Btn, Card, ErrorBanner, Loading, SectionTitle, roleText } from "./partyUi";
 
 export const PartyGaps: React.FC<PartyScreenProps> = ({ userId, partyId, meta, onOpenMember }) => {
   const [filters, setFilters] = useState<PartyFilters>({});
@@ -112,7 +112,7 @@ export const PartyGaps: React.FC<PartyScreenProps> = ({ userId, partyId, meta, o
                               <span className="min-w-0 flex-1">
                                 <span className="block text-xs font-bold text-[#F5EFE0] break-words">{m.name}</span>
                                 <span className="block text-[10px] text-[#B9AF95] break-words">
-                                  {(m.roles || []).join(", ") || "—"} · {m.assemblyConstituencyName || "—"}
+                                  {roleText(m.roles) || "—"} · {m.assemblyConstituencyName || "—"}
                                   {m.districtName ? ` · ${m.districtName}` : ""}
                                 </span>
                                 <span className="block text-[11px] text-rose-200 break-words">{m.detail}</span>

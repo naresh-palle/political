@@ -24,7 +24,8 @@ import {
   platformStatusLabel,
   platformTone,
   timeAgo,
-  toLocalInput
+  toLocalInput,
+  roleText
 } from "./partyUi";
 
 interface Props extends PartyScreenProps {
@@ -115,8 +116,8 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
     setNotice("");
     try {
       await fn();
-      setNotice(success);
       await load();
+      setNotice(success);
       return true;
     } catch (e: any) {
       setError(e?.message || "Something went wrong.");
@@ -160,7 +161,7 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, per
           <Avatar name={m.name} url={m.photoUrl} size={64} />
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-xl text-[#F9E29C] break-words">{m.name}</h2>
-            <div className="text-xs text-[#D4A24C]">{m.roles.join(", ") || "—"}</div>
+            <div className="text-xs text-[#D4A24C]">{roleText(m.roles) || "—"}</div>
             <div className="text-xs text-[#B9AF95]">
               {m.assemblyConstituencyName || "—"}
               {m.districtName ? ` · ${m.districtName}` : ""} · Record {m.verificationStatus.toLowerCase()}

@@ -14,7 +14,8 @@ import {
   PlatformChips,
   SectionTitle,
   formatNumber,
-  timeAgo
+  timeAgo,
+  roleText
 } from "./partyUi";
 
 interface Props extends PartyScreenProps {
@@ -32,7 +33,7 @@ export const MemberCard: React.FC<{ member: PartyMember; onOpen: () => void }> =
       <Avatar name={member.name} url={member.photoUrl} size={44} />
       <div className="min-w-0 flex-1">
         <div className="text-sm font-bold text-[#F5EFE0] break-words">{member.name}</div>
-        <div className="text-[11px] text-[#D4A24C] break-words">{member.roles.join(", ") || "—"}</div>
+        <div className="text-[11px] text-[#D4A24C] break-words">{roleText(member.roles) || "—"}</div>
         <div className="text-[11px] text-[#B9AF95] break-words">
           {member.assemblyConstituencyName || "—"}
           {member.districtName ? ` · ${member.districtName}` : ""}

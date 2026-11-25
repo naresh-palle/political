@@ -29,6 +29,10 @@ export const GAP_LABELS: Record<string, string> = {
   NO_RESEARCH: "No research"
 };
 
+export function roleText(roles?: string[] | null): string {
+  return (roles || []).map((r) => String(r).replace(/_/g, " ")).join(", ");
+}
+
 export function formatNumber(value?: number | null): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
   if (value >= 10_000_000) return `${(value / 10_000_000).toFixed(1)}Cr`;
@@ -269,7 +273,7 @@ export const Segmented: React.FC<{
   onChange: (id: string) => void;
   testId?: string;
 }> = ({ options, value, onChange, testId }) => (
-  <div data-testid={testId} className="flex flex-nowrap gap-1 overflow-x-auto no-scrollbar rounded-xl border border-[#C99436]/25 bg-[#050B12] p-1">
+  <div data-testid={testId} className="flex flex-wrap gap-1 rounded-xl border border-[#C99436]/25 bg-[#050B12] p-1">
     {options.map((o) => (
       <button
         key={o.id}

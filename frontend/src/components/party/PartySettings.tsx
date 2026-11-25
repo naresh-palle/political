@@ -49,8 +49,8 @@ export const PartySettings: React.FC<PartyScreenProps> = ({ userId, partyId, met
     try {
       const res = await partyApi.saveRules(userId, partyId, next);
       setRules(res.rules);
-      setNotice("Rules saved. Gaps and the overview now use these values.");
       await load();
+      setNotice("Rules saved. Gaps and the overview now use these values.");
     } catch (e: any) {
       setError(e?.message || "Could not save the rules.");
     } finally {

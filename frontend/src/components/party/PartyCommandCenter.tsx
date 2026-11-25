@@ -135,7 +135,15 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
 
       {!memberId && (
         <div className="mb-4">
-          <Segmented testId="party-tabs" options={tabs} value={tab} onChange={(id) => setTab(id as PartyTab)} />
+          <Segmented
+            testId="party-tabs"
+            options={tabs}
+            value={tab}
+            onChange={(id) => {
+              if (id === "members") setMemberFilters({});
+              setTab(id as PartyTab);
+            }}
+          />
         </div>
       )}
 

@@ -37,8 +37,8 @@ export const PartyAccounts: React.FC<PartyScreenProps> = ({ userId, partyId, met
     setNotice("");
     try {
       await fn();
-      setNotice(success);
       await load();
+      setNotice(success);
       return true;
     } catch (e: any) {
       setError(e?.message || "Something went wrong.");
