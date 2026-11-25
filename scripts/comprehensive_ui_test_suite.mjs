@@ -288,13 +288,19 @@ async function runFullSuite() {
       const text = document.body.innerText;
       const hasOldPill = text.includes('LEADER DIGITAL RANKINGS ·');
       const hasTitle = text.includes('State Political Digital Rankings');
+      const mainH1 = document.querySelector('h1')?.textContent?.trim();
+      const isRankingTitle = mainH1 === 'Ranking';
       return {
-        passed: !hasOldPill && hasTitle,
-        details: { hasOldPill, hasTitle }
+        passed: !hasOldPill && hasTitle && isRankingTitle,
+        details: { hasOldPill, hasTitle, mainH1, isRankingTitle }
       };
     });
-    results['Item 10 (Remove pill above State Rankings Title)'] = item10;
+    results['Item 10 (Remove pill & Top Heading displays Ranking)'] = item10;
     console.log('Item 10:', item10.passed ? '✓ PASSED' : '✗ FAILED', item10.details);
+
+    // Ensure rankings table has rendered
+    await page.waitForSelector('table th', { timeout: 15000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 1000));
 
     // Scroll table container down to verify sticky header freeze
     const item11 = await page.evaluate(async () => {
@@ -302,6 +308,7 @@ async function runFullSuite() {
       if (!scrollContainer) return { passed: false, reason: 'Scroll container not found' };
 
       const ths = Array.from(scrollContainer.querySelectorAll('th'));
+      if (!ths.length) return { passed: false, reason: 'No th elements found in table' };
       const initialPositions = ths.map(th => th.getBoundingClientRect().top);
 
       // Scroll container by 450px

@@ -2366,11 +2366,13 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
                 ? "Constituency Data Form"
                 : tab === "intelligence"
                   ? "Intelligence"
-                  : tab === "verify"
-                    ? "Verification Queue"
-                    : tab === "import"
-                      ? "Import / Export"
-                      : "Dashboard"}
+                  : tab === "ranking"
+                    ? "Ranking"
+                    : tab === "verify"
+                      ? "Verification Queue"
+                      : tab === "import"
+                        ? "Import / Export"
+                        : "Dashboard"}
             </h1>
             {(tab === "verify" || tab === "import") && (
               <button
