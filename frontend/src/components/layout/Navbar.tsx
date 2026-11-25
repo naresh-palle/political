@@ -6,7 +6,7 @@ import { NotificationCenter } from "../fieldops/NotificationCenter";
 import { EditProfileModal } from "../common/EditProfileModal";
 import { politicalApiService } from "../../services/api";
 import { setTicketIdInHash } from "../../utils/ticketHash";
-import { isPiOperatorUser, isSmAUser, isSmMUser } from "../../utils/piAccess";
+import { isPartyCommandUser, isPiOperatorUser, isSmAUser, isSmMUser } from "../../utils/piAccess";
 import {
   Shield,
   ArrowLeft,
@@ -19,12 +19,13 @@ import {
   Edit3,
   BarChart3,
   CheckCircle2,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Crown
 } from "lucide-react";
 
 interface NavbarProps {
-  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel";
-  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel") => void;
+  activeProduct: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel" | "party";
+  onProductChange: (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel" | "party") => void;
   isAuditView?: boolean;
   onResetToSelect?: () => void;
   currentProfile: UserProfile;
@@ -61,6 +62,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentParty, partyName, partyLogo, partySymbolEmoji, isPartyThemeActive } = usePartyTheme();
 
   const isPiUser = isPiOperatorUser(currentProfile);
+  const isPartyUser = isPartyCommandUser(currentProfile);
+  const isScopedUser = isPiUser || isPartyUser;
   const isSmM = isSmMUser(currentProfile);
   const primaryRole = currentProfile.primaryRole || (
     currentProfile.email === "admin" || currentProfile.email === "admin@leaderslens.ai" || currentProfile.roleId === "SUPER_ADMIN" || currentProfile.role === "super_admin" || currentProfile.isPlatformAdmin
@@ -76,20 +79,21 @@ export const Navbar: React.FC<NavbarProps> = ({
       : "DIRECTOR"
   );
 
-  const isPlatformAdmin = !isPiUser && (currentProfile.email === "admin" || currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin));
-  const isPoliticalAdmin = !isPlatformAdmin && !isPiUser && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
-  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isPiUser && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
-  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isPiUser && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer");
+  const isPlatformAdmin = !isScopedUser && (currentProfile.email === "admin" || currentProfile.email === "admin@leaderslens.ai" || (primaryRole === "SUPER_ADMIN" && !!currentProfile.isPlatformAdmin));
+  const isPoliticalAdmin = !isPlatformAdmin && !isScopedUser && (primaryRole === "POLITICAL_ADMIN" || !!currentProfile.isPoliticalAdmin);
+  const isDirector = !isPlatformAdmin && !isPoliticalAdmin && !isScopedUser && (primaryRole === "DIRECTOR" || currentProfile.roleId === "CAMPAIGN_MANAGER" || currentProfile.role === "campaign_manager" || currentProfile.roleId === "PARTY_ADMIN");
+  const isVolunteer = !isPlatformAdmin && !isPoliticalAdmin && !isDirector && !isScopedUser && (primaryRole === "VOLUNTEER" || currentProfile.roleId === "VOLUNTEER" || currentProfile.role === "volunteer");
 
   useEffect(() => {
     setLogoError(false);
   }, [partyLogo]);
 
   useEffect(() => {
+    if (isScopedUser) return;
     loadUnreadNotifications();
     const interval = setInterval(loadUnreadNotifications, 45000);
     return () => clearInterval(interval);
-  }, [currentProfile.id, currentProfile.primaryRole]);
+  }, [currentProfile.id, currentProfile.primaryRole, isScopedUser]);
 
   const loadUnreadNotifications = async () => {
     try {
@@ -133,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, [isNotifOpen]);
 
-  const brandSubtitle = isPiUser ? "Political Intelligence" : "Command Portal";
+  const brandSubtitle = isPartyUser ? "Party Command" : isPiUser ? "Political Intelligence" : "Command Portal";
 
   return (
     <>
@@ -150,6 +154,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               data-testid="brand-home"
               className="flex items-center space-x-3 cursor-pointer group shrink-0"
               onClick={() => {
+                if (isPartyUser) {
+                  window.location.hash = "#/party";
+                  onProductChange("party");
+                  return;
+                }
                 if (isPiUser) {
                   window.location.hash = "#/intel";
                   onProductChange("intel");
@@ -205,7 +214,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Political Intelligence</span>
             </button>
             )}
-            {!isPiUser && isPlatformAdmin && (
+            {(isPartyUser || isPlatformAdmin) && (
+            <button
+              data-testid="nav-party-command"
+              onClick={() => {
+                window.location.hash = "#/party";
+                onProductChange("party");
+              }}
+              className={navBtn(activeProduct === "party")}
+            >
+              <Crown className="w-3.5 h-3.5 shrink-0" />
+              <span>Party Command</span>
+            </button>
+            )}
+            {!isScopedUser && isPlatformAdmin && (
             <button
               onClick={() => {
                 window.location.hash = "#/field-ops";
@@ -218,7 +240,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             )}
 
-            {!isPiUser && isVolunteer && (
+            {!isScopedUser && isVolunteer && (
             <button
               onClick={() => {
                 window.location.hash = "#/field-ops";
@@ -231,7 +253,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             )}
 
-            {!isPiUser && !isVolunteer && (
+            {!isScopedUser && !isVolunteer && (
             <button
               onClick={() => {
                 window.location.hash = "#/assign-tickets?status=ALL";
@@ -244,7 +266,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             )}
 
-            {!isPiUser && (
+            {!isScopedUser && (
             <button
               onClick={() => {
                 window.location.hash = "#/contacts";
@@ -308,7 +330,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           <div className="flex flex-nowrap items-center gap-2 shrink-0">
-            {!isPiUser && (
+            {!isScopedUser && (
             <button
               onClick={() => setIsNotifOpen(true)}
               className="relative p-2 rounded-lg bg-[#080E18] border border-[#C99436]/30 text-[#C99436] hover:border-[#C99436]/80 transition-colors cursor-pointer shrink-0"
@@ -340,7 +362,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {currentProfile.name}
                   </span>
                   <span className="text-[9px] uppercase tracking-wider font-semibold text-[var(--party-primary)] mt-0.5 whitespace-nowrap">
-                    {primaryRole === "DIRECTOR" ? "Lead Manager" : primaryRole === "SM_A" ? "Associate Manager" : primaryRole === "SM_M" ? "Social Media Manager" : primaryRole}
+                    {primaryRole === "PARTY_PRESIDENT" ? "Party President" : primaryRole === "PARTY_ANALYST" ? "Party Analyst" : primaryRole === "DIRECTOR" ? "Lead Manager" : primaryRole === "SM_A" ? "Associate Manager" : primaryRole === "SM_M" ? "Social Media Manager" : primaryRole}
                   </span>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#C99436] shrink-0 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />

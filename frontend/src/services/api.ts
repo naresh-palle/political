@@ -1119,6 +1119,21 @@ export const politicalApiService = {
     throw new Error("Invalid username or password. Please verify credentials.");
   },
 
+  async verifyBackendLogin(email: string, password: string): Promise<UserProfile | null> {
+    try {
+      const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data?.user || null;
+    } catch {
+      return null;
+    }
+  },
+
   async getSystemUsers(): Promise<any[]> {
     try {
       const res = await fetchWithTimeout(`${RENDER_BACKEND_URL}/auth/users`);
@@ -2182,6 +2197,25 @@ export const politicalApiService = {
       }
       throw error;
     }
+  },
+
+  async piDownload(path: string, userId: string, filename: string, timeoutMs = 30000): Promise<void> {
+    const joiner = path.includes("?") ? "&" : "?";
+    const url = `${RENDER_BACKEND_URL}${path}${joiner}userId=${encodeURIComponent(userId)}`;
+    const res = await fetchWithTimeout(url, {}, timeoutMs);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.detail || `Download failed (${res.status})`);
+    }
+    const blob = await res.blob();
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 2000);
   },
 
   async getPiDashboard(userId: string, stateId?: string, districtId?: string, repType?: string) {

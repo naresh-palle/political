@@ -29,17 +29,18 @@ const GrievanceManagement = lazy(() => import("./components/grievances/Grievance
 const VolunteerMonitoring = lazy(() => import("./components/volunteers/VolunteerMonitoring").then(m => ({ default: m.VolunteerMonitoring })));
 const RoleManagement = lazy(() => import("./components/governance/RoleManagement").then(m => ({ default: m.RoleManagement })));
 const ContactDatabase = lazy(() => import("./components/contacts/ContactDatabase").then(m => ({ default: m.ContactDatabase })));
+const PartyCommandCenter = lazy(() => import("./components/party/PartyCommandCenter").then(m => ({ default: m.PartyCommandCenter })));
 const PoliticalIntelligence = lazy(() => import("./components/intel/PoliticalIntelligence").then(m => ({ default: m.PoliticalIntelligence })));
 const ExportModal = lazy(() => import("./components/audit/ExportModal").then(m => ({ default: m.ExportModal })));
 
 import { OfficerTicketPortal } from "./components/fieldops/OfficerTicketPortal";
-import { canAccessPoliticalIntelligence, isPiOperatorUser, isSmAUser, isSmMUser } from "./utils/piAccess";
+import { canAccessPartyCommand, canAccessPoliticalIntelligence, isPartyCommandUser, isPiOperatorUser, isSmAUser, isSmMUser } from "./utils/piAccess";
 
 const AUTH_STORAGE_KEY = "leaders_lens_auth_user";
 const ROUTE_STORAGE_KEY = "leaders_lens_route";
 const PRODUCT_STORAGE_KEY = "leaders_lens_active_product";
 
-type ActiveProductType = "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel";
+type ActiveProductType = "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel" | "party";
 
 const PRODUCT_TO_HASH_MAP: Record<ActiveProductType, string> = {
   fieldops: "#/field-ops",
@@ -50,6 +51,7 @@ const PRODUCT_TO_HASH_MAP: Record<ActiveProductType, string> = {
   governance: "#/user-management",
   contacts: "#/contacts",
   intel: "#/intel",
+  party: "#/party",
   pitch: "#/audit-pitch"
 };
 
@@ -68,6 +70,8 @@ const HASH_TO_PRODUCT_MAP: Record<string, ActiveProductType> = {
   "#/intel": "intel",
   "#/political-intelligence": "intel",
   "#/pi": "intel",
+  "#/party": "party",
+  "#/party-command": "party",
   "#/audit-pitch": "pitch",
   "#/pitch": "pitch"
 };
@@ -192,7 +196,7 @@ function AppInner() {
       const savedProduct = localStorage.getItem(PRODUCT_STORAGE_KEY);
       if (
         savedProduct &&
-        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts", "assigntickets", "intel"].includes(savedProduct)
+        ["fieldops", "pitch", "grievances", "volunteers", "webbuilder", "governance", "contacts", "assigntickets", "intel", "party"].includes(savedProduct)
       ) {
         return savedProduct as ActiveProductType;
       }
@@ -241,6 +245,7 @@ function AppInner() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const isPiUser = isPiOperatorUser(currentProfile);
+  const isPartyUser = isPartyCommandUser(currentProfile);
   const primaryRole = currentProfile?.primaryRole || (
     currentProfile?.email === "admin" || currentProfile?.email === "admin@leaderslens.ai" || currentProfile?.roleId === "SUPER_ADMIN" || currentProfile?.role === "super_admin" || currentProfile?.isPlatformAdmin
       ? "SUPER_ADMIN"
@@ -287,6 +292,7 @@ function AppInner() {
         governance: "User & Role Governance | Leaders Lens",
         contacts: "Contact Database | Leaders Lens",
         intel: "Political Intelligence | Leaders Lens",
+        party: "Party Command Center | Leaders Lens",
         pitch: "Audit & Strategy Command | Leaders Lens"
       };
       document.title = titles[activeProduct] || "Leaders Lens";
@@ -323,6 +329,24 @@ function AppInner() {
   // - Manager: Home (fieldops), Assign Tickets, Contact Database (no Squad Volunteer / governance)
   // - Volunteer: Home (fieldops), Contact Database — Add Complaint and status counts on Home, no ticket grid/table
   useEffect(() => {
+    if (isPartyUser) {
+      if (activeProduct !== "party") {
+        setActiveProduct("party");
+        try {
+          localStorage.setItem(PRODUCT_STORAGE_KEY, "party");
+        } catch {}
+        window.location.hash = "#/party";
+      }
+      return;
+    }
+    if (activeProduct === "party" && !isPlatformAdmin) {
+      setActiveProduct("fieldops");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
+      } catch {}
+      window.location.hash = "#/field-ops";
+      return;
+    }
     if (isPiUser) {
       if (activeProduct !== "intel") {
         setActiveProduct("intel");
@@ -367,11 +391,15 @@ function AppInner() {
         window.location.hash = "#/field-ops";
       }
     }
-  }, [isPiUser, isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
+  }, [isPartyUser, isPiUser, isVolunteer, isPoliticalAdmin, isDirector, isPlatformAdmin, activeProduct]);
 
-  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel") => {
+  const handleProductChange = (product: "fieldops" | "pitch" | "grievances" | "volunteers" | "webbuilder" | "governance" | "contacts" | "assigntickets" | "intel" | "party") => {
     let targetProduct = product;
-    if (isPiUser) {
+    if (isPartyUser) {
+      targetProduct = "party";
+    } else if (product === "party" && !isPlatformAdmin) {
+      targetProduct = "fieldops";
+    } else if (isPiUser) {
       targetProduct = "intel";
     } else if (product === "intel" || product === "webbuilder") {
       targetProduct = "fieldops";
@@ -395,13 +423,13 @@ function AppInner() {
 
   const handleAuthenticated = (user: UserProfile) => {
     setCurrentProfile(user);
-    const defaultProd: ActiveProductType = isPiOperatorUser(user) ? "intel" : "fieldops";
+    const defaultProd: ActiveProductType = isPartyCommandUser(user) ? "party" : isPiOperatorUser(user) ? "intel" : "fieldops";
     setActiveProduct(defaultProd);
     try {
       localStorage.setItem(PRODUCT_STORAGE_KEY, defaultProd);
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     } catch {}
-    window.location.hash = defaultProd === "intel" ? "#/intel" : "#/field-ops";
+    window.location.hash = PRODUCT_TO_HASH_MAP[defaultProd];
     setRoute("app");
   };
 
@@ -431,13 +459,19 @@ function AppInner() {
         : "DIRECTOR"
     );
 
-    if (isPiOperatorUser(profile)) {
+    if (isPartyCommandUser(profile)) {
+      setActiveProduct("party");
+      try {
+        localStorage.setItem(PRODUCT_STORAGE_KEY, "party");
+      } catch {}
+      window.location.hash = "#/party";
+    } else if (isPiOperatorUser(profile)) {
       setActiveProduct("intel");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "intel");
       } catch {}
       window.location.hash = "#/intel";
-    } else if (activeProduct === "intel" || userRole === "SM_A" || userRole === "SM_M") {
+    } else if (activeProduct === "intel" || activeProduct === "party" || userRole === "SM_A" || userRole === "SM_M") {
       setActiveProduct("fieldops");
       try {
         localStorage.setItem(PRODUCT_STORAGE_KEY, "fieldops");
@@ -630,6 +664,10 @@ function AppInner() {
                 {/* Module 7: CONSTITUENCY CONTACT DATABASE & CITIZEN DIRECTORY */}
                 {activeProduct === "contacts" && (
                   <ContactDatabase currentUser={currentProfile} />
+                )}
+
+                {activeProduct === "party" && canAccessPartyCommand(currentProfile) && (
+                  <PartyCommandCenter currentUser={currentProfile} />
                 )}
 
                 {activeProduct === "intel" && canAccessPoliticalIntelligence(currentProfile) && (

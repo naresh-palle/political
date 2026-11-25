@@ -3,6 +3,7 @@ import { UserProfile } from "../../types";
 import { politicalApiService } from "../../services/api";
 import { USER_PROFILES } from "../../services/mockData";
 import { LeadersLogo } from "../common/LeadersLogo";
+import { isPartyCommandUser } from "../../utils/piAccess";
 import { ArrowRight, Sparkles, User, KeyRound, Eye, EyeOff } from "lucide-react";
 
 interface AuthScreenProps {
@@ -35,6 +36,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthenticated, onBack 
 
       const users = await politicalApiService.getUsers();
       const existing = users.find((p) => p.email.toLowerCase() === cleanEmail);
+      if (existing && isPartyCommandUser(existing)) {
+        const verified = await politicalApiService.verifyBackendLogin(cleanEmail, password);
+        if (!verified) {
+          setAuthError("Invalid username or password.");
+          return;
+        }
+        onAuthenticated({ ...existing, ...verified });
+        return;
+      }
       if (existing) {
         if (existing.demoPassword && password !== existing.demoPassword) {
           setAuthError("Invalid username or password.");

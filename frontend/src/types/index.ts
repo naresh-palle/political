@@ -15,7 +15,9 @@ export type AdminUserRole =
   | "VIEWER"
   | "SM_AUDIT"
   | "SM_A"
-  | "SM_M";
+  | "SM_M"
+  | "PARTY_PRESIDENT"
+  | "PARTY_ANALYST";
 
 export type UserRole = 
   | AdminUserRole
@@ -30,6 +32,8 @@ export type UserRole =
   | "sm_audit"
   | "sm_a"
   | "sm_m"
+  | "party_president"
+  | "party_analyst"
   | "client"
   | "viewer"
   | "campaign_director" 
@@ -41,7 +45,7 @@ export type UserRole =
 
 export type UserAccountStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
 
-export type PrimaryRole = "SUPER_ADMIN" | "POLITICAL_ADMIN" | "DIRECTOR" | "VOLUNTEER" | "SM_AUDIT" | "SM_A" | "SM_M";
+export type PrimaryRole = "SUPER_ADMIN" | "POLITICAL_ADMIN" | "DIRECTOR" | "VOLUNTEER" | "SM_AUDIT" | "SM_A" | "SM_M" | "PARTY_PRESIDENT" | "PARTY_ANALYST";
 
 export interface UserProfile {
   _id?: string;
@@ -63,6 +67,8 @@ export interface UserProfile {
   assignedConstituency: string;
   clearanceLevel: string;
   partyId?: string | null;
+  commandPartyId?: string | null;
+  commandPartyName?: string;
   partyName?: string;
   partyAbbr?: string;
   partyColor?: string;

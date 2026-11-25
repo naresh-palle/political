@@ -47,6 +47,29 @@ export function canAccessPoliticalIntelligence(
   return isPiOperatorUser(user);
 }
 
+const PARTY_COMMAND_ROLES = new Set(["PARTY_PRESIDENT", "PARTY_ANALYST"]);
+
+export function isPartyCommandUser(
+  user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "commandPartyId"> | null
+): boolean {
+  if (!user) return false;
+  return PARTY_COMMAND_ROLES.has(roleKey(user)) && !!String(user.commandPartyId || "").trim();
+}
+
+export function isPartyPresidentUser(
+  user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "commandPartyId"> | null
+): boolean {
+  return isPartyCommandUser(user) && roleKey(user) === "PARTY_PRESIDENT";
+}
+
+export function canAccessPartyCommand(
+  user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "isPlatformAdmin" | "commandPartyId"> | null
+): boolean {
+  if (!user) return false;
+  if (isPiOperatorUser(user)) return false;
+  return isPartyCommandUser(user) || isPlatformAdminUser(user);
+}
+
 export function canManagePoliticalIntelligence(
   user?: Pick<UserProfile, "email" | "primaryRole" | "roleId" | "role" | "isPlatformAdmin"> | null
 ): boolean {
