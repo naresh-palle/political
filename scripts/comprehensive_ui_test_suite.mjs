@@ -103,7 +103,7 @@ async function runFullSuite() {
     // Item 4: Remove lines on footprint platform cards
     // Expand details if collapsed
     await page.evaluate(() => {
-      const detailsBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('details'));
+      const detailsBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.toLowerCase().includes('details'));
       if (detailsBtn && detailsBtn.textContent.includes('▾')) {
         detailsBtn.click();
       }
@@ -113,7 +113,7 @@ async function runFullSuite() {
     const item4 = await page.evaluate(() => {
       const cards = Array.from(document.querySelectorAll('div')).filter(d => {
         const t = d.textContent || '';
-        return (t.includes('Facebook') || t.includes('Instagram') || t.includes('YouTube') || t.includes('Twitter')) && t.includes('state reach') && d.children.length <= 4;
+        return (t.includes('Facebook') || t.includes('Instagram') || t.includes('YouTube') || t.includes('Twitter') || t.includes('X')) && t.includes('state reach') && d.children.length <= 4;
       });
       const hasThickBorder = cards.some(c => {
         const style = window.getComputedStyle(c);
