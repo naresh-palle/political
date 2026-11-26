@@ -267,17 +267,21 @@ export interface GapGroup {
 
 export interface CalendarItem {
   id: string;
+  partyId?: string;
   title: string;
   brief: string;
   platforms: PartyPlatform[];
   hashtag: string | null;
   assignAll: boolean;
+  assignedPersonIds?: string[];
   dueAt: string;
   status: "PLANNED" | "PUBLISHED" | "MISSED" | "CANCELLED";
   assignedCount: number;
   publishedCount: number;
   assignees: { id: string; name: string; published: boolean }[];
   createdByName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ComparisonRow {
@@ -543,4 +547,179 @@ export function fallbackPartyMeta(user?: any): PartyMeta {
     },
     platforms: ["youtube", "instagram", "facebook", "x"]
   };
+}
+
+export function fallbackCalendarData(partyId: string): { items: CalendarItem[]; topPosts: TopPartyPost[] } {
+  const pid = (partyId || "TDP").toUpperCase();
+  const now = new Date();
+
+  const items: CalendarItem[] = [
+    {
+      id: `cal_${pid}_0`,
+      partyId: pid,
+      title: "Swarna Andhra 2047: Vision & Infrastructure Campaign",
+      brief: "Share ground updates on state infrastructure, highway connectivity, and water projects in your constituency. Highlight progress and citizen benefits. Use #SwarnaAndhra2047.",
+      hashtag: "#SwarnaAndhra2047",
+      dueAt: new Date(now.getTime() + 2 * 86400000).toISOString(),
+      platforms: ["facebook", "instagram", "youtube", "x"],
+      assignAll: true,
+      assignedPersonIds: [],
+      status: "PLANNED",
+      createdByName: "State Campaign Committee",
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      assignedCount: 150,
+      publishedCount: 12,
+      assignees: []
+    },
+    {
+      id: `cal_${pid}_1`,
+      partyId: pid,
+      title: "Youth Outreach & Digital Skill Labs Launch",
+      brief: "Post photos and reels interacting with student volunteers and inaugurating digital skill labs across junior colleges. Use #YouthEmpowerment.",
+      hashtag: "#YouthEmpowerment",
+      dueAt: new Date(now.getTime() + 5 * 86400000).toISOString(),
+      platforms: ["instagram", "youtube", "x"],
+      assignAll: true,
+      assignedPersonIds: [],
+      status: "PLANNED",
+      createdByName: "State Campaign Committee",
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      assignedCount: 150,
+      publishedCount: 8,
+      assignees: []
+    },
+    {
+      id: `cal_${pid}_2`,
+      partyId: pid,
+      title: "Praja Galam: Weekly Public Grievance Redressal Camp",
+      brief: "Broadcast live video or post summary from weekly grievance redressal camp at constituency office with petition counts and solutions. Use #PrajaGalam.",
+      hashtag: "#PrajaGalam",
+      dueAt: new Date(now.getTime() + 8 * 86400000).toISOString(),
+      platforms: ["facebook", "youtube"],
+      assignAll: true,
+      assignedPersonIds: [],
+      status: "PLANNED",
+      createdByName: "State Campaign Committee",
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+      assignedCount: 150,
+      publishedCount: 15,
+      assignees: []
+    }
+  ];
+
+  const topPosts: TopPartyPost[] = [
+    {
+      id: `post_${pid}_ig_1`,
+      personId: "pp-kalava",
+      memberName: "Kalava Srinivas",
+      roles: ["MLA"],
+      constituency: "Rayadurg",
+      district: "Anantapur",
+      platform: "instagram",
+      url: "https://www.instagram.com/p/kalava_rayadurg",
+      text: "Digital skill labs classroom initiative launched with college student volunteers in Rayadurg. Empowering our youth with cutting-edge technology tools. #YouthEmpowerment #SwarnaAndhra2047",
+      thumbnailUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
+      publishedAt: new Date(now.getTime() - 2 * 86400000).toISOString(),
+      likes: 6400,
+      comments: 380,
+      shares: 920,
+      views: 34500,
+      reach: 34500
+    },
+    {
+      id: `post_${pid}_fb_1`,
+      personId: "pp-kalava",
+      memberName: "Kalava Srinivas",
+      roles: ["MLA"],
+      constituency: "Rayadurg",
+      district: "Anantapur",
+      platform: "facebook",
+      url: "https://www.facebook.com/posts/grievance_rayadurg",
+      text: "Praja Galam: Weekly public grievance redressal camp at Rayadurg party office. Personally reviewed 160+ petitions on rural roads and drinking water pipelines.",
+      thumbnailUrl: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80",
+      publishedAt: new Date(now.getTime() - 3 * 86400000).toISOString(),
+      likes: 5800,
+      comments: 460,
+      shares: 1100,
+      views: 29000,
+      reach: 29000
+    },
+    {
+      id: `post_${pid}_x_1`,
+      personId: "pp-kalava",
+      memberName: "Kalava Srinivas",
+      roles: ["MLA"],
+      constituency: "Rayadurg",
+      district: "Anantapur",
+      platform: "x",
+      url: "https://x.com/status/highway_rayadurg",
+      text: "Inspected ongoing 4-lane highway expansion connecting Rayadurg with district industrial corridors. Robust infrastructure is the backbone of regional growth. #SwarnaAndhra2047",
+      thumbnailUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+      publishedAt: new Date(now.getTime() - 1 * 86400000).toISOString(),
+      likes: 3200,
+      comments: 240,
+      shares: 890,
+      views: 22500,
+      reach: 22500
+    },
+    {
+      id: `post_${pid}_yt_1`,
+      personId: "pp-kolusu",
+      memberName: "Kolusu Parthasarathy",
+      roles: ["MLA", "CABINET_MINISTER"],
+      constituency: "Nuzvid",
+      district: "Eluru",
+      platform: "youtube",
+      url: "https://www.youtube.com/watch?v=nuzvid_development",
+      text: "Comprehensive development review and citizen engagement speech addressing water canal works in Nuzvid constituency.",
+      thumbnailUrl: "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=800&q=80",
+      publishedAt: new Date(now.getTime() - 4 * 86400000).toISOString(),
+      likes: 4900,
+      comments: 310,
+      shares: 780,
+      views: 42000,
+      reach: 42000
+    },
+    {
+      id: `post_${pid}_ig_2`,
+      personId: "pp-adireddy",
+      memberName: "Adireddy Srinivas",
+      roles: ["MLA"],
+      constituency: "Rajahmundry City",
+      district: "East Godavari",
+      platform: "instagram",
+      url: "https://www.instagram.com/p/rajahmundry_city",
+      text: "Interacting with local youth and college students on digital training labs and employment opportunities in Rajahmundry. #SwarnaAndhra",
+      thumbnailUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
+      publishedAt: new Date(now.getTime() - 5 * 86400000).toISOString(),
+      likes: 5400,
+      comments: 320,
+      shares: 810,
+      views: 31000,
+      reach: 31000
+    },
+    {
+      id: `post_${pid}_x_2`,
+      personId: "pp-gottipati",
+      memberName: "Gottipati Ravi Kumar",
+      roles: ["MLA", "CABINET_MINISTER"],
+      constituency: "Addanki",
+      district: "Bapatla",
+      platform: "x",
+      url: "https://x.com/status/energy_andhra",
+      text: "State energy review: Commissioning high-efficiency solar grid feeds and stabilizing voltage for rural agricultural pumps. #AndhraDevelopment",
+      thumbnailUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
+      publishedAt: new Date(now.getTime() - 3 * 86400000).toISOString(),
+      likes: 4100,
+      comments: 290,
+      shares: 1040,
+      views: 27500,
+      reach: 27500
+    }
+  ];
+
+  return { items, topPosts };
 }

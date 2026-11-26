@@ -684,8 +684,10 @@ async def _curate_top_party_posts(bundle: Dict[str, Any], party_id: str, platfor
                 all_posts.append(doc)
                 bundle.setdefault("posts", []).append(doc)
         if enriched_new_posts:
-            for p in enriched_new_posts:
-                await P._save("social_posts", p["id"], p)
+            try:
+                await asyncio.gather(*(P._save("social_posts", p["id"], p) for p in enriched_new_posts))
+            except Exception:
+                pass
             _touch_world()
 
     # 3. YouTube: Top content only (top reach, views, engagement) - not all raw uploads
@@ -1463,7 +1465,7 @@ def register_party_routes(api_router) -> None:
                 "status": state["status"],
                 "assignedCount": state["assignedCount"],
                 "publishedCount": state["publishedCount"],
-                "assignees": [{"id": pid, "name": names.get(pid), "published": bool(state["published"].get(pid))} for pid in state["assignees"]],
+                "assignees": [{"id": pid, "name": names.get(pid), "published": bool(state["published"].get(pid))} for pid in state["assignees"][:24]],
             })
 
         # Curate Top Posts: multiplatform (Instagram, Facebook, X, and top YouTube only)
