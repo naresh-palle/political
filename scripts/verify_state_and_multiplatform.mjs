@@ -42,9 +42,17 @@ async function verifyFeatures() {
     await page.waitForFunction(() => document.body.innerText.includes('Party Command Center'), { timeout: 25000 });
     console.log('✓ Successfully entered Party Command Center');
 
-    // Wait for overview filters to be rendered
+    // Wait for overview filters to be rendered and populated
     await page.waitForSelector('[data-testid="party-filters"]', { timeout: 20000 });
-    await new Promise(r => setTimeout(r, 1500));
+    try {
+      await page.waitForFunction(() => {
+        const dist = document.querySelector('#party-district');
+        return dist && dist.options.length > 5;
+      }, { timeout: 30000 });
+    } catch (e) {
+      console.warn('Timed out waiting for district options to exceed 5; continuing...');
+    }
+    await new Promise(r => setTimeout(r, 1000));
 
     // Verify State Dropdown before District
     const filterLabels = await page.evaluate(() => {
@@ -83,7 +91,14 @@ async function verifyFeatures() {
     });
 
     await page.waitForSelector('[data-testid="party-calendar"]', { timeout: 25000 });
-    await new Promise(r => setTimeout(r, 2000));
+    try {
+      await page.waitForFunction(() => {
+        return document.querySelectorAll('.aspect-video span').length > 0;
+      }, { timeout: 30000 });
+    } catch (e) {
+      console.warn('Timed out waiting for post cards in calendar; continuing...');
+    }
+    await new Promise(r => setTimeout(r, 1000));
 
     // Inspect Top Posts Showcase Platforms
     const postPlatforms = await page.evaluate(() => {
