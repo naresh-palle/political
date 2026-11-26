@@ -5196,7 +5196,7 @@ function AiCampaignIntelligence({
           return (
             <div
               key={i}
-              className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.35)] border-l-4 border-l-[#D4A24C] space-y-2 flex flex-col justify-between shadow-sm"
+              className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.35)] space-y-2 flex flex-col justify-between shadow-sm"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">

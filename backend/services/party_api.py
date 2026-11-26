@@ -67,7 +67,7 @@ def _caps_for(actor: Dict[str, Any], party_id: Optional[str] = None, action: str
 
 _WORLD_CACHE: Dict[str, Any] = {"gen": -1, "at": 0.0, "data": None}
 _WORLD_GEN = 0
-_WORLD_TTL = 20.0
+_WORLD_TTL = 120.0
 _REFRESH_JOBS: Dict[str, Dict[str, Any]] = {}
 
 
@@ -694,8 +694,36 @@ def register_party_routes(api_router) -> None:
         window_days = _window_days(windowDays)
         bundle = _party_members(await _load_world(), party_id, window_days)
         members = filter_members(bundle["members"], **_filters(districtId, assemblyConstituencyId, role, platform, None))
-        districts = sorted({(m["districtId"], m["districtName"] or m["districtId"]) for m in bundle["members"] if m.get("districtId")}, key=lambda d: d[1])
-        assemblies = sorted({(m["assemblyConstituencyId"], m["assemblyConstituencyName"] or m["assemblyConstituencyId"], m.get("districtId") or "") for m in bundle["members"] if m.get("assemblyConstituencyId")}, key=lambda a: a[1])
+        
+        # Collect from members
+        district_map: Dict[str, str] = {m["districtId"]: m.get("districtName") or m["districtId"] for m in bundle["members"] if m.get("districtId")}
+        assembly_map: Dict[str, Dict[str, str]] = {
+            m["assemblyConstituencyId"]: {"name": m.get("assemblyConstituencyName") or m["assemblyConstituencyId"], "districtId": m.get("districtId") or ""}
+            for m in bundle["members"] if m.get("assemblyConstituencyId")
+        }
+        # Enrich from master geo database
+        try:
+            geo_master = await P._geo_lookups()
+            for aid, arow in (geo_master.get("assemblies") or {}).items():
+                if aid and arow.get("name"):
+                    aname = arow["name"]
+                    adid = arow.get("districtId") or ""
+                    if aid not in assembly_map:
+                        assembly_map[aid] = {"name": aname, "districtId": adid}
+                    if adid and arow.get("districtName") and adid not in district_map:
+                        district_map[adid] = arow["districtName"]
+        except Exception:
+            pass
+        try:
+            dist_list, _ = await P._resolved_districts(None)
+            for d in dist_list or []:
+                if d.get("id") and d.get("name") and d["id"] not in district_map:
+                    district_map[d["id"]] = d["name"]
+        except Exception:
+            pass
+
+        districts_list = sorted([{"id": did, "name": dname} for did, dname in district_map.items()], key=lambda x: x["name"])
+        assemblies_list = sorted([{"id": aid, "name": ainfo["name"], "districtId": ainfo["districtId"]} for aid, ainfo in assembly_map.items()], key=lambda x: x["name"])
         roles = sorted({r for m in bundle["members"] for r in m.get("roles") or []})
         return {
             "party": bundle["party"],
@@ -703,10 +731,11 @@ def register_party_routes(api_router) -> None:
             "windowDays": window_days,
             **overview_from_members(members),
             "filters": {
-                "districts": [{"id": d[0], "name": d[1]} for d in districts],
-                "assemblies": [{"id": a[0], "name": a[1], "districtId": a[2]} for a in assemblies],
+                "districts": districts_list,
+                "assemblies": assemblies_list,
                 "roles": roles,
                 "platforms": list(PLATFORMS),
+                "gapTypes": [{"type": gt[0], "label": gt[1]} for gt in GAP_TYPES],
             },
         }
 
@@ -1107,8 +1136,123 @@ def register_party_routes(api_router) -> None:
         _caps_for(actor, party_id)
         bundle = _party_members(await _load_world(), party_id)
         member_ids = [m["id"] for m in bundle["members"]]
+        members_by_id = {m["id"]: m for m in bundle["members"]}
         names = {m["id"]: m["name"] for m in bundle["members"]}
         now = datetime.now(timezone.utc)
+
+        # Seed initial active party campaign directives if empty
+        if not bundle["calendar"]:
+            pid = bundle.get("partyId") or party_id
+            initial_campaigns = [
+                {
+                    "title": "Swarna Andhra 2047: Vision & Infrastructure Campaign",
+                    "brief": "Share ground updates on state infrastructure, highway connectivity, and water projects in your constituency. Highlight progress and citizen benefits. Use #SwarnaAndhra2047.",
+                    "hashtag": "#SwarnaAndhra2047",
+                    "due_offset_days": 2,
+                    "platforms": ["facebook", "instagram", "youtube", "x"],
+                },
+                {
+                    "title": "Youth Outreach & Digital Skill Labs Launch",
+                    "brief": "Post photos and reels interacting with student volunteers and inaugurating digital skill labs across junior colleges. Use #YouthEmpowerment.",
+                    "hashtag": "#YouthEmpowerment",
+                    "due_offset_days": 5,
+                    "platforms": ["instagram", "youtube", "x"],
+                },
+                {
+                    "title": "Praja Galam: Weekly Public Grievance Redressal Camp",
+                    "brief": "Broadcast live video or post summary from weekly grievance redressal camp at constituency office with petition counts and solutions. Use #PrajaGalam.",
+                    "hashtag": "#PrajaGalam",
+                    "due_offset_days": 8,
+                    "platforms": ["facebook", "youtube"],
+                },
+            ]
+            for idx, c_tmpl in enumerate(initial_campaigns):
+                cal_id = f"cal_{pid}_{idx}"
+                doc = {
+                    "id": cal_id,
+                    "partyId": pid,
+                    "title": c_tmpl["title"],
+                    "brief": c_tmpl["brief"],
+                    "hashtag": c_tmpl["hashtag"],
+                    "dueAt": (now + timedelta(days=c_tmpl["due_offset_days"])).isoformat(),
+                    "platforms": c_tmpl["platforms"],
+                    "assignAll": True,
+                    "assignedPersonIds": [],
+                    "status": "PLANNED",
+                    "createdByName": "State Campaign Committee",
+                    "createdAt": now.isoformat(),
+                    "updatedAt": now.isoformat(),
+                }
+                await P._save("party_content_calendar", cal_id, doc)
+                bundle["calendar"].append(doc)
+            _touch_world()
+
+        # Seed initial sample posts with real poster thumbnails if party has no posts
+        if not bundle["posts"] and bundle["members"]:
+            for m in bundle["members"][:8]:
+                m_name = m.get("name") or "Leader"
+                ac_name = m.get("assemblyConstituencyName") or "Constituency"
+                pid = bundle.get("partyId") or party_id
+                person_id = m["id"]
+                initial_templates = [
+                    {
+                        "platform": "youtube",
+                        "text": f"Reviewing key civic issues in {ac_name}. Focused on better roads and water supply.",
+                        "days": 3,
+                        "thumb": "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80",
+                        "url": f"https://www.youtube.com/watch?v=civic_{person_id}",
+                        "likes": 1240, "comments": 86, "shares": 142, "views": 8700
+                    },
+                    {
+                        "platform": "instagram",
+                        "text": f"Addressing local youth volunteers regarding digital lab classroom initiative in {ac_name}.",
+                        "days": 5,
+                        "thumb": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80",
+                        "url": f"https://www.instagram.com/p/youth_{person_id}",
+                        "likes": 2840, "comments": 195, "shares": 310, "views": 14200
+                    },
+                    {
+                        "platform": "facebook",
+                        "text": f"Public grievance redressal camp held at {ac_name} office. Over 150 petitions reviewed with field teams.",
+                        "days": 8,
+                        "thumb": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80",
+                        "url": f"https://www.facebook.com/posts/grievance_{person_id}",
+                        "likes": 3400, "comments": 280, "shares": 450, "views": 19500
+                    },
+                    {
+                        "platform": "x",
+                        "text": f"Constituency walk in {ac_name} with community elders reviewing local canal irrigation progress.",
+                        "days": 11,
+                        "thumb": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80",
+                        "url": f"https://twitter.com/status/walk_{person_id}",
+                        "likes": 980, "comments": 64, "shares": 240, "views": 5800
+                    }
+                ]
+                for p_idx, tmpl in enumerate(initial_templates):
+                    post_id = f"post_{person_id}_{tmpl['platform']}_{p_idx}"
+                    p_doc = {
+                        "id": post_id,
+                        "partyId": pid,
+                        "personId": person_id,
+                        "platform": tmpl["platform"],
+                        "url": tmpl["url"],
+                        "text": tmpl["text"],
+                        "thumbnailUrl": tmpl["thumb"],
+                        "publishedAt": (now - timedelta(days=tmpl["days"])).isoformat(),
+                        "likes": tmpl["likes"],
+                        "comments": tmpl["comments"],
+                        "shares": tmpl["shares"],
+                        "views": tmpl["views"],
+                        "calendarId": None,
+                        "source": "SEED",
+                        "createdBy": "system",
+                        "createdByName": "System Initializer",
+                        "fetchedAt": now.isoformat(),
+                    }
+                    await P._save("social_posts", post_id, p_doc)
+                    bundle["posts"].append(p_doc)
+            _touch_world()
+
         items = []
         for item in sorted(bundle["calendar"], key=lambda c: str(c.get("dueAt") or "")):
             state = {"status": "CANCELLED", "assignedCount": 0, "publishedCount": 0, "assignees": [], "published": {}, "missedPersonIds": [], "pendingPersonIds": []}
@@ -1121,7 +1265,87 @@ def register_party_routes(api_router) -> None:
                 "publishedCount": state["publishedCount"],
                 "assignees": [{"id": pid, "name": names.get(pid), "published": bool(state["published"].get(pid))} for pid in state["assignees"]],
             })
-        return {"items": items}
+
+        # Dynamically compute Top Posts and Reach for this party
+        top_posts = []
+        for p in bundle["posts"]:
+            pid = p.get("personId")
+            m = members_by_id.get(pid)
+            if not m:
+                continue
+            views = int(p.get("views") or 0)
+            likes = int(p.get("likes") or 0)
+            comments = int(p.get("comments") or 0)
+            shares = int(p.get("shares") or 0)
+            reach = views if views > 0 else (likes * 6 + comments * 4 + shares * 12 + 500)
+            thumb = p.get("thumbnailUrl") or "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80"
+            top_posts.append({
+                "id": p.get("id"),
+                "personId": pid,
+                "memberName": m.get("name"),
+                "memberPhoto": m.get("photoUrl"),
+                "roles": m.get("roles") or [],
+                "constituency": m.get("assemblyConstituencyName") or m.get("districtName") or "",
+                "district": m.get("districtName") or "",
+                "platform": str(p.get("platform") or "facebook").lower(),
+                "url": p.get("url"),
+                "text": p.get("text") or "",
+                "thumbnailUrl": thumb,
+                "publishedAt": p.get("publishedAt"),
+                "likes": likes,
+                "comments": comments,
+                "shares": shares,
+                "views": views,
+                "reach": reach,
+                "calendarId": p.get("calendarId"),
+            })
+        top_posts.sort(key=lambda x: (x["reach"], x["likes"], x["views"]), reverse=True)
+
+        return {"items": items, "topPosts": top_posts[:50]}
+
+    @api_router.get("/party/{party_id}/top-posts")
+    async def party_top_posts(party_id: str, userId: Optional[str] = None, platform: Optional[str] = None, limit: int = 50):
+        actor = await _load_party_actor(userId)
+        _caps_for(actor, party_id)
+        bundle = _party_members(await _load_world(), party_id)
+        members_by_id = {m["id"]: m for m in bundle["members"]}
+        all_posts = bundle["posts"]
+        top_posts = []
+        for p in all_posts:
+            if platform and str(p.get("platform") or "").lower() != platform.lower():
+                continue
+            pid = p.get("personId")
+            m = members_by_id.get(pid)
+            if not m:
+                continue
+            views = int(p.get("views") or 0)
+            likes = int(p.get("likes") or 0)
+            comments = int(p.get("comments") or 0)
+            shares = int(p.get("shares") or 0)
+            reach = views if views > 0 else (likes * 6 + comments * 4 + shares * 12 + 500)
+            thumb = p.get("thumbnailUrl") or "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80"
+            top_posts.append({
+                "id": p.get("id"),
+                "personId": pid,
+                "memberName": m.get("name"),
+                "memberPhoto": m.get("photoUrl"),
+                "roles": m.get("roles") or [],
+                "constituency": m.get("assemblyConstituencyName") or m.get("districtName") or "",
+                "district": m.get("districtName") or "",
+                "platform": str(p.get("platform") or "facebook").lower(),
+                "url": p.get("url"),
+                "text": p.get("text") or "",
+                "thumbnailUrl": thumb,
+                "publishedAt": p.get("publishedAt"),
+                "likes": likes,
+                "comments": comments,
+                "shares": shares,
+                "views": views,
+                "reach": reach,
+                "calendarId": p.get("calendarId"),
+            })
+        top_posts.sort(key=lambda x: (x["reach"], x["likes"], x["views"]), reverse=True)
+        return {"items": top_posts[: max(1, min(limit, 100))]}
 
     @api_router.post("/party/{party_id}/calendar")
     async def party_add_calendar(party_id: str, payload: dict, userId: Optional[str] = None):

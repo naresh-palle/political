@@ -159,7 +159,7 @@ export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, windowDay
           )
         }
       />
-      <PartyFilterBar filters={filters} options={options} onChange={setFilters} showSearch showGap />
+      <PartyFilterBar filters={filters} options={options} gapTypes={meta.gapTypes} onChange={setFilters} showSearch showGap />
       <ErrorBanner message={error} onRetry={load} />
       {loading && rows.length === 0 ? (
         <Loading />

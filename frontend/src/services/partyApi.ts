@@ -124,7 +124,29 @@ export interface PartyOverview {
     assemblies: { id: string; name: string; districtId: string }[];
     roles: string[];
     platforms: PartyPlatform[];
+    gapTypes?: { type: string; label: string }[];
   };
+}
+
+export interface TopPartyPost {
+  id: string;
+  personId: string;
+  memberName: string;
+  memberPhoto?: string;
+  roles?: string[];
+  constituency?: string;
+  district?: string;
+  platform: PartyPlatform;
+  url?: string;
+  text: string;
+  thumbnailUrl: string;
+  publishedAt: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  views: number;
+  reach: number;
+  calendarId?: string;
 }
 
 export interface ResearchNote {
@@ -292,15 +314,51 @@ function send(method: string, body?: unknown): RequestInit {
   return { method, body: body === undefined ? undefined : JSON.stringify(body) };
 }
 
+const PARTY_CACHE: Record<string, { at: number; data: any }> = {};
+const PARTY_CACHE_TTL = 45000; // 45-second cache for instant 0ms tab navigation
+
+export function invalidatePartyCache(partyId?: string) {
+  if (!partyId) {
+    for (const k in PARTY_CACHE) delete PARTY_CACHE[k];
+    return;
+  }
+  for (const k in PARTY_CACHE) {
+    if (k.includes(partyId)) delete PARTY_CACHE[k];
+  }
+}
+
+async function cachedFetch<T>(key: string, fetcher: () => Promise<T>, ttl = PARTY_CACHE_TTL): Promise<T> {
+  const hit = PARTY_CACHE[key];
+  const now = Date.now();
+  if (hit && now - hit.at < ttl) {
+    // Return immediately from memory (0ms) and revalidate in background
+    fetcher()
+      .then((fresh) => {
+        PARTY_CACHE[key] = { at: Date.now(), data: fresh };
+      })
+      .catch(() => {});
+    return hit.data as T;
+  }
+  const fresh = await fetcher();
+  PARTY_CACHE[key] = { at: Date.now(), data: fresh };
+  return fresh;
+}
+
 export const partyApi = {
   meta(userId: string): Promise<PartyMeta> {
-    return politicalApiService.piRequest("/party/meta", userId, {}, 20000);
+    return cachedFetch(`party_meta_${userId}`, () => politicalApiService.piRequest("/party/meta", userId, {}, 20000));
   },
   overview(userId: string, partyId: string, filters: PartyFilters = {}, windowDays = 7): Promise<PartyOverview> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/overview${query(filters, { windowDays: String(windowDays) })}`, userId, {}, 30000);
+    const key = `party_overview_${userId}_${partyId}_${windowDays}_${JSON.stringify(filters)}`;
+    return cachedFetch(key, () =>
+      politicalApiService.piRequest(`/party/${enc(partyId)}/overview${query(filters, { windowDays: String(windowDays) })}`, userId, {}, 30000)
+    );
   },
   members(userId: string, partyId: string, filters: PartyFilters = {}, windowDays = 7): Promise<{ total: number; windowDays?: number; items: PartyMember[] }> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/members${query(filters, { windowDays: String(windowDays) })}`, userId, {}, 30000);
+    const key = `party_members_${userId}_${partyId}_${windowDays}_${JSON.stringify(filters)}`;
+    return cachedFetch(key, () =>
+      politicalApiService.piRequest(`/party/${enc(partyId)}/members${query(filters, { windowDays: String(windowDays) })}`, userId, {}, 30000)
+    );
   },
   exportMembers(userId: string, partyId: string, filters: PartyFilters = {}): Promise<void> {
     const stamp = new Date().toISOString().slice(0, 10);
@@ -313,34 +371,50 @@ export const partyApi = {
   member(userId: string, partyId: string, personId: string): Promise<MemberDetail> {
     return politicalApiService.piRequest(`/party/${enc(partyId)}/members/${enc(personId)}`, userId, {}, 30000);
   },
-  saveContact(userId: string, partyId: string, personId: string, payload: Record<string, unknown>) {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/members/${enc(personId)}/contact`, userId, send("PUT", payload), 20000);
+  async saveContact(userId: string, partyId: string, personId: string, payload: Record<string, unknown>) {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/members/${enc(personId)}/contact`, userId, send("PUT", payload), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
-  addResearch(userId: string, partyId: string, personId: string, payload: Record<string, unknown>): Promise<ResearchNote> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/members/${enc(personId)}/research`, userId, send("POST", payload), 20000);
+  async addResearch(userId: string, partyId: string, personId: string, payload: Record<string, unknown>): Promise<ResearchNote> {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/members/${enc(personId)}/research`, userId, send("POST", payload), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
-  deleteResearch(userId: string, partyId: string, noteId: string) {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/research/${enc(noteId)}`, userId, send("DELETE"), 20000);
+  async deleteResearch(userId: string, partyId: string, noteId: string) {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/research/${enc(noteId)}`, userId, send("DELETE"), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
-  addPost(userId: string, partyId: string, personId: string, payload: Record<string, unknown>): Promise<SocialPost> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/members/${enc(personId)}/posts`, userId, send("POST", payload), 20000);
+  async addPost(userId: string, partyId: string, personId: string, payload: Record<string, unknown>): Promise<SocialPost> {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/members/${enc(personId)}/posts`, userId, send("POST", payload), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
-  deletePost(userId: string, partyId: string, postId: string) {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/posts/${enc(postId)}`, userId, send("DELETE"), 20000);
+  async deletePost(userId: string, partyId: string, postId: string) {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/posts/${enc(postId)}`, userId, send("DELETE"), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
   pending(userId: string, partyId: string, kind?: string, includeDone = false): Promise<{ total: number; counts: Record<string, number>; items: PendingItem[] }> {
-    return politicalApiService.piRequest(
-      `/party/${enc(partyId)}/pending${query({}, { kind, includeDone: includeDone ? "true" : undefined })}`,
-      userId,
-      {},
-      30000
+    const key = `party_pending_${userId}_${partyId}_${kind || ""}_${includeDone}`;
+    return cachedFetch(key, () =>
+      politicalApiService.piRequest(
+        `/party/${enc(partyId)}/pending${query({}, { kind, includeDone: includeDone ? "true" : undefined })}`,
+        userId,
+        {},
+        30000
+      )
     );
   },
-  updatePending(userId: string, partyId: string, itemId: string, payload: { status?: string; assigneeName?: string }) {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/pending/${itemId.split("/").map(enc).join("/")}`, userId, send("PATCH", payload), 20000);
+  async updatePending(userId: string, partyId: string, itemId: string, payload: { status?: string; assigneeName?: string }) {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/pending/${itemId.split("/").map(enc).join("/")}`, userId, send("PATCH", payload), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
   gaps(userId: string, partyId: string, filters: PartyFilters = {}): Promise<{ rules: GapRules; members: number; groups: GapGroup[] }> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/gaps${query(filters)}`, userId, {}, 30000);
+    const key = `party_gaps_${userId}_${partyId}_${JSON.stringify(filters)}`;
+    return cachedFetch(key, () => politicalApiService.piRequest(`/party/${enc(partyId)}/gaps${query(filters)}`, userId, {}, 30000));
   },
   exportGaps(userId: string, partyId: string, filters: PartyFilters = {}): Promise<void> {
     const stamp = new Date().toISOString().slice(0, 10);
@@ -350,35 +424,52 @@ export const partyApi = {
       `LeadersLens_${partyId}_gaps_${stamp}.csv`
     );
   },
-  calendar(userId: string, partyId: string): Promise<{ items: CalendarItem[] }> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/calendar`, userId, {}, 30000);
+  calendar(userId: string, partyId: string): Promise<{ items: CalendarItem[]; topPosts?: TopPartyPost[] }> {
+    const key = `party_calendar_${userId}_${partyId}`;
+    return cachedFetch(key, () => politicalApiService.piRequest(`/party/${enc(partyId)}/calendar`, userId, {}, 30000));
   },
-  addCalendar(userId: string, partyId: string, payload: Record<string, unknown>): Promise<CalendarItem> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/calendar`, userId, send("POST", payload), 20000);
+  topPosts(userId: string, partyId: string, platform?: string, limit = 50): Promise<{ items: TopPartyPost[] }> {
+    const key = `party_top_posts_${userId}_${partyId}_${platform || "all"}_${limit}`;
+    return cachedFetch(key, () =>
+      politicalApiService.piRequest(`/party/${enc(partyId)}/top-posts${query({}, { platform, limit: String(limit) })}`, userId, {}, 30000)
+    );
   },
-  updateCalendar(userId: string, partyId: string, itemId: string, payload: Record<string, unknown>): Promise<CalendarItem> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/calendar/${enc(itemId)}`, userId, send("PATCH", payload), 20000);
+  async addCalendar(userId: string, partyId: string, payload: Record<string, unknown>): Promise<CalendarItem> {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/calendar`, userId, send("POST", payload), 20000);
+    invalidatePartyCache(partyId);
+    return res;
+  },
+  async updateCalendar(userId: string, partyId: string, itemId: string, payload: Record<string, unknown>): Promise<CalendarItem> {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/calendar/${enc(itemId)}`, userId, send("PATCH", payload), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
   rules(userId: string, partyId: string): Promise<{ rules: GapRules; defaults: GapRules; updatedAt?: string; updatedByName?: string }> {
     return politicalApiService.piRequest(`/party/${enc(partyId)}/gap-rules`, userId, {}, 20000);
   },
-  saveRules(userId: string, partyId: string, rules: GapRules): Promise<{ rules: GapRules; updatedAt?: string; updatedByName?: string }> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/gap-rules`, userId, send("PUT", rules), 20000);
+  async saveRules(userId: string, partyId: string, rules: GapRules): Promise<{ rules: GapRules; updatedAt?: string; updatedByName?: string }> {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/gap-rules`, userId, send("PUT", rules), 20000);
+    invalidatePartyCache(partyId);
+    return res;
   },
   audit(userId: string, partyId: string): Promise<{ items: AuditRow[] }> {
     return politicalApiService.piRequest(`/party/${enc(partyId)}/audit`, userId, {}, 20000);
   },
   compare(userId: string): Promise<{ note: string; parties: ComparisonRow[] }> {
-    return politicalApiService.piRequest("/party/compare", userId, {}, 30000);
+    return cachedFetch(`party_compare_${userId}`, () => politicalApiService.piRequest("/party/compare", userId, {}, 30000));
   },
   admins(userId: string): Promise<{ items: PartyAdminRecord[] }> {
     return politicalApiService.piRequest("/party/admins", userId, {}, 20000);
   },
-  createAdmin(userId: string, payload: Record<string, unknown>): Promise<PartyAdminRecord> {
-    return politicalApiService.piRequest("/party/admins", userId, send("POST", payload), 20000);
+  async createAdmin(userId: string, payload: Record<string, unknown>): Promise<PartyAdminRecord> {
+    const res = await politicalApiService.piRequest("/party/admins", userId, send("POST", payload), 20000);
+    invalidatePartyCache();
+    return res;
   },
-  updateAdmin(userId: string, adminId: string, payload: Record<string, unknown>): Promise<PartyAdminRecord> {
-    return politicalApiService.piRequest(`/party/admins/${enc(adminId)}`, userId, send("PATCH", payload), 20000);
+  async updateAdmin(userId: string, adminId: string, payload: Record<string, unknown>): Promise<PartyAdminRecord> {
+    const res = await politicalApiService.piRequest(`/party/admins/${enc(adminId)}`, userId, send("PATCH", payload), 20000);
+    invalidatePartyCache();
+    return res;
   },
   team(userId: string, partyId: string): Promise<{ items: TeamMember[] }> {
     return politicalApiService.piRequest(`/party/${enc(partyId)}/team`, userId, {}, 20000);
@@ -389,7 +480,9 @@ export const partyApi = {
   refreshStatus(userId: string, partyId: string): Promise<RefreshJob> {
     return politicalApiService.piRequest(`/party/${enc(partyId)}/posts/refresh`, userId, {}, 20000);
   },
-  refreshPosts(userId: string, partyId: string, payload: { personId?: string; force?: boolean; wait?: boolean } = {}): Promise<RefreshJob> {
-    return politicalApiService.piRequest(`/party/${enc(partyId)}/posts/refresh`, userId, send("POST", payload), payload.wait ? 120000 : 20000);
+  async refreshPosts(userId: string, partyId: string, payload: { personId?: string; force?: boolean; wait?: boolean } = {}): Promise<RefreshJob> {
+    const res = await politicalApiService.piRequest(`/party/${enc(partyId)}/posts/refresh`, userId, send("POST", payload), payload.wait ? 120000 : 20000);
+    invalidatePartyCache(partyId);
+    return res;
   }
 };
