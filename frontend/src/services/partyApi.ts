@@ -98,6 +98,7 @@ export interface MemberBrief {
 }
 
 export interface PartyFilters {
+  stateId?: string;
   districtId?: string;
   assemblyConstituencyId?: string;
   role?: string;
@@ -120,8 +121,9 @@ export interface PartyOverview {
   mostActive: MemberBrief[];
   leastActive: MemberBrief[];
   filters: {
-    districts: { id: string; name: string }[];
-    assemblies: { id: string; name: string; districtId: string }[];
+    states?: { id: string; name: string }[];
+    districts: { id: string; name: string; stateId?: string }[];
+    assemblies: { id: string; name: string; districtId: string; stateId?: string }[];
     roles: string[];
     platforms: PartyPlatform[];
     gapTypes?: { type: string; label: string }[];
@@ -486,3 +488,59 @@ export const partyApi = {
     return res;
   }
 };
+
+export function fallbackPartyMeta(user?: any): PartyMeta {
+  const role = String(user?.role || user?.primaryRole || user?.roleId || "").toUpperCase();
+  const email = String(user?.email || "").toLowerCase();
+  const isSuper = Boolean(user?.isPlatformAdmin) || role === "SUPER_ADMIN" || email === "admin" || email.startsWith("admin@");
+  const isPresident = role === "PARTY_PRESIDENT";
+  const isAnalyst = role === "PARTY_ANALYST";
+  const partyId = user?.commandPartyId ? String(user.commandPartyId).toUpperCase() : "TDP";
+
+  const defaultParties: PartyRef[] = [
+    { id: "TDP", name: "Telugu Desam Party", abbreviation: "TDP", color: "#FFD200", symbolEmoji: "🚲" },
+    { id: "YSRCP", name: "YSR Congress Party", abbreviation: "YSRCP", color: "#1565C0", symbolEmoji: "🪭" },
+    { id: "JSP", name: "Jana Sena Party", abbreviation: "JSP", color: "#D32F2F", symbolEmoji: "🍵" },
+    { id: "BJP", name: "Bharatiya Janata Party", abbreviation: "BJP", color: "#FF9933", symbolEmoji: "🪷" },
+    { id: "INC", name: "Indian National Congress", abbreviation: "INC", color: "#198754", symbolEmoji: "✋" }
+  ];
+
+  const parties = isSuper ? defaultParties : defaultParties.filter((p) => p.id === partyId || p.abbreviation === partyId);
+  if (parties.length === 0) {
+    parties.push({ id: partyId, name: user?.commandPartyName || partyId, abbreviation: partyId, color: "#D4A24C" });
+  }
+
+  return {
+    capabilities: {
+      isSuper,
+      isPresident,
+      isAnalyst,
+      partyId: isSuper ? null : partyId,
+      view: true,
+      edit: isSuper || isPresident,
+      export: true,
+      research: isSuper || isPresident || isAnalyst,
+      compare: isSuper,
+      manageAdmins: isSuper
+    },
+    parties,
+    defaultPartyId: partyId,
+    gapTypes: [
+      { type: "MISSING_ACCOUNT", label: "Missing account" },
+      { type: "UNVERIFIED_ACCOUNT", label: "Unverified account" },
+      { type: "INACTIVE", label: "Inactive" },
+      { type: "LOW_POSTING", label: "Low posting" },
+      { type: "MISSED_CAMPAIGN_POST", label: "Missed campaign post" },
+      { type: "INCOMPLETE_PROFILE", label: "Incomplete profile" },
+      { type: "STALE_DATA", label: "Stale data" },
+      { type: "NO_RESEARCH", label: "No research" }
+    ],
+    defaultGapRules: {
+      inactiveDays: 7,
+      weeklyPostTarget: 3,
+      staleHours: 48,
+      researchDays: 30
+    },
+    platforms: ["youtube", "instagram", "facebook", "x"]
+  };
+}

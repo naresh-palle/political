@@ -12,6 +12,15 @@ interface Props {
   showGap?: boolean;
 }
 
+const DEFAULT_STATES = [
+  { id: "AP", name: "Andhra Pradesh" },
+  { id: "TS", name: "Telangana" },
+  { id: "TN", name: "Tamil Nadu" },
+  { id: "KA", name: "Karnataka" },
+  { id: "MH", name: "Maharashtra" },
+  { id: "DL", name: "Delhi" },
+];
+
 export const PartyFilterBar: React.FC<Props> = ({
   filters,
   options,
@@ -22,13 +31,25 @@ export const PartyFilterBar: React.FC<Props> = ({
   showGap
 }) => {
   const set = (patch: PartyFilters) => onChange({ ...filters, ...patch });
-  const assemblies = (options?.assemblies || []).filter((a) => !filters.districtId || a.districtId === filters.districtId);
-  const active = Object.values(filters).some(Boolean);
+  const activeState = filters.stateId !== undefined ? filters.stateId : "AP";
+  const resolvedStates = options?.states && options.states.length > 0 ? options.states : DEFAULT_STATES;
+
+  const districts = (options?.districts || []).filter(
+    (d) => !activeState || activeState === "ALL" || !d.stateId || d.stateId === activeState || d.id.startsWith(activeState + "-")
+  );
+
+  const assemblies = (options?.assemblies || []).filter((a) => {
+    const matchState = !activeState || activeState === "ALL" || !a.stateId || a.stateId === activeState || a.id.startsWith(activeState + "-");
+    const matchDistrict = !filters.districtId || a.districtId === filters.districtId;
+    return matchState && matchDistrict;
+  });
+
+  const active = Boolean(filters.districtId || filters.assemblyConstituencyId || filters.role || filters.platform || filters.q || filters.gap || (filters.stateId && filters.stateId !== "AP"));
   const resolvedGapTypes = options?.gapTypes || gapTypes || Object.entries(GAP_LABELS).map(([type, label]) => ({ type, label }));
   const resolvedPlatforms = options?.platforms && options.platforms.length > 0 ? options.platforms : PLATFORMS;
 
   return (
-    <div data-testid="party-filters" className="grid grid-cols-2 lg:grid-cols-6 gap-2 mb-3 items-end">
+    <div data-testid="party-filters" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 mb-3 items-end">
       {showSearch && (
         <div className="col-span-2">
           <label className={labelCls} htmlFor="party-search">Search</label>
@@ -42,6 +63,25 @@ export const PartyFilterBar: React.FC<Props> = ({
         </div>
       )}
       <div>
+        <label className={labelCls} htmlFor="party-state">State</label>
+        <select
+          id="party-state"
+          className={inputCls}
+          value={activeState}
+          onChange={(e) => {
+            const val = e.target.value;
+            set({ stateId: val, districtId: undefined, assemblyConstituencyId: undefined });
+          }}
+        >
+          <option value="ALL">All states</option>
+          {resolvedStates.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
         <label className={labelCls} htmlFor="party-district">District</label>
         <select
           id="party-district"
@@ -49,8 +89,8 @@ export const PartyFilterBar: React.FC<Props> = ({
           value={filters.districtId || ""}
           onChange={(e) => set({ districtId: e.target.value || undefined, assemblyConstituencyId: undefined })}
         >
-          <option value="">All districts ({options?.districts?.length || 0})</option>
-          {(options?.districts || []).map((d) => (
+          <option value="">All districts ({districts.length})</option>
+          {districts.map((d) => (
             <option key={d.id} value={d.id}>{d.name}</option>
           ))}
         </select>
@@ -109,7 +149,7 @@ export const PartyFilterBar: React.FC<Props> = ({
         <div>
           <button
             type="button"
-            onClick={() => onChange({})}
+            onClick={() => onChange({ stateId: "AP" })}
             className="w-full rounded-lg border border-[#C99436]/40 px-3 py-2 text-xs font-semibold text-[#F5EFE0] hover:bg-[#0C1524] transition-colors"
           >
             Clear filters

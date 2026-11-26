@@ -97,7 +97,9 @@ export const MemberCard: React.FC<{ member: PartyMember; windowDays: number; onO
 );
 
 export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, windowDays, refreshTick, onOpenMember, initialFilters }) => {
-  const [filters, setFilters] = useState<PartyFilters>(initialFilters || {});
+  const [filters, setFilters] = useState<PartyFilters>(
+    initialFilters && Object.keys(initialFilters).length > 0 ? initialFilters : { stateId: "AP" }
+  );
   const [options, setOptions] = useState<PartyOverview["filters"] | null>(null);
   const [rows, setRows] = useState<PartyMember[]>([]);
   const [total, setTotal] = useState(0);
@@ -108,10 +110,10 @@ export const PartyMembers: React.FC<Props> = ({ userId, partyId, meta, windowDay
 
   useEffect(() => {
     partyApi
-      .overview(userId, partyId)
+      .overview(userId, partyId, { stateId: filters.stateId || "AP" })
       .then((o) => setOptions(o.filters))
       .catch(() => setOptions(null));
-  }, [userId, partyId]);
+  }, [userId, partyId, filters.stateId]);
 
   const load = useCallback(async () => {
     const id = ++seq.current;

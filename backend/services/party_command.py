@@ -554,6 +554,7 @@ def party_comparison_row(party: Dict[str, Any], members: List[Dict[str, Any]]) -
 def filter_members(
     members: List[Dict[str, Any]],
     *,
+    state_id: Optional[str] = None,
     district_id: Optional[str] = None,
     assembly_id: Optional[str] = None,
     role: Optional[str] = None,
@@ -562,6 +563,14 @@ def filter_members(
     gap: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     out = members
+    if state_id and state_id.strip().upper() not in ("", "ALL"):
+        st = state_id.strip().upper()
+        out = [
+            m for m in out
+            if str(m.get("stateId") or "").strip().upper() == st
+            or str(m.get("districtId") or "").startswith(f"{st}-")
+            or str(m.get("assemblyConstituencyId") or "").startswith(f"{st}-")
+        ]
     if gap:
         out = [m for m in out if gap.upper() in (m.get("gapTypes") or [])]
     if district_id:

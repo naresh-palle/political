@@ -49,7 +49,7 @@ const ActivityList: React.FC<{ title: string; rows: MemberBrief[]; onOpen: (id: 
 );
 
 export const PartyOverview: React.FC<Props> = ({ userId, partyId, windowDays, onWindowDays, refreshTick, onOpenMember, onShowMembers, onShowTab }) => {
-  const [filters, setFilters] = useState<PartyFilters>({});
+  const [filters, setFilters] = useState<PartyFilters>({ stateId: "AP" });
   const [options, setOptions] = useState<Overview["filters"] | null>(null);
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState("");
@@ -61,7 +61,7 @@ export const PartyOverview: React.FC<Props> = ({ userId, partyId, windowDays, on
     try {
       const res = await partyApi.overview(userId, partyId, filters, windowDays);
       setData(res);
-      setOptions((prev) => (Object.values(filters).some(Boolean) && prev ? prev : res.filters));
+      setOptions((prev) => (Boolean(filters.districtId || filters.assemblyConstituencyId) && prev ? prev : res.filters));
     } catch (e: any) {
       setError(e?.message || "Could not load the overview.");
     } finally {

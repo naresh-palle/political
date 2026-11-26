@@ -507,3 +507,40 @@ def test_remind_and_team_are_party_scoped(routes):
     assert any(item["name"] == "TDP President" for item in team)
     assert all(item["role"] in {"PARTY_PRESIDENT", "PARTY_ANALYST"} for item in team)
     assert not any(item["name"] == "YSRCP President" for item in team)
+
+
+def test_state_wise_filtering_and_multiplatform_calendar(routes):
+    # 1. State filtering cascade in overview
+    tdp_ap = _call(routes, "GET", "/party/{party_id}/overview", party_id="TDP", userId=TDP_PRES["id"], stateId="AP")
+    assert "states" in tdp_ap["filters"]
+    assert any(s["id"] == "AP" for s in tdp_ap["filters"]["states"])
+    # AP is first state option
+    assert tdp_ap["filters"]["states"][0]["id"] == "AP"
+    # Districts list returned for AP
+    assert tdp_ap["filters"]["districts"]
+    assert all("AP" in d["id"] or d.get("stateId") == "AP" for d in tdp_ap["filters"]["districts"])
+
+    # 2. Multi-platform posts in Content Calendar & Top Posts showcase
+    cal = _call(routes, "GET", "/party/{party_id}/calendar", party_id="TDP", userId=TDP_PRES["id"])
+    top = cal.get("topPosts") or []
+    assert len(top) > 0
+    platforms = {p["platform"] for p in top}
+    # Verify Instagram, Facebook, X, and YouTube are all present
+    assert "instagram" in platforms
+    assert "facebook" in platforms
+    assert "x" in platforms
+    # Check top post structure has thumbnail, reach, likes, views
+    sample = top[0]
+    assert sample["thumbnailUrl"]
+    assert sample["reach"] > 0
+    assert sample["url"]
+
+    # 3. Top posts platform filtering
+    x_posts = _call(routes, "GET", "/party/{party_id}/top-posts", party_id="TDP", userId=TDP_PRES["id"], platform="x")
+    assert len(x_posts["items"]) > 0
+    assert all(p["platform"] == "x" for p in x_posts["items"])
+
+    ig_posts = _call(routes, "GET", "/party/{party_id}/top-posts", party_id="TDP", userId=TDP_PRES["id"], platform="instagram")
+    assert len(ig_posts["items"]) > 0
+    assert all(p["platform"] == "instagram" for p in ig_posts["items"])
+

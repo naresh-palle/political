@@ -6,7 +6,7 @@ import { PartyFilterBar } from "./PartyFilterBar";
 import { Avatar, Btn, Card, ErrorBanner, Loading, SectionTitle, formatDate, roleText } from "./partyUi";
 
 export const PartyGaps: React.FC<PartyScreenProps> = ({ userId, partyId, meta, onOpenMember }) => {
-  const [filters, setFilters] = useState<PartyFilters>({});
+  const [filters, setFilters] = useState<PartyFilters>({ stateId: "AP" });
   const [options, setOptions] = useState<PartyOverview["filters"] | null>(null);
   const [groups, setGroups] = useState<GapGroup[]>([]);
   const [rules, setRules] = useState<GapRules | null>(null);
@@ -19,10 +19,10 @@ export const PartyGaps: React.FC<PartyScreenProps> = ({ userId, partyId, meta, o
 
   useEffect(() => {
     partyApi
-      .overview(userId, partyId)
+      .overview(userId, partyId, { stateId: filters.stateId || "AP" })
       .then((o) => setOptions(o.filters))
       .catch(() => setOptions(null));
-  }, [userId, partyId]);
+  }, [userId, partyId, filters.stateId]);
 
   const load = useCallback(async () => {
     setLoading(true);
