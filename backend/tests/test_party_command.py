@@ -521,6 +521,27 @@ def test_state_wise_filtering_and_multiplatform_calendar(routes):
     assert all("AP" in d["id"] or d.get("stateId") == "AP" for d in tdp_ap["filters"]["districts"])
 
     # 2. Multi-platform posts in Content Calendar & Top Posts showcase
+    members = _call(routes, "GET", "/party/{party_id}/members", party_id="TDP", userId=TDP_PRES["id"])["items"]
+    m_id = members[0]["id"]
+    for plat in ["youtube", "instagram", "facebook", "x"]:
+        _call(
+            routes,
+            "POST",
+            "/party/{party_id}/members/{person_id}/posts",
+            party_id="TDP",
+            person_id=m_id,
+            userId=TDP_PRES["id"],
+            payload={
+                "platform": plat,
+                "url": f"https://{plat}.com/update_{plat}_1",
+                "text": f"Real constituency initiative on {plat}",
+                "publishedAt": _iso(1),
+                "thumbnailUrl": f"https://img.test/{plat}.jpg",
+                "likes": 400,
+                "views": 2000,
+            },
+        )
+
     cal = _call(routes, "GET", "/party/{party_id}/calendar", party_id="TDP", userId=TDP_PRES["id"])
     top = cal.get("topPosts") or []
     assert len(top) > 0
@@ -529,6 +550,7 @@ def test_state_wise_filtering_and_multiplatform_calendar(routes):
     assert "instagram" in platforms
     assert "facebook" in platforms
     assert "x" in platforms
+    assert "youtube" in platforms
     # Check top post structure has thumbnail, reach, likes, views
     sample = top[0]
     assert sample["thumbnailUrl"]

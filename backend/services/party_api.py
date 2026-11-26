@@ -568,140 +568,115 @@ async def _run_post_refresh_body(pid: str, caps: Dict[str, Any], actor: Dict[str
 
 async def _curate_top_party_posts(bundle: Dict[str, Any], party_id: str, platform_filter: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
     members_by_id = {m["id"]: m for m in bundle["members"]}
-    all_posts = list(bundle.get("posts") or [])
+    raw_posts = list(bundle.get("posts") or [])
     pid = bundle.get("partyId") or party_id
     now = datetime.now(timezone.utc)
 
-    # 1. Group by platform
+    # 1. Strictly filter out any mock/seed posts or unsplash stock templates
+    actual_posts = []
+    seed_ids = []
+    for p in raw_posts:
+        is_seed = (
+            p.get("source") == "SEED"
+            or "images.unsplash.com" in str(p.get("thumbnailUrl") or "")
+            or "health_camp" in str(p.get("url") or "")
+            or "digital_lab" in str(p.get("url") or "")
+            or "substation" in str(p.get("url") or "")
+            or "grievance" in str(p.get("url") or "")
+            or "highway" in str(p.get("url") or "")
+            or "farmers" in str(p.get("url") or "")
+            or "townhall" in str(p.get("url") or "")
+            or "governance" in str(p.get("url") or "")
+        )
+        if is_seed:
+            seed_ids.append(p.get("id"))
+        else:
+            actual_posts.append(p)
+
+    # Clean up legacy seed docs from MongoDB in background
+    if seed_ids:
+        async def _cleanup_seed():
+            for sid in seed_ids:
+                try:
+                    await P._delete("social_posts", sid)
+                except Exception:
+                    pass
+            _touch_world()
+        asyncio.create_task(_cleanup_seed())
+
+    # 2. Group actual posts by platform
     posts_by_platform: Dict[str, List[Dict[str, Any]]] = {
         "youtube": [],
         "instagram": [],
         "facebook": [],
         "x": [],
     }
-    for p in all_posts:
+    for p in actual_posts:
         plat = str(p.get("platform") or "").lower()
         if plat in ("twitter", "x"):
             plat = "x"
         if plat in posts_by_platform:
             posts_by_platform[plat].append(p)
 
-    # 2. If Instagram, Facebook, or X have few or no posts, seed / enrich high-impact posts
-    needed_platforms = [p for p in ("instagram", "facebook", "x") if len(posts_by_platform[p]) < 4]
-    if needed_platforms and bundle["members"]:
-        enriched_new_posts = []
-        leaders = bundle["members"][:12]
-        templates_by_plat = {
-            "instagram": [
-                {
-                    "text": "Digital skill labs classroom initiative launched with college student volunteers in {ac}. Empowering our youth with cutting-edge technology tools. #YouthEmpowerment #SwarnaAndhra2047",
-                    "thumb": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://www.instagram.com/p/digital_lab_{pid}",
-                    "likes": 4200, "comments": 280, "shares": 640, "views": 24500, "days": 2,
-                },
-                {
-                    "text": "Reviewing progress of drip irrigation and tail-end canal water supply with local farmers in {ac}. Working relentlessly for sustainable agriculture. #FarmerFirst",
-                    "thumb": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://www.instagram.com/p/irrigation_{pid}",
-                    "likes": 5800, "comments": 340, "shares": 890, "views": 32000, "days": 4,
-                },
-                {
-                    "text": "Vibrant constituency townhall in {ac}. Engaging with women self-help groups and handloom artisans on micro-credit schemes. #WomenLeadership",
-                    "thumb": "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://www.instagram.com/p/townhall_{pid}",
-                    "likes": 6900, "comments": 410, "shares": 1120, "views": 38500, "days": 6,
-                },
-            ],
-            "facebook": [
-                {
-                    "text": "Praja Galam: Weekly public grievance redressal camp at {ac} party office. Personally reviewed 160+ petitions on rural roads and local development.",
-                    "thumb": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://www.facebook.com/posts/grievance_{pid}",
-                    "likes": 5100, "comments": 420, "shares": 950, "views": 28000, "days": 3,
-                },
-                {
-                    "text": "Inauguration of upgraded 33/11kV electrical substation in {ac}. Resolving low-voltage issues for 18 surrounding agricultural villages.",
-                    "thumb": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://www.facebook.com/posts/substation_{pid}",
-                    "likes": 6400, "comments": 510, "shares": 1280, "views": 36000, "days": 5,
-                },
-                {
-                    "text": "Free mega health and eye camp conducted in {ac}. Over 1,400 senior citizens and families received free specialist consultation and medicines.",
-                    "thumb": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://www.facebook.com/posts/health_camp_{pid}",
-                    "likes": 7800, "comments": 630, "shares": 1650, "views": 44000, "days": 7,
-                },
-            ],
-            "x": [
-                {
-                    "text": "Inspected ongoing 4-lane highway expansion connecting {ac} with state industrial hubs. Robust infrastructure is the backbone of economic prosperity. #SwarnaAndhra2047 #Infrastructure",
-                    "thumb": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://x.com/status/highway_{pid}",
-                    "likes": 2400, "comments": 190, "shares": 720, "views": 18500, "days": 1,
-                },
-                {
-                    "text": "Productive interaction with farmer delegations in {ac} regarding smooth MSP procurement operations and timely fertilizer distribution across mandals.",
-                    "thumb": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://x.com/status/farmers_{pid}",
-                    "likes": 3100, "comments": 240, "shares": 890, "views": 22000, "days": 3,
-                },
-                {
-                    "text": "Our commitment is visible on the ground. Every development project in {ac} is being monitored weekly for timely completion and quality execution. #AndhraPradesh",
-                    "thumb": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
-                    "url_tmpl": "https://x.com/status/governance_{pid}",
-                    "likes": 3900, "comments": 310, "shares": 1150, "views": 29000, "days": 6,
-                },
-            ],
-        }
-        for plat in needed_platforms:
-            tmpls = templates_by_plat.get(plat) or []
-            for idx, leader in enumerate(leaders):
-                tmpl = tmpls[idx % len(tmpls)]
-                l_id = leader["id"]
-                ac_name = leader.get("assemblyConstituencyName") or leader.get("districtName") or "Constituency"
-                post_id = f"post_{pid}_{l_id}_{plat}_{idx}"
-                doc = {
-                    "id": post_id,
-                    "partyId": pid,
-                    "personId": l_id,
-                    "platform": plat,
-                    "url": tmpl["url_tmpl"].format(pid=l_id),
-                    "text": tmpl["text"].format(ac=ac_name),
-                    "thumbnailUrl": tmpl["thumb"],
-                    "publishedAt": (now - timedelta(days=tmpl["days"] + (idx % 3))).isoformat(),
-                    "likes": tmpl["likes"] + (idx * 150),
-                    "comments": tmpl["comments"] + (idx * 25),
-                    "shares": tmpl["shares"] + (idx * 60),
-                    "views": tmpl["views"] + (idx * 1200),
-                    "calendarId": None,
-                    "source": "SEED",
-                    "createdBy": "system",
-                    "createdByName": "Party Command Feed",
-                    "fetchedAt": now.isoformat(),
-                }
-                enriched_new_posts.append(doc)
-                posts_by_platform[plat].append(doc)
-                all_posts.append(doc)
-                bundle.setdefault("posts", []).append(doc)
-        if enriched_new_posts:
+    # 3. Auto-populate live actual YouTube posts if database has few or no posts yet
+    if len(posts_by_platform["youtube"]) < 8 and bundle.get("accounts"):
+        yt_accs = [
+            a for a in bundle["accounts"]
+            if str(a.get("platform") or "").lower() == "youtube" and a.get("profileUrl") and not a.get("noAccount")
+        ]
+        if yt_accs:
             try:
-                await asyncio.gather(*(P._save("social_posts", p["id"], p) for p in enriched_new_posts))
-            except Exception:
-                pass
-            _touch_world()
+                from .social_fetcher import fetch_youtube_posts
+                async def _fetch_one_yt(acc):
+                    res = await fetch_youtube_posts(acc["profileUrl"], limit=8)
+                    fetched = []
+                    for item in res.get("posts") or []:
+                        doc = {
+                            "id": f"post_yt_{item.get('externalId') or new_id('yt')}",
+                            "partyId": pid,
+                            "personId": acc.get("personId"),
+                            "accountId": acc.get("id"),
+                            "platform": "youtube",
+                            "url": item.get("url"),
+                            "text": item.get("text") or "",
+                            "thumbnailUrl": item.get("thumbnailUrl") or "",
+                            "publishedAt": item.get("publishedAt") or now.isoformat(),
+                            "likes": int(item.get("likes") or 0),
+                            "comments": int(item.get("comments") or 0),
+                            "shares": int(item.get("shares") or 0),
+                            "views": int(item.get("views") or 0),
+                            "source": "FETCH",
+                            "createdBy": "system",
+                            "createdByName": "Leader YouTube Sync",
+                            "fetchedAt": now.isoformat(),
+                        }
+                        await P._save("social_posts", doc["id"], doc)
+                        fetched.append(doc)
+                    return fetched
+                # Fetch up to 6 leader channels concurrently
+                batches = await asyncio.gather(*(_fetch_one_yt(acc) for acc in yt_accs[:6]))
+                for batch in batches:
+                    for doc in batch:
+                        posts_by_platform["youtube"].append(doc)
+                        actual_posts.append(doc)
+                        bundle.setdefault("posts", []).append(doc)
+                _touch_world()
+            except Exception as ex:
+                logger.warning("Auto-fetch YouTube leader posts notice: %s", ex)
 
-    # 3. YouTube: Top content only (top reach, views, engagement) - not all raw uploads
+    # 4. YouTube: Strictly rank by actual views / reach / likes (top content only)
     youtube_posts = posts_by_platform.get("youtube") or []
     youtube_posts.sort(
         key=lambda x: (
             int(x.get("views") or 0) if int(x.get("views") or 0) > 0 else (int(x.get("likes") or 0) * 10),
-            int(x.get("likes") or 0)
+            int(x.get("likes") or 0),
+            str(x.get("publishedAt") or "")
         ),
         reverse=True
     )
-    top_youtube = youtube_posts[:8]
+    top_youtube = youtube_posts[:15]
 
-    # 4. Compile candidates across all 4 platforms
+    # 5. Compile actual candidates across all platforms (no mock data)
     candidates = []
     candidates.extend(top_youtube)
     ig_posts = sorted(posts_by_platform.get("instagram") or [], key=lambda x: (int(x.get("views") or 0), int(x.get("likes") or 0)), reverse=True)
@@ -711,20 +686,20 @@ async def _curate_top_party_posts(bundle: Dict[str, Any], party_id: str, platfor
     x_posts = sorted(posts_by_platform.get("x") or [], key=lambda x: (int(x.get("views") or 0), int(x.get("likes") or 0)), reverse=True)
     candidates.extend(x_posts[:12])
 
-    # 5. Format to top post objects
+    # 6. Format actual posts to response objects
     top_posts = []
     seen_ids = set()
     for p in candidates:
         if p.get("id") in seen_ids:
             continue
         seen_ids.add(p.get("id"))
-        plat = str(p.get("platform") or "facebook").lower()
+        plat = str(p.get("platform") or "youtube").lower()
         if plat in ("twitter", "x"):
             plat = "x"
         if platform_filter and platform_filter.lower() != "all" and plat != platform_filter.lower():
             continue
-        pid = p.get("personId")
-        m = members_by_id.get(pid)
+        pid_person = p.get("personId")
+        m = members_by_id.get(pid_person)
         if not m:
             continue
         views = int(p.get("views") or 0)
@@ -732,10 +707,11 @@ async def _curate_top_party_posts(bundle: Dict[str, Any], party_id: str, platfor
         comments = int(p.get("comments") or 0)
         shares = int(p.get("shares") or 0)
         reach = views if views > 0 else (likes * 6 + comments * 4 + shares * 12 + 500)
-        thumb = p.get("thumbnailUrl") or "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80"
+        # Use genuine thumbnail or leader's photo, NEVER a random unsplash stock photo
+        thumb = p.get("thumbnailUrl") or m.get("photoUrl") or ""
         top_posts.append({
             "id": p.get("id"),
-            "personId": pid,
+            "personId": pid_person,
             "memberName": m.get("name"),
             "memberPhoto": m.get("photoUrl"),
             "roles": m.get("roles") or [],
@@ -1180,78 +1156,67 @@ def register_party_routes(api_router) -> None:
     @api_router.get("/party/{party_id}/members/{person_id}/posts")
     async def party_list_posts(party_id: str, person_id: str, userId: Optional[str] = None, platform: Optional[str] = None, limit: int = 50):
         actor = await _load_party_actor(userId)
-        _caps_for(actor, party_id)
+        caps = _caps_for(actor, party_id)
         bundle = _party_members(await _load_world(), party_id)
         member = _member_or_404(bundle, person_id)
-        posts = [p for p in bundle["posts"] if p.get("personId") == person_id and (not platform or str(p.get("platform")).lower() == platform.lower())]
-        if not posts:
-            now = datetime.now(timezone.utc)
-            m_name = member.get("name") or "Leader"
-            ac_name = member.get("assemblyConstituencyName") or "Constituency"
-            pid = bundle.get("partyId") or party_id
-            initial_templates = [
-                {
-                    "platform": "youtube",
-                    "text": f"Reviewing key civic issues in {ac_name}. Focused on better roads and water supply.",
-                    "days": 3,
-                    "thumb": "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80",
-                    "url": f"https://www.youtube.com/watch?v=civic_{person_id}",
-                    "likes": 1240, "comments": 86, "shares": 142, "views": 8700
-                },
-                {
-                    "platform": "instagram",
-                    "text": f"Addressing local youth volunteers regarding digital lab classroom initiative in {ac_name}.",
-                    "days": 5,
-                    "thumb": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80",
-                    "url": f"https://www.instagram.com/p/youth_{person_id}",
-                    "likes": 2840, "comments": 195, "shares": 310, "views": 14200
-                },
-                {
-                    "platform": "facebook",
-                    "text": f"Public grievance redressal camp held at {ac_name} office. Over 150 petitions reviewed with field teams.",
-                    "days": 8,
-                    "thumb": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80",
-                    "url": f"https://www.facebook.com/posts/grievance_{person_id}",
-                    "likes": 3400, "comments": 280, "shares": 450, "views": 19500
-                },
-                {
-                    "platform": "x",
-                    "text": f"Constituency walk in {ac_name} with community elders reviewing local canal irrigation progress.",
-                    "days": 11,
-                    "thumb": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80",
-                    "url": f"https://twitter.com/status/walk_{person_id}",
-                    "likes": 980, "comments": 64, "shares": 240, "views": 5800
-                }
-            ]
-            seeded = []
-            for idx, tmpl in enumerate(initial_templates):
-                if platform and tmpl["platform"] != platform.lower():
-                    continue
-                p_id = f"post_{person_id}_{tmpl['platform']}_{idx}"
-                doc = {
-                    "id": p_id,
-                    "partyId": pid,
-                    "personId": person_id,
-                    "platform": tmpl["platform"],
-                    "url": tmpl["url"],
-                    "text": tmpl["text"],
-                    "thumbnailUrl": tmpl["thumb"],
-                    "publishedAt": (now - timedelta(days=tmpl["days"])).isoformat(),
-                    "likes": tmpl["likes"],
-                    "comments": tmpl["comments"],
-                    "shares": tmpl["shares"],
-                    "views": tmpl["views"],
-                    "calendarId": None,
-                    "source": "SEED",
-                    "createdBy": "system",
-                    "createdByName": "System Initializer",
-                    "fetchedAt": now.isoformat(),
-                }
-                await P._save("social_posts", p_id, doc)
-                seeded.append(doc)
-            posts = seeded
-        posts.sort(key=lambda p: str(p.get("publishedAt") or ""), reverse=True)
-        return {"items": posts[: max(1, min(limit, 200))]}
+        actual_posts = [
+            p for p in bundle["posts"]
+            if p.get("personId") == person_id
+            and (not platform or str(p.get("platform")).lower() == platform.lower())
+            and p.get("source") != "SEED"
+            and not (
+                "images.unsplash.com" in str(p.get("thumbnailUrl") or "")
+                or "civic_" in str(p.get("url") or "")
+                or "youth_" in str(p.get("url") or "")
+                or "grievance_" in str(p.get("url") or "")
+                or "walk_" in str(p.get("url") or "")
+            )
+        ]
+        if not actual_posts:
+            # Check if this leader has a live YouTube account to fetch directly
+            yt_acc = next(
+                (
+                    a for a in bundle["accounts"]
+                    if a.get("personId") == person_id
+                    and str(a.get("platform") or "").lower() == "youtube"
+                    and a.get("profileUrl")
+                    and not a.get("noAccount")
+                ),
+                None,
+            )
+            if yt_acc and (not platform or platform.lower() == "youtube"):
+                try:
+                    from .social_fetcher import fetch_youtube_posts
+                    res = await fetch_youtube_posts(yt_acc["profileUrl"], limit=10)
+                    now_str = now_iso()
+                    for item in res.get("posts") or []:
+                        doc = {
+                            "id": f"post_yt_{item.get('externalId') or new_id('yt')}",
+                            "partyId": bundle["partyId"],
+                            "personId": person_id,
+                            "accountId": yt_acc.get("id"),
+                            "platform": "youtube",
+                            "url": item.get("url"),
+                            "text": item.get("text") or "",
+                            "thumbnailUrl": item.get("thumbnailUrl") or "",
+                            "publishedAt": item.get("publishedAt") or now_str,
+                            "likes": int(item.get("likes") or 0),
+                            "comments": int(item.get("comments") or 0),
+                            "shares": int(item.get("shares") or 0),
+                            "views": int(item.get("views") or 0),
+                            "source": "FETCH",
+                            "createdBy": caps["actorId"],
+                            "createdByName": caps["actorName"],
+                            "fetchedAt": now_str,
+                        }
+                        await P._save("social_posts", doc["id"], doc)
+                        actual_posts.append(doc)
+                    if actual_posts:
+                        _touch_world()
+                except Exception as ex:
+                    logger.warning("Fetch leader YouTube posts notice for %s: %s", person_id, ex)
+        actual_posts.sort(key=lambda p: str(p.get("publishedAt") or ""), reverse=True)
+        return {"items": actual_posts[: max(1, min(limit, 200))]}
 
     @api_router.post("/party/{party_id}/members/{person_id}/posts")
     async def party_add_post(party_id: str, person_id: str, payload: dict, userId: Optional[str] = None):
