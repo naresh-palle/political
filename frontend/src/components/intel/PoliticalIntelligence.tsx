@@ -1562,7 +1562,10 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
         districts: [],
         recentCollections: []
       };
-      setDashboard(fallback);
+      setDashboard((prev) => {
+        if (prev && (prev.totalLeaders || 0) > 0) return prev;
+        return fallback;
+      });
       if (!isTransientLoadError(e)) flash(e.message || "Could not load dashboard", true);
     } finally {
       if (req === dashReqRef.current) setPageLoading(false);
@@ -2589,7 +2592,7 @@ export const PoliticalIntelligence: React.FC<{ currentUser: UserProfile; openDat
 
                     {/* 4-Color Stacked Platform Share Bar (Increased height per user request) */}
                     <div className="mt-4 pt-3 border-t border-[rgba(201,148,54,0.15)]">
-                      <div className="w-full h-5 rounded-full bg-[#050B12] overflow-hidden flex border border-[rgba(201,148,54,0.3)] shadow-inner">
+                      <div className="w-full h-6 rounded-full bg-[#050B12] overflow-hidden flex border border-[rgba(201,148,54,0.3)] shadow-inner">
                         <div style={{ width: `${fbPct}%` }} className="h-full bg-[#1877F2] flex items-center justify-center text-[10px] font-bold text-white overflow-hidden" title={`Facebook: ${activeState.platformEstimates.facebookDisplay} (${fbPct}%)`}>
                           {fbPct >= 10 ? `${fbPct}%` : ""}
                         </div>
@@ -5185,40 +5188,35 @@ function AiCampaignIntelligence({
           const isHigh = rec.priority === "High";
           const isMed = rec.priority === "Medium";
           const badgeClass = isHigh
-            ? "bg-[#E5636B]/15 text-[#E5636B] border-[#E5636B]/40"
+            ? "bg-[#E5636B]/15 text-[#E5636B] border-[#E5636B]/40 font-bold"
             : isMed
-            ? "bg-[#E0A33A]/15 text-[#E0A33A] border-[#E0A33A]/40"
-            : "bg-[#A7A39A]/15 text-[#A7A39A] border-[#A7A39A]/40";
-          const borderClass = isHigh
-            ? "border-l-[#E5636B]"
-            : isMed
-            ? "border-l-[#E0A33A]"
-            : "border-l-[#A7A39A]";
+            ? "bg-[#E0A33A]/15 text-[#E0A33A] border-[#E0A33A]/40 font-bold"
+            : "bg-[#A7A39A]/15 text-[#A7A39A] border-[#A7A39A]/40 font-bold";
 
           return (
             <div
               key={i}
-              className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.25)] space-y-2 flex flex-col justify-between"
+              className="p-3.5 rounded-xl bg-[#050B12] border border-[rgba(201,148,54,0.35)] border-l-4 border-l-[#D4A24C] space-y-2 flex flex-col justify-between shadow-sm"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="font-bold text-xs text-[#F3EEE2]">{i + 1}. {rec.title}</div>
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border shrink-0 ${badgeClass}`}>
+                  <div className="font-bold text-sm text-white">{i + 1}. {rec.title}</div>
+                  <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border shrink-0 ${badgeClass}`}>
                     {rec.priority}
                   </span>
                 </div>
-                <div className="text-[11px] font-mono font-semibold text-[#D4A24C] mt-1">
+                <div className="text-xs font-mono font-bold text-[#D4A24C] mt-1">
                   {rec.gapMetric}
                 </div>
-                <p className="text-xs text-[#A7A39A] leading-relaxed mt-1">{rec.desc}</p>
+                <p className="text-xs text-white font-medium leading-relaxed mt-1">{rec.desc}</p>
               </div>
 
-              <div className="pt-2 border-t border-[#0C1524] flex flex-wrap items-center justify-between text-[11px] text-[#A7A39A] gap-1">
-                <span className="font-medium text-[#F3EEE2]">
-                  {rec.owner} · <span className="text-[#A7A39A]">{rec.dueDate}</span>
+              <div className="pt-2 border-t border-[#0C1524] flex flex-wrap items-center justify-between text-[11px] gap-1">
+                <span className="font-bold text-white">
+                  {rec.owner} · <span className="text-[#E6DCC4] font-semibold">{rec.dueDate}</span>
                 </span>
                 {rec.costEst && (
-                  <span className="font-mono text-[#D4A24C]">
+                  <span className="font-mono font-bold text-[#D4A24C]">
                     {rec.costEst} · {rec.expectedReach}
                   </span>
                 )}

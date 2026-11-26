@@ -156,7 +156,7 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
 
   return (
     <RefreshContext.Provider value={{ job, start: startRefresh }}>
-    <div data-testid="party-command" className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 pb-40">
+    <div data-testid="party-command" className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 pb-12">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-11 h-11 rounded-xl border border-[#C99436]/50 bg-[#050B12] flex items-center justify-center text-xl shrink-0">
@@ -197,6 +197,29 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
         )}
       </div>
 
+      {/* Tab Navigation Header (Positioned at Top) */}
+      <nav
+        data-testid="party-tabs"
+        className="mb-4 rounded-xl border border-[#C99436]/35 bg-[#050B12] p-1.5 shadow-md overflow-x-auto no-scrollbar"
+      >
+        <div className="flex flex-nowrap sm:flex-wrap items-center gap-1.5">
+          {tabs.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => chooseTab(item.id)}
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-bold uppercase tracking-wider cursor-pointer transition-all ${
+                !memberId && tab === item.id
+                  ? "bg-gradient-to-r from-[#C99436] to-[#E5B869] text-[#050B12] shadow font-black"
+                  : "text-[#CBD5E1] hover:text-[#F5EFE0] hover:bg-[#0C1524] border border-transparent"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
       <ErrorBanner message={error} onRetry={loadMeta} />
 
       {job && (job.status === "RUNNING" || job.detail || (job.notes && job.notes.length > 0)) && (
@@ -235,25 +258,6 @@ export const PartyCommandCenter: React.FC<Props> = ({ currentUser }) => {
           {tab === "accounts" && caps.manageAdmins && <PartyAccounts {...screenProps} />}
         </React.Fragment>
       )}
-      <nav
-        data-testid="party-tabs"
-        className="fixed bottom-0 inset-x-0 z-30 border-t border-[#C99436]/35 bg-[#050B12]/95 backdrop-blur-xl"
-      >
-        <div className="max-w-7xl mx-auto px-2 py-1.5 flex flex-wrap gap-1">
-          {tabs.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => chooseTab(item.id)}
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-[11px] font-semibold cursor-pointer ${
-                !memberId && tab === item.id ? "bg-gradient-to-r from-[#C99436] to-[#E5B869] text-[#050B12]" : "text-[#CBD5E1] hover:bg-[#0C1524]"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </nav>
     </div>
     </RefreshContext.Provider>
   );

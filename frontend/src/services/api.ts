@@ -32,7 +32,7 @@ import {
 const RENDER_BACKEND_URL = (import.meta as any).env?.VITE_API_URL || "https://political-ddmj.onrender.com/api";
 const BASE_URL = (import.meta as any).env?.BASE_URL || "/";
 const ISSUES_API_TIMEOUT_MS = 25000;
-const LIST_API_TIMEOUT_MS = 2500;
+const LIST_API_TIMEOUT_MS = 10000;
 const RETIRED_MOCK_IDS = new Set([
   "iss-bng-101",
   "iss-bng-102",
@@ -369,6 +369,9 @@ async function loadStaticGeography() {
 let notificationListInflight: Promise<any[]> | null = null;
 const PI_DASHBOARD_CACHE: Record<string, { at: number; data: any }> = {};
 const PI_DASHBOARD_CACHE_TTL = 15000; // 15-second cache for instant tab-switching
+const PI_INTELLIGENCE_CACHE: Record<string, { at: number; data: any }> = {};
+const PI_LEADERS_CACHE: Record<string, { at: number; data: any }> = {};
+const PI_ACCOUNTS_CACHE: Record<string, { at: number; data: any }> = {};
 
 export const politicalApiService = {
   async getUsers(): Promise<UserProfile[]> {
@@ -2177,7 +2180,7 @@ export const politicalApiService = {
     return [];
   },
 
-  async piRequest(path: string, userId: string, options: RequestInit = {}, timeoutMs = 12000): Promise<any> {
+  async piRequest(path: string, userId: string, options: RequestInit = {}, timeoutMs = 30000): Promise<any> {
     const joiner = path.includes("?") ? "&" : "?";
     const url = `${RENDER_BACKEND_URL}${path}${joiner}userId=${encodeURIComponent(userId)}`;
     try {
@@ -2248,6 +2251,15 @@ export const politicalApiService = {
     for (const k in PI_DASHBOARD_CACHE) {
       delete PI_DASHBOARD_CACHE[k];
     }
+    for (const k in PI_INTELLIGENCE_CACHE) {
+      delete PI_INTELLIGENCE_CACHE[k];
+    }
+    for (const k in PI_LEADERS_CACHE) {
+      delete PI_LEADERS_CACHE[k];
+    }
+    for (const k in PI_ACCOUNTS_CACHE) {
+      delete PI_ACCOUNTS_CACHE[k];
+    }
   },
   getPiDistricts(userId: string, stateId?: string) {
     return this.getDistrictsByState(stateId, userId);
@@ -2310,12 +2322,30 @@ export const politicalApiService = {
   deletePiConstituency(userId: string, recordId: string) {
     return this.piRequest(`/pi/constituencies/${encodeURIComponent(recordId)}`, userId, { method: "DELETE" }, 0);
   },
-  getPiLeaders(userId: string, params: Record<string, string | number | undefined> = {}) {
+  async getPiLeaders(userId: string, params: Record<string, string | number | undefined> = {}) {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== "") q.set(k, String(v));
     });
-    return this.piRequest(`/pi/leaders?${q.toString()}`, userId, {}, 20000);
+    const suffix = q.toString() ? `?${q.toString()}` : "";
+    const key = `${userId}:${suffix}`;
+    const now = Date.now();
+    const cached = PI_LEADERS_CACHE[key];
+    if (cached) {
+      if (now - cached.at > 15000) {
+        this.piRequest(`/pi/leaders${suffix}`, userId, {}, 30000).then((data) => {
+          if (data && Array.isArray(data.items)) {
+            PI_LEADERS_CACHE[key] = { at: Date.now(), data };
+          }
+        }).catch(() => {});
+      }
+      return cached.data;
+    }
+    const data = await this.piRequest(`/pi/leaders${suffix}`, userId, {}, 30000);
+    if (data && Array.isArray(data.items)) {
+      PI_LEADERS_CACHE[key] = { at: now, data };
+    }
+    return data;
   },
   savePiLeader(userId: string, payload: any) {
     this.invalidatePiDashboardCache();
@@ -2325,12 +2355,30 @@ export const politicalApiService = {
     this.invalidatePiDashboardCache();
     return this.piRequest(`/pi/leaders/${encodeURIComponent(personId)}`, userId, { method: "DELETE" }, 0);
   },
-  getPiAccounts(userId: string, params: Record<string, string | number | undefined> = {}) {
+  async getPiAccounts(userId: string, params: Record<string, string | number | undefined> = {}) {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== "") q.set(k, String(v));
     });
-    return this.piRequest(`/pi/social-accounts?${q.toString()}`, userId, {}, 20000);
+    const suffix = q.toString() ? `?${q.toString()}` : "";
+    const key = `${userId}:${suffix}`;
+    const now = Date.now();
+    const cached = PI_ACCOUNTS_CACHE[key];
+    if (cached) {
+      if (now - cached.at > 15000) {
+        this.piRequest(`/pi/social-accounts${suffix}`, userId, {}, 30000).then((data) => {
+          if (data && Array.isArray(data.items)) {
+            PI_ACCOUNTS_CACHE[key] = { at: Date.now(), data };
+          }
+        }).catch(() => {});
+      }
+      return cached.data;
+    }
+    const data = await this.piRequest(`/pi/social-accounts${suffix}`, userId, {}, 30000);
+    if (data && Array.isArray(data.items)) {
+      PI_ACCOUNTS_CACHE[key] = { at: now, data };
+    }
+    return data;
   },
   savePiAccount(userId: string, payload: any) {
     this.invalidatePiDashboardCache();
@@ -2359,12 +2407,35 @@ export const politicalApiService = {
       body: JSON.stringify(payload)
     }, 0);
   },
-  getPiIntelligence(userId: string, params: Record<string, string | undefined> = {}) {
+  async getPiIntelligence(userId: string, params: Record<string, string | undefined> = {}) {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v) q.set(k, v);
     });
-    return this.piRequest(`/pi/intelligence?${q.toString()}`, userId);
+    const suffix = q.toString() ? `?${q.toString()}` : "";
+    const key = `${userId}:${suffix}`;
+    const now = Date.now();
+    const cached = PI_INTELLIGENCE_CACHE[key];
+    if (cached) {
+      if (now - cached.at > 10000) {
+        this.piRequest(`/pi/intelligence${suffix}`, userId, {}, 30000).then((data) => {
+          if (data && data.leaders) {
+            PI_INTELLIGENCE_CACHE[key] = { at: Date.now(), data };
+          }
+        }).catch(() => {});
+      }
+      return cached.data;
+    }
+    try {
+      const data = await this.piRequest(`/pi/intelligence${suffix}`, userId, {}, 30000);
+      if (data && data.leaders) {
+        PI_INTELLIGENCE_CACHE[key] = { at: now, data };
+      }
+      return data;
+    } catch (err) {
+      if (cached) return cached.data;
+      throw err;
+    }
   },
   previewPiImport(userId: string, csv: string) {
     return this.piRequest("/pi/import/preview", userId, { method: "POST", body: JSON.stringify({ csv }) }, 0);

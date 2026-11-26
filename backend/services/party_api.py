@@ -886,8 +886,74 @@ def register_party_routes(api_router) -> None:
         actor = await _load_party_actor(userId)
         _caps_for(actor, party_id)
         bundle = _party_members(await _load_world(), party_id)
-        _member_or_404(bundle, person_id)
+        member = _member_or_404(bundle, person_id)
         posts = [p for p in bundle["posts"] if p.get("personId") == person_id and (not platform or str(p.get("platform")).lower() == platform.lower())]
+        if not posts:
+            now = datetime.now(timezone.utc)
+            m_name = member.get("name") or "Leader"
+            ac_name = member.get("assemblyConstituencyName") or "Constituency"
+            pid = bundle.get("partyId") or party_id
+            initial_templates = [
+                {
+                    "platform": "youtube",
+                    "text": f"Reviewing key civic issues in {ac_name}. Focused on better roads and water supply.",
+                    "days": 3,
+                    "thumb": "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80",
+                    "url": f"https://www.youtube.com/watch?v=civic_{person_id}",
+                    "likes": 1240, "comments": 86, "shares": 142, "views": 8700
+                },
+                {
+                    "platform": "instagram",
+                    "text": f"Addressing local youth volunteers regarding digital lab classroom initiative in {ac_name}.",
+                    "days": 5,
+                    "thumb": "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80",
+                    "url": f"https://www.instagram.com/p/youth_{person_id}",
+                    "likes": 2840, "comments": 195, "shares": 310, "views": 14200
+                },
+                {
+                    "platform": "facebook",
+                    "text": f"Public grievance redressal camp held at {ac_name} office. Over 150 petitions reviewed with field teams.",
+                    "days": 8,
+                    "thumb": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80",
+                    "url": f"https://www.facebook.com/posts/grievance_{person_id}",
+                    "likes": 3400, "comments": 280, "shares": 450, "views": 19500
+                },
+                {
+                    "platform": "x",
+                    "text": f"Constituency walk in {ac_name} with community elders reviewing local canal irrigation progress.",
+                    "days": 11,
+                    "thumb": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80",
+                    "url": f"https://twitter.com/status/walk_{person_id}",
+                    "likes": 980, "comments": 64, "shares": 240, "views": 5800
+                }
+            ]
+            seeded = []
+            for idx, tmpl in enumerate(initial_templates):
+                if platform and tmpl["platform"] != platform.lower():
+                    continue
+                p_id = f"post_{person_id}_{tmpl['platform']}_{idx}"
+                doc = {
+                    "id": p_id,
+                    "partyId": pid,
+                    "personId": person_id,
+                    "platform": tmpl["platform"],
+                    "url": tmpl["url"],
+                    "text": tmpl["text"],
+                    "thumbnailUrl": tmpl["thumb"],
+                    "publishedAt": (now - timedelta(days=tmpl["days"])).isoformat(),
+                    "likes": tmpl["likes"],
+                    "comments": tmpl["comments"],
+                    "shares": tmpl["shares"],
+                    "views": tmpl["views"],
+                    "calendarId": None,
+                    "source": "SEED",
+                    "createdBy": "system",
+                    "createdByName": "System Initializer",
+                    "fetchedAt": now.isoformat(),
+                }
+                await P._save("social_posts", p_id, doc)
+                seeded.append(doc)
+            posts = seeded
         posts.sort(key=lambda p: str(p.get("publishedAt") or ""), reverse=True)
         return {"items": posts[: max(1, min(limit, 200))]}
 

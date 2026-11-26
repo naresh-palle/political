@@ -79,6 +79,7 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, ref
   const [post, setPost] = useState({
     platform: "facebook" as PartyPlatform,
     url: "",
+    thumbnailUrl: "",
     publishedAt: toLocalInput(),
     text: "",
     likes: "",
@@ -479,6 +480,17 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, ref
                   </div>
                 ))}
                 <div className="sm:col-span-2 lg:col-span-4">
+                  <label className={labelCls} htmlFor="post-thumb">Poster / Media URL (optional)</label>
+                  <input
+                    id="post-thumb"
+                    type="url"
+                    className={inputCls}
+                    placeholder="https://… (link to post poster, graphic, or photo)"
+                    value={post.thumbnailUrl}
+                    onChange={(e) => setPost({ ...post, thumbnailUrl: e.target.value })}
+                  />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-4">
                   <label className={labelCls} htmlFor="post-calendar">Campaign item (optional)</label>
                   <select id="post-calendar" className={inputCls} value={post.calendarId} onChange={(e) => setPost({ ...post, calendarId: e.target.value })}>
                     <option value="">Not part of a campaign</option>
@@ -503,6 +515,7 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, ref
                         partyApi.addPost(userId, partyId, personId, {
                           platform: post.platform,
                           url: post.url.trim(),
+                          thumbnailUrl: post.thumbnailUrl.trim() || undefined,
                           publishedAt: fromLocalInput(post.publishedAt),
                           text: post.text,
                           likes: num(post.likes),
@@ -513,7 +526,7 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, ref
                         }),
                       "Post logged."
                     );
-                    if (ok) setPost({ ...post, url: "", text: "", likes: "", comments: "", shares: "", views: "", calendarId: "", publishedAt: toLocalInput() });
+                    if (ok) setPost({ ...post, url: "", thumbnailUrl: "", text: "", likes: "", comments: "", shares: "", views: "", calendarId: "", publishedAt: toLocalInput() });
                   }}
                 >
                   <Plus className="w-3.5 h-3.5" /> Log post
@@ -529,53 +542,80 @@ export const PartyMemberProfile: React.FC<Props> = ({ userId, partyId, meta, ref
           {posts.length === 0 ? (
             <Empty message="No posts logged for this member yet." />
           ) : (
-            posts.map((p) => (
-              <Card key={p.id} testId="post-row">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  {p.thumbnailUrl && (
-                    <a href={p.url} target="_blank" rel="noreferrer" className="shrink-0">
-                      <img src={p.thumbnailUrl} alt="" className="w-36 h-24 rounded-lg object-cover border border-[#C99436]/30 bg-[#050B12]" />
+            posts.map((p) => {
+              const fallbackPoster = (
+                <div className="w-28 sm:w-36 h-20 sm:h-24 rounded-lg border border-[#C99436]/40 bg-gradient-to-br from-[#0C1524] via-[#050B12] to-[#080E18] flex flex-col items-center justify-center p-2 text-center shrink-0 shadow-sm">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-[#C99436] font-mono">Campaign Poster</span>
+                  <span className="text-[10px] text-[#F5EFE0] font-bold line-clamp-2 mt-0.5">{p.text ? p.text.slice(0, 36) : PLATFORM_LABELS[p.platform]}</span>
+                  <span className="text-[9px] text-[#A7A39A] mt-0.5">{formatDate(p.publishedAt)}</span>
+                </div>
+              );
+
+              return (
+                <Card key={p.id} testId="post-row">
+                  <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-3.5">
+                    <a href={p.url} target="_blank" rel="noreferrer" className="shrink-0 hover:opacity-90 transition-opacity">
+                      {p.thumbnailUrl ? (
+                        <img
+                          src={p.thumbnailUrl}
+                          alt="Social Media Poster"
+                          className="w-28 sm:w-36 h-20 sm:h-24 rounded-lg object-cover border border-[#C99436]/40 bg-[#050B12] shadow-sm"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = "none";
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <div style={{ display: p.thumbnailUrl ? "none" : "flex" }}>
+                        {fallbackPoster}
+                      </div>
                     </a>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-[#F9E29C]">
-                      {PLATFORM_LABELS[p.platform]} · {formatDate(p.publishedAt, true)}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-[#F9E29C] flex items-center gap-1.5">
+                        <span className="px-1.5 py-0.5 rounded bg-[#C99436]/15 border border-[#C99436]/30 text-[10px]">
+                          {PLATFORM_LABELS[p.platform]}
+                        </span>
+                        <span>·</span>
+                        <span>{formatDate(p.publishedAt, true)}</span>
+                      </div>
+                      {p.text && <p className="mt-1.5 text-xs text-[#E6DCC4] break-words line-clamp-3 font-medium">{p.text}</p>}
+                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                        <a href={p.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#F9E29C] hover:underline">
+                          <ExternalLink className="w-3 h-3 shrink-0" /> Open post →
+                        </a>
+                      </div>
                     </div>
-                    {p.text && <p className="mt-1 text-xs text-[#E6DCC4] break-words">{p.text}</p>}
-                    <a href={p.url} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#F9E29C] underline">
-                      <ExternalLink className="w-3 h-3 shrink-0" /> Open post
-                    </a>
-                    <div className="text-[10px] text-[#8A8E9B] break-all">{p.url}</div>
+                    {caps.edit && (
+                      <Btn
+                        variant="danger"
+                        busy={busy === `post:${p.id}`}
+                        onClick={() => {
+                          if (window.confirm("Delete this post record?")) {
+                            run(`post:${p.id}`, () => partyApi.deletePost(userId, partyId, p.id), "Post deleted.");
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </Btn>
+                    )}
                   </div>
-                  {caps.edit && (
-                    <Btn
-                      variant="danger"
-                      busy={busy === `post:${p.id}`}
-                      onClick={() => {
-                        if (window.confirm("Delete this post record?")) {
-                          run(`post:${p.id}`, () => partyApi.deletePost(userId, partyId, p.id), "Post deleted.");
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Delete
-                    </Btn>
+                  <div className="mt-3 grid grid-cols-4 gap-2 text-center pt-2 border-t border-[rgba(201,148,54,0.15)]">
+                    {(["likes", "comments", "shares", "views"] as const).map((k) => (
+                      <div key={k} className="rounded-lg bg-[#050B12] py-1 border border-[rgba(201,148,54,0.15)]">
+                        <div className="text-xs font-bold text-[#F5EFE0] font-mono">{formatNumber(p[k] ?? null)}</div>
+                        <div className="text-[9px] uppercase font-semibold text-[#8A8E9B]">{k}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {p.calendarId && (
+                    <p className="mt-2 text-[10px] text-[#B9AF95] font-medium">
+                      Campaign: {calendar.find((c) => c.id === p.calendarId)?.title || p.calendarId}
+                    </p>
                   )}
-                </div>
-                <div className="mt-2 grid grid-cols-4 gap-2 text-center">
-                  {(["likes", "comments", "shares", "views"] as const).map((k) => (
-                    <div key={k} className="rounded-lg bg-[#050B12] py-1">
-                      <div className="text-xs font-bold text-[#F5EFE0]">{formatNumber(p[k] ?? null)}</div>
-                      <div className="text-[9px] uppercase text-[#8A8E9B]">{k}</div>
-                    </div>
-                  ))}
-                </div>
-                {p.calendarId && (
-                  <p className="mt-1 text-[10px] text-[#B9AF95]">
-                    Campaign: {calendar.find((c) => c.id === p.calendarId)?.title || p.calendarId}
-                  </p>
-                )}
-              </Card>
-            ))
+                </Card>
+              );
+            })
           )}
         </div>
       )}
